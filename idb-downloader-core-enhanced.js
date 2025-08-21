@@ -1927,7 +1927,7 @@ class DownloadTask {
     }
   }
 
-  // ENHANCED: File assembly with improved blob system
+        // ENHANCED: File assembly with improved blob system and filename URL support
   async _assembleAndClear() {
     try {
       console.log('[R-ServiceX-DB] Assembling file from chunks...');
@@ -2074,11 +2074,12 @@ class DownloadTask {
         this.emit('status', { text: PROGRESS_MESSAGES.ASSEMBLING });
         const result = await this._assembleAndClear();
         
-        // ENHANCED: Create blob URL with filename metadata
+        // ENHANCED: Create blob URL with filename metadata for better browser compatibility
         const blobUrl = URL.createObjectURL(result.blob);
+        const enhancedBlobUrl = `${blobUrl}#filename=${encodeURIComponent(result.fileName)}`;
         
         this.emit('complete', { 
-          href: blobUrl, 
+          href: enhancedBlobUrl, 
           fileName: result.fileName,
           blob: result.blob,
           mimeType: result.mimeType,
@@ -2220,11 +2221,12 @@ class DownloadTask {
       this.emit('status', { text: PROGRESS_MESSAGES.ASSEMBLING });
       const result = await this._assembleAndClear();
       
-      // ENHANCED: Create blob URL with filename metadata
+      // ENHANCED: Create blob URL with filename metadata for better browser compatibility
       const blobUrl = URL.createObjectURL(result.blob);
+      const enhancedBlobUrl = `${blobUrl}#filename=${encodeURIComponent(result.fileName)}`;
       
       this.emit('complete', { 
-        href: blobUrl, 
+        href: enhancedBlobUrl, 
         fileName: result.fileName,
         blob: result.blob,
         mimeType: result.mimeType,
