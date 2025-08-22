@@ -1,8 +1,8 @@
 /*
  * idb-downloader-dialog-enhanced.js
  * 
- * ENHANCED VERSION v1.0.0: Premium download dialog with comprehensive improvements
- * All features implemented with professional polish and bug fixes
+ * ENHANCED VERSION v1.3.0: Premium download dialog with bulletproof validation
+ * New completion animation, improved error handling, and enhanced UI
  */
 
 function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconName = 'file_download' } = {}) {
@@ -17,7 +17,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
       return (i === 0 ? v : v.toFixed(1)) + ' ' + units[i];
     },
-    VERSION: '1.0.0'
+    VERSION: '1.3.0'
   };
   
   const fmt = (typeof window.formatFileSize === 'function') ? window.formatFileSize : utils.humanBytes;
@@ -42,7 +42,9 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     controls: `dl_controls_${tag}`,
     conc: `dl_conc_${tag}`,
     chunk: `dl_chunk_${tag}`,
-    settings: `dl_settings_${tag}`
+    settings: `dl_settings_${tag}`,
+    readyMessage: `dl_ready_${tag}`,
+    quotaMessage: `dl_quota_${tag}`
   };
 
   const html = `
@@ -60,6 +62,8 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   --dl-error-bg: rgba(244,67,54,0.06);
   --dl-error-border: rgba(244,67,54,0.2);
   --dl-error-text: #d32f2f;
+  --dl-text-primary: #000000;
+  --dl-text-secondary: #333333;
 }
 
 @keyframes premiumFadeIn {
@@ -83,140 +87,83 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   100% { filter: blur(0px); transform: scale(1); }
 }
 
-/* ENHANCED: Premium green wave animation with outline animation */
-@keyframes greenWaveExpansion {
+/* NEW: Enhanced completion animations with bold tick and green sphere */
+@keyframes boldTickEntry {
   0% {
-    transform: scale(1);
-    box-shadow: 
-      0 0 0 0 rgba(76, 175, 80, 0.8),
-      0 0 0 0 rgba(255, 255, 255, 0.6);
-  }
-  25% {
-    transform: scale(1.05);
-    box-shadow: 
-      0 0 0 15px rgba(76, 175, 80, 0.6),
-      0 0 0 18px rgba(255, 255, 255, 0.4);
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+    stroke-dasharray: 0, 100;
   }
   50% {
-    transform: scale(1.1);
-    box-shadow: 
-      0 0 0 30px rgba(76, 175, 80, 0.4),
-      0 0 0 36px rgba(255, 255, 255, 0.3);
-  }
-  75% {
-    transform: scale(1.05);
-    box-shadow: 
-      0 0 0 45px rgba(76, 175, 80, 0.2),
-      0 0 0 54px rgba(255, 255, 255, 0.2);
+    transform: scale(0.8) rotate(-90deg);
+    opacity: 0.7;
+    stroke-dasharray: 50, 100;
   }
   100% {
-    transform: scale(1);
-    box-shadow: 
-      0 0 0 60px rgba(76, 175, 80, 0),
-      0 0 0 72px rgba(255, 255, 255, 0);
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    stroke-dasharray: 100, 100;
   }
 }
 
-@keyframes outlineGlow {
-  0%, 100% { 
-    border-color: rgba(255,255,255,0.9);
-    box-shadow: 
-      0 0 20px rgba(255,255,255,0.4),
-      inset 0 0 25px rgba(255,255,255,0.3);
+@keyframes greenSphereGrow {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+    background: #cccccc;
+    border-color: #aaaaaa;
   }
-  50% { 
-    border-color: rgba(255,255,255,1);
-    box-shadow: 
-      0 0 35px rgba(255,255,255,0.6),
-      inset 0 0 40px rgba(255,255,255,0.4);
+  30% {
+    transform: scale(0.6);
+    opacity: 0.5;
+    background: #81c784;
+    border-color: #66bb6a;
+  }
+  60% {
+    transform: scale(1.1);
+    opacity: 0.8;
+    background: #4caf50;
+    border-color: #43a047;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    border-color: #81c784;
+  }
+}
+
+@keyframes rippleWave {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.8);
+  }
+  25% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px rgba(76, 175, 80, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 30px rgba(76, 175, 80, 0.4);
+  }
+  75% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 45px rgba(76, 175, 80, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 60px rgba(76, 175, 80, 0);
   }
 }
 
 @keyframes borderPulse {
-  0%, 100% { 
-    border-style: dashed;
-    border-width: 3px;
-    border-color: rgba(255,255,255,0.8);
+  0%, 100% {
+    border-color: #81c784;
+    box-shadow: 0 0 20px rgba(129, 199, 132, 0.4);
   }
-  25% {
-    border-style: solid;
-    border-width: 4px;
-    border-color: rgba(255,255,255,0.9);
-  }
-  50% { 
-    border-style: solid;
-    border-width: 5px;
-    border-color: rgba(255,255,255,1);
-  }
-  75% {
-    border-style: dashed;
-    border-width: 4px;
-    border-color: rgba(255,255,255,0.9);
-  }
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%) rotate(25deg); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: translateX(100%) rotate(25deg); opacity: 0; }
-}
-
-@keyframes completionTickContainer {
-  0% { 
-    transform: scale(0) rotate(-12deg);
-    opacity: 0;
-    border-style: dashed;
-    border-width: 2px;
-    border-color: rgba(255,255,255,0.3);
-  }
-  40% { 
-    transform: scale(0.8) rotate(-4deg);
-    opacity: 0.6;
-    border-style: solid;
-    border-width: 3px;
-    border-color: rgba(255,255,255,0.6);
-  }
-  100% { 
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-    border-style: dashed;
-    border-width: 3px;
-    border-color: rgba(255,255,255,0.9);
-  }
-}
-
-@keyframes completionTick {
-  0% { 
-    transform: scale(0) rotate(180deg);
-    opacity: 0;
-    filter: drop-shadow(0 0 0 transparent);
-  }
-  50% { 
-    transform: scale(0.9) rotate(90deg);
-    opacity: 0.7;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-  }
-  100% { 
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
-  }
-}
-
-@keyframes tickGlow {
-  0%, 100% { 
-    box-shadow: 
-      0 0 25px rgba(76,175,80,0.5),
-      0 0 50px rgba(76,175,80,0.3),
-      0 8px 30px rgba(76,175,80,0.2),
-      inset 0 0 20px rgba(255,255,255,0.3);
-  }
-  50% { 
-    box-shadow: 
-      0 0 40px rgba(76,175,80,0.7),
-      0 0 80px rgba(76,175,80,0.4),
-      0 12px 45px rgba(76,175,80,0.3),
-      inset 0 0 35px rgba(255,255,255,0.4);
+  50% {
+    border-color: #4caf50;
+    box-shadow: 0 0 40px rgba(76, 175, 80, 0.6);
   }
 }
 
@@ -227,7 +174,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   border-radius: var(--dl-border-radius);
   margin: 0 auto;
   background: rgba(255,255,255,0.98);
-  color: #083544;
+  color: var(--dl-text-primary);
   text-align: center;
   box-sizing: border-box;
   position: relative;
@@ -258,7 +205,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   align-items: center;
   justify-content: center;
   font-size: 64px !important;
-  color: #083544;
+  color: var(--dl-text-primary);
   border-radius: var(--dl-border-radius);
   position: relative;
   transition: all 0.3s ease;
@@ -285,12 +232,12 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   overflow-wrap: anywhere;
   margin: 0;
   max-width: 100%;
-  color: #083544;
+  color: var(--dl-text-primary);
 }
 
 .meta-size{
   font-size: 0.86rem;
-  color: #274e57;
+  color: var(--dl-text-secondary);
   opacity: 0.95;
   font-weight: 300;
   margin: 0;
@@ -325,7 +272,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 .setting-label{
   font-size: 0.72rem;
   font-weight: 400;
-  color: #274e57;
+  color: var(--dl-text-secondary);
   opacity: 0.9;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -340,7 +287,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   font-size: 0.82rem;
   font-weight: 400;
   text-align: center;
-  color: #083544;
+  color: var(--dl-text-primary);
   transition: all 0.2s ease;
 }
 
@@ -366,8 +313,34 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   animation: premiumFadeIn 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 300ms both;
 }
 
-.status-line{
+.ready-message, .quota-message{
+  font-size: 0.9rem;
+  color: var(--dl-accent);
+  background: rgba(100,181,246,0.08);
+  padding: 12px 16px;
+  border-radius: var(--dl-border-radius);
+  margin: 8px 0;
+  border: 1px solid rgba(100,181,246,0.15);
+  font-weight: 300;
+  line-height: 1.4;
+  animation: premiumFadeIn 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
   display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.ready-message i, .quota-message i{
+  font-size: 20px;
+  color: var(--dl-primary);
+}
+
+.ready-message.hidden, .quota-message.hidden{
+  display: none;
+}
+
+.status-line{
+  display: none;
   gap: 8px;
   align-items: center;
   justify-content: center;
@@ -378,31 +351,31 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   min-height: 26px;
 }
 
+.status-line.visible{
+  display: flex;
+}
+
 .status-line i{
   font-size: 18px;
   color: var(--dl-primary);
 }
 
-.progress-container{
-  margin: 4px auto 6px auto;
-  max-width: 100%;
-  width: 100%;
-  position: relative;
-}
-
 .metrics-card{
   display: none;
-  margin: 4px 0;
-  padding: 4px 8px;
-  border-radius: 12px;
+  margin: 2px 0;
+  padding: 2px 6px;
+  border-radius: 10px;
   background: var(--dl-meta-bg);
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 300;
-  color: #083544;
-  min-width: 120px;
-  line-height: 1.2;
+  color: var(--dl-text-primary);
+  min-width: 100px;
+  line-height: 1.1;
   transition: all 0.3s ease;
   position: relative;
+  max-width: 200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .metrics-card.visible{
@@ -417,7 +390,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
 .buttons-row{
   display: flex;
-  gap: 8px;
+  gap: 12px;
   justify-content: center;
   align-items: center;
   margin-top: 8px;
@@ -425,7 +398,6 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   animation: premiumFadeIn 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 500ms both;
 }
 
-/* ENHANCED: Borderless buttons with light blue background */
 .glassy-btn{
   border: none;
   border-radius: var(--dl-border-radius);
@@ -516,89 +488,66 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   box-shadow: 0 6px 16px rgba(244,67,54,0.3);
 }
 
-/* ENHANCED: Improved completion with mdui icon, green bg, and advanced animations */
-.completion-tick{
+/* NEW: Bold Tick and Green Sphere Completion Animation */
+.completion-container{
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 24px;
-  padding: 45px 12px;
+  padding: 40px 20px;
   background: linear-gradient(135deg, 
-    rgba(129,199,132,0.15) 0%, 
-    rgba(102,187,106,0.2) 25%, 
-    rgba(76,175,80,0.25) 50%, 
-    rgba(67,160,71,0.2) 75%, 
-    rgba(56,142,60,0.15) 100%);
+    rgba(129,199,132,0.1) 0%, 
+    rgba(102,187,106,0.15) 25%, 
+    rgba(76,175,80,0.2) 50%, 
+    rgba(67,160,71,0.15) 75%, 
+    rgba(56,142,60,0.1) 100%);
   border-radius: var(--dl-border-radius);
   position: relative;
   overflow: hidden;
-  box-shadow: 
-    0 8px 32px rgba(76,175,80,0.2),
-    inset 0 1px 0 rgba(255,255,255,0.3);
 }
 
-.completion-tick::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, 
-    transparent 30%, 
-    rgba(255,255,255,0.15) 50%, 
-    transparent 70%);
-  animation: shimmer 4s ease-in-out infinite 2s;
-}
-
-.tick-container{
-  width: 100px;
-  height: 100px;
+.completion-sphere{
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  border: 4px solid #81c784;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, 
-    #81c784 0%, 
-    #66bb6a 15%, 
-    #4caf50 30%, 
-    #43a047 45%, 
-    #388e3c 60%, 
-    #2e7d32 75%, 
-    #1b5e20 90%, 
-    #0d4f12 100%);
-  border: 3px dashed rgba(255,255,255,0.9);
-  animation: 
-    completionTickContainer 1200ms cubic-bezier(0.68, -0.55, 0.265, 1.55) 200ms both,
-    tickGlow 3s ease-in-out infinite 1400ms,
-    greenWaveExpansion 2.5s ease-out 1600ms infinite,
-    outlineGlow 3s ease-in-out infinite 1800ms,
-    borderPulse 5s ease-in-out infinite 2200ms;
   position: relative;
+  animation: 
+    greenSphereGrow 1000ms cubic-bezier(0.68, -0.55, 0.265, 1.55) both,
+    rippleWave 2s ease-out 1200ms infinite,
+    borderPulse 3s ease-in-out 1500ms infinite;
   box-shadow: 
-    0 15px 40px rgba(76,175,80,0.4),
-    0 8px 25px rgba(76,175,80,0.3),
-    inset 0 4px 15px rgba(255,255,255,0.3),
-    inset 0 -2px 8px rgba(0,0,0,0.1);
+    0 8px 32px rgba(76, 175, 80, 0.3),
+    inset 0 4px 12px rgba(255, 255, 255, 0.2);
 }
 
-.tick-mark{
-  font-size: 52px !important;
-  font-weight: 900 !important;
-  color: white;
-  animation: completionTick 1000ms cubic-bezier(0.68, -0.55, 0.265, 1.55) 700ms both;
+.completion-tick{
+  width: 60px;
+  height: 60px;
   position: relative;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
-  text-shadow: 
-    0 2px 4px rgba(0,0,0,0.2),
-    0 1px 2px rgba(0,0,0,0.3);
+  animation: boldTickEntry 800ms cubic-bezier(0.68, -0.55, 0.265, 1.55) 600ms both;
+}
+
+.completion-tick svg {
+  width: 100%;
+  height: 100%;
+  stroke: white;
+  stroke-width: 6;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .completion-message{
   font-size: 1.25rem;
   font-weight: 400;
   color: var(--dl-success-fill);
-  margin: 16px 0 10px 0;
+  margin: 0;
   animation: premiumFadeIn 600ms ease 1400ms both;
   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
   letter-spacing: 0.5px;
@@ -606,13 +555,14 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
 .completion-details{
   font-size: 0.88rem;
-  color: #083544;
+  color: var(--dl-text-primary);
   animation: premiumFadeIn 500ms ease 1600ms both;
   text-align: center;
   line-height: 1.6;
   opacity: 0.9;
   max-width: 340px;
   font-weight: 300;
+  margin: 0;
 }
 
 .error-area{
@@ -659,7 +609,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
 .final-note{
   font-size: 0.78rem;
-  color: #083544;
+  color: var(--dl-text-primary);
   text-align: center;
   line-height: 1.5;
   padding-bottom: 6px;
@@ -700,24 +650,30 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     min-width: 70px;
   }
   .buttons-row{
-    gap: 6px;
+    gap: 8px;
   }
   .glassy-btn{
     min-width: 85px;
     font-size: 0.78rem;
     padding: 8px 14px;
   }
-  .tick-container{
-    width: 85px;
-    height: 85px;
+  .completion-sphere{
+    width: 100px;
+    height: 100px;
   }
-  .tick-mark{
-    font-size: 44px !important;
+  .completion-tick{
+    width: 50px;
+    height: 50px;
+  }
+  .metrics-card{
+    font-size: 0.58rem;
+    padding: 1px 4px;
+    max-width: 180px;
   }
 }
 </style>
 
-<div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.0.0">
+<div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.3.0">
   <div class="file-metadata" id="${IDS.meta}">
     <i class="mdui-icon material-icons-outlined main-icon" id="${IDS.icon}">${iconName}</i>
     <div class="meta-name" id="${IDS.fname}">${fileName || 'File'}</div>
@@ -736,15 +692,23 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   </div>
 
   <div class="main-block" id="${IDS.main}">
+    <div class="ready-message" id="${IDS.readyMessage}">
+      <i class="mdui-icon material-icons-outlined">info</i>
+      <span>Click Start to begin secure parallel download with automatic resume capability</span>
+    </div>
+
+    <div class="quota-message hidden" id="${IDS.quotaMessage}">
+      <i class="mdui-icon material-icons-outlined">storage</i>
+      <span>Checking available storage space...</span>
+    </div>
+
     <div class="status-line" id="${IDS.status}">
       <i class="mdui-icon material-icons-outlined">cloud_download</i>
       <span>Ready to download</span>
     </div>
 
-    <div class="progress-container">
-      <div class="mdui-progress" id="${IDS.progress}">
-        <div class="mdui-progress-indeterminate"></div>
-      </div>
+    <div class="mdui-progress" id="${IDS.progress}" style="display: none;">
+      <div class="mdui-progress-indeterminate"></div>
     </div>
 
     <div id="${IDS.metricsCard}" class="metrics-card hidden">
@@ -752,7 +716,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     </div>
 
     <div class="buttons-row">
-      <button class="glassy-btn enabled" id="${IDS.action}" data-state="start" aria-label="Start download">
+      <button class="glassy-btn disabled" id="${IDS.action}" data-state="start" aria-label="Start download">
         <i class="mdui-icon material-icons-outlined">download</i>
         <span>Start</span>
       </button>
@@ -760,7 +724,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         <i class="mdui-icon material-icons-outlined">close</i>
         <span>Cancel</span>
       </button>
-      <button class="glassy-btn enabled" id="${IDS.browser}" aria-label="Use browser download">
+      <button class="glassy-btn disabled" id="${IDS.browser}" aria-label="Use browser download">
         <i class="mdui-icon material-icons-outlined">open_in_browser</i>
         <span>Browser</span>
       </button>
@@ -772,7 +736,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   <div class="divider"></div>
 
   <div class="final-note">
-    Secure parallel downloading with automatic resume capability v1.0.0. 
+    Secure parallel downloading with automatic resume capability v1.3.0. 
     Downloads continue when browser is in background with dialog open.
   </div>
 </div>
@@ -877,7 +841,9 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         errorArea: byId(IDS.errorArea),
         conc: byId(IDS.conc),
         chunk: byId(IDS.chunk),
-        settings: byId(IDS.settings)
+        settings: byId(IDS.settings),
+        readyMessage: byId(IDS.readyMessage),
+        quotaMessage: byId(IDS.quotaMessage)
       };
 
       if (!nodes.action) { 
@@ -952,6 +918,47 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
           }
         } catch (e) {
           console.warn('[R-ServiceX-Downloader] Error hiding metrics:', e);
+        }
+      };
+
+      const showReadyMessage = () => {
+        try {
+          if (nodes.readyMessage) {
+            nodes.readyMessage.classList.remove('hidden');
+          }
+        } catch (e) {
+          console.warn('[R-ServiceX-Downloader] Error showing ready message:', e);
+        }
+      };
+
+      const hideReadyMessage = () => {
+        try {
+          if (nodes.readyMessage) {
+            nodes.readyMessage.classList.add('hidden');
+          }
+        } catch (e) {
+          console.warn('[R-ServiceX-Downloader] Error hiding ready message:', e);
+        }
+      };
+
+      const showQuotaMessage = (message) => {
+        try {
+          if (nodes.quotaMessage) {
+            nodes.quotaMessage.querySelector('span').textContent = message;
+            nodes.quotaMessage.classList.remove('hidden');
+          }
+        } catch (e) {
+          console.warn('[R-ServiceX-Downloader] Error showing quota message:', e);
+        }
+      };
+
+      const hideQuotaMessage = () => {
+        try {
+          if (nodes.quotaMessage) {
+            nodes.quotaMessage.classList.add('hidden');
+          }
+        } catch (e) {
+          console.warn('[R-ServiceX-Downloader] Error hiding quota message:', e);
         }
       };
 
@@ -1321,9 +1328,11 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
           }
 
           const isValidationError = String(message || '').toLowerCase().includes('invalid settings') || 
-                                  String(message || '').toLowerCase().includes('correct the invalid');
+                                  String(message || '').toLowerCase().includes('correct the invalid') ||
+                                  String(message || '').toLowerCase().includes('download settings are outside allowed limits');
           
-          if (!isValidationError) {
+          // Only hide settings if it's not a validation error and download is actually starting
+          if (!isValidationError && hasStarted && actualDownloadStarted) {
             hideSettings();
           }
 
@@ -1383,15 +1392,19 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       const showCompletionAnimation = () => {
         try {
           const completionHTML = `
-            <div class="completion-tick" aria-live="polite">
-              <div class="tick-container">
-                <i class="mdui-icon material-icons-outlined tick-mark">check_circle</i>
+            <div class="completion-container" aria-live="polite">
+              <div class="completion-sphere">
+                <div class="completion-tick">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                </div>
               </div>
               <div class="completion-message">
                 Download completed successfully!
               </div>
               <div class="completion-details">
-                File has been saved to your downloads folder with the correct filename
+                File has been saved to your chosen location with the correct filename
               </div>
             </div>
           `;
@@ -1417,9 +1430,13 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       const showFallbackCompletionAnimation = () => {
         try {
           const fallbackCompletionHTML = `
-            <div class="completion-tick" aria-live="polite">
-              <div class="tick-container">
-                <i class="mdui-icon material-icons-outlined tick-mark">check_circle</i>
+            <div class="completion-container" aria-live="polite">
+              <div class="completion-sphere">
+                <div class="completion-tick">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                </div>
               </div>
               <div class="completion-message">
                 Download initiated via browser!
@@ -1899,10 +1916,14 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
           log('Action button clicked:', currentState);
 
           if (currentState === 'start') {
+            hideReadyMessage();
+            showStatusLine();
+            showProgressBar();
+            setProgressIndeterminate();
+            
             setActionButtonState('starting');
             setStatusText('Initializing secure download');
             isProcessing = true;
-            setProgressIndeterminate(true);
 
             if (!window.indexedDB) { 
               showErrorMessage('Advanced downloading not supported. Use browser download', true); 
@@ -1914,10 +1935,22 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
               return; 
             }
 
+            // Show quota checking message
             try {
               if (typeof manager.checkQuota === 'function') {
+                setStatusText('Checking available storage space');
+                showQuotaMessage('Checking available storage space...');
+                
                 const quotaInfo = await manager.checkQuota(fileSizeBytes || 0);
                 log('Storage quota check:', quotaInfo);
+
+                if (quotaInfo && quotaInfo.message) {
+                  showQuotaMessage(quotaInfo.message);
+                  
+                  setTimeout(() => {
+                    hideQuotaMessage();
+                  }, 3000);
+                }
 
                 if (quotaInfo && quotaInfo.supported && !quotaInfo.sufficient) { 
                   showErrorMessage(utils.ERROR_MESSAGES?.STORAGE_INSUFFICIENT || 'Insufficient storage space. Use browser download', true); 
@@ -1926,6 +1959,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
               }
             } catch (e) { 
               log('Quota check error', e && e.message); 
+              hideQuotaMessage();
             }
 
             try {
@@ -2179,15 +2213,23 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
-      // Initialize UI state
+      // Initialize UI state - fix browser button state after restart
       setCancelState(false);
-      setBrowserButtonState(true);
+      setBrowserButtonState(false); // Start disabled until validation
       showSettings();
       stopIconPulse();
+      showReadyMessage();
+      hideProgressBar();
+      hideStatusLine();
+      hideMetrics();
 
-      setProgressIndeterminate(true);
-      showMetrics();
-      if (nodes.metricsCard) nodes.metricsCard.innerHTML = 'Fetching details';
+      // Enable buttons after validation
+      setTimeout(() => {
+        if (validateSettings()) {
+          setBrowserButtonState(true);
+          setActionButtonState('start');
+        }
+      }, 100);
 
       setupEventListeners();
 
@@ -2353,5 +2395,5 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = { openIDBDownloaderDialog };
 } else if (typeof window !== 'undefined') {
   window.openIDBDownloaderDialog = openIDBDownloaderDialog;
-  console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.0.0 loaded successfully');
+  console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.3.0 loaded successfully');
 }

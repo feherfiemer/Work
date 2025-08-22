@@ -1,0 +1,118 @@
+# Enhanced IndexedDB Downloader v1.3.0
+
+Professional-grade parallel downloader with bulletproof chunk validation and enhanced UI.
+
+## Files
+
+- `idb-downloader-core-enhanced.js` - Core download engine with bulletproof validation
+- `idb-downloader-dialog-enhanced.js` - Premium UI dialog with enhanced animations
+
+## Key Features (v1.3.0)
+
+### 🔧 Core Improvements
+- **Bulletproof Chunk Validation**: Multiple layered validation prevents corrupted downloads
+- **Enhanced Resume Logic**: Robust resume functionality with integrity checks
+- **Improved Error Handling**: Contextual error messages with recovery options
+- **Storage Quota Checking**: Real-time storage space validation with detailed messages
+
+### 🎨 UI Enhancements
+- **New Completion Animation**: Bold tick with green sphere and ripple wave effects
+- **Smart Settings Panel**: Stays visible during validation errors, hides only when download starts
+- **Improved Color Scheme**: All text colors properly set to black for better readability
+- **Compact Metrics Card**: Reduced size with better spacing and typography
+- **Enhanced Button States**: Proper disabled states after browser restart
+
+### 🛡️ Reliability Features
+- **Chunk Sequence Validation**: Ensures perfect file integrity on resume
+- **Gap Detection**: Automatically detects and fixes missing chunks
+- **Corruption Recovery**: Clears corrupted data and starts fresh when needed
+- **Multiple Retry Layers**: Bulletproof download continuation
+
+### 📱 User Experience
+- **Quota Messages**: Shows available storage space with usage percentages
+- **Progress Indicators**: Enhanced progress tracking with real-time metrics
+- **File System Access API**: Direct file saving with progress indication
+- **Background Continuity**: Downloads continue when browser is backgrounded
+
+## Technical Details
+
+### Chunk Validation System
+```javascript
+// Multiple validation layers
+1. Chunk integrity validation (size, position, data)
+2. Sequence validation (gaps, order, continuity)
+3. Corruption detection and recovery
+4. Resume point verification
+```
+
+### Storage Management
+```javascript
+// Enhanced quota checking
+- Real-time space calculation
+- Safety buffer allocation (20% extra)
+- Usage percentage tracking
+- Detailed status messages
+```
+
+### Error Recovery
+```javascript
+// Bulletproof error handling
+- Validation failure recovery
+- Network interruption handling
+- Corruption detection and cleanup
+- Graceful degradation to browser download
+```
+
+## Usage
+
+```html
+<!-- Include both files -->
+<script src="idb-downloader-core-enhanced.js"></script>
+<script src="idb-downloader-dialog-enhanced.js"></script>
+
+<script>
+// Open download dialog
+openIDBDownloaderDialog({
+  url: 'https://example.com/file.zip',
+  fileName: 'example-file.zip',
+  fileSizeBytes: 1024000,
+  iconName: 'archive'
+});
+</script>
+```
+
+## Browser Compatibility
+
+- Chrome 89+ (File System Access API)
+- Firefox 85+ (IndexedDB)
+- Safari 14+ (IndexedDB)
+- Edge 89+ (File System Access API)
+
+## Version History
+
+### v1.3.0 (Current)
+- Bulletproof chunk validation
+- Enhanced completion animation
+- Improved error handling
+- Storage quota messages
+- UI color scheme fixes
+- Settings panel behavior fixes
+
+### v1.2.0
+- File System Access API integration
+- Enhanced progress tracking
+- Improved resume logic
+
+### v1.1.0
+- Parallel downloading
+- Chunk-based storage
+- Resume functionality
+
+### v1.0.0
+- Initial release
+- Basic IndexedDB storage
+- Simple UI
+
+## License
+
+MIT License - See main project README for details.

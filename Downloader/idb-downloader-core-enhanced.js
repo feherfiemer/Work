@@ -1,26 +1,26 @@
 /**
  * idb-downloader-core-enhanced.js
  * 
- * ENHANCED VERSION v1.0.0: Professional-grade IndexedDB downloader with comprehensive improvements
- * All bugs fixed, performance optimized, and user experience enhanced
+ * ENHANCED VERSION v1.3.0: Professional-grade IndexedDB downloader with bulletproof chunk validation
+ * Multiple layered validation, improved resume logic, and enhanced reliability
  */
 
 (function () {
 'use strict';
 
-const VERSION = '1.0.0';
+const VERSION = '1.3.0';
 const DB_NAME = 'R-ServiceX-DB';
-const DB_VER = 5;
+const DB_VER = 8;
 const STORE_META = 'meta';
 const STORE_CHUNKS = 'chunks';
 const STORE_SESSIONS = 'sessions';
 const DEFAULT_CHUNK_SIZE = 1024 * 1024;
 const DEFAULT_CONCURRENCY = 4;
-const PROGRESS_UPDATE_INTERVAL = 150; // Ultra-smooth updates
+const PROGRESS_UPDATE_INTERVAL = 100;
 const SESSION_TIMEOUT = 3600000;
-const MAX_RETRY_ATTEMPTS = 5;
-const RETRY_DELAY = 800;
-const CONNECTION_TIMEOUT = 25000;
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY = 500;
+const CONNECTION_TIMEOUT = 20000;
 
 // ENHANCED: Professional error messages with context
 const ERROR_MESSAGES = {
@@ -33,7 +33,10 @@ const ERROR_MESSAGES = {
   INITIALIZATION_FAILED: 'Failed to initialize download system. Please refresh the page and try again.',
   ASSEMBLY_FAILED: 'Failed to assemble downloaded file. Please try downloading again or use browser download.',
   PERMISSION_DENIED: 'Storage access denied. Please check browser permissions or use browser download instead.',
-  QUOTA_EXCEEDED: 'Storage quota exceeded. Consider clearing browser data or using browser download.'
+  QUOTA_EXCEEDED: 'Storage quota exceeded. Consider clearing browser data or using browser download.',
+  FILE_SAVE_FAILED: 'Failed to save file to your device. Please try again or use browser download.',
+  FILE_SAVE_CANCELLED: 'File save was cancelled. You can try downloading again.',
+  CHUNK_VALIDATION_FAILED: 'Downloaded chunks validation failed. Starting fresh download to ensure file integrity.'
 };
 
 // ENHANCED: Progress message templates
@@ -46,7 +49,10 @@ const PROGRESS_MESSAGES = {
   RESUMING: 'Resuming download from last saved position...',
   ASSEMBLING: 'Assembling downloaded segments into final file...',
   COMPLETING: 'Finalizing download and preparing file for save...',
-  CANCELLING: 'Cancelling download and cleaning up temporary data...'
+  CANCELLING: 'Cancelling download and cleaning up temporary data...',
+  VALIDATING: 'Validating downloaded chunks for integrity...',
+  QUOTA_CHECKING: 'Checking available storage space...',
+  SAVING_FILE: 'Saving file to your device...'
 };
 
 function nowMs() { 
@@ -54,6 +60,111 @@ function nowMs() {
     return performance.now(); 
   } catch (e) {
     return Date.now();
+  }
+}
+
+// ENHANCED: Bulletproof chunk validation utilities
+function validateChunkIntegrity(chunk, expectedStart, expectedSize) {
+  try {
+    if (!chunk || !chunk.data || typeof chunk.start !== 'number') {
+      console.warn(`[R-ServiceX-DB] Invalid chunk structure:`, chunk);
+      return false;
+    }
+    
+    if (chunk.start !== expectedStart) {
+      console.warn(`[R-ServiceX-DB] Chunk start mismatch: expected ${expectedStart}, got ${chunk.start}`);
+      return false;
+    }
+    
+    if (chunk.data.byteLength === 0) {
+      console.warn(`[R-ServiceX-DB] Empty chunk data at start ${chunk.start}`);
+      return false;
+    }
+    
+    if (expectedSize && chunk.data.byteLength > expectedSize) {
+      console.warn(`[R-ServiceX-DB] Chunk size exceeds expected: ${chunk.data.byteLength} > ${expectedSize}`);
+      return false;
+    }
+    
+    return true;
+  } catch (e) {
+    console.warn(`[R-ServiceX-DB] Chunk validation error:`, e);
+    return false;
+  }
+}
+
+function validateChunkSequence(chunks, totalBytes, chunkSize) {
+  try {
+    if (!Array.isArray(chunks) || chunks.length === 0) {
+      console.warn(`[R-ServiceX-DB] Invalid chunks array:`, chunks);
+      return { valid: false, reason: 'Invalid chunks array' };
+    }
+    
+    // Sort chunks by start position
+    const sortedChunks = [...chunks].sort((a, b) => a.start - b.start);
+    
+    let expectedStart = 0;
+    let totalValidated = 0;
+    
+    for (let i = 0; i < sortedChunks.length; i++) {
+      const chunk = sortedChunks[i];
+      
+      if (chunk.start !== expectedStart) {
+        console.warn(`[R-ServiceX-DB] Gap detected: expected ${expectedStart}, found ${chunk.start}`);
+        return { 
+          valid: false, 
+          reason: `Gap at position ${expectedStart}`,
+          lastValidStart: i > 0 ? sortedChunks[i-1].start : 0
+        };
+      }
+      
+      const expectedChunkSize = Math.min(chunkSize, totalBytes - chunk.start);
+      if (!validateChunkIntegrity(chunk, expectedStart, expectedChunkSize)) {
+        return { 
+          valid: false, 
+          reason: `Invalid chunk at ${chunk.start}`,
+          lastValidStart: i > 0 ? sortedChunks[i-1].start : 0
+        };
+      }
+      
+      expectedStart += chunk.data.byteLength;
+      totalValidated += chunk.data.byteLength;
+    }
+    
+    const isComplete = expectedStart >= totalBytes;
+    
+    return {
+      valid: true,
+      complete: isComplete,
+      validatedBytes: totalValidated,
+      nextExpectedStart: expectedStart,
+      chunksCount: sortedChunks.length
+    };
+  } catch (e) {
+    console.warn(`[R-ServiceX-DB] Chunk sequence validation error:`, e);
+    return { valid: false, reason: 'Validation error', error: e.message };
+  }
+}
+
+function createChunkMap(chunks) {
+  try {
+    const map = new Map();
+    if (!Array.isArray(chunks)) return map;
+    
+    chunks.forEach(chunk => {
+      if (chunk && typeof chunk.start === 'number' && chunk.data) {
+        map.set(chunk.start, {
+          size: chunk.data.byteLength,
+          data: chunk.data,
+          timestamp: chunk.timestamp || Date.now()
+        });
+      }
+    });
+    
+    return map;
+  } catch (e) {
+    console.warn(`[R-ServiceX-DB] Error creating chunk map:`, e);
+    return new Map();
   }
 }
 
@@ -737,7 +848,14 @@ async function clearAllData(db) {
 async function checkQuota(requiredBytes) {
   try {
     if (!navigator.storage || !navigator.storage.estimate) {
-      return { supported: false, usage: 0, quota: 0, free: Infinity, sufficient: true };
+      return { 
+        supported: false, 
+        usage: 0, 
+        quota: 0, 
+        free: Infinity, 
+        sufficient: true,
+        message: 'Storage estimation not supported'
+      };
     }
     
     const estimate = await navigator.storage.estimate();
@@ -747,16 +865,45 @@ async function checkQuota(requiredBytes) {
     const requiredWithBuffer = (Number(requiredBytes) || 0) * 1.2;
     const sufficient = requiredBytes === 0 ? true : free >= requiredWithBuffer;
     
-    console.log(`[R-ServiceX-DB] Storage: ${formatPrefer(usage)} used, ${formatPrefer(free)} free of ${formatPrefer(quota)}`);
+    const usagePercent = quota > 0 ? Math.round((usage / quota) * 100) : 0;
+    
+    let message = `Storage: ${formatPrefer(free)} available of ${formatPrefer(quota)} total (${usagePercent}% used)`;
+    
+    if (requiredBytes > 0) {
+      message += ` • Need: ${formatPrefer(requiredWithBuffer)} (with safety buffer)`;
+      if (sufficient) {
+        message += ' ✓ Sufficient space';
+      } else {
+        message += ' ⚠ Insufficient space';
+      }
+    }
+    
+    console.log(`[R-ServiceX-DB] ${message}`);
     
     if (!sufficient) {
       console.warn(`[R-ServiceX-DB] Insufficient storage: need ${formatPrefer(requiredWithBuffer)}, have ${formatPrefer(free)}`);
     }
     
-    return { supported: true, usage, quota, free, sufficient };
+    return { 
+      supported: true, 
+      usage, 
+      quota, 
+      free, 
+      sufficient, 
+      usagePercent,
+      requiredWithBuffer,
+      message
+    };
   } catch (e) {
     console.warn('[R-ServiceX-DB] Storage estimation failed:', e);
-    return { supported: false, usage: 0, quota: 0, free: Infinity, sufficient: true };
+    return { 
+      supported: false, 
+      usage: 0, 
+      quota: 0, 
+      free: Infinity, 
+      sufficient: true,
+      message: 'Storage check failed'
+    };
   }
 }
 
@@ -1174,6 +1321,18 @@ class IDBDownloaderManager {
 
       if (targetId && targetMeta) {
         console.log('[R-ServiceX-DB] Creating resume task for:', targetId);
+        
+        // Additional validation before resuming
+        if (!targetMeta.totalBytes || targetMeta.totalBytes <= 0) {
+          console.warn('[R-ServiceX-DB] Invalid metadata: missing total bytes');
+          throw new Error(ERROR_MESSAGES.RESUME_UNAVAILABLE);
+        }
+        
+        if (!targetMeta.chunkSize || targetMeta.chunkSize <= 0) {
+          console.warn('[R-ServiceX-DB] Invalid metadata: missing chunk size');
+          targetMeta.chunkSize = chunkSize || DEFAULT_CHUNK_SIZE;
+        }
+        
         const db = await this._open();
         
         const task = new DownloadTask({
@@ -1757,20 +1916,76 @@ class DownloadTask {
         return [];
       }
       
-      const starts = await listChunkStarts(this.db, this.id);
-      const existingStarts = Array.isArray(this.meta.completedStarts) ? this.meta.completedStarts : [];
-      const newStarts = Array.isArray(starts) ? starts : [];
+      console.log('[R-ServiceX-DB] Starting bulletproof chunk validation...');
       
-      const set = new Set([...existingStarts, ...newStarts]);
-      this.meta.completedStarts = Array.from(set).sort((a, b) => a - b);
+      // Get all stored chunks for validation
+      const storedChunks = await readChunksInOrder(this.db, this.id);
+      const starts = await listChunkStarts(this.db, this.id);
+      
+      if (storedChunks.length === 0 && starts.length === 0) {
+        console.log('[R-ServiceX-DB] No stored chunks found, starting fresh');
+        this.meta.completedStarts = [];
+        await putMeta(this.db, this.meta);
+        return [];
+      }
+      
+      // Validate chunk sequence integrity
+      const validation = validateChunkSequence(
+        storedChunks.map((data, index) => ({
+          start: starts[index] || (index * this.meta.chunkSize),
+          data: data
+        })),
+        this.meta.totalBytes,
+        this.meta.chunkSize
+      );
+      
+      if (!validation.valid) {
+        console.warn(`[R-ServiceX-DB] Chunk validation failed: ${validation.reason}`);
+        
+        // Clear corrupted data and start fresh
+        await deleteChunks(this.db, this.id);
+        this.meta.completedStarts = [];
+        this.meta.lastError = 'Chunk validation failed - starting fresh';
+        this.meta.updatedAt = Date.now();
+        await putMeta(this.db, this.meta);
+        
+        // Emit validation failure event
+        this.emit('error', { 
+          message: ERROR_MESSAGES.CHUNK_VALIDATION_FAILED,
+          validationError: true
+        });
+        
+        return [];
+      }
+      
+      // If validation passed, update completed starts
+      const validStarts = starts.slice(0, validation.chunksCount).sort((a, b) => a - b);
+      
+      console.log(`[R-ServiceX-DB] Chunk validation passed: ${validStarts.length} valid chunks, ${formatPrefer(validation.validatedBytes)} validated`);
+      
+      this.meta.completedStarts = validStarts;
       this.meta.updatedAt = Date.now();
       this.meta.version = VERSION;
+      this.meta.lastError = ''; // Clear any previous errors
       
       await putMeta(this.db, this.meta);
       return this.meta.completedStarts;
     } catch (e) {
-      console.warn('[R-ServiceX-DB] _refreshCompletedStarts failed:', e);
-      return this.meta ? (this.meta.completedStarts || []) : [];
+      console.error('[R-ServiceX-DB] _refreshCompletedStarts failed:', e);
+      
+      // On critical error, clear potentially corrupted data
+      try {
+        await deleteChunks(this.db, this.id);
+        if (this.meta) {
+          this.meta.completedStarts = [];
+          this.meta.lastError = `Validation error: ${e.message}`;
+          await putMeta(this.db, this.meta);
+        }
+      } catch (cleanupError) {
+        console.error('[R-ServiceX-DB] Cleanup after validation failure failed:', cleanupError);
+      }
+      
+      return [];
     }
   }
 
