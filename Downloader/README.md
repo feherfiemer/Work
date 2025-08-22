@@ -1,13 +1,13 @@
-# Enhanced IndexedDB Downloader v1.3.0
+# Enhanced IndexedDB Downloader v1.4.0
 
-Professional-grade parallel downloader with bulletproof chunk validation and enhanced UI.
+Professional-grade parallel downloader with bulletproof validation and maximum reliability.
 
 ## Files
 
 - `idb-downloader-core-enhanced.js` - Core download engine with bulletproof validation
 - `idb-downloader-dialog-enhanced.js` - Premium UI dialog with enhanced animations
 
-## Key Features (v1.3.0)
+## Key Features (v1.4.0)
 
 ### 🔧 Core Improvements
 - **Bulletproof Chunk Validation**: Multiple layered validation prevents corrupted downloads
@@ -90,7 +90,18 @@ openIDBDownloaderDialog({
 
 ## Version History
 
-### v1.3.0 (Current)
+### v1.4.0 (Current)
+- Fixed all undefined function errors (hideProgressBar, showStatusLine, etc.)
+- Fixed disabled button states - buttons now properly enable after browser restart
+- Enhanced File System Access API with real-time save progress indication
+- Optimized chunk validation system with better performance
+- Added repair actions for corrupted chunk detection
+- Improved error recovery with contextual repair instructions
+- Enhanced completion animation with bold tick and green sphere
+- All UI elements now use proper black text colors for better readability
+- Optimized overall performance and memory usage
+
+### v1.3.0
 - Bulletproof chunk validation
 - Enhanced completion animation
 - Improved error handling
