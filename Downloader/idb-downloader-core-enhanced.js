@@ -1,19 +1,20 @@
 /**
  * idb-downloader-core-enhanced.js
  * 
- * ENHANCED VERSION v1.6.0: Professional-grade IndexedDB downloader with bulletproof validation
- * Complete feature implementation, all bugs fixed, maximum reliability with enhanced chunk validation
+ * ENHANCED VERSION v1.7.0: Professional-grade IndexedDB downloader with bulletproof validation
+ * Advanced chunk sequencing, enhanced resume capabilities, and maximum reliability
  */
 
 (function () {
 'use strict';
 
-const VERSION = '1.6.0';
+const VERSION = '1.7.0';
 const DB_NAME = 'R-ServiceX-DB';
-const DB_VER = 9;
+const DB_VER = 10;
 const STORE_META = 'meta';
 const STORE_CHUNKS = 'chunks';
 const STORE_SESSIONS = 'sessions';
+const STORE_SEQUENCES = 'sequences';
 const DEFAULT_CHUNK_SIZE = 1024 * 1024;
 const DEFAULT_CONCURRENCY = 4;
 const PROGRESS_UPDATE_INTERVAL = 100;
@@ -22,6 +23,7 @@ const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 500;
 const CONNECTION_TIMEOUT = 20000;
 const CHUNK_VALIDATION_TIMEOUT = 5000;
+const SEQUENCE_VALIDATION_TIMEOUT = 8000;
 
 // ENHANCED: Professional error messages with context
 const ERROR_MESSAGES = {
@@ -364,6 +366,225 @@ function calculateSimpleChecksum(arrayBuffer) {
   }
 }
 
+// ENHANCED: Advanced chunk sequence management for bulletproof resuming
+function generateSequenceHash(chunksArray) {
+  try {
+    const sorted = [...chunksArray].sort((a, b) => a.start - b.start);
+    const sequenceString = sorted.map(chunk => `${chunk.start}:${chunk.data?.byteLength || 0}`).join('|');
+    
+    // Simple hash function for sequence
+    let hash = 0;
+    for (let i = 0; i < sequenceString.length; i++) {
+      const char = sequenceString.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
+  } catch (e) {
+    console.warn('[R-ServiceX-DB] Error generating sequence hash:', e);
+    return String(Date.now()).slice(-8);
+  }
+}
+
+async function saveChunkSequence(db, downloadId, chunks, totalBytes) {
+  try {
+    const sequenceId = `seq_${downloadId}_${Date.now()}`;
+    const sequenceHash = generateSequenceHash(chunks);
+    
+    const sequenceData = {
+      id: sequenceId,
+      downloadId: downloadId,
+      timestamp: Date.now(),
+      sequenceHash: sequenceHash,
+      totalChunks: chunks.length,
+      totalBytes: totalBytes,
+      chunkStarts: chunks.map(chunk => chunk.start).sort((a, b) => a - b),
+      checksums: chunks.map(chunk => ({
+        start: chunk.start,
+        checksum: calculateSimpleChecksum(chunk.data)
+      })),
+      version: VERSION
+    };
+
+    const tx = db.transaction(STORE_SEQUENCES, 'readwrite');
+    const store = tx.objectStore(STORE_SEQUENCES);
+    await new Promise((resolve, reject) => {
+      const req = store.put(sequenceData);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+
+    console.log(`[R-ServiceX-DB] Saved chunk sequence: ${sequenceId} (${chunks.length} chunks)`);
+    return sequenceId;
+  } catch (e) {
+    console.warn('[R-ServiceX-DB] Error saving chunk sequence:', e);
+    return null;
+  }
+}
+
+async function validateChunkSequence(db, downloadId, currentChunks, totalBytes) {
+  try {
+    // Get latest sequence for this download
+    const tx = db.transaction(STORE_SEQUENCES, 'readonly');
+    const store = tx.objectStore(STORE_SEQUENCES);
+    const index = store.index('by_download_id');
+    
+    const sequences = await new Promise((resolve, reject) => {
+      const results = [];
+      const cursor = index.openCursor(IDBKeyRange.only(downloadId));
+      
+      cursor.onsuccess = (event) => {
+        const cur = event.target.result;
+        if (cur) {
+          results.push(cur.value);
+          cur.continue();
+        } else {
+          resolve(results);
+        }
+      };
+      cursor.onerror = () => reject(cursor.error);
+    });
+
+    if (sequences.length === 0) {
+      console.log('[R-ServiceX-DB] No previous sequences found, creating first sequence');
+      await saveChunkSequence(db, downloadId, currentChunks, totalBytes);
+      return { valid: true, firstTime: true };
+    }
+
+    // Get the most recent sequence
+    const latestSequence = sequences.sort((a, b) => b.timestamp - a.timestamp)[0];
+    
+    // Validate current chunks against the sequence
+    const currentHash = generateSequenceHash(currentChunks);
+    const currentStarts = currentChunks.map(chunk => chunk.start).sort((a, b) => a - b);
+    
+    // Check if sequence is consistent
+    const isConsistent = currentStarts.every((start, index) => {
+      const expectedStart = latestSequence.chunkStarts[index];
+      return start === expectedStart;
+    });
+
+    if (!isConsistent) {
+      console.warn('[R-ServiceX-DB] Chunk sequence inconsistency detected');
+      
+      // Find where the inconsistency starts
+      let lastValidIndex = -1;
+      for (let i = 0; i < Math.min(currentStarts.length, latestSequence.chunkStarts.length); i++) {
+        if (currentStarts[i] === latestSequence.chunkStarts[i]) {
+          lastValidIndex = i;
+        } else {
+          break;
+        }
+      }
+
+      return {
+        valid: false,
+        reason: 'Sequence inconsistency detected',
+        lastValidIndex: lastValidIndex,
+        lastValidStart: lastValidIndex >= 0 ? currentStarts[lastValidIndex] : 0,
+        expectedNext: lastValidIndex + 1 < latestSequence.chunkStarts.length ? 
+                     latestSequence.chunkStarts[lastValidIndex + 1] : null,
+        repairAction: 'clear_from_inconsistency'
+      };
+    }
+
+    // Validate checksums for existing chunks
+    for (const chunk of currentChunks) {
+      const expectedChecksum = latestSequence.checksums.find(c => c.start === chunk.start);
+      if (expectedChecksum) {
+        const actualChecksum = calculateSimpleChecksum(chunk.data);
+        if (actualChecksum !== expectedChecksum.checksum) {
+          console.warn(`[R-ServiceX-DB] Checksum mismatch at chunk ${chunk.start}`);
+          return {
+            valid: false,
+            reason: `Checksum mismatch at chunk ${chunk.start}`,
+            corruptedStart: chunk.start,
+            repairAction: 'clear_from_corruption'
+          };
+        }
+      }
+    }
+
+    // Update sequence if more chunks were added
+    if (currentChunks.length > latestSequence.totalChunks) {
+      await saveChunkSequence(db, downloadId, currentChunks, totalBytes);
+    }
+
+    return { 
+      valid: true, 
+      consistent: true,
+      sequenceId: latestSequence.id,
+      validatedChunks: currentChunks.length
+    };
+
+  } catch (e) {
+    console.error('[R-ServiceX-DB] Error validating chunk sequence:', e);
+    return { valid: false, reason: 'Validation error', error: e.message };
+  }
+}
+
+async function repairChunkSequence(db, downloadId, validationResult) {
+  try {
+    console.log(`[R-ServiceX-DB] Repairing chunk sequence for ${downloadId}:`, validationResult.repairAction);
+    
+    switch (validationResult.repairAction) {
+      case 'clear_from_inconsistency':
+        if (validationResult.lastValidStart !== undefined) {
+          await clearChunksFromPosition(db, downloadId, validationResult.lastValidStart + 1);
+          return { repaired: true, action: 'cleared_from_inconsistency', position: validationResult.lastValidStart };
+        }
+        break;
+        
+      case 'clear_from_corruption':
+        if (validationResult.corruptedStart !== undefined) {
+          await clearChunksFromPosition(db, downloadId, validationResult.corruptedStart);
+          return { repaired: true, action: 'cleared_corruption', position: validationResult.corruptedStart };
+        }
+        break;
+        
+      default:
+        // Clear all chunks and sequences
+        await deleteChunks(db, downloadId);
+        await clearSequences(db, downloadId);
+        return { repaired: true, action: 'cleared_all' };
+    }
+    
+    return { repaired: false, reason: 'Unknown repair action' };
+  } catch (e) {
+    console.error('[R-ServiceX-DB] Chunk sequence repair failed:', e);
+    return { repaired: false, error: e.message };
+  }
+}
+
+async function clearSequences(db, downloadId) {
+  try {
+    const tx = db.transaction(STORE_SEQUENCES, 'readwrite');
+    const store = tx.objectStore(STORE_SEQUENCES);
+    const index = store.index('by_download_id');
+    const cursor = index.openCursor(IDBKeyRange.only(downloadId));
+    
+    let deletedCount = 0;
+    
+    await new Promise((resolve, reject) => {
+      cursor.onsuccess = (event) => {
+        const cur = event.target.result;
+        if (cur) {
+          cur.delete();
+          deletedCount++;
+          cur.continue();
+        } else {
+          resolve();
+        }
+      };
+      cursor.onerror = () => reject(cursor.error);
+    });
+
+    console.log(`[R-ServiceX-DB] Cleared ${deletedCount} sequences for download ${downloadId}`);
+  } catch (e) {
+    console.warn('[R-ServiceX-DB] Error clearing sequences:', e);
+  }
+}
+
 function humanBytes(n) {
   try {
     if (!n || !Number.isFinite(n)) return '0 B';
@@ -492,7 +713,7 @@ function openDB(){
           console.log(`[R-ServiceX-DB] Upgrading database from version ${oldVersion} to ${DB_VER}`);
           
           if (oldVersion > 0 && oldVersion < DB_VER) {
-            const storeNames = [STORE_META, STORE_CHUNKS, STORE_SESSIONS];
+            const storeNames = [STORE_META, STORE_CHUNKS, STORE_SESSIONS, STORE_SEQUENCES];
             for (const storeName of storeNames) {
               if (db.objectStoreNames.contains(storeName)) {
                 db.deleteObjectStore(storeName);
@@ -526,6 +747,14 @@ function openDB(){
             sessionsStore.createIndex('by_download_id', 'downloadId', { unique: false });
             sessionsStore.createIndex('by_last_update', 'lastUpdate', { unique: false });
             console.log(`[R-ServiceX-DB] Created enhanced store: ${STORE_SESSIONS}`);
+          }
+
+          if (!db.objectStoreNames.contains(STORE_SEQUENCES)) {
+            const sequencesStore = db.createObjectStore(STORE_SEQUENCES, { keyPath: 'id' });
+            sequencesStore.createIndex('by_download_id', 'downloadId', { unique: false });
+            sequencesStore.createIndex('by_timestamp', 'timestamp', { unique: false });
+            sequencesStore.createIndex('by_sequence_hash', 'sequenceHash', { unique: false });
+            console.log(`[R-ServiceX-DB] Created enhanced store: ${STORE_SEQUENCES}`);
           }
         } catch (e) {
           console.error(`[R-ServiceX-DB] Database upgrade error:`, e);
@@ -1130,7 +1359,7 @@ class BrowserBackgroundManager {
     try {
       this.setupEventListeners();
       this.initialized = true;
-      console.log('[R-ServiceX-DB] Enhanced Background Manager v1.6.0 initialized');
+      console.log('[R-ServiceX-DB] Enhanced Background Manager v1.7.0 initialized');
     } catch (e) {
       console.error('[R-ServiceX-DB] BrowserBackgroundManager initialization failed:', e);
     }
@@ -2163,8 +2392,37 @@ class DownloadTask {
       let m = await getMeta(this.db, this.id);
       if (m) {
         this.meta = m;
+        
+        // ENHANCED: Validate and fix metadata for resume
+        let metadataUpdated = false;
+        
         if (!this.meta.chunkSize || this.meta.chunkSize <= 0) {
           this.meta.chunkSize = this.chunkSize;
+          metadataUpdated = true;
+          console.log(`[R-ServiceX-DB] Fixed chunkSize: ${this.chunkSize}`);
+        }
+        
+        if (!this.meta.totalBytes || this.meta.totalBytes <= 0) {
+          console.warn(`[R-ServiceX-DB] Invalid totalBytes in existing metadata: ${this.meta.totalBytes}`);
+          try {
+            const head = await fetch(this.url, { method: 'HEAD', signal: AbortSignal.timeout(10000) });
+            if (head.ok) {
+              const contentLength = parseInt(head.headers.get('content-length') || '0', 10);
+              if (contentLength > 0) {
+                this.meta.totalBytes = contentLength;
+                metadataUpdated = true;
+                console.log(`[R-ServiceX-DB] Updated totalBytes from server: ${contentLength}`);
+              }
+            }
+          } catch (fetchError) {
+            console.warn(`[R-ServiceX-DB] Failed to fetch content-length:`, fetchError);
+          }
+        }
+        
+        if (this.meta.url !== this.url) {
+          console.log(`[R-ServiceX-DB] Updating URL in metadata: ${this.url}`);
+          this.meta.url = this.url;
+          metadataUpdated = true;
         }
         
         const starts = await listChunkStarts(this.db, this.id);
@@ -2174,7 +2432,19 @@ class DownloadTask {
         const set = new Set([...existingStarts, ...allStarts]);
         this.meta.completedStarts = Array.from(set).sort((a, b) => a - b);
         this.meta.version = VERSION;
-        await putMeta(this.db, this.meta);
+        
+        if (metadataUpdated || this.meta.version !== VERSION) {
+          await putMeta(this.db, this.meta);
+          console.log(`[R-ServiceX-DB] Updated metadata for resume compatibility`);
+        }
+        
+        // ENHANCED: Validate that we can resume with current data
+        if (this.meta.totalBytes <= 0) {
+          console.warn(`[R-ServiceX-DB] Cannot resume without valid totalBytes, clearing data`);
+          await this._completeCleanup();
+          throw new Error('Resume data invalid - starting fresh download');
+        }
+        
         return;
       }
 
@@ -2409,29 +2679,41 @@ class DownloadTask {
         timestamp: Date.now()
       }));
       
-      // ENHANCED: Multi-layered validation with detailed analysis
+      // ENHANCED: Multi-layered validation with sequence verification
       const validation = validateChunkSequence(
         chunkObjects,
         this.meta.totalBytes,
         this.meta.chunkSize
       );
+
+      // ENHANCED: Advanced sequence validation for bulletproof resuming
+      let sequenceValidation;
+      try {
+        sequenceValidation = await validateChunkSequence(this.db, this.id, chunkObjects, this.meta.totalBytes);
+      } catch (seqError) {
+        console.warn(`[R-ServiceX-DB] Sequence validation error:`, seqError);
+        sequenceValidation = { valid: false, reason: 'Sequence validation failed', error: seqError.message };
+      }
       
       console.log(`[R-ServiceX-DB] Validation result:`, {
-        valid: validation.valid,
-        reason: validation.reason,
-        chunksCount: validation.chunksCount,
+        basic: { valid: validation.valid, reason: validation.reason, chunksCount: validation.chunksCount },
+        sequence: { valid: sequenceValidation.valid, reason: sequenceValidation.reason },
         completionPercentage: validation.completionPercentage,
         validationTime: Date.now() - validationStart
       });
       
-      if (!validation.valid) {
-        console.warn(`[R-ServiceX-DB] Chunk validation failed: ${validation.reason}`);
+      // ENHANCED: Check both basic and sequence validation
+      if (!validation.valid || !sequenceValidation.valid) {
+        const failedValidation = !validation.valid ? validation : sequenceValidation;
+        console.warn(`[R-ServiceX-DB] Validation failed: ${failedValidation.reason}`);
         
         // ENHANCED: Attempt intelligent repair before clearing all data
-        if (validation.repairAction && validation.repairAction !== 'clear_all') {
-          console.log(`[R-ServiceX-DB] Attempting repair: ${validation.repairAction}`);
+        if (failedValidation.repairAction && failedValidation.repairAction !== 'clear_all') {
+          console.log(`[R-ServiceX-DB] Attempting repair: ${failedValidation.repairAction}`);
           
-          const repairResult = await repairChunkSequence(this.db, this.id, validation, this.meta);
+          const repairResult = !validation.valid ? 
+            await repairChunkSequence(this.db, this.id, validation, this.meta) :
+            await repairChunkSequence(this.db, this.id, sequenceValidation);
           
           if (repairResult.repaired) {
             console.log(`[R-ServiceX-DB] Repair successful: ${repairResult.action}`);
@@ -2446,6 +2728,7 @@ class DownloadTask {
         
         // Clear corrupted data and start fresh
         await deleteChunks(this.db, this.id);
+        await clearSequences(this.db, this.id);
         this.meta.completedStarts = [];
         this.meta.lastError = 'Chunk validation failed - starting fresh';
         this.meta.updatedAt = Date.now();
@@ -2456,10 +2739,11 @@ class DownloadTask {
           message: ERROR_MESSAGES.CHUNK_VALIDATION_FAILED,
           validationError: true,
           validationDetails: {
-            reason: validation.reason,
-            repairAttempted: validation.repairAction !== 'clear_all',
+            reason: failedValidation.reason,
+            repairAttempted: failedValidation.repairAction !== 'clear_all',
             totalChunks: chunkObjects.length,
-            corruptedAt: validation.corruptionInfo?.position
+            corruptedAt: failedValidation.corruptionInfo?.position || failedValidation.corruptedStart,
+            sequenceValidation: !sequenceValidation.valid
           }
         });
         
@@ -3105,7 +3389,7 @@ class DownloadTask {
   }
 }
 
-// ENHANCED: Global initialization with comprehensive error handling v1.6.0
+// ENHANCED: Global initialization with comprehensive error handling v1.7.0
 try {
   if (typeof window !== 'undefined') {
     if (!window.IDBDownloaderManager) {
@@ -3125,13 +3409,16 @@ try {
         validateChunkSequence,
         repairChunkSequence,
         calculateSimpleChecksum,
+        generateSequenceHash,
+        saveChunkSequence,
+        clearSequences,
         ERROR_MESSAGES,
         PROGRESS_MESSAGES,
         VERSION
       };
     }
 
-    console.log(`[R-ServiceX-DB] Enhanced Core module v${VERSION} loaded successfully with bulletproof chunk validation, enhanced resume capabilities, and maximum reliability`);
+    console.log(`[R-ServiceX-DB] Enhanced Core module v${VERSION} loaded successfully with advanced chunk sequencing, bulletproof validation, and maximum reliability`);
   }
 } catch (e) {
   console.error('[R-ServiceX-DB] Error initializing enhanced global instances:', e);

@@ -1,8 +1,8 @@
 /*
  * idb-downloader-dialog-enhanced.js
  * 
- * ENHANCED VERSION v1.6.0: Professional download dialog with bulletproof validation
- * All duplicate function errors fixed, complete feature implementation with enhanced UI
+ * ENHANCED VERSION v1.7.0: Professional download dialog with bulletproof validation
+ * Advanced completion animation, custom location dialog, and enhanced chunk sequencing
  */
 
 function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconName = 'file_download' } = {}) {
@@ -17,7 +17,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
       return (i === 0 ? v : v.toFixed(1)) + ' ' + units[i];
     },
-    VERSION: '1.6.0'
+    VERSION: '1.7.0'
   };
   
   const fmt = (typeof window.formatFileSize === 'function') ? window.formatFileSize : utils.humanBytes;
@@ -45,7 +45,12 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     location: `dl_location_${tag}`,
     settings: `dl_settings_${tag}`,
     readyMessage: `dl_ready_${tag}`,
-    quotaMessage: `dl_quota_${tag}`
+    quotaMessage: `dl_quota_${tag}`,
+    locationDialog: `location_dialog_${tag}`,
+    locationClose: `location_close_${tag}`,
+    locationPath: `location_path_${tag}`,
+    locationOptionDefault: `location_option_default_${tag}`,
+    locationOptionCustom: `location_option_custom_${tag}`
   };
 
   const html = `
@@ -90,83 +95,82 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   100% { filter: blur(0px); transform: scale(1); }
 }
 
-/* ENHANCED: Bold Tick and Green Sphere Completion Animation v1.6.0 */
-@keyframes boldTickEntry {
+/* ENHANCED: Professional Completion Animation v1.7.0 */
+@keyframes materialTickDraw {
   0% {
-    transform: scale(0) rotate(-180deg);
-    opacity: 0;
     stroke-dasharray: 0, 100;
+    stroke-dashoffset: 0;
+    opacity: 0;
+    transform: scale(0.8);
   }
-  50% {
-    transform: scale(0.8) rotate(-90deg);
+  40% {
+    stroke-dasharray: 100, 100;
+    stroke-dashoffset: 0;
     opacity: 0.7;
-    stroke-dasharray: 50, 100;
+    transform: scale(0.95);
   }
   100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
     stroke-dasharray: 100, 100;
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-@keyframes greenSphereGrow {
+@keyframes materialSphereEntry {
   0% {
     transform: scale(0);
     opacity: 0;
-    background: #cccccc;
-    border-color: #aaaaaa;
+    background: radial-gradient(circle at 30% 30%, #e8f5e9, #c8e6c9);
+    box-shadow: none;
   }
-  30% {
-    transform: scale(0.6);
-    opacity: 0.5;
-    background: #81c784;
-    border-color: #66bb6a;
+  20% {
+    transform: scale(0.4);
+    opacity: 0.6;
+    background: radial-gradient(circle at 30% 30%, #a5d6a7, #81c784);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
   }
   60% {
-    transform: scale(1.15);
-    opacity: 0.8;
-    background: #4caf50;
-    border-color: #43a047;
+    transform: scale(1.1);
+    opacity: 0.9;
+    background: radial-gradient(circle at 30% 30%, #66bb6a, #4caf50);
+    box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
   }
   100% {
     transform: scale(1);
     opacity: 1;
-    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
-    border-color: #81c784;
+    background: radial-gradient(circle at 30% 30%, #4caf50, #2e7d32);
+    box-shadow: 0 12px 32px rgba(46, 125, 50, 0.5);
   }
 }
 
-@keyframes rippleWave {
+@keyframes materialRipple {
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.8);
-  }
-  25% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 15px rgba(76, 175, 80, 0.6);
+    box-shadow: 
+      0 0 0 0 rgba(76, 175, 80, 0.6),
+      0 12px 32px rgba(46, 125, 50, 0.5);
   }
   50% {
-    transform: scale(1.1);
-    box-shadow: 0 0 0 30px rgba(76, 175, 80, 0.4);
-  }
-  75% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 45px rgba(76, 175, 80, 0.2);
+    transform: scale(1.02);
+    box-shadow: 
+      0 0 0 20px rgba(76, 175, 80, 0.0),
+      0 16px 40px rgba(46, 125, 50, 0.3);
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 60px rgba(76, 175, 80, 0);
+    box-shadow: 
+      0 0 0 40px rgba(76, 175, 80, 0.0),
+      0 12px 32px rgba(46, 125, 50, 0.5);
   }
 }
 
-@keyframes borderPulse {
+@keyframes materialGlow {
   0%, 100% {
-    border-color: #81c784;
-    box-shadow: 0 0 20px rgba(129, 199, 132, 0.4);
+    filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.4));
   }
   50% {
-    border-color: #4caf50;
-    box-shadow: 0 0 40px rgba(76, 175, 80, 0.6);
+    filter: drop-shadow(0 0 16px rgba(76, 175, 80, 0.7));
   }
 }
 
@@ -308,11 +312,19 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   font-family: var(--dl-font);
 }
 
-.setting-select{
-  width: 88px;
-  text-align: left;
-  padding-left: 10px;
-}
+  .setting-select{
+    width: 88px;
+    text-align: left;
+    padding-left: 10px;
+    cursor: pointer;
+  }
+
+  .setting-select.custom-location {
+    background: rgba(100,181,246,0.08);
+    border-color: var(--dl-primary);
+    color: var(--dl-accent);
+    font-weight: 600;
+  }
 
 .setting-input:focus, .setting-select:focus{
   outline: none;
@@ -395,22 +407,22 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   color: var(--dl-primary);
 }
 
-.metrics-card{
-  display: none;
-  margin: 4px auto;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: var(--dl-meta-bg);
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--dl-text-primary);
-  min-width: 180px;
-  max-width: 280px;
-  line-height: 1.2;
-  transition: all 0.3s ease;
-  position: relative;
-  border: 1px solid rgba(173, 216, 230, 0.2);
-}
+  .metrics-card{
+    display: none;
+    margin: 6px auto;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: var(--dl-meta-bg);
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--dl-text-primary);
+    min-width: 220px;
+    max-width: 320px;
+    line-height: 1.25;
+    transition: all 0.3s ease;
+    position: relative;
+    border: 1px solid rgba(173, 216, 230, 0.2);
+  }
 
 .metrics-card.visible{
   display: inline-block;
@@ -422,15 +434,15 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   animation: premiumFadeOut 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-.buttons-row{
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  align-items: center;
-  margin-top: 12px;
-  flex-wrap: wrap;
-  animation: premiumFadeIn 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 500ms both;
-}
+  .buttons-row{
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    animation: premiumFadeIn 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 500ms both;
+  }
 
 .glassy-btn{
   border: none;
@@ -527,60 +539,73 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   box-shadow: 0 6px 20px rgba(244,67,54,0.25);
 }
 
-/* ENHANCED: Bold Tick and Green Sphere Completion Animation */
+/* ENHANCED: Professional Material Design Completion Animation */
 .completion-container{
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
-  padding: 45px 24px;
-  background: linear-gradient(135deg, 
-    rgba(129,199,132,0.08) 0%, 
-    rgba(102,187,106,0.12) 25%, 
-    rgba(76,175,80,0.18) 50%, 
-    rgba(67,160,71,0.12) 75%, 
-    rgba(56,142,60,0.08) 100%);
+  gap: 32px;
+  padding: 50px 28px;
+  background: linear-gradient(145deg, 
+    rgba(232,245,233,0.95) 0%, 
+    rgba(200,230,201,0.85) 25%, 
+    rgba(165,214,167,0.75) 50%, 
+    rgba(129,199,132,0.85) 75%, 
+    rgba(102,187,106,0.95) 100%);
   border-radius: var(--dl-border-radius);
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(129,199,132,0.2);
+  border: 2px solid rgba(76,175,80,0.3);
+  box-shadow: 
+    0 8px 32px rgba(76, 175, 80, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .completion-sphere{
-  width: 130px;
-  height: 130px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
-  border: 4px solid #81c784;
+  background: radial-gradient(circle at 30% 30%, #4caf50, #2e7d32);
+  border: 3px solid rgba(76,175,80,0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   animation: 
-    greenSphereGrow 1100ms cubic-bezier(0.68, -0.55, 0.265, 1.55) both,
-    rippleWave 2.5s ease-out 1300ms infinite,
-    borderPulse 3.5s ease-in-out 1600ms infinite;
-  box-shadow: 
-    0 12px 40px rgba(76, 175, 80, 0.35),
-    inset 0 4px 16px rgba(255, 255, 255, 0.25);
+    materialSphereEntry 1200ms cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    materialRipple 3s ease-in-out 1400ms infinite,
+    materialGlow 2s ease-in-out 1600ms infinite;
+  box-shadow: 0 12px 32px rgba(46, 125, 50, 0.5);
+}
+
+.completion-sphere::before {
+  content: '';
+  position: absolute;
+  top: 10%;
+  left: 15%;
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
+  filter: blur(1px);
 }
 
 .completion-tick{
-  width: 65px;
-  height: 65px;
+  width: 70px;
+  height: 70px;
   position: relative;
-  animation: boldTickEntry 900ms cubic-bezier(0.68, -0.55, 0.265, 1.55) 700ms both;
+  animation: materialTickDraw 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 800ms both;
 }
 
 .completion-tick svg {
   width: 100%;
   height: 100%;
-  stroke: white;
-  stroke-width: 7;
+  stroke: #ffffff;
+  stroke-width: 8;
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
 .completion-message{
@@ -682,15 +707,132 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   margin: 24px 0 18px 0;
 }
 
-.final-note{
-  font-size: 0.8rem;
-  color: var(--dl-text-primary);
-  text-align: center;
-  line-height: 1.55;
-  padding-bottom: 8px;
-  opacity: 0.8;
-  font-weight: 400;
-}
+  .final-note{
+    font-size: 0.8rem;
+    color: var(--dl-text-primary);
+    text-align: center;
+    line-height: 1.55;
+    padding-bottom: 8px;
+    opacity: 0.8;
+    font-weight: 400;
+  }
+
+  /* Location Selection Dialog */
+  .location-dialog-overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: premiumFadeIn 300ms ease both;
+  }
+
+  .location-dialog-overlay.visible{
+    display: flex;
+  }
+
+  .location-dialog{
+    background: rgba(255,255,255,0.98);
+    border-radius: var(--dl-border-radius);
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+    animation: premiumFadeIn 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    border: 2px solid rgba(100,181,246,0.2);
+  }
+
+  .location-dialog-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .location-dialog-title{
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dl-text-primary);
+    margin: 0;
+  }
+
+  .location-dialog-close{
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--dl-text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+
+  .location-dialog-close:hover{
+    background: rgba(0,0,0,0.1);
+    color: var(--dl-text-primary);
+  }
+
+  .location-option{
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255,255,255,0.5);
+  }
+
+  .location-option:hover{
+    border-color: var(--dl-primary);
+    background: rgba(100,181,246,0.05);
+  }
+
+  .location-option.selected{
+    border-color: var(--dl-primary);
+    background: rgba(100,181,246,0.1);
+  }
+
+  .location-option-icon{
+    font-size: 24px;
+    margin-right: 12px;
+    color: var(--dl-primary);
+  }
+
+  .location-option-content{
+    flex: 1;
+  }
+
+  .location-option-title{
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--dl-text-primary);
+    margin: 0 0 4px 0;
+  }
+
+  .location-option-desc{
+    font-size: 0.8rem;
+    color: var(--dl-text-secondary);
+    margin: 0;
+    opacity: 0.9;
+  }
+
+  .location-selected-path{
+    background: rgba(100,181,246,0.08);
+    border: 1px solid rgba(100,181,246,0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--dl-accent);
+    font-weight: 500;
+  }
 
 @media (max-width: 600px){
   .download-card{
@@ -743,16 +885,16 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     width: 55px;
     height: 55px;
   }
-  .metrics-card{
-    font-size: 0.68rem;
-    padding: 6px 10px;
-    max-width: 260px;
-    min-width: 160px;
-  }
+      .metrics-card{
+      font-size: 0.64rem;
+      padding: 10px 12px;
+      max-width: 280px;
+      min-width: 180px;
+    }
 }
 </style>
 
-  <div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.6.0">
+  <div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.7.0">
   <div class="file-metadata" id="${IDS.meta}">
     <i class="mdui-icon material-icons-outlined main-icon" id="${IDS.icon}">${iconName}</i>
     <div class="meta-name" id="${IDS.fname}">${fileName || 'File'}</div>
@@ -770,14 +912,18 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     </div>
     <div class="setting-group">
       <label class="setting-label">Location</label>
-      <select class="setting-select" id="${IDS.location}">
-        <option value="default">Browser</option>
-        <option value="custom">Custom</option>
-      </select>
+      <button class="setting-select" id="${IDS.location}" data-location="default">
+        Browser
+      </button>
     </div>
   </div>
 
   <div class="main-block" id="${IDS.main}">
+    <div class="ready-message hidden" id="${IDS.readyMessage}">
+      <i class="mdui-icon material-icons-outlined">info</i>
+      <span>Click Start to begin secure parallel download with automatic resume capability</span>
+    </div>
+
     <div class="quota-message hidden" id="${IDS.quotaMessage}">
       <span>Checking available storage space</span>
     </div>
@@ -823,8 +969,37 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   <div class="divider"></div>
 
   <div class="final-note">
-    Secure parallel downloading with automatic resume capability v1.6.0. 
+    Secure parallel downloading with automatic resume capability v1.7.0. 
     Downloads continue when browser is in background with dialog open.
+  </div>
+</div>
+
+<!-- Location Selection Dialog -->
+<div class="location-dialog-overlay" id="location_dialog_${tag}">
+  <div class="location-dialog">
+    <div class="location-dialog-header">
+      <h3 class="location-dialog-title">Choose Download Location</h3>
+      <button class="location-dialog-close" id="location_close_${tag}">×</button>
+    </div>
+    
+    <div class="location-option" data-location="default" id="location_option_default_${tag}">
+      <i class="mdui-icon material-icons-outlined location-option-icon">folder</i>
+      <div class="location-option-content">
+        <div class="location-option-title">Browser Default</div>
+        <div class="location-option-desc">Use your browser's default download folder</div>
+      </div>
+    </div>
+    
+    <div class="location-option" data-location="custom" id="location_option_custom_${tag}">
+      <i class="mdui-icon material-icons-outlined location-option-icon">create_new_folder</i>
+      <div class="location-option-content">
+        <div class="location-option-title">Custom Location</div>
+        <div class="location-option-desc">Choose a specific folder on your device</div>
+        <div class="location-selected-path" id="location_path_${tag}" style="display: none;">
+          No folder selected
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 `;
@@ -931,7 +1106,12 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         location: byId(IDS.location),
         settings: byId(IDS.settings),
         readyMessage: byId(IDS.readyMessage),
-        quotaMessage: byId(IDS.quotaMessage)
+        quotaMessage: byId(IDS.quotaMessage),
+        locationDialog: byId(IDS.locationDialog),
+        locationClose: byId(IDS.locationClose),
+        locationPath: byId(IDS.locationPath),
+        locationOptionDefault: byId(IDS.locationOptionDefault),
+        locationOptionCustom: byId(IDS.locationOptionCustom)
       };
 
       if (!nodes.action) { 
@@ -968,6 +1148,11 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       let pauseClickTimeout = null;
       let persistentDownloadMessage = null;
       let actualDownloadStarted = false;
+      
+      // Location dialog state
+      let selectedLocation = 'default';
+      let customDirectoryHandle = null;
+      let customDirectoryPath = '';
 
       const setProgressIndeterminate = (indeterminate) => {
         try {
@@ -1009,9 +1194,10 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
+      // ENHANCED: Smart ready message - only show for fresh downloads
       const showReadyMessage = () => {
         try {
-          if (nodes.readyMessage) {
+          if (nodes.readyMessage && !meta?.completedStarts?.length) {
             nodes.readyMessage.classList.remove('hidden');
           }
         } catch (e) {
@@ -1039,6 +1225,165 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
           }
         } catch (e) {
           console.warn('[R-ServiceX-Downloader] Error showing quota message:', e);
+        }
+      };
+
+      // ENHANCED: Location dialog management
+      const showLocationDialog = () => {
+        try {
+          if (!window.showDirectoryPicker && !window.showSaveFilePicker) {
+            alert('Custom location selection requires a modern browser like Chrome or Edge.');
+            return;
+          }
+          
+          if (nodes.locationDialog) {
+            nodes.locationDialog.classList.add('visible');
+            updateLocationSelection();
+          }
+        } catch (e) {
+          console.warn('[R-ServiceX-Downloader] Error showing location dialog:', e);
+        }
+      };
+
+      const hideLocationDialog = () => {
+        try {
+          if (nodes.locationDialog) {
+            nodes.locationDialog.classList.remove('visible');
+          }
+        } catch (e) {
+          console.warn('[R-ServiceX-Downloader] Error hiding location dialog:', e);
+        }
+      };
+
+      const updateLocationSelection = () => {
+        try {
+          // Clear all selections
+          [nodes.locationOptionDefault, nodes.locationOptionCustom].forEach(option => {
+            if (option) option.classList.remove('selected');
+          });
+
+          // Select current option
+          if (selectedLocation === 'default' && nodes.locationOptionDefault) {
+            nodes.locationOptionDefault.classList.add('selected');
+          } else if (selectedLocation === 'custom' && nodes.locationOptionCustom) {
+            nodes.locationOptionCustom.classList.add('selected');
+          }
+
+          // Show/hide custom path
+          if (nodes.locationPath) {
+            if (selectedLocation === 'custom' && customDirectoryPath) {
+              nodes.locationPath.style.display = 'block';
+              nodes.locationPath.textContent = customDirectoryPath;
+            } else {
+              nodes.locationPath.style.display = 'none';
+            }
+          }
+        } catch (e) {
+          console.warn('[R-ServiceX-Downloader] Error updating location selection:', e);
+        }
+      };
+
+      const updateLocationButton = () => {
+        try {
+          if (!nodes.location) return;
+
+          // Check if File Access API is available
+          const fileAccessSupported = window.showDirectoryPicker || window.showSaveFilePicker;
+          
+          if (!fileAccessSupported) {
+            nodes.location.textContent = 'Browser Only';
+            nodes.location.disabled = true;
+            nodes.location.style.opacity = '0.6';
+            nodes.location.style.cursor = 'not-allowed';
+            return;
+          }
+
+          if (selectedLocation === 'custom' && customDirectoryPath) {
+            nodes.location.textContent = 'Custom';
+            nodes.location.classList.add('custom-location');
+            nodes.location.setAttribute('data-location', 'custom');
+          } else {
+            nodes.location.textContent = 'Browser';
+            nodes.location.classList.remove('custom-location');
+            nodes.location.setAttribute('data-location', 'default');
+            selectedLocation = 'default'; // Fallback to default if custom not available
+          }
+          
+          nodes.location.disabled = false;
+          nodes.location.style.opacity = '1';
+          nodes.location.style.cursor = 'pointer';
+        } catch (e) {
+          console.warn('[R-ServiceX-Downloader] Error updating location button:', e);
+        }
+      };
+
+      const selectCustomLocation = async () => {
+        try {
+          if (!window.showDirectoryPicker) {
+            alert('Custom location selection is not supported in this browser. Please use Chrome or Edge.');
+            return;
+          }
+
+          const directoryHandle = await window.showDirectoryPicker({
+            mode: 'readwrite'
+          });
+
+          if (directoryHandle) {
+            customDirectoryHandle = directoryHandle;
+            customDirectoryPath = directoryHandle.name;
+            selectedLocation = 'custom';
+            
+            log(`Custom directory selected: ${customDirectoryPath}`);
+            updateLocationSelection();
+            updateLocationButton();
+            hideLocationDialog();
+          }
+        } catch (error) {
+          if (error.name !== 'AbortError') {
+            console.warn('[R-ServiceX-Downloader] Error selecting custom location:', error);
+            alert('Failed to select custom location. Please try again.');
+          }
+        }
+      };
+
+      // ENHANCED: Real-time file save progress helper
+      const saveFileWithProgress = async (writable, blob, progressCallback) => {
+        try {
+          // ENHANCED: Real-time progress for file saving
+          if (blob.size > 5 * 1024 * 1024) { // 5MB+
+            const chunkSize = Math.max(1024 * 512, Math.min(1024 * 1024 * 2, blob.size / 50)); // Dynamic chunk size
+            const totalChunks = Math.ceil(blob.size / chunkSize);
+            
+            progressCallback('Writing file to storage', 10);
+            
+            for (let i = 0; i < totalChunks; i++) {
+              const start = i * chunkSize;
+              const end = Math.min(start + chunkSize, blob.size);
+              const chunk = blob.slice(start, end);
+              
+              await writable.write(chunk);
+              
+              const baseProgress = 10;
+              const writeProgress = ((i + 1) / totalChunks) * 80;
+              const totalProgress = baseProgress + writeProgress;
+              
+              progressCallback(`Writing file to storage (${Math.round(writeProgress)}%)`, totalProgress);
+              setStatusText(`Saving file to device (${Math.round(writeProgress)}%)`);
+              
+              // Allow UI to update with proper throttling
+              if (i % 5 === 0 || i === totalChunks - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1));
+              }
+            }
+          } else {
+            progressCallback('Writing file to storage', 50);
+            await writable.write(blob);
+          }
+          
+          progressCallback('Finalizing file save', 95);
+          await writable.close();
+        } catch (e) {
+          throw e;
         }
       };
 
@@ -1366,22 +1711,28 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         try {
           const concurrencyInput = nodes.conc;
           const chunkInput = nodes.chunk;
-          const locationInput = nodes.location;
 
           const concurrency = concurrencyInput ? 
             Math.max(1, Math.min(12, parseInt(concurrencyInput.value || '4', 10) || 4)) : 4;
           const chunkKB = chunkInput ? 
             Math.max(64, Math.min(4096, parseInt(chunkInput.value || '1024', 10) || 1024)) : 1024;
-          const customLocation = locationInput ? locationInput.value === 'custom' : false;
 
           return { 
             concurrency, 
             chunkSize: chunkKB * 1024,
-            useCustomLocation: customLocation
+            useCustomLocation: selectedLocation === 'custom' && customDirectoryHandle,
+            customDirectoryHandle: customDirectoryHandle,
+            locationMode: selectedLocation
           };
         } catch (e) {
           console.warn('[R-ServiceX-Downloader] Error reading download options:', e);
-          return { concurrency: 4, chunkSize: 1024 * 1024, useCustomLocation: false };
+          return { 
+            concurrency: 4, 
+            chunkSize: 1024 * 1024, 
+            useCustomLocation: false,
+            customDirectoryHandle: null,
+            locationMode: 'default'
+          };
         }
       };
 
@@ -1484,10 +1835,12 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
           const isValidationError = String(message || '').toLowerCase().includes('invalid settings') || 
                                   String(message || '').toLowerCase().includes('correct the invalid') ||
-                                  String(message || '').toLowerCase().includes('download settings are outside allowed limits');
+                                  String(message || '').toLowerCase().includes('download settings are outside allowed limits') ||
+                                  String(message || '').toLowerCase().includes('threads') ||
+                                  String(message || '').toLowerCase().includes('chunk');
           
-          // ENHANCED: Only hide settings if download has actually started, not on validation errors
-          if (!isValidationError && actualDownloadStarted && hasStarted) {
+          // ENHANCED: Never hide settings for validation errors, only hide when download actually starts
+          if (!isValidationError && actualDownloadStarted && hasStarted && !pauseInProgress) {
             hideSettings();
           }
 
@@ -1495,8 +1848,10 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
           
           if (isValidationError) {
             safeMessage = utils.ERROR_MESSAGES?.INVALID_SETTINGS || safeMessage;
-            // For validation errors, ensure settings remain visible
+            // For validation errors, ALWAYS ensure settings remain visible and accessible
             showSettings();
+            // Reset any download states that might hide settings
+            actualDownloadStarted = false;
           }
           
           nodes.errorArea.innerHTML = `
@@ -1617,7 +1972,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       };
 
       // ENHANCED: Advanced blob download with real-time save progress and custom location support
-      const downloadBlobWithRealFilename = (blob, filename, useCustomLocation = false) => {
+      const downloadBlobWithRealFilename = (blob, filename, useCustomLocation = false, directoryHandle = null) => {
         return new Promise((resolve, reject) => {
           try {
             if (!blob || !filename) {
@@ -1662,7 +2017,23 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
               }
             };
 
-            if ((window.showSaveFilePicker && useCustomLocation) || window.showSaveFilePicker) {
+            // ENHANCED: Handle custom directory or file picker
+            if (useCustomLocation && directoryHandle) {
+              // Save to custom directory
+              try {
+                showSaveProgress('Creating file in custom location', 5);
+                const fileHandle = await directoryHandle.getFileHandle(cleanFilename, { create: true });
+                const writable = await fileHandle.createWritable();
+                
+                await saveFileWithProgress(writable, blob, showSaveProgress);
+                hideSaveProgress();
+                resolve('success');
+              } catch (directoryError) {
+                console.warn('[R-ServiceX-Downloader] Custom directory save failed:', directoryError);
+                // Fallback to regular file picker
+                downloadBlobMethod2();
+              }
+            } else if (window.showSaveFilePicker) {
               const fileExtension = cleanFilename.includes('.') ? 
                 cleanFilename.split('.').pop().toLowerCase() : 'bin';
               
@@ -1677,40 +2048,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
                 setStatusText('Saving file to device');
                 
                 const writable = await handle.createWritable();
-                
-                // ENHANCED: Real-time progress for file saving
-                if (blob.size > 5 * 1024 * 1024) { // 5MB+
-                  const chunkSize = Math.max(1024 * 512, Math.min(1024 * 1024 * 2, blob.size / 50)); // Dynamic chunk size
-                  const totalChunks = Math.ceil(blob.size / chunkSize);
-                  
-                  showSaveProgress('Writing file to storage', 10);
-                  
-                  for (let i = 0; i < totalChunks; i++) {
-                    const start = i * chunkSize;
-                    const end = Math.min(start + chunkSize, blob.size);
-                    const chunk = blob.slice(start, end);
-                    
-                    await writable.write(chunk);
-                    
-                    const baseProgress = 10;
-                    const writeProgress = ((i + 1) / totalChunks) * 80;
-                    const totalProgress = baseProgress + writeProgress;
-                    
-                    showSaveProgress(`Writing file to storage (${Math.round(writeProgress)}%)`, totalProgress);
-                    setStatusText(`Saving file to device (${Math.round(writeProgress)}%)`);
-                    
-                    // Allow UI to update with proper throttling
-                    if (i % 5 === 0 || i === totalChunks - 1) {
-                      await new Promise(resolve => setTimeout(resolve, 1));
-                    }
-                  }
-                } else {
-                  showSaveProgress('Writing file to storage', 50);
-                  await writable.write(blob);
-                }
-                
-                showSaveProgress('Finalizing file save', 95);
-                await writable.close();
+                await saveFileWithProgress(writable, blob, showSaveProgress);
                 showSaveProgress('File saved successfully', 100);
                 
                 log(`File saved via File System Access API: ${cleanFilename}`);
@@ -1968,8 +2306,8 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
               if (blob && finalFileName) {
                 try {
-                  const { useCustomLocation } = readDownloadOptions();
-                  await downloadBlobWithRealFilename(blob, finalFileName, useCustomLocation);
+                  const { useCustomLocation, customDirectoryHandle } = readDownloadOptions();
+                  await downloadBlobWithRealFilename(blob, finalFileName, useCustomLocation, customDirectoryHandle);
                   log(`File successfully downloaded with name: ${finalFileName}, custom location: ${useCustomLocation}`);
                 } catch (downloadError) {
                   log('Enhanced download failed, trying simple method:', downloadError);
@@ -2446,8 +2784,51 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
             nodes.chunk.addEventListener('input', validateSettings);
             nodes.chunk.addEventListener('blur', validateSettings);
           }
+          // Location dialog event listeners
           if (nodes.location) {
-            nodes.location.addEventListener('change', validateSettings);
+            nodes.location.addEventListener('click', (event) => {
+              try {
+                event.preventDefault();
+                showLocationDialog();
+              } catch (e) {
+                console.warn('[R-ServiceX-Downloader] Error in location button click:', e);
+              }
+            });
+          }
+
+          if (nodes.locationClose) {
+            nodes.locationClose.addEventListener('click', hideLocationDialog);
+          }
+
+          if (nodes.locationOptionDefault) {
+            nodes.locationOptionDefault.addEventListener('click', () => {
+              try {
+                selectedLocation = 'default';
+                customDirectoryHandle = null;
+                customDirectoryPath = '';
+                updateLocationButton();
+                hideLocationDialog();
+              } catch (e) {
+                console.warn('[R-ServiceX-Downloader] Error selecting default location:', e);
+              }
+            });
+          }
+
+          if (nodes.locationOptionCustom) {
+            nodes.locationOptionCustom.addEventListener('click', selectCustomLocation);
+          }
+
+          // Close dialog when clicking overlay
+          if (nodes.locationDialog) {
+            nodes.locationDialog.addEventListener('click', (event) => {
+              try {
+                if (event.target === nodes.locationDialog) {
+                  hideLocationDialog();
+                }
+              } catch (e) {
+                console.warn('[R-ServiceX-Downloader] Error in dialog overlay click:', e);
+              }
+            });
           }
         } catch (e) {
           console.error('[R-ServiceX-Downloader] Error setting up event listeners:', e);
@@ -2464,6 +2845,9 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
       // Don't show ready message initially - will be shown if no resume data
       hideReadyMessage();
+
+      // Initialize location button
+      updateLocationButton();
 
       // Enable buttons after validation - ensure they start enabled
       setTimeout(() => {
@@ -2655,5 +3039,5 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = { openIDBDownloaderDialog };
 } else if (typeof window !== 'undefined') {
   window.openIDBDownloaderDialog = openIDBDownloaderDialog;
-      console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.6.0 loaded successfully');
+      console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.7.0 loaded successfully');
 }
