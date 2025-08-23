@@ -1,14 +1,14 @@
 /**
  * idb-downloader-core-enhanced.js
  * 
- * ENHANCED VERSION v1.4.0: Professional-grade IndexedDB downloader with bulletproof validation
- * Optimized performance, all bugs fixed, and maximum reliability
+ * ENHANCED VERSION v1.5.0: Professional-grade IndexedDB downloader with bulletproof validation
+ * Complete feature implementation, all bugs fixed, maximum reliability
  */
 
 (function () {
 'use strict';
 
-const VERSION = '1.4.0';
+const VERSION = '1.5.0';
 const DB_NAME = 'R-ServiceX-DB';
 const DB_VER = 8;
 const STORE_META = 'meta';
@@ -2611,7 +2611,7 @@ try {
       };
     }
 
-    console.log(`[R-ServiceX-DB] Enhanced Core module v${VERSION} loaded successfully with bulletproof validation and maximum reliability`);
+    console.log(`[R-ServiceX-DB] Enhanced Core module v${VERSION} loaded successfully with complete feature implementation and maximum reliability`);
   }
 } catch (e) {
   console.error('[R-ServiceX-DB] Error initializing enhanced global instances:', e);

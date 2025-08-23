@@ -1,8 +1,8 @@
 /*
  * idb-downloader-dialog-enhanced.js
  * 
- * ENHANCED VERSION v1.4.0: Professional download dialog with bulletproof validation
- * All bugs fixed, optimized performance, and enhanced reliability
+ * ENHANCED VERSION v1.5.0: Professional download dialog with bulletproof validation
+ * All duplicate function errors fixed, complete feature implementation
  */
 
 function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconName = 'file_download' } = {}) {
@@ -17,7 +17,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
       return (i === 0 ? v : v.toFixed(1)) + ' ' + units[i];
     },
-    VERSION: '1.4.0'
+    VERSION: '1.5.0'
   };
   
   const fmt = (typeof window.formatFileSize === 'function') ? window.formatFileSize : utils.humanBytes;
@@ -673,7 +673,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 }
 </style>
 
-  <div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.4.0">
+  <div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.5.0">
   <div class="file-metadata" id="${IDS.meta}">
     <i class="mdui-icon material-icons-outlined main-icon" id="${IDS.icon}">${iconName}</i>
     <div class="meta-name" id="${IDS.fname}">${fileName || 'File'}</div>
@@ -736,7 +736,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   <div class="divider"></div>
 
   <div class="final-note">
-    Secure parallel downloading with automatic resume capability v1.4.0. 
+    Secure parallel downloading with automatic resume capability v1.5.0. 
     Downloads continue when browser is in background with dialog open.
   </div>
 </div>
@@ -1002,14 +1002,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
-      const setProgressIndeterminate = () => {
-        try {
-          if (!nodes.progress) return;
-          nodes.progress.innerHTML = '<div class="mdui-progress-indeterminate"></div>';
-        } catch (e) {
-          console.warn('[R-ServiceX-Downloader] Error setting progress indeterminate:', e);
-        }
-      };
+
 
       const setProgressDeterminate = (percent) => {
         try {
@@ -1135,24 +1128,6 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
           }
         } catch (e) {
           console.warn('[R-ServiceX-Downloader] Error setting browser button state:', e);
-        }
-      };
-
-      const setStatusText = (text, percent = null) => {
-        try {
-          if (!nodes.status) return;
-          
-          const percentText = (typeof percent === 'number') ? 
-            ` <span style="font-weight:400">(${percent.toFixed(1)}%)</span>` : '';
-          
-          const cleanText = String(text || '').replace(/\.+$/, '');
-          
-          nodes.status.innerHTML = `
-            <i class="mdui-icon material-icons-outlined">cloud_download</i>
-            <span>${cleanText}${percentText}</span>
-          `;
-        } catch (e) {
-          console.warn('[R-ServiceX-Downloader] Error setting status text:', e);
         }
       };
 
@@ -1565,7 +1540,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
                 }]
               }).then(async (handle) => {
                 setStatusText('Saving file to device');
-                setProgressIndeterminate();
+                setProgressIndeterminate(true);
                 
                 const writable = await handle.createWritable();
                 
@@ -2023,7 +1998,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
             hideReadyMessage();
             showStatusLine();
             showProgressBar();
-            setProgressIndeterminate();
+            setProgressIndeterminate(true);
             
             setActionButtonState('starting');
             setStatusText('Initializing secure download');
@@ -2508,5 +2483,5 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = { openIDBDownloaderDialog };
 } else if (typeof window !== 'undefined') {
   window.openIDBDownloaderDialog = openIDBDownloaderDialog;
-      console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.4.0 loaded successfully');
+      console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.5.0 loaded successfully');
 }

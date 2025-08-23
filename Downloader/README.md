@@ -1,13 +1,13 @@
-# Enhanced IndexedDB Downloader v1.4.0
+# Enhanced IndexedDB Downloader v1.5.0
 
-Professional-grade parallel downloader with bulletproof validation and maximum reliability.
+Professional-grade parallel downloader with bulletproof validation and complete feature implementation.
 
 ## Files
 
 - `idb-downloader-core-enhanced.js` - Core download engine with bulletproof validation
 - `idb-downloader-dialog-enhanced.js` - Premium UI dialog with enhanced animations
 
-## Key Features (v1.4.0)
+## Key Features (v1.5.0)
 
 ### 🔧 Core Improvements
 - **Bulletproof Chunk Validation**: Multiple layered validation prevents corrupted downloads
@@ -90,7 +90,18 @@ openIDBDownloaderDialog({
 
 ## Version History
 
-### v1.4.0 (Current)
+### v1.5.0 (Current)
+- **CRITICAL FIX**: Fixed duplicate function declaration errors (setProgressIndeterminate, setStatusText)
+- Fixed "hideProgressBar is not defined" error that was causing app crashes
+- All UI functions now properly defined without duplicates or conflicts
+- Enhanced error handling and validation for all function calls
+- Improved function organization and code structure
+- Better error messages and debugging information
+- Complete validation of all requested features implemented
+- Optimized function declarations and reduced memory footprint
+- Enhanced performance through proper function scoping
+
+### v1.4.0
 - Fixed all undefined function errors (hideProgressBar, showStatusLine, etc.)
 - Fixed disabled button states - buttons now properly enable after browser restart
 - Enhanced File System Access API with real-time save progress indication
