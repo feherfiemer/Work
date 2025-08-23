@@ -1,0 +1,38 @@
+{
+  "name": "enhanced-idb-downloader",
+  "version": "1.0.0",
+  "description": "Professional-grade IndexedDB parallel downloader with comprehensive improvements",
+  "main": "idb-downloader-core-enhanced.js",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "download",
+    "indexeddb",
+    "parallel",
+    "resume",
+    "browser",
+    "javascript",
+    "file-management"
+  ],
+  "author": "Enhanced IDB Downloader Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/enhanced-idb-downloader/main.git"
+  },
+  "files": [
+    "idb-downloader-core-enhanced.js",
+    "idb-downloader-dialog-enhanced.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "Chrome >= 86",
+    "Firefox >= 78",
+    "Safari >= 14",
+    "Edge >= 86"
+  ]
+}
