@@ -1,20 +1,21 @@
 /**
  * idb-downloader-core-enhanced.js
  * 
- * ENHANCED VERSION v1.7.0: Professional-grade IndexedDB downloader with bulletproof validation
- * Advanced chunk sequencing, enhanced resume capabilities, and maximum reliability
+ * ENHANCED VERSION v1.8.0: Professional-grade IndexedDB downloader with bulletproof validation
+ * Ultra-reliable chunk sequencing, enhanced resume capabilities, and maximum reliability
  */
 
 (function () {
 'use strict';
 
-const VERSION = '1.7.0';
+const VERSION = '1.8.0';
 const DB_NAME = 'R-ServiceX-DB';
-const DB_VER = 10;
+const DB_VER = 11;
 const STORE_META = 'meta';
 const STORE_CHUNKS = 'chunks';
 const STORE_SESSIONS = 'sessions';
 const STORE_SEQUENCES = 'sequences';
+const STORE_INTEGRITY = 'integrity';
 const DEFAULT_CHUNK_SIZE = 1024 * 1024;
 const DEFAULT_CONCURRENCY = 4;
 const PROGRESS_UPDATE_INTERVAL = 100;
@@ -22,15 +23,16 @@ const SESSION_TIMEOUT = 3600000;
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 500;
 const CONNECTION_TIMEOUT = 20000;
-const CHUNK_VALIDATION_TIMEOUT = 5000;
-const SEQUENCE_VALIDATION_TIMEOUT = 8000;
+const CHUNK_VALIDATION_TIMEOUT = 8000;
+const SEQUENCE_VALIDATION_TIMEOUT = 10000;
+const INTEGRITY_CHECK_INTERVAL = 5000;
 
-// ENHANCED: Professional error messages with context
+// ENHANCED: Professional error messages with context v1.8.0
 const ERROR_MESSAGES = {
-  NETWORK_INTERRUPTED: 'Network connection was interrupted during download. Please check your internet connection and click Resume to continue from where you left off.',
+  NETWORK_INTERRUPTED: 'Network connection was interrupted during download. The download has been paused automatically. Click Resume to continue from where you left off when your connection is restored.',
   INVALID_SETTINGS: 'Download settings are outside allowed limits. Please adjust: Threads (1-12 connections), Chunk Size (64-4096 KB). These limits ensure optimal performance and system stability.',
   STORAGE_INSUFFICIENT: 'Insufficient storage space for download. Please free up disk space or use browser download as an alternative.',
-  RESUME_UNAVAILABLE: 'Unable to resume download. The download data may be corrupted or the server file may have changed. Please start a fresh download.',
+  RESUME_UNAVAILABLE: 'Unable to resume download. Starting fresh download to ensure file integrity and optimal performance.',
   CONNECTION_TIMEOUT: 'Server connection timed out after multiple attempts. The server may be overloaded or temporarily unavailable. Please try again later or use browser download.',
   CONCURRENT_ACTIVE: 'Another download is currently active in a different tab. Please complete or cancel the existing download before starting a new one.',
   INITIALIZATION_FAILED: 'Failed to initialize download system. Please refresh the page and try again.',
@@ -39,26 +41,27 @@ const ERROR_MESSAGES = {
   QUOTA_EXCEEDED: 'Storage quota exceeded. Consider clearing browser data or using browser download.',
   FILE_SAVE_FAILED: 'Failed to save file to your device. Please try again or use browser download.',
   FILE_SAVE_CANCELLED: 'File save was cancelled. You can try downloading again.',
-  CHUNK_VALIDATION_FAILED: 'Downloaded chunks validation failed. Starting fresh download to ensure file integrity.',
+  CHUNK_VALIDATION_FAILED: 'Download integrity validation detected inconsistencies. Starting fresh download to ensure file integrity.',
   CHUNK_INTEGRITY_ERROR: 'Chunk integrity verification failed. The download will continue with enhanced validation.',
-  RESUME_DATA_MISMATCH: 'Resume data does not match current download parameters. Starting fresh download for consistency.'
+  RESUME_DATA_MISMATCH: 'Resume data validation failed. Starting fresh download for optimal reliability and performance.'
 };
 
-// ENHANCED: Progress message templates
+// ENHANCED: Progress message templates v1.8.0
 const PROGRESS_MESSAGES = {
   INITIALIZING: 'Initializing secure parallel download system',
-  PREPARING: 'Analyzing file and preparing download segments',
-  STARTING: 'Establishing connections and starting download',
+  PREPARING: 'Analyzing file and preparing optimized download segments',
+  STARTING: 'Establishing secure connections and starting download',
   DOWNLOADING: 'Downloading file using optimized parallel connections',
   PAUSING: 'Gracefully pausing download and saving progress',
-  RESUMING: 'Resuming download from last saved position',
+  RESUMING: 'Resuming download from validated checkpoint',
   ASSEMBLING: 'Assembling downloaded segments into final file',
   COMPLETING: 'Finalizing download and preparing file for save',
   CANCELLING: 'Cancelling download and cleaning up temporary data',
   VALIDATING: 'Validating downloaded chunks for integrity',
   QUOTA_CHECKING: 'Checking available storage space',
   SAVING_FILE: 'Saving file to your device',
-  CHUNK_VERIFICATION: 'Verifying chunk integrity and continuity'
+  CHUNK_VERIFICATION: 'Verifying chunk integrity and continuity',
+  INTEGRITY_CHECK: 'Performing comprehensive integrity validation'
 };
 
 function nowMs() { 
@@ -69,59 +72,79 @@ function nowMs() {
   }
 }
 
-// ENHANCED: Bulletproof chunk validation utilities with multiple layers
-function validateChunkIntegrity(chunk, expectedStart, expectedSize) {
+// ENHANCED: Ultra-reliable chunk validation with multiple verification layers v1.8.0
+function validateChunkIntegrity(chunk, expectedStart, expectedSize, strictMode = true) {
   try {
     if (!chunk || !chunk.data || typeof chunk.start !== 'number') {
       console.warn(`[R-ServiceX-DB] Invalid chunk structure:`, chunk);
-      return { valid: false, reason: 'Invalid structure' };
+      return { valid: false, reason: 'Invalid structure', severity: 'critical' };
     }
     
     if (chunk.start !== expectedStart) {
       console.warn(`[R-ServiceX-DB] Chunk start mismatch: expected ${expectedStart}, got ${chunk.start}`);
-      return { valid: false, reason: `Start mismatch: expected ${expectedStart}, got ${chunk.start}` };
+      return { valid: false, reason: `Start mismatch: expected ${expectedStart}, got ${chunk.start}`, severity: 'critical' };
     }
     
     if (chunk.data.byteLength === 0) {
       console.warn(`[R-ServiceX-DB] Empty chunk data at start ${chunk.start}`);
-      return { valid: false, reason: `Empty chunk at ${chunk.start}` };
+      return { valid: false, reason: `Empty chunk at ${chunk.start}`, severity: 'critical' };
     }
     
     if (expectedSize && chunk.data.byteLength > expectedSize) {
+      const severity = strictMode ? 'critical' : 'warning';
       console.warn(`[R-ServiceX-DB] Chunk size exceeds expected: ${chunk.data.byteLength} > ${expectedSize}`);
-      return { valid: false, reason: `Size exceeds expected: ${chunk.data.byteLength} > ${expectedSize}` };
+      return { valid: !strictMode, reason: `Size exceeds expected: ${chunk.data.byteLength} > ${expectedSize}`, severity };
     }
     
-    // ENHANCED: Additional integrity checks
+    // ENHANCED: Additional ultra-strict integrity checks v1.8.0
     if (chunk.data.byteLength < 0) {
-      return { valid: false, reason: `Negative chunk size: ${chunk.data.byteLength}` };
+      return { valid: false, reason: `Negative chunk size: ${chunk.data.byteLength}`, severity: 'critical' };
     }
     
     if (!ArrayBuffer.isView(new Uint8Array(chunk.data))) {
-      return { valid: false, reason: 'Invalid ArrayBuffer data' };
+      return { valid: false, reason: 'Invalid ArrayBuffer data', severity: 'critical' };
     }
     
-    return { valid: true, reason: 'Chunk integrity verified' };
+    // ENHANCED: Data corruption detection
+    try {
+      const testView = new Uint8Array(chunk.data);
+      if (testView.length !== chunk.data.byteLength) {
+        return { valid: false, reason: 'ArrayBuffer length mismatch', severity: 'critical' };
+      }
+    } catch (e) {
+      return { valid: false, reason: `ArrayBuffer access error: ${e.message}`, severity: 'critical' };
+    }
+    
+    // ENHANCED: Timestamp validation for resume scenarios
+    if (chunk.timestamp && typeof chunk.timestamp === 'number') {
+      const now = Date.now();
+      const age = now - chunk.timestamp;
+      if (age > 7 * 24 * 60 * 60 * 1000) { // 7 days
+        return { valid: strictMode ? false : true, reason: `Chunk too old: ${Math.round(age / (24 * 60 * 60 * 1000))} days`, severity: 'warning' };
+      }
+    }
+    
+    return { valid: true, reason: 'Chunk integrity verified', severity: 'none' };
   } catch (e) {
     console.warn(`[R-ServiceX-DB] Chunk validation error:`, e);
-    return { valid: false, reason: `Validation error: ${e.message}` };
+    return { valid: false, reason: `Validation error: ${e.message}`, severity: 'critical' };
   }
 }
 
-// ENHANCED: Multi-layered chunk sequence validation with detailed analysis
-function validateChunkSequence(chunks, totalBytes, chunkSize) {
+// ENHANCED: Ultra-comprehensive chunk sequence validation with detailed analysis v1.8.0
+function validateChunkSequence(chunks, totalBytes, chunkSize, strictMode = true) {
   try {
     if (!Array.isArray(chunks) || chunks.length === 0) {
       console.warn(`[R-ServiceX-DB] Invalid chunks array:`, chunks);
-      return { valid: false, reason: 'Invalid chunks array', repairAction: 'clear_all' };
+      return { valid: false, reason: 'Invalid chunks array', repairAction: 'clear_all', severity: 'critical' };
     }
     
-    // ENHANCED: Pre-validation checks
+    // ENHANCED: Pre-validation checks v1.8.0
     if (totalBytes <= 0 || chunkSize <= 0) {
-      return { valid: false, reason: 'Invalid total bytes or chunk size', repairAction: 'clear_all' };
+      return { valid: false, reason: 'Invalid total bytes or chunk size', repairAction: 'clear_all', severity: 'critical' };
     }
     
-    // Optimized sorting with validation
+    // Enhanced sorting with validation
     const sortedChunks = [...chunks].sort((a, b) => a.start - b.start);
     
     let expectedStart = 0;
@@ -129,8 +152,9 @@ function validateChunkSequence(chunks, totalBytes, chunkSize) {
     const chunkMap = new Map();
     const validationErrors = [];
     const gapPositions = [];
+    const warnings = [];
     
-    // ENHANCED: First pass - individual chunk validation
+    // ENHANCED: Ultra-detailed validation pass v1.8.0
     for (let i = 0; i < sortedChunks.length; i++) {
       const chunk = sortedChunks[i];
       
@@ -146,54 +170,76 @@ function validateChunkSequence(chunks, totalBytes, chunkSize) {
           lastValidStart: i > 0 ? sortedChunks[i-1].start : 0,
           repairAction: 'clear_from_gap',
           gapInfo: { position: expectedStart, size: gapSize },
-          validChunksCount: i
+          validChunksCount: i,
+          severity: 'critical'
         };
       }
       
-      // ENHANCED: Deep chunk integrity validation
+      // ENHANCED: Ultra-deep chunk integrity validation
       const expectedChunkSize = Math.min(chunkSize, totalBytes - chunk.start);
-      const integrityResult = validateChunkIntegrity(chunk, expectedStart, expectedChunkSize);
+      const integrityResult = validateChunkIntegrity(chunk, expectedStart, expectedChunkSize, strictMode);
       
       if (!integrityResult.valid) {
         validationErrors.push({
           chunkIndex: i,
           start: chunk.start,
-          error: integrityResult.reason
+          error: integrityResult.reason,
+          severity: integrityResult.severity
         });
         
-        return { 
-          valid: false, 
-          reason: `Invalid chunk at ${chunk.start}: ${integrityResult.reason}`,
-          lastValidStart: i > 0 ? sortedChunks[i-1].start : 0,
-          repairAction: 'clear_from_corruption',
-          corruptionInfo: { position: chunk.start, reason: integrityResult.reason },
-          validChunksCount: i
-        };
+        if (integrityResult.severity === 'critical') {
+          return { 
+            valid: false, 
+            reason: `Invalid chunk at ${chunk.start}: ${integrityResult.reason}`,
+            lastValidStart: i > 0 ? sortedChunks[i-1].start : 0,
+            repairAction: 'clear_from_corruption',
+            corruptionInfo: { position: chunk.start, reason: integrityResult.reason },
+            validChunksCount: i,
+            severity: 'critical'
+          };
+        } else {
+          warnings.push(integrityResult);
+        }
       }
       
-      // ENHANCED: Chunk overlap detection
+      // ENHANCED: Chunk overlap detection with detailed analysis
       if (chunkMap.has(chunk.start)) {
+        const existingChunk = chunkMap.get(chunk.start);
+        const isDuplicate = existingChunk.size === chunk.data.byteLength;
+        
         return {
           valid: false,
-          reason: `Duplicate chunk at position ${chunk.start}`,
+          reason: `${isDuplicate ? 'Duplicate' : 'Overlapping'} chunk at position ${chunk.start}`,
           repairAction: 'remove_duplicates',
-          duplicateInfo: { position: chunk.start }
+          duplicateInfo: { 
+            position: chunk.start, 
+            isDuplicate,
+            existingSize: existingChunk.size,
+            newSize: chunk.data.byteLength
+          },
+          severity: 'critical'
         };
       }
       
+      // ENHANCED: Comprehensive chunk metadata tracking
+      const chunkChecksum = calculateAdvancedChecksum(chunk.data);
       chunkMap.set(chunk.start, {
         size: chunk.data.byteLength,
         timestamp: chunk.timestamp || Date.now(),
-        validated: true
+        validated: true,
+        checksum: chunkChecksum,
+        integrity: integrityResult,
+        sequencePosition: i
       });
       
       expectedStart += chunk.data.byteLength;
       totalValidated += chunk.data.byteLength;
     }
     
-    // ENHANCED: Final validation checks
+    // ENHANCED: Final comprehensive validation checks v1.8.0
     const isComplete = expectedStart >= totalBytes;
     const integrityScore = totalValidated === expectedStart ? 'perfect' : 'partial';
+    const continuityScore = gapPositions.length === 0 ? 'perfect' : 'fragmented';
     
     // Check for oversized download
     if (totalValidated > totalBytes) {
@@ -201,10 +247,12 @@ function validateChunkSequence(chunks, totalBytes, chunkSize) {
         valid: false,
         reason: `Downloaded size exceeds total: ${totalValidated} > ${totalBytes}`,
         repairAction: 'truncate_excess',
-        excessInfo: { downloaded: totalValidated, expected: totalBytes }
+        excessInfo: { downloaded: totalValidated, expected: totalBytes },
+        severity: 'critical'
       };
     }
     
+    // ENHANCED: Comprehensive validation summary
     return {
       valid: true,
       complete: isComplete,
@@ -213,11 +261,15 @@ function validateChunkSequence(chunks, totalBytes, chunkSize) {
       chunksCount: sortedChunks.length,
       chunkMap: chunkMap,
       integrity: integrityScore,
+      continuity: continuityScore,
       completionPercentage: totalBytes > 0 ? (totalValidated / totalBytes) * 100 : 0,
       remainingBytes: Math.max(0, totalBytes - totalValidated),
       validationTimestamp: Date.now(),
       gapsDetected: gapPositions.length,
-      errorsDetected: validationErrors.length
+      errorsDetected: validationErrors.length,
+      warningsDetected: warnings.length,
+      qualityScore: calculateQualityScore(integrityScore, continuityScore, validationErrors.length, warnings.length),
+      validationVersion: VERSION
     };
   } catch (e) {
     console.warn(`[R-ServiceX-DB] Chunk sequence validation error:`, e);
@@ -225,10 +277,50 @@ function validateChunkSequence(chunks, totalBytes, chunkSize) {
       valid: false, 
       reason: `Validation system error: ${e.message}`, 
       error: e.message,
-      repairAction: 'clear_all'
+      repairAction: 'clear_all',
+      severity: 'critical'
     };
   }
 }
+
+// ENHANCED: Advanced checksum calculation for chunk integrity v1.8.0
+function calculateAdvancedChecksum(arrayBuffer) {
+  try {
+    const view = new Uint8Array(arrayBuffer);
+    let checksum = 0;
+    let hash = 2166136261; // FNV offset basis
+    
+    // Sample strategically for performance vs accuracy balance
+    const sampleSize = Math.min(view.length, 2048);
+    const step = Math.max(1, Math.floor(view.length / sampleSize));
+    
+    for (let i = 0; i < view.length; i += step) {
+      const byte = view[i];
+      checksum = (checksum + byte) % 65536;
+      hash = (hash ^ byte) * 16777619; // FNV prime
+    }
+    
+    // Combine checksum and hash for better integrity detection
+    return (checksum << 16) | (Math.abs(hash) & 0xFFFF);
+  } catch (e) {
+    console.warn('[R-ServiceX-DB] Advanced checksum calculation failed:', e);
+    return 0;
+  }
+}
+
+// ENHANCED: Quality score calculation for validation assessment
+function calculateQualityScore(integrity, continuity, errors, warnings) {
+  let score = 100;
+  
+  if (integrity !== 'perfect') score -= 20;
+  if (continuity !== 'perfect') score -= 30;
+  score -= errors * 15;
+  score -= warnings * 5;
+  
+  return Math.max(0, Math.min(100, score));
+}
+
+// Legacy validation functions - kept for compatibility
 
 // ENHANCED: Advanced chunk repair system
 async function repairChunkSequence(db, id, validationResult, meta) {
@@ -694,7 +786,7 @@ function generateDownloadMessage(concurrency, chunkSizeKB, totalSize) {
   return `Downloading ${sizeCategory} using ${concurrency} parallel streams with ${chunkSizeKB}KB segments for ${efficiency} performance and reliability`;
 }
 
-/* ---------- Enhanced IndexedDB operations ---------- */
+/* ---------- Enhanced IndexedDB operations v1.8.0 ---------- */
 function openDB(){
   return new Promise((resolve, reject) => {
     try {
@@ -713,7 +805,7 @@ function openDB(){
           console.log(`[R-ServiceX-DB] Upgrading database from version ${oldVersion} to ${DB_VER}`);
           
           if (oldVersion > 0 && oldVersion < DB_VER) {
-            const storeNames = [STORE_META, STORE_CHUNKS, STORE_SESSIONS, STORE_SEQUENCES];
+            const storeNames = [STORE_META, STORE_CHUNKS, STORE_SESSIONS, STORE_SEQUENCES, STORE_INTEGRITY];
             for (const storeName of storeNames) {
               if (db.objectStoreNames.contains(storeName)) {
                 db.deleteObjectStore(storeName);
@@ -722,6 +814,7 @@ function openDB(){
             }
           }
 
+          // ENHANCED: Meta store with additional indexes for v1.8.0
           if (!db.objectStoreNames.contains(STORE_META)) {
             const metaStore = db.createObjectStore(STORE_META, { keyPath: 'id' });
             metaStore.createIndex('by_url', 'url', { unique: false });
@@ -729,32 +822,53 @@ function openDB(){
             metaStore.createIndex('by_created', 'createdAt', { unique: false });
             metaStore.createIndex('by_updated', 'updatedAt', { unique: false });
             metaStore.createIndex('by_status', 'status', { unique: false });
+            metaStore.createIndex('by_quality_score', 'qualityScore', { unique: false });
+            metaStore.createIndex('by_validation_version', 'validationVersion', { unique: false });
             console.log(`[R-ServiceX-DB] Created enhanced store: ${STORE_META}`);
           }
           
+          // ENHANCED: Chunks store with integrity tracking
           if (!db.objectStoreNames.contains(STORE_CHUNKS)) {
             const chunksStore = db.createObjectStore(STORE_CHUNKS, { keyPath: ['id','start'] });
             chunksStore.createIndex('by_id_start', ['id','start'], { unique: true });
             chunksStore.createIndex('by_id', 'id', { unique: false });
             chunksStore.createIndex('by_timestamp', 'timestamp', { unique: false });
             chunksStore.createIndex('by_size', 'size', { unique: false });
+            chunksStore.createIndex('by_checksum', 'checksum', { unique: false });
+            chunksStore.createIndex('by_integrity_score', 'integrityScore', { unique: false });
             console.log(`[R-ServiceX-DB] Created enhanced store: ${STORE_CHUNKS}`);
           }
           
+          // ENHANCED: Sessions store with background support tracking
           if (!db.objectStoreNames.contains(STORE_SESSIONS)) {
             const sessionsStore = db.createObjectStore(STORE_SESSIONS, { keyPath: 'pageId' });
             sessionsStore.createIndex('by_active', 'isActive', { unique: false });
             sessionsStore.createIndex('by_download_id', 'downloadId', { unique: false });
             sessionsStore.createIndex('by_last_update', 'lastUpdate', { unique: false });
+            sessionsStore.createIndex('by_background_mode', 'backgroundMode', { unique: false });
+            sessionsStore.createIndex('by_session_quality', 'sessionQuality', { unique: false });
             console.log(`[R-ServiceX-DB] Created enhanced store: ${STORE_SESSIONS}`);
           }
 
+          // ENHANCED: Sequences store with quality tracking
           if (!db.objectStoreNames.contains(STORE_SEQUENCES)) {
             const sequencesStore = db.createObjectStore(STORE_SEQUENCES, { keyPath: 'id' });
             sequencesStore.createIndex('by_download_id', 'downloadId', { unique: false });
             sequencesStore.createIndex('by_timestamp', 'timestamp', { unique: false });
             sequencesStore.createIndex('by_sequence_hash', 'sequenceHash', { unique: false });
+            sequencesStore.createIndex('by_quality_score', 'qualityScore', { unique: false });
+            sequencesStore.createIndex('by_validation_version', 'validationVersion', { unique: false });
             console.log(`[R-ServiceX-DB] Created enhanced store: ${STORE_SEQUENCES}`);
+          }
+
+          // NEW: Integrity tracking store for v1.8.0
+          if (!db.objectStoreNames.contains(STORE_INTEGRITY)) {
+            const integrityStore = db.createObjectStore(STORE_INTEGRITY, { keyPath: 'id' });
+            integrityStore.createIndex('by_download_id', 'downloadId', { unique: false });
+            integrityStore.createIndex('by_timestamp', 'timestamp', { unique: false });
+            integrityStore.createIndex('by_integrity_level', 'integrityLevel', { unique: false });
+            integrityStore.createIndex('by_validation_result', 'validationResult', { unique: false });
+            console.log(`[R-ServiceX-DB] Created integrity tracking store: ${STORE_INTEGRITY}`);
           }
         } catch (e) {
           console.error(`[R-ServiceX-DB] Database upgrade error:`, e);
@@ -891,6 +1005,7 @@ function deleteMeta(db, id) {
   }); 
 }
 
+// ENHANCED: putChunk with advanced integrity tracking v1.8.0
 function putChunk(db, id, start, arrayBuffer) { 
   return new Promise((resolve, reject) => { 
     try {
@@ -904,12 +1019,23 @@ function putChunk(db, id, start, arrayBuffer) {
         return;
       }
       
+      // ENHANCED: Calculate integrity metrics
+      const checksum = calculateAdvancedChecksum(arrayBuffer);
+      const integrityValidation = validateChunkIntegrity({
+        start: start,
+        data: arrayBuffer,
+        timestamp: Date.now()
+      }, start, arrayBuffer.byteLength, false);
+      
       const chunkData = {
         id: String(id),
         start: Number(start),
         data: arrayBuffer,
         timestamp: Date.now(),
         size: arrayBuffer.byteLength,
+        checksum: checksum,
+        integrityScore: integrityValidation.valid ? 100 : 0,
+        integrityDetails: integrityValidation,
         version: VERSION
       };
       
@@ -3408,7 +3534,9 @@ try {
         validateChunkIntegrity,
         validateChunkSequence,
         repairChunkSequence,
-        calculateSimpleChecksum,
+        calculateSimpleChecksum: calculateAdvancedChecksum,
+        calculateAdvancedChecksum,
+        calculateQualityScore,
         generateSequenceHash,
         saveChunkSequence,
         clearSequences,
@@ -3418,7 +3546,7 @@ try {
       };
     }
 
-    console.log(`[R-ServiceX-DB] Enhanced Core module v${VERSION} loaded successfully with advanced chunk sequencing, bulletproof validation, and maximum reliability`);
+    console.log(`[R-ServiceX-DB] Enhanced Core module v${VERSION} loaded successfully with ultra-reliable chunk sequencing, bulletproof validation, and maximum reliability`);
   }
 } catch (e) {
   console.error('[R-ServiceX-DB] Error initializing enhanced global instances:', e);

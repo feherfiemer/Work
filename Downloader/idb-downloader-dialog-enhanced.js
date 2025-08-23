@@ -1,8 +1,8 @@
 /*
  * idb-downloader-dialog-enhanced.js
  * 
- * ENHANCED VERSION v1.7.0: Professional download dialog with bulletproof validation
- * Advanced completion animation, custom location dialog, and enhanced chunk sequencing
+ * ENHANCED VERSION v1.8.0: Professional download dialog with bulletproof validation
+ * Ultra-premium completion animation, enhanced custom location dialog, and comprehensive error handling
  */
 
 function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconName = 'file_download' } = {}) {
@@ -17,7 +17,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
       return (i === 0 ? v : v.toFixed(1)) + ' ' + units[i];
     },
-    VERSION: '1.7.0'
+    VERSION: '1.8.0'
   };
   
   const fmt = (typeof window.formatFileSize === 'function') ? window.formatFileSize : utils.humanBytes;
@@ -95,52 +95,97 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   100% { filter: blur(0px); transform: scale(1); }
 }
 
-/* ENHANCED: Professional Completion Animation v1.7.0 */
+/* ENHANCED: Ultra-Premium Completion Animation v1.8.0 */
 @keyframes materialTickDraw {
   0% {
     stroke-dasharray: 0, 100;
     stroke-dashoffset: 0;
     opacity: 0;
-    transform: scale(0.8);
+    transform: scale(0.6) rotate(-10deg);
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
   }
-  40% {
-    stroke-dasharray: 100, 100;
+  30% {
+    stroke-dasharray: 40, 100;
     stroke-dashoffset: 0;
-    opacity: 0.7;
-    transform: scale(0.95);
+    opacity: 0.8;
+    transform: scale(0.85) rotate(-3deg);
+    filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3));
+  }
+  70% {
+    stroke-dasharray: 85, 100;
+    stroke-dashoffset: 0;
+    opacity: 0.95;
+    transform: scale(1.05) rotate(2deg);
+    filter: drop-shadow(0 4px 8px rgba(255, 255, 255, 0.5));
   }
   100% {
     stroke-dasharray: 100, 100;
     stroke-dashoffset: 0;
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 6px 12px rgba(255, 255, 255, 0.6));
   }
 }
 
 @keyframes materialSphereEntry {
   0% {
-    transform: scale(0);
+    transform: scale(0) rotate(0deg);
     opacity: 0;
-    background: radial-gradient(circle at 30% 30%, #e8f5e9, #c8e6c9);
+    background: linear-gradient(135deg, 
+      rgba(232, 245, 233, 0.9) 0%, 
+      rgba(200, 230, 201, 0.8) 25%, 
+      rgba(165, 214, 167, 0.7) 50%, 
+      rgba(129, 199, 132, 0.8) 75%, 
+      rgba(76, 175, 80, 0.9) 100%);
     box-shadow: none;
+    border: 3px solid rgba(76, 175, 80, 0.2);
   }
-  20% {
-    transform: scale(0.4);
-    opacity: 0.6;
-    background: radial-gradient(circle at 30% 30%, #a5d6a7, #81c784);
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  15% {
+    transform: scale(0.3) rotate(45deg);
+    opacity: 0.4;
+    background: linear-gradient(135deg, 
+      rgba(165, 214, 167, 0.9) 0%, 
+      rgba(129, 199, 132, 0.8) 30%, 
+      rgba(102, 187, 106, 0.7) 60%, 
+      rgba(76, 175, 80, 0.8) 100%);
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.2);
+    border: 3px solid rgba(76, 175, 80, 0.4);
   }
-  60% {
-    transform: scale(1.1);
-    opacity: 0.9;
-    background: radial-gradient(circle at 30% 30%, #66bb6a, #4caf50);
-    box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+  45% {
+    transform: scale(0.8) rotate(135deg);
+    opacity: 0.8;
+    background: linear-gradient(135deg, 
+      rgba(129, 199, 132, 0.95) 0%, 
+      rgba(102, 187, 106, 0.9) 25%, 
+      rgba(76, 175, 80, 0.85) 50%, 
+      rgba(56, 142, 60, 0.9) 75%, 
+      rgba(46, 125, 50, 0.95) 100%);
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.35);
+    border: 3px solid rgba(76, 175, 80, 0.6);
+  }
+  75% {
+    transform: scale(1.15) rotate(270deg);
+    opacity: 0.95;
+    background: linear-gradient(135deg, 
+      rgba(102, 187, 106, 1) 0%, 
+      rgba(76, 175, 80, 0.95) 20%, 
+      rgba(56, 142, 60, 0.9) 40%, 
+      rgba(46, 125, 50, 0.95) 70%, 
+      rgba(27, 94, 32, 1) 100%);
+    box-shadow: 0 12px 48px rgba(76, 175, 80, 0.45);
+    border: 3px solid rgba(76, 175, 80, 0.8);
   }
   100% {
-    transform: scale(1);
+    transform: scale(1) rotate(360deg);
     opacity: 1;
-    background: radial-gradient(circle at 30% 30%, #4caf50, #2e7d32);
-    box-shadow: 0 12px 32px rgba(46, 125, 50, 0.5);
+    background: linear-gradient(135deg, 
+      rgba(76, 175, 80, 1) 0%, 
+      rgba(56, 142, 60, 0.98) 25%, 
+      rgba(46, 125, 50, 0.95) 50%, 
+      rgba(27, 94, 32, 0.98) 75%, 
+      rgba(1, 87, 155, 1) 100%);
+    box-shadow: 0 16px 64px rgba(76, 175, 80, 0.5);
+    border: 3px solid rgba(76, 175, 80, 1);
   }
 }
 
@@ -148,29 +193,31 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   0% {
     transform: scale(1);
     box-shadow: 
-      0 0 0 0 rgba(76, 175, 80, 0.6),
-      0 12px 32px rgba(46, 125, 50, 0.5);
+      0 0 0 0 rgba(76, 175, 80, 0.7),
+      0 16px 64px rgba(76, 175, 80, 0.5);
   }
   50% {
-    transform: scale(1.02);
+    transform: scale(1.03);
     box-shadow: 
-      0 0 0 20px rgba(76, 175, 80, 0.0),
-      0 16px 40px rgba(46, 125, 50, 0.3);
+      0 0 0 30px rgba(76, 175, 80, 0.0),
+      0 20px 80px rgba(76, 175, 80, 0.3);
   }
   100% {
     transform: scale(1);
     box-shadow: 
-      0 0 0 40px rgba(76, 175, 80, 0.0),
-      0 12px 32px rgba(46, 125, 50, 0.5);
+      0 0 0 60px rgba(76, 175, 80, 0.0),
+      0 16px 64px rgba(76, 175, 80, 0.5);
   }
 }
 
 @keyframes materialGlow {
   0%, 100% {
-    filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.4));
+    filter: drop-shadow(0 0 12px rgba(76, 175, 80, 0.6)) 
+            drop-shadow(0 0 24px rgba(76, 175, 80, 0.4));
   }
   50% {
-    filter: drop-shadow(0 0 16px rgba(76, 175, 80, 0.7));
+    filter: drop-shadow(0 0 20px rgba(76, 175, 80, 0.8)) 
+            drop-shadow(0 0 40px rgba(76, 175, 80, 0.6));
   }
 }
 
@@ -264,7 +311,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
 .settings-panel{
   display: flex;
-  gap: 16px;
+  gap: 20px;
   justify-content: center;
   align-items: center;
   margin: 10px 0 14px 0;
@@ -312,19 +359,19 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   font-family: var(--dl-font);
 }
 
-  .setting-select{
-    width: 88px;
-    text-align: left;
-    padding-left: 10px;
-    cursor: pointer;
-  }
+.setting-select{
+  width: 88px;
+  text-align: left;
+  padding-left: 10px;
+  cursor: pointer;
+}
 
-  .setting-select.custom-location {
-    background: rgba(100,181,246,0.08);
-    border-color: var(--dl-primary);
-    color: var(--dl-accent);
-    font-weight: 600;
-  }
+.setting-select.custom-location {
+  background: rgba(100,181,246,0.08);
+  border-color: var(--dl-primary);
+  color: var(--dl-accent);
+  font-weight: 600;
+}
 
 .setting-input:focus, .setting-select:focus{
   outline: none;
@@ -407,22 +454,23 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   color: var(--dl-primary);
 }
 
-  .metrics-card{
-    display: none;
-    margin: 6px auto;
-    padding: 12px 16px;
-    border-radius: 14px;
-    background: var(--dl-meta-bg);
-    font-size: 0.68rem;
-    font-weight: 500;
-    color: var(--dl-text-primary);
-    min-width: 220px;
-    max-width: 320px;
-    line-height: 1.25;
-    transition: all 0.3s ease;
-    position: relative;
-    border: 1px solid rgba(173, 216, 230, 0.2);
-  }
+/* ENHANCED: Larger metrics card with better spacing v1.8.0 */
+.metrics-card{
+  display: none;
+  margin: 8px auto;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: var(--dl-meta-bg);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--dl-text-primary);
+  min-width: 280px;
+  max-width: 380px;
+  line-height: 1.35;
+  transition: all 0.3s ease;
+  position: relative;
+  border: 1px solid rgba(173, 216, 230, 0.2);
+}
 
 .metrics-card.visible{
   display: inline-block;
@@ -434,15 +482,16 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   animation: premiumFadeOut 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-  .buttons-row{
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    align-items: center;
-    margin-top: 16px;
-    flex-wrap: wrap;
-    animation: premiumFadeIn 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 500ms both;
-  }
+/* ENHANCED: Better button spacing v1.8.0 */
+.buttons-row{
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  animation: premiumFadeIn 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 500ms both;
+}
 
 .glassy-btn{
   border: none;
@@ -539,93 +588,110 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   box-shadow: 0 6px 20px rgba(244,67,54,0.25);
 }
 
-/* ENHANCED: Professional Material Design Completion Animation */
+/* ENHANCED: Ultra-Premium Material Design Completion Animation v1.8.0 */
 .completion-container{
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
-  padding: 50px 28px;
+  gap: 36px;
+  padding: 60px 32px;
   background: linear-gradient(145deg, 
-    rgba(232,245,233,0.95) 0%, 
-    rgba(200,230,201,0.85) 25%, 
-    rgba(165,214,167,0.75) 50%, 
-    rgba(129,199,132,0.85) 75%, 
-    rgba(102,187,106,0.95) 100%);
+    rgba(232,245,233,0.98) 0%, 
+    rgba(200,230,201,0.92) 15%, 
+    rgba(165,214,167,0.85) 35%, 
+    rgba(129,199,132,0.88) 55%, 
+    rgba(102,187,106,0.92) 75%, 
+    rgba(76,175,80,0.98) 100%);
   border-radius: var(--dl-border-radius);
   position: relative;
   overflow: hidden;
-  border: 2px solid rgba(76,175,80,0.3);
+  border: 3px solid rgba(76,175,80,0.4);
   box-shadow: 
-    0 8px 32px rgba(76, 175, 80, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 12px 48px rgba(76, 175, 80, 0.25),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 0 rgba(76, 175, 80, 0.2);
 }
 
 .completion-sphere{
-  width: 140px;
-  height: 140px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #4caf50, #2e7d32);
-  border: 3px solid rgba(76,175,80,0.4);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 1) 0%, rgba(27, 94, 32, 1) 100%);
+  border: 3px solid rgba(76, 175, 80, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   animation: 
-    materialSphereEntry 1200ms cubic-bezier(0.34, 1.56, 0.64, 1) both,
-    materialRipple 3s ease-in-out 1400ms infinite,
-    materialGlow 2s ease-in-out 1600ms infinite;
-  box-shadow: 0 12px 32px rgba(46, 125, 50, 0.5);
+    materialSphereEntry 1400ms cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    materialRipple 3.5s ease-in-out 1600ms infinite,
+    materialGlow 2.5s ease-in-out 1800ms infinite;
+  box-shadow: 0 16px 64px rgba(76, 175, 80, 0.5);
 }
 
 .completion-sphere::before {
   content: '';
   position: absolute;
-  top: 10%;
-  left: 15%;
-  width: 30%;
-  height: 30%;
+  top: 12%;
+  left: 18%;
+  width: 35%;
+  height: 35%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
-  filter: blur(1px);
+  background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 50%, transparent 80%);
+  filter: blur(2px);
+}
+
+.completion-sphere::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, 
+    rgba(76, 175, 80, 0.3) 0%, 
+    rgba(76, 175, 80, 0.1) 40%, 
+    transparent 70%);
+  z-index: -1;
 }
 
 .completion-tick{
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   position: relative;
-  animation: materialTickDraw 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 800ms both;
+  animation: materialTickDraw 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 1000ms both;
 }
 
 .completion-tick svg {
   width: 100%;
   height: 100%;
   stroke: #ffffff;
-  stroke-width: 8;
+  stroke-width: 6;
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.4));
 }
 
 .completion-message{
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 600;
   color: var(--dl-success-fill);
   margin: 0;
-  animation: premiumFadeIn 700ms ease 1500ms both;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  letter-spacing: 0.6px;
+  animation: premiumFadeIn 800ms ease 1700ms both;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  letter-spacing: 0.8px;
 }
 
 .completion-details{
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--dl-text-primary);
-  animation: premiumFadeIn 600ms ease 1700ms both;
+  animation: premiumFadeIn 700ms ease 1900ms both;
   text-align: center;
-  line-height: 1.6;
-  opacity: 0.85;
-  max-width: 380px;
+  line-height: 1.7;
+  opacity: 0.9;
+  max-width: 400px;
   font-weight: 400;
   margin: 0;
 }
@@ -704,135 +770,174 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg,transparent,rgba(0,0,0,0.08),transparent);
-  margin: 24px 0 18px 0;
+  margin: 28px 0 20px 0;
 }
 
-  .final-note{
-    font-size: 0.8rem;
-    color: var(--dl-text-primary);
-    text-align: center;
-    line-height: 1.55;
-    padding-bottom: 8px;
-    opacity: 0.8;
-    font-weight: 400;
-  }
+.final-note{
+  font-size: 0.8rem;
+  color: var(--dl-text-primary);
+  text-align: center;
+  line-height: 1.55;
+  padding-bottom: 8px;
+  opacity: 0.8;
+  font-weight: 400;
+}
 
-  /* Location Selection Dialog */
-  .location-dialog-overlay{
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    animation: premiumFadeIn 300ms ease both;
-  }
+/* ENHANCED: Professional Location Selection Dialog v1.8.0 */
+.location-dialog-overlay{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: premiumFadeIn 300ms ease both;
+  backdrop-filter: blur(4px);
+}
 
-  .location-dialog-overlay.visible{
-    display: flex;
-  }
+.location-dialog-overlay.visible{
+  display: flex;
+}
 
-  .location-dialog{
-    background: rgba(255,255,255,0.98);
-    border-radius: var(--dl-border-radius);
-    padding: 24px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.2);
-    animation: premiumFadeIn 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-    border: 2px solid rgba(100,181,246,0.2);
-  }
+.location-dialog{
+  background: rgba(255,255,255,0.98);
+  border-radius: var(--dl-border-radius);
+  padding: 28px;
+  max-width: 450px;
+  width: 92%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  animation: premiumFadeIn 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  border: 2px solid rgba(100,181,246,0.2);
+  position: relative;
+  overflow: hidden;
+}
 
-  .location-dialog-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
+.location-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--dl-primary), var(--dl-accent));
+}
 
-  .location-dialog-title{
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--dl-text-primary);
-    margin: 0;
-  }
+.location-dialog-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
 
-  .location-dialog-close{
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: var(--dl-text-secondary);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-  }
+.location-dialog-title{
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--dl-text-primary);
+  margin: 0;
+}
 
-  .location-dialog-close:hover{
-    background: rgba(0,0,0,0.1);
-    color: var(--dl-text-primary);
-  }
+.location-dialog-close{
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: var(--dl-text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .location-option{
-    display: flex;
-    align-items: center;
-    padding: 16px;
-    border: 2px solid rgba(0,0,0,0.1);
-    border-radius: 12px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background: rgba(255,255,255,0.5);
-  }
+.location-dialog-close:hover{
+  background: rgba(0,0,0,0.08);
+  color: var(--dl-text-primary);
+  transform: scale(1.1);
+}
 
-  .location-option:hover{
-    border-color: var(--dl-primary);
-    background: rgba(100,181,246,0.05);
-  }
+.location-option{
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border: 2px solid rgba(0,0,0,0.1);
+  border-radius: 16px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255,255,255,0.6);
+  position: relative;
+  overflow: hidden;
+}
 
-  .location-option.selected{
-    border-color: var(--dl-primary);
-    background: rgba(100,181,246,0.1);
-  }
+.location-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(100,181,246,0.1), transparent);
+  transition: left 0.5s ease;
+}
 
-  .location-option-icon{
-    font-size: 24px;
-    margin-right: 12px;
-    color: var(--dl-primary);
-  }
+.location-option:hover::before {
+  left: 100%;
+}
 
-  .location-option-content{
-    flex: 1;
-  }
+.location-option:hover{
+  border-color: var(--dl-primary);
+  background: rgba(100,181,246,0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(100,181,246,0.15);
+}
 
-  .location-option-title{
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--dl-text-primary);
-    margin: 0 0 4px 0;
-  }
+.location-option.selected{
+  border-color: var(--dl-primary);
+  background: rgba(100,181,246,0.1);
+  box-shadow: 0 4px 16px rgba(100,181,246,0.2);
+}
 
-  .location-option-desc{
-    font-size: 0.8rem;
-    color: var(--dl-text-secondary);
-    margin: 0;
-    opacity: 0.9;
-  }
+.location-option-icon{
+  font-size: 28px;
+  margin-right: 16px;
+  color: var(--dl-primary);
+}
 
-  .location-selected-path{
-    background: rgba(100,181,246,0.08);
-    border: 1px solid rgba(100,181,246,0.2);
-    border-radius: 8px;
-    padding: 8px 12px;
-    margin-top: 8px;
-    font-size: 0.75rem;
-    color: var(--dl-accent);
-    font-weight: 500;
-  }
+.location-option-content{
+  flex: 1;
+}
+
+.location-option-title{
+  font-size: 1.0rem;
+  font-weight: 600;
+  color: var(--dl-text-primary);
+  margin: 0 0 6px 0;
+}
+
+.location-option-desc{
+  font-size: 0.85rem;
+  color: var(--dl-text-secondary);
+  margin: 0;
+  opacity: 0.9;
+}
+
+.location-selected-path{
+  background: rgba(100,181,246,0.08);
+  border: 1px solid rgba(100,181,246,0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--dl-accent);
+  font-weight: 500;
+}
 
 @media (max-width: 600px){
   .download-card{
@@ -850,12 +955,12 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   }
   .settings-panel{
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     padding: 12px;
   }
   .setting-group{
     flex-direction: row;
-    gap: 10px;
+    gap: 12px;
     min-width: auto;
   }
   .setting-input, .setting-select{
@@ -870,7 +975,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     min-width: 75px;
   }
   .buttons-row{
-    gap: 12px;
+    gap: 16px;
   }
   .glassy-btn{
     min-width: 90px;
@@ -878,23 +983,30 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     padding: 10px 16px;
   }
   .completion-sphere{
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
   }
   .completion-tick{
-    width: 55px;
-    height: 55px;
+    width: 60px;
+    height: 60px;
   }
-      .metrics-card{
-      font-size: 0.64rem;
-      padding: 10px 12px;
-      max-width: 280px;
-      min-width: 180px;
-    }
+  .metrics-card{
+    font-size: 0.7rem;
+    padding: 12px 16px;
+    max-width: 320px;
+    min-width: 240px;
+  }
+  .location-dialog{
+    padding: 20px;
+    max-width: 95vw;
+  }
+  .location-option{
+    padding: 16px;
+  }
 }
 </style>
 
-  <div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.7.0">
+  <div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.8.0">
   <div class="file-metadata" id="${IDS.meta}">
     <i class="mdui-icon material-icons-outlined main-icon" id="${IDS.icon}">${iconName}</i>
     <div class="meta-name" id="${IDS.fname}">${fileName || 'File'}</div>
@@ -921,7 +1033,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   <div class="main-block" id="${IDS.main}">
     <div class="ready-message hidden" id="${IDS.readyMessage}">
       <i class="mdui-icon material-icons-outlined">info</i>
-      <span>Click Start to begin secure parallel download with automatic resume capability</span>
+      <span>Ready for secure parallel download with automatic resume capability</span>
     </div>
 
     <div class="quota-message hidden" id="${IDS.quotaMessage}">
@@ -969,20 +1081,20 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   <div class="divider"></div>
 
   <div class="final-note">
-    Secure parallel downloading with automatic resume capability v1.7.0. 
+    Secure parallel downloading with automatic resume capability v1.8.0. 
     Downloads continue when browser is in background with dialog open.
   </div>
 </div>
 
-<!-- Location Selection Dialog -->
-<div class="location-dialog-overlay" id="location_dialog_${tag}">
+<!-- ENHANCED: Professional Location Selection Dialog v1.8.0 -->
+<div class="location-dialog-overlay" id="${IDS.locationDialog}">
   <div class="location-dialog">
     <div class="location-dialog-header">
       <h3 class="location-dialog-title">Choose Download Location</h3>
-      <button class="location-dialog-close" id="location_close_${tag}">×</button>
+      <button class="location-dialog-close" id="${IDS.locationClose}">×</button>
     </div>
     
-    <div class="location-option" data-location="default" id="location_option_default_${tag}">
+    <div class="location-option" data-location="default" id="${IDS.locationOptionDefault}">
       <i class="mdui-icon material-icons-outlined location-option-icon">folder</i>
       <div class="location-option-content">
         <div class="location-option-title">Browser Default</div>
@@ -990,12 +1102,12 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       </div>
     </div>
     
-    <div class="location-option" data-location="custom" id="location_option_custom_${tag}">
+    <div class="location-option" data-location="custom" id="${IDS.locationOptionCustom}">
       <i class="mdui-icon material-icons-outlined location-option-icon">create_new_folder</i>
       <div class="location-option-content">
         <div class="location-option-title">Custom Location</div>
         <div class="location-option-desc">Choose a specific folder on your device</div>
-        <div class="location-selected-path" id="location_path_${tag}" style="display: none;">
+        <div class="location-selected-path" id="${IDS.locationPath}" style="display: none;">
           No folder selected
         </div>
       </div>
@@ -1215,11 +1327,16 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
-      // ENHANCED: Professional quota message display without icons
+      // ENHANCED: Professional quota message display v1.8.0 - clean, professional text only
       const showQuotaMessage = (message) => {
         try {
           if (nodes.quotaMessage) {
-            const cleanMessage = String(message || '').replace(/[🔧⚡📊✓⚠]/g, '').trim();
+            // Remove all icons, emojis, and symbols for professional appearance
+            const cleanMessage = String(message || '')
+              .replace(/[🔧⚡📊✓⚠️⭐🌟💫🎯🔥💎⚙️🛠️📈📊🎪🎨🎭🎪]/g, '')
+              .replace(/[✓✗❌✅⭐]/g, '')
+              .replace(/\s+/g, ' ')
+              .trim();
             nodes.quotaMessage.querySelector('span').textContent = cleanMessage;
             nodes.quotaMessage.classList.remove('hidden');
           }
@@ -1317,6 +1434,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
+      // ENHANCED: Fixed selectCustomLocation function v1.8.0
       const selectCustomLocation = async () => {
         try {
           if (!window.showDirectoryPicker) {
@@ -1324,25 +1442,39 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
             return;
           }
 
-          const directoryHandle = await window.showDirectoryPicker({
-            mode: 'readwrite'
-          });
+          // Show custom location immediately when selected
+          selectedLocation = 'custom';
+          updateLocationSelection();
+          
+          try {
+            const directoryHandle = await window.showDirectoryPicker({
+              mode: 'readwrite'
+            });
 
-          if (directoryHandle) {
-            customDirectoryHandle = directoryHandle;
-            customDirectoryPath = directoryHandle.name;
-            selectedLocation = 'custom';
-            
-            log(`Custom directory selected: ${customDirectoryPath}`);
-            updateLocationSelection();
-            updateLocationButton();
-            hideLocationDialog();
+            if (directoryHandle) {
+              customDirectoryHandle = directoryHandle;
+              customDirectoryPath = directoryHandle.name;
+              
+              log(`Custom directory selected: ${customDirectoryPath}`);
+              updateLocationSelection();
+              updateLocationButton();
+              hideLocationDialog();
+            }
+          } catch (pickerError) {
+            if (pickerError.name === 'AbortError') {
+              // User cancelled, revert to default
+              selectedLocation = 'default';
+              customDirectoryHandle = null;
+              customDirectoryPath = '';
+              updateLocationSelection();
+              updateLocationButton();
+            } else {
+              console.warn('[R-ServiceX-Downloader] Error selecting custom location:', pickerError);
+              alert('Failed to select custom location. Please try again.');
+            }
           }
         } catch (error) {
-          if (error.name !== 'AbortError') {
-            console.warn('[R-ServiceX-Downloader] Error selecting custom location:', error);
-            alert('Failed to select custom location. Please try again.');
-          }
+          console.warn('[R-ServiceX-Downloader] Error in selectCustomLocation:', error);
         }
       };
 
@@ -1479,10 +1611,12 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
-      // ENHANCED: Settings panel hide logic - only hide during actual download, not on validation errors
+      // ENHANCED: Improved settings panel hide logic v1.8.0 - only hide during actual download
       const hideSettings = () => {
         try {
-          if (nodes.settings && actualDownloadStarted && !pauseInProgress) {
+          // Only hide settings if download actually started AND not paused AND not showing errors
+          if (nodes.settings && actualDownloadStarted && !pauseInProgress && !isProcessing && 
+              nodes.errorArea.style.display === 'none') {
             nodes.settings.classList.add('settings-hidden');
             setTimeout(() => {
               if (nodes.settings && nodes.settings.classList.contains('settings-hidden')) {
@@ -1820,7 +1954,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         stopIconPulse();
       };
 
-      // ENHANCED: Error message handling with improved settings panel logic
+      // ENHANCED: Improved error handling system v1.8.0 with better categorization
       const showErrorMessage = (message, allowFallback = true) => {
         try {
           if (isCompleted) {
@@ -1833,32 +1967,53 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
             persistentDownloadMessage = null;
           }
 
-          const isValidationError = String(message || '').toLowerCase().includes('invalid settings') || 
-                                  String(message || '').toLowerCase().includes('correct the invalid') ||
-                                  String(message || '').toLowerCase().includes('download settings are outside allowed limits') ||
-                                  String(message || '').toLowerCase().includes('threads') ||
-                                  String(message || '').toLowerCase().includes('chunk');
+          const messageStr = String(message || '').toLowerCase();
           
-          // ENHANCED: Never hide settings for validation errors, only hide when download actually starts
-          if (!isValidationError && actualDownloadStarted && hasStarted && !pauseInProgress) {
+          // ENHANCED: Better error categorization v1.8.0
+          const isValidationError = messageStr.includes('invalid settings') || 
+                                  messageStr.includes('settings are outside allowed limits') ||
+                                  messageStr.includes('threads') ||
+                                  messageStr.includes('chunk');
+          
+          const isResumeError = messageStr.includes('unable to resume') ||
+                               messageStr.includes('resume unavailable') ||
+                               messageStr.includes('resume data');
+          
+          const isNetworkError = messageStr.includes('network') ||
+                                messageStr.includes('connection') ||
+                                messageStr.includes('timeout');
+          
+          // ENHANCED: Smart settings panel management
+          if (isValidationError) {
+            // For validation errors, ALWAYS show settings and reset download state
+            showSettings();
+            actualDownloadStarted = false;
+            isProcessing = false;
+          } else if (isResumeError) {
+            // For resume errors, keep settings visible for user to adjust or restart
+            showSettings();
+            actualDownloadStarted = false;
+          } else if (!isNetworkError && actualDownloadStarted && hasStarted && !pauseInProgress) {
+            // Only hide settings for non-network errors during active download
             hideSettings();
           }
 
           let safeMessage = String(message || 'Unknown error occurred');
           
+          // ENHANCED: Better error message formatting
           if (isValidationError) {
             safeMessage = utils.ERROR_MESSAGES?.INVALID_SETTINGS || safeMessage;
-            // For validation errors, ALWAYS ensure settings remain visible and accessible
-            showSettings();
-            // Reset any download states that might hide settings
-            actualDownloadStarted = false;
+          } else if (isResumeError) {
+            safeMessage = utils.ERROR_MESSAGES?.RESUME_UNAVAILABLE || safeMessage;
+          } else if (isNetworkError) {
+            safeMessage = utils.ERROR_MESSAGES?.NETWORK_INTERRUPTED || safeMessage;
           }
           
           nodes.errorArea.innerHTML = `
             <div class="error-area">
-              <div style="font-weight:500;margin-bottom:10px;">${safeMessage}</div>
+              <div style="font-weight:500;margin-bottom:12px;">${safeMessage}</div>
               ${allowFallback ? `
-                <div style="margin-top:18px;display:flex;gap:12px;justify-content:center">
+                <div style="margin-top:20px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
                   <button id="fallback_${tag}" class="glassy-btn enabled" style="min-width:170px">
                     <i class="mdui-icon material-icons-outlined">download</i>
                     <span>Use Browser Download</span>
@@ -1971,9 +2126,9 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
-      // ENHANCED: Advanced blob download with real-time save progress and custom location support
+      // ENHANCED: Advanced blob download with real-time save progress and custom location support v1.8.0
       const downloadBlobWithRealFilename = (blob, filename, useCustomLocation = false, directoryHandle = null) => {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
           try {
             if (!blob || !filename) {
               reject(new Error('Invalid blob or filename'));
@@ -2017,7 +2172,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
               }
             };
 
-            // ENHANCED: Handle custom directory or file picker
+            // ENHANCED: Handle custom directory or file picker - FIXED await syntax error
             if (useCustomLocation && directoryHandle) {
               // Save to custom directory
               try {
@@ -2985,8 +3140,9 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       }
 
-      // ENHANCED: Final UI state setup with proper ready message handling
+      // ENHANCED: Final UI state setup with proper ready message and progress bar handling v1.8.0
       if (!meta || !meta.completedStarts || meta.completedStarts.length === 0) {
+        // Fresh download scenario
         setActionButtonState('start');
         setStatusText('Ready to download');
         showSettings();
@@ -2996,12 +3152,44 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         currentProgressPercent = 0;
         hideMetrics();
         hideStatusLine();
+        hideProgressBar();
         showReadyMessage(); // Only show ready message when no resume data
       } else {
-        // Resume data available, show progress bar and hide ready message
+        // Resume data available - show progress and hide ready message
         hideReadyMessage();
         showStatusLine();
         showProgressBar();
+        
+        // ENHANCED: Properly display resume progress
+        let downloadedBytes = 0;
+        (meta.completedStarts || []).forEach(start => { 
+          downloadedBytes += Math.min(
+            meta.chunkSize || (1024 * 1024), 
+            Math.max(0, (meta.totalBytes || fileSizeBytes) - start)
+          ); 
+        });
+
+        const percentComplete = meta.totalBytes ? 
+          Math.round((downloadedBytes / meta.totalBytes) * 1000) / 10 : 0;
+
+        // Set determinate progress for resume
+        setProgressDeterminate(percentComplete);
+        currentProgressPercent = percentComplete;
+        
+        // Show metrics for resume
+        if (nodes.metricsCard) {
+          nodes.metricsCard.innerHTML = 
+            `${fmt(downloadedBytes)} / ${fmt(meta.totalBytes || fileSizeBytes)} @ 0 B/s`;
+        }
+        showMetrics();
+        
+        setActionButtonState('resume');
+        setStatusText('Resume available', percentComplete);
+        setCancelState(true);
+        setBrowserButtonState(true);
+        showSettings();
+        
+        log(`Resume UI setup complete: ${percentComplete.toFixed(1)}% progress displayed`);
       }
 
       try {
@@ -3039,5 +3227,5 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = { openIDBDownloaderDialog };
 } else if (typeof window !== 'undefined') {
   window.openIDBDownloaderDialog = openIDBDownloaderDialog;
-      console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.7.0 loaded successfully');
+      console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.8.0 loaded successfully');
 }
