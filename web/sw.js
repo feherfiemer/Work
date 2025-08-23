@@ -1,7 +1,7 @@
-// R-Service Tracker Service Worker v1.0.0
+// Job Tracker Service Worker v1.0.0
 // Provides offline functionality and caching
 
-const CACHE_NAME = 'r-service-tracker-v1.0.0';
+const CACHE_NAME = 'job-tracker-v1.0.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -139,17 +139,17 @@ self.addEventListener('push', (event) => {
   console.log('Service Worker: Push received', event);
   
   const options = {
-    body: event.data ? event.data.text() : 'New notification from R-Service Tracker',
-    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" fill="%23ff6b35" rx="48"/><text x="96" y="140" font-size="120" text-anchor="middle" fill="white">🚗</text></svg>',
-    badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><circle cx="48" cy="48" r="48" fill="%23ff6b35"/><text x="48" y="68" font-size="60" text-anchor="middle" fill="white">🚗</text></svg>',
+    body: event.data ? event.data.text() : 'New notification from Job Tracker',
+    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" fill="%23ff6b35" rx="48"/><path d="M48 96l30 30 60-60" stroke="white" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><circle cx="48" cy="48" r="48" fill="%23ff6b35"/><path d="M24 48l12 12 24-24" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     vibrate: [200, 100, 200],
-    tag: 'r-service-tracker',
+    tag: 'job-tracker',
     renotify: true,
     requireInteraction: false,
-    actions: [
-      {
-        action: 'mark-work',
-        title: 'Mark Work Done',
+          actions: [
+        {
+          action: 'mark-job',
+          title: 'Mark Job Done',
         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><circle cx="48" cy="48" r="48" fill="%234caf50"/><path d="M28 48l12 12 28-28" stroke="white" stroke-width="4" fill="none"/></svg>'
       },
       {
@@ -161,7 +161,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('R-Service Tracker', options)
+    self.registration.showNotification('Job Tracker', options)
   );
 });
 
@@ -171,10 +171,10 @@ self.addEventListener('notificationclick', (event) => {
   
   event.notification.close();
 
-  if (event.action === 'mark-work') {
-    // Open app with work action
+  if (event.action === 'mark-job') {
+    // Open app with job action
     event.waitUntil(
-      clients.openWindow('/?action=work')
+      clients.openWindow('/?action=job')
     );
   } else if (event.action === 'view-app') {
     // Open main app
@@ -239,9 +239,9 @@ async function sendDailyReminder() {
     
     if (clients.length === 0) {
       // App is not open, show reminder notification
-      await self.registration.showNotification('Daily Work Reminder', {
-        body: "Don't forget to record your work for today!",
-        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" fill="%23ff6b35" rx="48"/><text x="96" y="140" font-size="120" text-anchor="middle" fill="white">🚗</text></svg>',
+      await self.registration.showNotification('Daily Job Reminder', {
+        body: "Don't forget to record your job completion for today!",
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" fill="%23ff6b35" rx="48"/><path d="M48 96l30 30 60-60" stroke="white" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         tag: 'daily-reminder',
         renotify: false,
         requireInteraction: false

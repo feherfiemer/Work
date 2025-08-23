@@ -1,7 +1,7 @@
 {
-  "name": "R-Service Tracker",
-  "short_name": "R-Service",
-  "description": "Premium driving work tracker for professional drivers",
+  "name": "Job Tracker",
+  "short_name": "JobTracker",
+  "description": "Premium job tracking application for professionals",
   "version": "1.0.0",
   "start_url": "/",
   "display": "standalone",
@@ -11,34 +11,34 @@
   "scope": "/",
   "lang": "en-US",
   "categories": ["productivity", "business", "finance"],
-  "icons": [
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23ff6b35' rx='48'/><text x='96' y='140' font-size='120' text-anchor='middle' fill='white'>🚗</text></svg>",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23ff6b35' rx='128'/><text x='256' y='380' font-size='320' text-anchor='middle' fill='white'>🚗</text></svg>",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ],
+      "icons": [
+      {
+        "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23ff6b35' rx='48'/><path d='M48 96l30 30 60-60' stroke='white' stroke-width='12' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+        "sizes": "192x192",
+        "type": "image/svg+xml",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23ff6b35' rx='128'/><path d='M128 256l80 80 160-160' stroke='white' stroke-width='24' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+        "sizes": "512x512",
+        "type": "image/svg+xml",
+        "purpose": "any maskable"
+      }
+    ],
   "screenshots": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844'><rect width='390' height='844' fill='%23fafafa'/><rect x='20' y='60' width='350' height='200' fill='%23ff6b35' rx='18'/><text x='195' y='140' font-size='24' text-anchor='middle' fill='white'>R-Service Tracker</text><text x='195' y='170' font-size='16' text-anchor='middle' fill='white'>Premium Work Tracking</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844'><rect width='390' height='844' fill='%23fafafa'/><rect x='20' y='60' width='350' height='200' fill='%23ff6b35' rx='18'/><text x='195' y='140' font-size='24' text-anchor='middle' fill='white'>Job Tracker</text><text x='195' y='170' font-size='16' text-anchor='middle' fill='white'>Premium Work Management</text></svg>",
       "sizes": "390x844",
       "type": "image/svg+xml",
       "form_factor": "narrow",
-      "label": "R-Service Tracker Main Screen"
+      "label": "Job Tracker Main Screen"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "Mark Work Done",
-      "short_name": "Work",
-      "description": "Quickly record today's work",
+      "shortcuts": [
+      {
+        "name": "Mark Job Done",
+        "short_name": "Job",
+        "description": "Quickly record today's job completion",
       "url": "/?action=work",
       "icons": [
         {

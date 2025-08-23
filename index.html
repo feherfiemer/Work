@@ -3,14 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R-Service Tracker - Premium Driving Work Tracker</title>
+    <title>Job Tracker - Premium Work Management System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ff6b35' rx='18'/><path d='M25 45l15 15 30-30' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#ff6b35">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Job Tracker">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23ff6b35' rx='48'/><path d='M48 96l30 30 60-60' stroke='white' stroke-width='12' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 </head>
 <body>
     <!-- Menu Button -->
@@ -21,7 +29,10 @@
     <!-- Side Menu -->
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
-            <h3>Menu</h3>
+            <div class="menu-title">
+                <i class="fas fa-tasks"></i>
+                <h3>Menu</h3>
+            </div>
             <button class="close-menu" id="closeMenu">
                 <i class="fas fa-times"></i>
             </button>
@@ -30,48 +41,87 @@
             <div class="menu-item" id="themeToggle">
                 <i class="fas fa-palette"></i>
                 <span>Theme</span>
+                <i class="fas fa-chevron-right menu-arrow"></i>
                 <div class="theme-options">
-                    <button class="theme-btn" data-theme="orange-light">Orange Light</button>
-                    <button class="theme-btn" data-theme="orange-dark">Orange Dark</button>
-                    <button class="theme-btn" data-theme="blue-light">Blue Light</button>
-                    <button class="theme-btn" data-theme="blue-dark">Blue Dark</button>
+                    <button class="theme-btn" data-theme="orange-light">
+                        <i class="fas fa-sun"></i>
+                        Orange Light
+                    </button>
+                    <button class="theme-btn" data-theme="orange-dark">
+                        <i class="fas fa-moon"></i>
+                        Orange Dark
+                    </button>
+                    <button class="theme-btn" data-theme="blue-light">
+                        <i class="fas fa-sun"></i>
+                        Blue Light
+                    </button>
+                    <button class="theme-btn" data-theme="blue-dark">
+                        <i class="fas fa-moon"></i>
+                        Blue Dark
+                    </button>
                 </div>
             </div>
             <div class="menu-item" id="historyBtn">
                 <i class="fas fa-history"></i>
                 <span>History</span>
+                <i class="fas fa-chevron-right menu-arrow"></i>
             </div>
             <div class="menu-item" id="clearBtn">
                 <i class="fas fa-trash-alt"></i>
                 <span>Clear Data</span>
+                <i class="fas fa-chevron-right menu-arrow"></i>
             </div>
             <div class="menu-item" id="aboutBtn">
                 <i class="fas fa-info-circle"></i>
                 <span>About</span>
+                <i class="fas fa-chevron-right menu-arrow"></i>
             </div>
         </div>
     </div>
+
+    <!-- Background Blur Overlay -->
+    <div class="blur-overlay" id="blurOverlay"></div>
 
     <!-- Main Container -->
     <div class="container">
         <!-- Header -->
         <header class="header">
             <div class="logo">
-                <i class="fas fa-car"></i>
-                <h1>R-Service Tracker</h1>
+                <div class="logo-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Job Tracker</h1>
+                    <p>Premium Work Management</p>
+                </div>
             </div>
             <div class="header-stats">
                 <div class="stat-card">
-                    <div class="stat-value" id="totalEarnings">₹0</div>
-                    <div class="stat-label">Total Earnings</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalEarnings">₹0</div>
+                        <div class="stat-label">Total Earned</div>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="pendingAmount">₹0</div>
-                    <div class="stat-label">Pending Amount</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="pendingAmount">₹0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="workStreak">0</div>
-                    <div class="stat-label">Current Streak</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="workStreak">0</div>
+                        <div class="stat-label">Streak</div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -80,19 +130,31 @@
         <section class="daily-work">
             <div class="work-card">
                 <div class="work-header">
-                    <h2>Today's Work</h2>
+                    <div class="work-title">
+                        <i class="fas fa-calendar-day"></i>
+                        <h2>Today's Job</h2>
+                    </div>
                     <div class="date-display" id="currentDate"></div>
                 </div>
                 <div class="work-content">
                     <div class="work-status" id="workStatus">
-                        <i class="fas fa-clock"></i>
-                        <span>Ready to start work</span>
+                        <i class="fas fa-play-circle"></i>
+                        <span>Ready to start your job</span>
                     </div>
-                    <button class="work-btn" id="workBtn">
-                        <i class="fas fa-play"></i>
-                        <span>Mark Work Done</span>
-                    </button>
+                    <div class="work-actions">
+                        <button class="work-btn" id="workBtn">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Mark Job Done</span>
+                            <div class="btn-ripple"></div>
+                        </button>
+                        <button class="collect-btn hidden" id="collectBtn">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            <span>Collect Payment</span>
+                            <div class="btn-ripple"></div>
+                        </button>
+                    </div>
                     <div class="daily-earning" id="dailyEarning">
+                        <i class="fas fa-rupee-sign"></i>
                         <span>Daily Rate: ₹25</span>
                     </div>
                 </div>
@@ -102,18 +164,24 @@
         <!-- Payment Notification -->
         <div class="payment-notification" id="paymentNotification" style="display: none;">
             <div class="notification-content">
-                <i class="fas fa-money-bill-wave"></i>
-                <h3>Payment Day!</h3>
-                <p>You've completed 4 consecutive days of work!</p>
-                <p>You can collect ₹100 today!</p>
-                <button class="collect-btn" id="collectBtn">Collect Payment</button>
+                <div class="notification-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="notification-text">
+                    <h3>Payment Ready!</h3>
+                    <p>You've completed 4 consecutive days of work!</p>
+                    <p>You can collect <strong>₹100</strong> today!</p>
+                </div>
             </div>
         </div>
 
         <!-- Analytics Section -->
         <section class="analytics">
             <div class="section-header">
-                <h2>Analytics & Reports</h2>
+                <h2>
+                    <i class="fas fa-chart-line"></i>
+                    Analytics & Reports
+                </h2>
                 <div class="view-toggles">
                     <button class="toggle-btn active" data-view="chart">
                         <i class="fas fa-chart-line"></i>
@@ -136,9 +204,18 @@
                     <canvas id="earningsChart"></canvas>
                 </div>
                 <div class="chart-controls">
-                    <button class="chart-btn" data-period="week">Week</button>
-                    <button class="chart-btn active" data-period="month">Month</button>
-                    <button class="chart-btn" data-period="year">Year</button>
+                    <button class="chart-btn" data-period="week">
+                        <i class="fas fa-calendar-week"></i>
+                        Week
+                    </button>
+                    <button class="chart-btn active" data-period="month">
+                        <i class="fas fa-calendar-alt"></i>
+                        Month
+                    </button>
+                    <button class="chart-btn" data-period="year">
+                        <i class="fas fa-calendar"></i>
+                        Year
+                    </button>
                 </div>
             </div>
 
@@ -161,7 +238,10 @@
             <!-- Balance Sheet View -->
             <div class="view-content balance-view">
                 <div class="balance-header">
-                    <h3>Balance Sheet</h3>
+                    <h3>
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        Balance Sheet
+                    </h3>
                     <div class="export-buttons">
                         <button class="export-btn" id="exportPDF">
                             <i class="fas fa-file-pdf"></i>
@@ -182,7 +262,10 @@
     <div class="modal" id="aboutModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>About R-Service Tracker</h3>
+                <h3>
+                    <i class="fas fa-tasks"></i>
+                    About Job Tracker
+                </h3>
                 <button class="close-modal">
                     <i class="fas fa-times"></i>
                 </button>
@@ -190,30 +273,54 @@
             <div class="modal-body">
                 <div class="about-content">
                     <div class="app-icon">
-                        <i class="fas fa-car"></i>
+                        <i class="fas fa-tasks"></i>
                     </div>
-                    <h4>R-Service Tracker v1.0.0</h4>
-                    <p>A premium driving work tracker designed for professional drivers to monitor their daily work, earnings, and payment schedules.</p>
+                    <h4>Job Tracker v1.0.0</h4>
+                    <p>A premium job tracking application designed for professionals to monitor their daily work, earnings, and payment schedules with advanced analytics.</p>
                     
                     <div class="features">
                         <h5>Features:</h5>
                         <ul>
-                            <li>Daily work tracking with ₹25 per day</li>
+                            <li>Daily job tracking with ₹25 per day</li>
                             <li>Automatic payment calculation (₹100 every 4 days)</li>
                             <li>Advanced analytics and charts</li>
                             <li>Calendar view for work history</li>
                             <li>PDF export and email reports</li>
                             <li>Multiple themes (Orange/Blue, Light/Dark)</li>
                             <li>Offline support with local storage</li>
+                            <li>Browser notifications for reminders</li>
                             <li>Responsive design for all devices</li>
                         </ul>
                     </div>
                     
                     <div class="developer-info">
-                        <p><strong>Developed with ❤️ for professional drivers</strong></p>
-                        <p>Built using modern web technologies for optimal performance</p>
+                        <p><strong>Built with ❤️ for professionals</strong></p>
+                        <p>Modern web technologies for optimal performance</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Permission Banner -->
+    <div class="notification-banner" id="notificationBanner" style="display: none;">
+        <div class="banner-content">
+            <div class="banner-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="banner-text">
+                <h4>Enable Notifications</h4>
+                <p>Get reminded to track your daily job progress</p>
+            </div>
+            <div class="banner-actions">
+                <button class="banner-btn allow" id="allowNotifications">
+                    <i class="fas fa-check"></i>
+                    Allow
+                </button>
+                <button class="banner-btn deny" id="denyNotifications">
+                    <i class="fas fa-times"></i>
+                    Not Now
+                </button>
             </div>
         </div>
     </div>

@@ -1,15 +1,16 @@
-// R-Service Tracker - Premium JavaScript Application
+// Job Tracker - Premium JavaScript Application
 // Version 1.0.0
 
-class RServiceTracker {
+class JobTracker {
     constructor() {
-        this.dbName = 'RServiceTracker';
+        this.dbName = 'JobTracker';
         this.dbVersion = 1;
         this.db = null;
         this.currentTheme = localStorage.getItem('theme') || 'orange-light';
         this.currentView = 'chart';
         this.currentMonth = new Date();
         this.chart = null;
+        this.notificationPermission = localStorage.getItem('notificationPermission') || 'default';
         
         this.init();
     }
@@ -24,6 +25,9 @@ class RServiceTracker {
         this.renderCalendar();
         this.updateBalanceSheet();
         this.setCurrentDate();
+        this.checkNotificationPermission();
+        this.setupRippleEffect();
+        this.sendDailyReminder();
     }
 
     // Database Operations
@@ -141,37 +145,182 @@ class RServiceTracker {
         this.renderCalendar();
     }
 
+    // Notification System
+    checkNotificationPermission() {
+        if (this.notificationPermission === 'default' && 'Notification' in window) {
+            setTimeout(() => {
+                this.showNotificationBanner();
+            }, 3000); // Show after 3 seconds
+        }
+    }
+
+    showNotificationBanner() {
+        const banner = document.getElementById('notificationBanner');
+        if (banner) {
+            banner.style.display = 'block';
+            
+            // Auto hide after 10 seconds
+            setTimeout(() => {
+                this.hideNotificationBanner();
+            }, 10000);
+        }
+    }
+
+    hideNotificationBanner() {
+        const banner = document.getElementById('notificationBanner');
+        if (banner) {
+            banner.style.animation = 'bannerSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 400);
+        }
+    }
+
+    async requestNotificationPermission() {
+        if ('Notification' in window) {
+            const permission = await Notification.requestPermission();
+            this.notificationPermission = permission;
+            localStorage.setItem('notificationPermission', permission);
+            
+            if (permission === 'granted') {
+                this.showNotification('Notifications enabled! You\'ll receive daily reminders.', 'success');
+                this.showBrowserNotification('Job Tracker', {
+                    body: 'Notifications are now enabled! We\'ll remind you to track your daily progress.',
+                    icon: this.getNotificationIcon()
+                });
+            } else if (permission === 'denied') {
+                this.showNotification('Notifications disabled. You can enable them later in browser settings.', 'warning');
+            }
+            
+            this.hideNotificationBanner();
+        }
+    }
+
+    showBrowserNotification(title, options = {}) {
+        if (this.notificationPermission === 'granted' && 'Notification' in window) {
+            const defaultOptions = {
+                icon: this.getNotificationIcon(),
+                badge: this.getNotificationIcon(),
+                vibrate: [200, 100, 200],
+                tag: 'job-tracker',
+                renotify: true,
+                requireInteraction: false,
+                actions: [
+                    {
+                        action: 'mark-job',
+                        title: 'Mark Job Done'
+                    },
+                    {
+                        action: 'view-app',
+                        title: 'View App'
+                    }
+                ]
+            };
+            
+            const notification = new Notification(title, { ...defaultOptions, ...options });
+            
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+            
+            // Auto close after 8 seconds
+            setTimeout(() => {
+                notification.close();
+            }, 8000);
+            
+            return notification;
+        }
+    }
+
+    getNotificationIcon() {
+        return "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23ff6b35' rx='48'/><path d='M48 96l30 30 60-60' stroke='white' stroke-width='12' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+    }
+
+    sendDailyReminder() {
+        // Check if we should send a daily reminder
+        const lastReminder = localStorage.getItem('lastReminder');
+        const today = new Date().toDateString();
+        
+        if (lastReminder !== today && this.notificationPermission === 'granted') {
+            // Check if user hasn't worked today
+            this.getWorkRecords().then(records => {
+                const todayRecord = records.find(record => 
+                    new Date(record.date).toDateString() === today
+                );
+                
+                if (!todayRecord) {
+                    // Send reminder at 6 PM if not worked yet
+                    const now = new Date();
+                    const reminderTime = new Date();
+                    reminderTime.setHours(18, 0, 0, 0);
+                    
+                    if (now >= reminderTime) {
+                        this.showBrowserNotification('Daily Job Reminder', {
+                            body: "Don't forget to mark your job completion for today!",
+                            tag: 'daily-reminder'
+                        });
+                        localStorage.setItem('lastReminder', today);
+                    }
+                }
+            });
+        }
+    }
+
+    // Ripple Effect for Buttons
+    setupRippleEffect() {
+        const buttons = document.querySelectorAll('.work-btn, .collect-btn, .export-btn, .toggle-btn, .chart-btn');
+        
+        buttons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                this.createRipple(e, button);
+            });
+        });
+    }
+
+    createRipple(event, element) {
+        const ripple = document.createElement('span');
+        const rect = element.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+        
+        ripple.className = 'btn-ripple';
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        
+        element.appendChild(ripple);
+        
+        setTimeout(() => {
+            ripple.remove();
+        }, 600);
+    }
+
     // Event Listeners
     initEventListeners() {
-        // Menu toggle
+        // Menu toggle with blur overlay
         document.getElementById('menuToggle').addEventListener('click', () => {
-            document.getElementById('sideMenu').classList.add('active');
+            const menu = document.getElementById('sideMenu');
+            const overlay = document.getElementById('blurOverlay');
+            
+            menu.classList.add('active');
+            overlay.classList.add('active');
         });
 
         document.getElementById('closeMenu').addEventListener('click', () => {
-            document.getElementById('sideMenu').classList.remove('active');
+            this.closeSideMenu();
         });
 
         // Click outside menu to close
-        document.addEventListener('click', (e) => {
-            const menu = document.getElementById('sideMenu');
-            const toggle = document.getElementById('menuToggle');
-            
-            if (!menu.contains(e.target) && !toggle.contains(e.target)) {
-                menu.classList.remove('active');
-            }
+        document.getElementById('blurOverlay').addEventListener('click', () => {
+            this.closeSideMenu();
         });
 
         // Theme toggle
         document.getElementById('themeToggle').addEventListener('click', () => {
-            const themeOptions = document.querySelector('.theme-options');
             const menuItem = document.getElementById('themeToggle');
-            
-            if (menuItem.classList.contains('active')) {
-                menuItem.classList.remove('active');
-            } else {
-                menuItem.classList.add('active');
-            }
+            menuItem.classList.toggle('active');
         });
 
         // Theme buttons
@@ -179,7 +328,7 @@ class RServiceTracker {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.setTheme(btn.dataset.theme);
-                document.getElementById('sideMenu').classList.remove('active');
+                this.closeSideMenu();
                 document.getElementById('themeToggle').classList.remove('active');
             });
         });
@@ -187,7 +336,7 @@ class RServiceTracker {
         // Menu items
         document.getElementById('historyBtn').addEventListener('click', () => {
             this.showView('balance');
-            document.getElementById('sideMenu').classList.remove('active');
+            this.closeSideMenu();
         });
 
         document.getElementById('clearBtn').addEventListener('click', () => {
@@ -195,12 +344,12 @@ class RServiceTracker {
                 this.clearAllData();
                 this.showNotification('All data cleared successfully!', 'success');
             }
-            document.getElementById('sideMenu').classList.remove('active');
+            this.closeSideMenu();
         });
 
         document.getElementById('aboutBtn').addEventListener('click', () => {
             this.showAboutModal();
-            document.getElementById('sideMenu').classList.remove('active');
+            this.closeSideMenu();
         });
 
         // Work button
@@ -260,6 +409,51 @@ class RServiceTracker {
                 this.closeModal();
             }
         });
+
+        // Notification banner buttons
+        document.getElementById('allowNotifications').addEventListener('click', () => {
+            this.requestNotificationPermission();
+        });
+
+        document.getElementById('denyNotifications').addEventListener('click', () => {
+            this.notificationPermission = 'denied';
+            localStorage.setItem('notificationPermission', 'denied');
+            this.hideNotificationBanner();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'Enter':
+                        e.preventDefault();
+                        document.getElementById('workBtn').click();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        document.getElementById('exportPDF').click();
+                        break;
+                    case 'm':
+                        e.preventDefault();
+                        document.getElementById('menuToggle').click();
+                        break;
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                this.closeSideMenu();
+                this.closeModal();
+            }
+        });
+    }
+
+    closeSideMenu() {
+        const menu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('blurOverlay');
+        
+        menu.classList.remove('active');
+        overlay.classList.remove('active');
+        document.getElementById('themeToggle').classList.remove('active');
     }
 
     // Theme Management
@@ -267,6 +461,11 @@ class RServiceTracker {
         this.currentTheme = theme;
         localStorage.setItem('theme', theme);
         this.applyTheme();
+        
+        // Update chart colors if chart exists
+        if (this.chart) {
+            setTimeout(() => this.initChart(), 300);
+        }
     }
 
     applyTheme() {
@@ -290,7 +489,7 @@ class RServiceTracker {
         );
         
         if (todayRecord) {
-            this.showNotification('You have already recorded work for today!', 'warning');
+            this.showNotification('You have already recorded your job for today!', 'warning');
             return;
         }
         
@@ -304,20 +503,65 @@ class RServiceTracker {
         this.initChart();
         this.renderCalendar();
         
-        this.showNotification('Work recorded successfully! ₹25 added to pending amount.', 'success');
+        // Show success notification
+        this.showNotification('Job completed successfully! ₹25 added to pending amount.', 'success');
+        
+        // Show browser notification
+        if (this.notificationPermission === 'granted') {
+            this.showBrowserNotification('Job Completed!', {
+                body: '₹25 has been added to your pending amount. Great work today!',
+                tag: 'job-completed'
+            });
+        }
+        
+        // Check for celebration animation
+        this.celebrateJobCompletion();
+    }
+
+    celebrateJobCompletion() {
+        // Add a subtle celebration effect
+        const workCard = document.querySelector('.work-card');
+        workCard.style.animation = 'none';
+        workCard.offsetHeight; // Trigger reflow
+        workCard.style.animation = 'celebrateJob 0.6s ease';
+        
+        // Add CSS for celebration animation
+        if (!document.getElementById('celebrationStyle')) {
+            const style = document.createElement('style');
+            style.id = 'celebrationStyle';
+            style.textContent = `
+                @keyframes celebrateJob {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.02); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
 
     async checkPaymentEligibility() {
         const records = await this.getWorkRecords();
         const consecutiveDays = this.getConsecutiveWorkDays(records);
+        const pendingAmount = await this.calculatePendingAmount();
         
-        if (consecutiveDays >= 4) {
-            const pendingAmount = await this.calculatePendingAmount();
-            if (pendingAmount >= 100) {
-                document.getElementById('paymentNotification').style.display = 'block';
+        const paymentNotification = document.getElementById('paymentNotification');
+        const collectBtn = document.getElementById('collectBtn');
+        
+        if (consecutiveDays >= 4 && pendingAmount >= 100) {
+            paymentNotification.style.display = 'block';
+            collectBtn.classList.remove('hidden');
+            
+            // Show browser notification for payment eligibility
+            if (this.notificationPermission === 'granted') {
+                this.showBrowserNotification('Payment Ready!', {
+                    body: `You can collect ₹100 today! You've completed ${consecutiveDays} consecutive days.`,
+                    tag: 'payment-ready',
+                    requireInteraction: true
+                });
             }
         } else {
-            document.getElementById('paymentNotification').style.display = 'none';
+            paymentNotification.style.display = 'none';
+            collectBtn.classList.add('hidden');
         }
     }
 
@@ -327,6 +571,16 @@ class RServiceTracker {
         const sortedRecords = records.sort((a, b) => new Date(b.date) - new Date(a.date));
         let consecutive = 0;
         let currentDate = new Date();
+        
+        // Check if worked today first
+        const today = new Date().toDateString();
+        const workedToday = sortedRecords.some(record => 
+            new Date(record.date).toDateString() === today
+        );
+        
+        if (!workedToday) {
+            currentDate.setDate(currentDate.getDate() - 1);
+        }
         
         for (let i = 0; i < sortedRecords.length; i++) {
             const recordDate = new Date(sortedRecords[i].date);
@@ -346,16 +600,74 @@ class RServiceTracker {
     async collectPayment() {
         const records = await this.getWorkRecords();
         const consecutiveDays = this.getConsecutiveWorkDays(records);
+        const pendingAmount = await this.calculatePendingAmount();
         
-        if (consecutiveDays >= 4) {
-            const paymentAmount = Math.floor(consecutiveDays / 4) * 100;
+        if (consecutiveDays >= 4 && pendingAmount >= 100) {
+            const paymentAmount = Math.floor(pendingAmount / 100) * 100;
             await this.savePaymentRecord(paymentAmount, consecutiveDays);
             
             document.getElementById('paymentNotification').style.display = 'none';
+            document.getElementById('collectBtn').classList.add('hidden');
+            
             this.updateDisplay();
             this.updateBalanceSheet();
             
             this.showNotification(`Payment of ₹${paymentAmount} collected successfully!`, 'success');
+            
+            // Show browser notification
+            if (this.notificationPermission === 'granted') {
+                this.showBrowserNotification('Payment Collected!', {
+                    body: `₹${paymentAmount} has been successfully collected. Keep up the great work!`,
+                    tag: 'payment-collected'
+                });
+            }
+            
+            // Celebration effect
+            this.celebratePayment();
+        }
+    }
+
+    celebratePayment() {
+        // Create confetti effect
+        this.createConfetti();
+    }
+
+    createConfetti() {
+        const colors = ['#ff6b35', '#ffa726', '#4caf50', '#2196f3'];
+        const confettiCount = 50;
+        
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.style.cssText = `
+                position: fixed;
+                top: -10px;
+                left: ${Math.random() * 100}%;
+                width: 10px;
+                height: 10px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                z-index: 3000;
+                animation: confettiFall ${2 + Math.random() * 3}s linear forwards;
+                transform: rotate(${Math.random() * 360}deg);
+            `;
+            
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => confetti.remove(), 5000);
+        }
+        
+        // Add confetti animation if not exists
+        if (!document.getElementById('confettiStyle')) {
+            const style = document.createElement('style');
+            style.id = 'confettiStyle';
+            style.textContent = `
+                @keyframes confettiFall {
+                    to {
+                        transform: translateY(100vh) rotate(720deg);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
         }
     }
 
@@ -368,9 +680,10 @@ class RServiceTracker {
         const pendingAmount = await this.calculatePendingAmount();
         const workStreak = this.getConsecutiveWorkDays(records);
         
-        document.getElementById('totalEarnings').textContent = `₹${totalEarnings}`;
-        document.getElementById('pendingAmount').textContent = `₹${pendingAmount}`;
-        document.getElementById('workStreak').textContent = workStreak;
+        // Animate number changes
+        this.animateValue('totalEarnings', totalEarnings, '₹');
+        this.animateValue('pendingAmount', pendingAmount, '₹');
+        this.animateValue('workStreak', workStreak);
         
         // Update work button state
         const today = new Date();
@@ -384,13 +697,31 @@ class RServiceTracker {
         
         if (todayRecord) {
             workBtn.disabled = true;
-            workBtn.innerHTML = '<i class="fas fa-check"></i><span>Work Completed</span>';
-            workStatus.innerHTML = '<i class="fas fa-check-circle"></i><span>Work completed for today</span>';
+            workBtn.innerHTML = '<i class="fas fa-check-circle"></i><span>Job Completed</span>';
+            workBtn.style.background = 'var(--success-color)';
+            workStatus.innerHTML = '<i class="fas fa-check-circle"></i><span>Job completed for today</span>';
         } else {
             workBtn.disabled = false;
-            workBtn.innerHTML = '<i class="fas fa-play"></i><span>Mark Work Done</span>';
-            workStatus.innerHTML = '<i class="fas fa-clock"></i><span>Ready to start work</span>';
+            workBtn.innerHTML = '<i class="fas fa-check-circle"></i><span>Mark Job Done</span>';
+            workBtn.style.background = 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))';
+            workStatus.innerHTML = '<i class="fas fa-play-circle"></i><span>Ready to start your job</span>';
         }
+    }
+
+    animateValue(elementId, targetValue, prefix = '') {
+        const element = document.getElementById(elementId);
+        const currentValue = parseInt(element.textContent.replace(/[^\d]/g, '')) || 0;
+        const increment = (targetValue - currentValue) / 20;
+        let current = currentValue;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if ((increment > 0 && current >= targetValue) || (increment < 0 && current <= targetValue)) {
+                current = targetValue;
+                clearInterval(timer);
+            }
+            element.textContent = prefix + Math.round(current);
+        }, 50);
     }
 
     async calculatePendingAmount() {
@@ -451,6 +782,10 @@ class RServiceTracker {
         const records = await this.getWorkRecords();
         const chartData = await this.getChartData('month', records);
         
+        // Get current theme colors
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+        const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim();
+        
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -458,16 +793,19 @@ class RServiceTracker {
                 datasets: [{
                     label: 'Daily Earnings (₹)',
                     data: chartData.earnings,
-                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim(),
-                    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--shadow-light').trim(),
+                    borderColor: primaryColor,
+                    backgroundColor: `${primaryColor}20`,
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim(),
+                    pointBackgroundColor: primaryColor,
                     pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
+                    pointBorderWidth: 3,
                     pointRadius: 6,
-                    pointHoverRadius: 8
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: secondaryColor,
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 3
                 }]
             },
             options: {
@@ -482,10 +820,20 @@ class RServiceTracker {
                             padding: 20,
                             font: {
                                 family: 'Inter',
-                                size: 12,
-                                weight: '500'
-                            }
+                                size: 14,
+                                weight: '600'
+                            },
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim()
                         }
+                    },
+                    tooltip: {
+                        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--surface-color').trim(),
+                        titleColor: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim(),
+                        bodyColor: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim(),
+                        borderWidth: 1,
+                        cornerRadius: 12,
+                        displayColors: false
                     }
                 },
                 scales: {
@@ -493,6 +841,7 @@ class RServiceTracker {
                         beginAtZero: true,
                         grid: {
                             color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim(),
+                            drawBorder: false
                         },
                         ticks: {
                             callback: function(value) {
@@ -500,25 +849,34 @@ class RServiceTracker {
                             },
                             font: {
                                 family: 'Inter',
-                                size: 11
-                            }
+                                size: 12,
+                                weight: '500'
+                            },
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim()
                         }
                     },
                     x: {
                         grid: {
                             color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim(),
+                            drawBorder: false
                         },
                         ticks: {
                             font: {
                                 family: 'Inter',
-                                size: 11
-                            }
+                                size: 12,
+                                weight: '500'
+                            },
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim()
                         }
                     }
                 },
                 interaction: {
                     intersect: false,
                     mode: 'index'
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutCubic'
                 }
             }
         });
@@ -532,7 +890,7 @@ class RServiceTracker {
         
         this.chart.data.labels = chartData.labels;
         this.chart.data.datasets[0].data = chartData.earnings;
-        this.chart.update();
+        this.chart.update('active');
     }
 
     async getChartData(period, records) {
@@ -608,10 +966,6 @@ class RServiceTracker {
             const header = document.createElement('div');
             header.className = 'calendar-day-header';
             header.textContent = day;
-            header.style.fontWeight = '600';
-            header.style.textAlign = 'center';
-            header.style.padding = '10px';
-            header.style.color = 'var(--text-secondary)';
             calendarGrid.appendChild(header);
         });
         
@@ -638,7 +992,7 @@ class RServiceTracker {
             );
             if (dayRecord) {
                 dayElement.classList.add('worked');
-                dayElement.title = `Work completed: ₹${dayRecord.amount}`;
+                dayElement.title = `Job completed: ₹${dayRecord.amount}`;
             }
             
             calendarGrid.appendChild(dayElement);
@@ -798,10 +1152,16 @@ class RServiceTracker {
                 .summary-stat {
                     display: flex;
                     justify-content: space-between;
-                    padding: 10px 15px;
-                    background: var(--surface-color);
-                    border-radius: 12px;
-                    border: 1px solid var(--border-color);
+                    padding: 15px 20px;
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(8px);
+                    border-radius: 15px;
+                    border: 1px solid var(--glass-border);
+                    transition: all 0.3s ease;
+                }
+                .summary-stat:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px var(--shadow-light);
                 }
                 .summary-stat .label {
                     color: var(--text-secondary);
@@ -813,17 +1173,19 @@ class RServiceTracker {
                 }
                 .month-section {
                     margin-bottom: 20px;
-                    border: 1px solid var(--border-color);
-                    border-radius: 12px;
+                    border: 1px solid var(--glass-border);
+                    border-radius: 15px;
                     overflow: hidden;
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(8px);
                 }
                 .month-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     padding: 15px 20px;
-                    background: var(--surface-color);
-                    border-bottom: 1px solid var(--border-color);
+                    background: var(--primary-color);
+                    color: white;
                 }
                 .month-header h5 {
                     margin: 0;
@@ -834,20 +1196,25 @@ class RServiceTracker {
                     display: flex;
                     gap: 15px;
                     font-size: 0.9rem;
-                    color: var(--text-secondary);
+                    opacity: 0.9;
                 }
                 .month-details {
-                    padding: 10px;
+                    padding: 15px;
                 }
                 .work-record, .payment-record {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    padding: 8px 15px;
-                    margin-bottom: 5px;
+                    padding: 12px 15px;
+                    margin-bottom: 8px;
                     background: var(--surface-color);
-                    border-radius: 8px;
+                    border-radius: 12px;
                     border: 1px solid var(--border-color);
+                    transition: all 0.3s ease;
+                }
+                .work-record:hover, .payment-record:hover {
+                    transform: translateX(5px);
+                    box-shadow: 0 4px 15px var(--shadow-light);
                 }
                 .record-date, .payment-date {
                     font-weight: 500;
@@ -869,11 +1236,13 @@ class RServiceTracker {
                         flex-direction: column;
                         gap: 10px;
                         align-items: stretch;
+                        text-align: center;
                     }
                     .work-record, .payment-record {
                         flex-direction: column;
                         align-items: stretch;
                         gap: 5px;
+                        text-align: center;
                     }
                 }
             </style>
@@ -890,7 +1259,7 @@ class RServiceTracker {
             
             // Add title
             pdf.setFontSize(20);
-            pdf.text('R-Service Tracker Report', 20, 30);
+            pdf.text('Job Tracker Report', 20, 30);
             
             // Add generation date
             pdf.setFontSize(12);
@@ -916,7 +1285,7 @@ class RServiceTracker {
             // Work Records
             if (records.length > 0) {
                 pdf.setFontSize(14);
-                pdf.text('Work Records:', 20, 150);
+                pdf.text('Recent Job Records:', 20, 150);
                 
                 let yPos = 165;
                 pdf.setFontSize(10);
@@ -934,7 +1303,7 @@ class RServiceTracker {
             }
             
             // Save PDF
-            pdf.save('r-service-tracker-report.pdf');
+            pdf.save('job-tracker-report.pdf');
             this.showNotification('PDF exported successfully!', 'success');
             
         } catch (error) {
@@ -953,7 +1322,7 @@ class RServiceTracker {
             const pendingAmount = totalWorked - totalPaid;
             
             const emailBody = `
-R-Service Tracker Report
+Job Tracker Report
 Generated on: ${new Date().toLocaleDateString()}
 
 SUMMARY:
@@ -962,7 +1331,7 @@ SUMMARY:
 - Total Paid: ₹${totalPaid}
 - Pending Amount: ₹${pendingAmount}
 
-RECENT WORK RECORDS:
+RECENT JOB RECORDS:
 ${records.slice(-10).map(record => 
     `${new Date(record.date).toLocaleDateString()} - ₹${record.amount}`
 ).join('\n')}
@@ -972,10 +1341,10 @@ ${payments.map(payment =>
     `${new Date(payment.date).toLocaleDateString()} - ₹${payment.amount} (${payment.workDays} days)`
 ).join('\n')}
 
-Generated by R-Service Tracker v1.0.0
+Generated by Job Tracker v1.0.0
             `.trim();
             
-            const mailtoLink = `mailto:?subject=R-Service Tracker Report&body=${encodeURIComponent(emailBody)}`;
+            const mailtoLink = `mailto:?subject=Job Tracker Report&body=${encodeURIComponent(emailBody)}`;
             window.location.href = mailtoLink;
             
             this.showNotification('Email client opened with report data!', 'success');
@@ -995,7 +1364,7 @@ Generated by R-Service Tracker v1.0.0
         document.getElementById('aboutModal').classList.remove('active');
     }
 
-    // Notification System
+    // Enhanced Notification System
     showNotification(message, type = 'info') {
         // Remove existing notifications
         const existingNotifications = document.querySelectorAll('.notification');
@@ -1006,6 +1375,9 @@ Generated by R-Service Tracker v1.0.0
         notification.className = `notification ${type}`;
         notification.innerHTML = `
             <div class="notification-content">
+                <div class="notification-icon">
+                    <i class="fas ${this.getNotificationIcon(type)}"></i>
+                </div>
                 <div class="notification-message">${message}</div>
                 <button class="notification-close">&times;</button>
             </div>
@@ -1017,22 +1389,36 @@ Generated by R-Service Tracker v1.0.0
             top: 20px;
             right: 20px;
             z-index: 3000;
-            min-width: 300px;
-            max-width: 400px;
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
+            min-width: 350px;
+            max-width: 450px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
             border-radius: 18px;
-            box-shadow: 0 8px 30px var(--shadow-heavy);
-            animation: slideInRight 0.3s ease;
+            box-shadow: 0 10px 40px var(--shadow-heavy);
+            animation: notificationSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         `;
         
         const content = notification.querySelector('.notification-content');
         content.style.cssText = `
-            padding: 20px;
+            padding: 20px 25px;
             display: flex;
-            justify-content: space-between;
             align-items: flex-start;
             gap: 15px;
+        `;
+        
+        const icon = notification.querySelector('.notification-icon');
+        icon.style.cssText = `
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            flex-shrink: 0;
+            background: ${this.getNotificationColor(type)};
         `;
         
         const messageEl = notification.querySelector('.notification-message');
@@ -1040,87 +1426,112 @@ Generated by R-Service Tracker v1.0.0
             flex: 1;
             color: var(--text-primary);
             font-weight: 500;
-            line-height: 1.4;
+            line-height: 1.5;
+            font-size: 1rem;
         `;
         
         const closeBtn = notification.querySelector('.notification-close');
         closeBtn.style.cssText = `
             background: none;
             border: none;
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
             color: var(--text-secondary);
             padding: 0;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
         `;
         
-        // Add type-specific styling
-        if (type === 'success') {
-            notification.style.borderLeftColor = 'var(--success-color)';
-            notification.style.borderLeftWidth = '4px';
-        } else if (type === 'warning') {
-            notification.style.borderLeftColor = 'var(--warning-color)';
-            notification.style.borderLeftWidth = '4px';
-        } else if (type === 'error') {
-            notification.style.borderLeftColor = 'var(--error-color)';
-            notification.style.borderLeftWidth = '4px';
-        }
+        closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.background = 'var(--surface-variant)';
+            closeBtn.style.color = 'var(--text-primary)';
+        });
+        
+        closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.background = 'none';
+            closeBtn.style.color = 'var(--text-secondary)';
+        });
         
         // Add animation styles
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideInRight {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
+        if (!document.getElementById('notificationStyles')) {
+            const style = document.createElement('style');
+            style.id = 'notificationStyles';
+            style.textContent = `
+                @keyframes notificationSlideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
                 }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
+                @keyframes notificationSlideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
                 }
-            }
-            @keyframes slideOutRight {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
+            `;
+            document.head.appendChild(style);
+        }
         
         // Add to DOM
         document.body.appendChild(notification);
         
         // Close button functionality
         closeBtn.addEventListener('click', () => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
+            notification.style.animation = 'notificationSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             setTimeout(() => notification.remove(), 300);
         });
         
-        // Auto remove after 5 seconds
+        // Auto remove after 6 seconds
         setTimeout(() => {
             if (notification.parentNode) {
-                notification.style.animation = 'slideOutRight 0.3s ease';
+                notification.style.animation = 'notificationSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                 setTimeout(() => notification.remove(), 300);
             }
-        }, 5000);
+        }, 6000);
+    }
+
+    getNotificationIcon(type) {
+        switch (type) {
+            case 'success': return 'fa-check-circle';
+            case 'warning': return 'fa-exclamation-triangle';
+            case 'error': return 'fa-times-circle';
+            case 'info': return 'fa-info-circle';
+            default: return 'fa-bell';
+        }
+    }
+
+    getNotificationColor(type) {
+        switch (type) {
+            case 'success': return 'var(--success-color)';
+            case 'warning': return 'var(--warning-color)';
+            case 'error': return 'var(--error-color)';
+            case 'info': return 'var(--info-color)';
+            default: return 'var(--primary-color)';
+        }
     }
 }
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new RServiceTracker();
+    new JobTracker();
 });
 
-// Service Worker for PWA functionality (optional)
+// Service Worker for PWA functionality
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
