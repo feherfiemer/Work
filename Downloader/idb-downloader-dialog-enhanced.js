@@ -1,8 +1,8 @@
 /*
  * idb-downloader-dialog-enhanced.js
  * 
- * ENHANCED VERSION v1.5.0: Professional download dialog with bulletproof validation
- * All duplicate function errors fixed, complete feature implementation
+ * ENHANCED VERSION v1.6.0: Professional download dialog with bulletproof validation
+ * All duplicate function errors fixed, complete feature implementation with enhanced UI
  */
 
 function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconName = 'file_download' } = {}) {
@@ -17,7 +17,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
       return (i === 0 ? v : v.toFixed(1)) + ' ' + units[i];
     },
-    VERSION: '1.5.0'
+    VERSION: '1.6.0'
   };
   
   const fmt = (typeof window.formatFileSize === 'function') ? window.formatFileSize : utils.humanBytes;
@@ -42,6 +42,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     controls: `dl_controls_${tag}`,
     conc: `dl_conc_${tag}`,
     chunk: `dl_chunk_${tag}`,
+    location: `dl_location_${tag}`,
     settings: `dl_settings_${tag}`,
     readyMessage: `dl_ready_${tag}`,
     quotaMessage: `dl_quota_${tag}`
@@ -56,14 +57,16 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   --dl-success-fill: #2e7d32;
   --dl-success-fill-light: #e8f5e8;
   --dl-success-outline: #4caf50;
-  --dl-meta-bg: rgba(173, 216, 230, 0.3);
-  --dl-btn-bg: rgba(173, 216, 230, 0.15);
-  --dl-border-radius: 18px;
-  --dl-error-bg: rgba(244,67,54,0.06);
-  --dl-error-border: rgba(244,67,54,0.2);
+  --dl-meta-bg: rgba(173, 216, 230, 0.25);
+  --dl-btn-bg: rgba(173, 216, 230, 0.12);
+  --dl-border-radius: 20px;
+  --dl-error-bg: rgba(244,67,54,0.05);
+  --dl-error-border: rgba(244,67,54,0.15);
   --dl-error-text: #d32f2f;
   --dl-text-primary: #000000;
-  --dl-text-secondary: #333333;
+  --dl-text-secondary: #1a1a1a;
+  --dl-quota-bg: rgba(100,181,246,0.06);
+  --dl-quota-border: rgba(100,181,246,0.12);
 }
 
 @keyframes premiumFadeIn {
@@ -77,7 +80,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 }
 
 @keyframes premiumSlideOut {
-  from { opacity: 1; transform: translateY(0) scale(1); max-height: 200px; }
+  from { opacity: 1; transform: translateY(0) scale(1); max-height: 300px; }
   to { opacity: 0; transform: translateY(-20px) scale(0.95); max-height: 0; }
 }
 
@@ -87,7 +90,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   100% { filter: blur(0px); transform: scale(1); }
 }
 
-/* NEW: Enhanced completion animations with bold tick and green sphere */
+/* ENHANCED: Bold Tick and Green Sphere Completion Animation v1.6.0 */
 @keyframes boldTickEntry {
   0% {
     transform: scale(0) rotate(-180deg);
@@ -120,7 +123,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
     border-color: #66bb6a;
   }
   60% {
-    transform: scale(1.1);
+    transform: scale(1.15);
     opacity: 0.8;
     background: #4caf50;
     border-color: #43a047;
@@ -167,10 +170,19 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   }
 }
 
+@keyframes fileProgressPulse {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 .download-card{
   font-family: var(--dl-font);
-  max-width: 480px;
-  padding: 16px;
+  max-width: 520px;
+  padding: 18px;
   border-radius: var(--dl-border-radius);
   margin: 0 auto;
   background: rgba(255,255,255,0.98);
@@ -179,19 +191,21 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   box-sizing: border-box;
   position: relative;
   animation: premiumFadeIn 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
 }
 
 .file-metadata{
   background: var(--dl-meta-bg);
   border-radius: var(--dl-border-radius);
-  padding: 12px;
-  margin-bottom: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   animation: premiumFadeIn 800ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 200ms both;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid rgba(173, 216, 230, 0.2);
 }
 
 .file-metadata.fade-out {
@@ -199,16 +213,17 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 }
 
 .main-icon{
-  width: 70px;
-  height: 70px;
+  width: 75px;
+  height: 75px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 64px !important;
+  font-size: 68px !important;
   color: var(--dl-text-primary);
   border-radius: var(--dl-border-radius);
   position: relative;
   transition: all 0.3s ease;
+  font-weight: 400 !important;
 }
 
 .main-icon.downloading {
@@ -220,14 +235,14 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 }
 
 @keyframes iconPulse{
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.05); opacity: 1; }
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.08); opacity: 1; }
 }
 
 .meta-name{
-  font-weight: 400;
-  font-size: 1.0rem;
-  line-height: 1.3;
+  font-weight: 500;
+  font-size: 1.05rem;
+  line-height: 1.35;
   word-break: break-word;
   overflow-wrap: anywhere;
   margin: 0;
@@ -236,22 +251,23 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 }
 
 .meta-size{
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   color: var(--dl-text-secondary);
-  opacity: 0.95;
-  font-weight: 300;
+  opacity: 0.9;
+  font-weight: 400;
   margin: 0;
 }
 
 .settings-panel{
   display: flex;
-  gap: 12px;
+  gap: 16px;
   justify-content: center;
   align-items: center;
-  margin: 8px 0 12px 0;
-  padding: 8px;
+  margin: 10px 0 14px 0;
+  padding: 12px;
   animation: premiumFadeIn 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 400ms both;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  flex-wrap: wrap;
 }
 
 .settings-panel.settings-hidden{
@@ -265,40 +281,47 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  min-width: 80px;
+  gap: 8px;
+  min-width: 90px;
 }
 
 .setting-label{
-  font-size: 0.72rem;
-  font-weight: 400;
-  color: var(--dl-text-secondary);
-  opacity: 0.9;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--dl-text-primary);
+  opacity: 0.8;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
-.setting-input{
-  width: 64px;
-  padding: 5px 7px;
-  border: 1px solid rgba(120,120,120,0.3);
-  border-radius: 8px;
+.setting-input, .setting-select{
+  width: 72px;
+  padding: 6px 8px;
+  border: 1px solid rgba(26,26,26,0.25);
+  border-radius: 10px;
   background: rgba(255,255,255,0.95);
-  font-size: 0.82rem;
-  font-weight: 400;
+  font-size: 0.85rem;
+  font-weight: 500;
   text-align: center;
   color: var(--dl-text-primary);
   transition: all 0.2s ease;
+  font-family: var(--dl-font);
 }
 
-.setting-input:focus{
+.setting-select{
+  width: 88px;
+  text-align: left;
+  padding-left: 10px;
+}
+
+.setting-input:focus, .setting-select:focus{
   outline: none;
   border-color: var(--dl-primary);
   background: rgba(255,255,255,1);
-  box-shadow: 0 0 0 2px rgba(100,181,246,0.1);
+  box-shadow: 0 0 0 2px rgba(100,181,246,0.15);
 }
 
-.setting-input.invalid {
+.setting-input.invalid, .setting-select.invalid {
   border-color: var(--dl-error-text) !important;
   background: rgba(244,67,54,0.05) !important;
   color: var(--dl-error-text) !important;
@@ -309,19 +332,36 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   animation: premiumFadeIn 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 300ms both;
 }
 
-.ready-message, .quota-message{
-  font-size: 0.9rem;
+.ready-message{
+  font-size: 0.92rem;
   color: var(--dl-accent);
   background: rgba(100,181,246,0.08);
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-radius: var(--dl-border-radius);
   margin: 8px 0;
   border: 1px solid rgba(100,181,246,0.15);
-  font-weight: 300;
+  font-weight: 400;
+  line-height: 1.45;
+  animation: premiumFadeIn 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.quota-message{
+  font-size: 0.88rem;
+  color: var(--dl-text-primary);
+  background: var(--dl-quota-bg);
+  padding: 12px 16px;
+  border-radius: var(--dl-border-radius);
+  margin: 8px 0;
+  border: 1px solid var(--dl-quota-border);
+  font-weight: 400;
   line-height: 1.4;
   animation: premiumFadeIn 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
   display: flex;
@@ -330,25 +370,20 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   justify-content: center;
 }
 
-.ready-message i, .quota-message i{
-  font-size: 20px;
-  color: var(--dl-primary);
-}
-
 .ready-message.hidden, .quota-message.hidden{
   display: none;
 }
 
 .status-line{
   display: none;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
   justify-content: center;
-  font-weight: 400;
-  font-size: 0.94rem;
-  color: var(--dl-accent);
+  font-weight: 500;
+  font-size: 0.96rem;
+  color: var(--dl-text-primary);
   margin: 0;
-  min-height: 26px;
+  min-height: 28px;
 }
 
 .status-line.visible{
@@ -356,26 +391,25 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 }
 
 .status-line i{
-  font-size: 18px;
+  font-size: 20px;
   color: var(--dl-primary);
 }
 
 .metrics-card{
   display: none;
-  margin: 2px 0;
-  padding: 2px 6px;
-  border-radius: 10px;
+  margin: 4px auto;
+  padding: 8px 12px;
+  border-radius: 12px;
   background: var(--dl-meta-bg);
-  font-size: 0.62rem;
-  font-weight: 300;
+  font-size: 0.72rem;
+  font-weight: 500;
   color: var(--dl-text-primary);
-  min-width: 100px;
-  line-height: 1.1;
+  min-width: 180px;
+  max-width: 280px;
+  line-height: 1.2;
   transition: all 0.3s ease;
   position: relative;
-  max-width: 200px;
-  margin-left: auto;
-  margin-right: auto;
+  border: 1px solid rgba(173, 216, 230, 0.2);
 }
 
 .metrics-card.visible{
@@ -390,10 +424,10 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
 .buttons-row{
   display: flex;
-  gap: 12px;
+  gap: 16px;
   justify-content: center;
   align-items: center;
-  margin-top: 8px;
+  margin-top: 12px;
   flex-wrap: wrap;
   animation: premiumFadeIn 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 500ms both;
 }
@@ -401,16 +435,16 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 .glassy-btn{
   border: none;
   border-radius: var(--dl-border-radius);
-  padding: 10px 16px;
+  padding: 12px 18px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   background: var(--dl-btn-bg) !important;
   cursor: pointer;
-  font-weight: 400;
-  color: var(--dl-accent);
-  min-width: 90px;
-  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--dl-text-primary);
+  min-width: 100px;
+  font-size: 0.82rem;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
   overflow: hidden;
@@ -418,7 +452,9 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   pointer-events: all;
   touch-action: manipulation;
   user-select: none;
-  box-shadow: 0 2px 8px rgba(100,181,246,0.15);
+  box-shadow: 0 2px 12px rgba(100,181,246,0.12);
+  border: 1px solid rgba(173, 216, 230, 0.2);
+  font-family: var(--dl-font);
 }
 
 .glassy-btn::before {
@@ -447,10 +483,10 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 }
 
 .glassy-btn:hover{
-  color: #1565c0;
-  background: rgba(173, 216, 230, 0.35) !important;
+  color: var(--dl-text-primary);
+  background: rgba(173, 216, 230, 0.25) !important;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(100, 181, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(100, 181, 246, 0.3);
 }
 
 .glassy-btn:active {
@@ -463,52 +499,56 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 }
 
 .glassy-btn.enabled:hover {
-  background: rgba(173, 216, 230, 0.35) !important;
+  background: rgba(173, 216, 230, 0.25) !important;
 }
 
 .glassy-btn i{
   font-size: 16px;
+  color: var(--dl-text-primary);
 }
 
 .glassy-btn.disabled,.glassy-btn[disabled]{
-  opacity: 0.5;
+  opacity: 0.4;
   pointer-events: none;
-  filter: grayscale(0.3);
+  filter: grayscale(0.4);
   transform: none !important;
+  background: rgba(173, 216, 230, 0.08) !important;
 }
 
 .glassy-btn.cancel-enabled{ 
-  color: #d32f2f;
+  color: var(--dl-text-primary);
   background: rgba(244,67,54,0.08) !important;
-  box-shadow: 0 2px 8px rgba(244,67,54,0.15);
+  box-shadow: 0 2px 12px rgba(244,67,54,0.12);
+  border: 1px solid rgba(244,67,54,0.15);
 }
 
 .glassy-btn.cancel-enabled:hover{
-  background: rgba(244,67,54,0.18) !important;
-  box-shadow: 0 6px 16px rgba(244,67,54,0.3);
+  background: rgba(244,67,54,0.15) !important;
+  box-shadow: 0 6px 20px rgba(244,67,54,0.25);
 }
 
-/* NEW: Bold Tick and Green Sphere Completion Animation */
+/* ENHANCED: Bold Tick and Green Sphere Completion Animation */
 .completion-container{
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  padding: 40px 20px;
+  gap: 28px;
+  padding: 45px 24px;
   background: linear-gradient(135deg, 
-    rgba(129,199,132,0.1) 0%, 
-    rgba(102,187,106,0.15) 25%, 
-    rgba(76,175,80,0.2) 50%, 
-    rgba(67,160,71,0.15) 75%, 
-    rgba(56,142,60,0.1) 100%);
+    rgba(129,199,132,0.08) 0%, 
+    rgba(102,187,106,0.12) 25%, 
+    rgba(76,175,80,0.18) 50%, 
+    rgba(67,160,71,0.12) 75%, 
+    rgba(56,142,60,0.08) 100%);
   border-radius: var(--dl-border-radius);
   position: relative;
   overflow: hidden;
+  border: 1px solid rgba(129,199,132,0.2);
 }
 
 .completion-sphere{
-  width: 120px;
-  height: 120px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
   border: 4px solid #81c784;
@@ -517,66 +557,101 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   justify-content: center;
   position: relative;
   animation: 
-    greenSphereGrow 1000ms cubic-bezier(0.68, -0.55, 0.265, 1.55) both,
-    rippleWave 2s ease-out 1200ms infinite,
-    borderPulse 3s ease-in-out 1500ms infinite;
+    greenSphereGrow 1100ms cubic-bezier(0.68, -0.55, 0.265, 1.55) both,
+    rippleWave 2.5s ease-out 1300ms infinite,
+    borderPulse 3.5s ease-in-out 1600ms infinite;
   box-shadow: 
-    0 8px 32px rgba(76, 175, 80, 0.3),
-    inset 0 4px 12px rgba(255, 255, 255, 0.2);
+    0 12px 40px rgba(76, 175, 80, 0.35),
+    inset 0 4px 16px rgba(255, 255, 255, 0.25);
 }
 
 .completion-tick{
-  width: 60px;
-  height: 60px;
+  width: 65px;
+  height: 65px;
   position: relative;
-  animation: boldTickEntry 800ms cubic-bezier(0.68, -0.55, 0.265, 1.55) 600ms both;
+  animation: boldTickEntry 900ms cubic-bezier(0.68, -0.55, 0.265, 1.55) 700ms both;
 }
 
 .completion-tick svg {
   width: 100%;
   height: 100%;
   stroke: white;
-  stroke-width: 6;
+  stroke-width: 7;
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
 }
 
 .completion-message{
-  font-size: 1.25rem;
-  font-weight: 400;
+  font-size: 1.3rem;
+  font-weight: 600;
   color: var(--dl-success-fill);
   margin: 0;
-  animation: premiumFadeIn 600ms ease 1400ms both;
+  animation: premiumFadeIn 700ms ease 1500ms both;
   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
 .completion-details{
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: var(--dl-text-primary);
-  animation: premiumFadeIn 500ms ease 1600ms both;
+  animation: premiumFadeIn 600ms ease 1700ms both;
   text-align: center;
   line-height: 1.6;
-  opacity: 0.9;
-  max-width: 340px;
-  font-weight: 300;
+  opacity: 0.85;
+  max-width: 380px;
+  font-weight: 400;
   margin: 0;
 }
 
+.file-save-progress{
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+  animation: premiumFadeIn 400ms ease both;
+}
+
+.file-save-progress.visible{
+  display: flex;
+}
+
+.save-progress-text{
+  font-size: 0.84rem;
+  color: var(--dl-text-primary);
+  font-weight: 500;
+}
+
+.save-progress-bar{
+  width: 100%;
+  height: 6px;
+  background: rgba(100,181,246,0.15);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.save-progress-fill{
+  height: 100%;
+  background: linear-gradient(90deg, #64b5f6, #1976d2);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  background-size: 200% 100%;
+  animation: fileProgressPulse 2s ease-in-out infinite;
+}
+
 .error-area{
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   color: var(--dl-error-text);
-  padding: 14px 18px;
+  padding: 16px 20px;
   border-radius: var(--dl-border-radius);
   background: var(--dl-error-bg);
   border: 1px solid var(--dl-error-border);
-  margin: 10px 0;
-  line-height: 1.4;
+  margin: 12px 0;
+  line-height: 1.45;
   animation: premiumFadeIn 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 2px 8px rgba(244,67,54,0.1);
-  font-weight: 300;
+  box-shadow: 0 2px 12px rgba(244,67,54,0.08);
+  font-weight: 400;
 }
 
 .error-area.fade-out {
@@ -584,15 +659,15 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 }
 
 .download-message{
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   color: var(--dl-accent);
   background: rgba(100,181,246,0.06);
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: var(--dl-border-radius);
-  margin: 4px 0;
-  border: 1px solid rgba(100,181,246,0.2);
-  font-weight: 300;
-  line-height: 1.3;
+  margin: 6px 0;
+  border: 1px solid rgba(100,181,246,0.15);
+  font-weight: 400;
+  line-height: 1.35;
   animation: premiumFadeIn 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
@@ -603,77 +678,81 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 .divider{
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg,transparent,rgba(0,0,0,0.10),transparent);
-  margin: 20px 0 16px 0;
+  background: linear-gradient(90deg,transparent,rgba(0,0,0,0.08),transparent);
+  margin: 24px 0 18px 0;
 }
 
 .final-note{
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--dl-text-primary);
   text-align: center;
-  line-height: 1.5;
-  padding-bottom: 6px;
-  opacity: 0.85;
-  font-weight: 300;
+  line-height: 1.55;
+  padding-bottom: 8px;
+  opacity: 0.8;
+  font-weight: 400;
 }
 
 @media (max-width: 600px){
   .download-card{
-    padding: 14px;
+    padding: 16px;
     max-width: 95vw;
-    margin: 6px auto;
+    margin: 8px auto;
   }
   .main-icon{
-    width: 60px;
-    height: 60px;
-    font-size: 56px !important;
+    width: 65px;
+    height: 65px;
+    font-size: 60px !important;
   }
   .meta-name{
-    font-size: 0.96rem;
+    font-size: 1.0rem;
   }
   .settings-panel{
     flex-direction: column;
-    gap: 10px;
-    padding: 10px;
+    gap: 12px;
+    padding: 12px;
   }
   .setting-group{
     flex-direction: row;
-    gap: 8px;
+    gap: 10px;
     min-width: auto;
   }
-  .setting-input{
-    width: 56px;
-    font-size: 0.8rem;
+  .setting-input, .setting-select{
+    width: 60px;
+    font-size: 0.82rem;
+  }
+  .setting-select{
+    width: 76px;
   }
   .setting-label{
-    font-size: 0.7rem;
-    min-width: 70px;
+    font-size: 0.72rem;
+    min-width: 75px;
   }
   .buttons-row{
-    gap: 8px;
+    gap: 12px;
   }
   .glassy-btn{
-    min-width: 85px;
-    font-size: 0.78rem;
-    padding: 8px 14px;
+    min-width: 90px;
+    font-size: 0.8rem;
+    padding: 10px 16px;
   }
   .completion-sphere{
-    width: 100px;
-    height: 100px;
+    width: 110px;
+    height: 110px;
   }
   .completion-tick{
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
   }
   .metrics-card{
-    font-size: 0.58rem;
-    padding: 1px 4px;
-    max-width: 180px;
+    font-size: 0.68rem;
+    padding: 6px 10px;
+    max-width: 260px;
+    min-width: 160px;
   }
 }
 </style>
 
-  <div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.5.0">
+  <div class="download-card" id="${IDS.root}" role="dialog" aria-label="Download Manager v1.6.0">
   <div class="file-metadata" id="${IDS.meta}">
     <i class="mdui-icon material-icons-outlined main-icon" id="${IDS.icon}">${iconName}</i>
     <div class="meta-name" id="${IDS.fname}">${fileName || 'File'}</div>
@@ -689,17 +768,18 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
       <label class="setting-label">Chunk (KB)</label>
       <input type="number" class="setting-input" id="${IDS.chunk}" value="1024" min="64" max="4096" step="64">
     </div>
+    <div class="setting-group">
+      <label class="setting-label">Location</label>
+      <select class="setting-select" id="${IDS.location}">
+        <option value="default">Browser</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
   </div>
 
   <div class="main-block" id="${IDS.main}">
-    <div class="ready-message" id="${IDS.readyMessage}">
-      <i class="mdui-icon material-icons-outlined">info</i>
-      <span>Click Start to begin secure parallel download with automatic resume capability</span>
-    </div>
-
     <div class="quota-message hidden" id="${IDS.quotaMessage}">
-      <i class="mdui-icon material-icons-outlined">storage</i>
-      <span>Checking available storage space...</span>
+      <span>Checking available storage space</span>
     </div>
 
     <div class="status-line" id="${IDS.status}">
@@ -709,6 +789,13 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
     <div class="mdui-progress" id="${IDS.progress}" style="display: none;">
       <div class="mdui-progress-indeterminate"></div>
+    </div>
+
+    <div class="file-save-progress" id="file_save_progress_${tag}">
+      <div class="save-progress-text">Saving file to device...</div>
+      <div class="save-progress-bar">
+        <div class="save-progress-fill" style="width: 0%"></div>
+      </div>
     </div>
 
     <div id="${IDS.metricsCard}" class="metrics-card hidden">
@@ -736,7 +823,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
   <div class="divider"></div>
 
   <div class="final-note">
-    Secure parallel downloading with automatic resume capability v1.5.0. 
+    Secure parallel downloading with automatic resume capability v1.6.0. 
     Downloads continue when browser is in background with dialog open.
   </div>
 </div>
@@ -841,6 +928,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         errorArea: byId(IDS.errorArea),
         conc: byId(IDS.conc),
         chunk: byId(IDS.chunk),
+        location: byId(IDS.location),
         settings: byId(IDS.settings),
         readyMessage: byId(IDS.readyMessage),
         quotaMessage: byId(IDS.quotaMessage)
@@ -941,10 +1029,12 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
+      // ENHANCED: Professional quota message display without icons
       const showQuotaMessage = (message) => {
         try {
           if (nodes.quotaMessage) {
-            nodes.quotaMessage.querySelector('span').textContent = message;
+            const cleanMessage = String(message || '').replace(/[🔧⚡📊✓⚠]/g, '').trim();
+            nodes.quotaMessage.querySelector('span').textContent = cleanMessage;
             nodes.quotaMessage.classList.remove('hidden');
           }
         } catch (e) {
@@ -1044,9 +1134,10 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
+      // ENHANCED: Settings panel hide logic - only hide during actual download, not on validation errors
       const hideSettings = () => {
         try {
-          if (nodes.settings) {
+          if (nodes.settings && actualDownloadStarted && !pauseInProgress) {
             nodes.settings.classList.add('settings-hidden');
             setTimeout(() => {
               if (nodes.settings && nodes.settings.classList.contains('settings-hidden')) {
@@ -1228,12 +1319,14 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
+      // ENHANCED: Settings validation with custom location support
       const validateSettings = () => {
         try {
           if (isCompleted) return true;
           
           const concInput = nodes.conc;
           const chunkInput = nodes.chunk;
+          const locationInput = nodes.location;
           
           let isValid = true;
           
@@ -1257,6 +1350,10 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
             }
           }
           
+          if (locationInput) {
+            locationInput.classList.remove('invalid');
+          }
+          
           return isValid;
         } catch (e) {
           console.warn('[R-ServiceX-Downloader] Error validating settings:', e);
@@ -1264,23 +1361,27 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
+      // ENHANCED: Read download options with custom location support
       const readDownloadOptions = () => {
         try {
           const concurrencyInput = nodes.conc;
           const chunkInput = nodes.chunk;
+          const locationInput = nodes.location;
 
           const concurrency = concurrencyInput ? 
             Math.max(1, Math.min(12, parseInt(concurrencyInput.value || '4', 10) || 4)) : 4;
           const chunkKB = chunkInput ? 
             Math.max(64, Math.min(4096, parseInt(chunkInput.value || '1024', 10) || 1024)) : 1024;
+          const customLocation = locationInput ? locationInput.value === 'custom' : false;
 
           return { 
             concurrency, 
-            chunkSize: chunkKB * 1024 
+            chunkSize: chunkKB * 1024,
+            useCustomLocation: customLocation
           };
         } catch (e) {
           console.warn('[R-ServiceX-Downloader] Error reading download options:', e);
-          return { concurrency: 4, chunkSize: 1024 * 1024 };
+          return { concurrency: 4, chunkSize: 1024 * 1024, useCustomLocation: false };
         }
       };
 
@@ -1368,6 +1469,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         stopIconPulse();
       };
 
+      // ENHANCED: Error message handling with improved settings panel logic
       const showErrorMessage = (message, allowFallback = true) => {
         try {
           if (isCompleted) {
@@ -1384,8 +1486,8 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
                                   String(message || '').toLowerCase().includes('correct the invalid') ||
                                   String(message || '').toLowerCase().includes('download settings are outside allowed limits');
           
-          // Only hide settings if it's not a validation error and download is actually starting
-          if (!isValidationError && hasStarted && actualDownloadStarted) {
+          // ENHANCED: Only hide settings if download has actually started, not on validation errors
+          if (!isValidationError && actualDownloadStarted && hasStarted) {
             hideSettings();
           }
 
@@ -1393,14 +1495,16 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
           
           if (isValidationError) {
             safeMessage = utils.ERROR_MESSAGES?.INVALID_SETTINGS || safeMessage;
+            // For validation errors, ensure settings remain visible
+            showSettings();
           }
           
           nodes.errorArea.innerHTML = `
             <div class="error-area">
-              <div style="font-weight:400;margin-bottom:8px;">${safeMessage}</div>
+              <div style="font-weight:500;margin-bottom:10px;">${safeMessage}</div>
               ${allowFallback ? `
-                <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
-                  <button id="fallback_${tag}" class="glassy-btn enabled" style="min-width:160px">
+                <div style="margin-top:18px;display:flex;gap:12px;justify-content:center">
+                  <button id="fallback_${tag}" class="glassy-btn enabled" style="min-width:170px">
                     <i class="mdui-icon material-icons-outlined">download</i>
                     <span>Use Browser Download</span>
                   </button>
@@ -1512,7 +1616,8 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       };
 
-      const downloadBlobWithRealFilename = (blob, filename) => {
+      // ENHANCED: Advanced blob download with real-time save progress and custom location support
+      const downloadBlobWithRealFilename = (blob, filename, useCustomLocation = false) => {
         return new Promise((resolve, reject) => {
           try {
             if (!blob || !filename) {
@@ -1526,9 +1631,38 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
               .replace(/\.+$/, '')
               .trim() || 'download';
 
-            log(`Attempting enhanced download with filename: ${cleanFilename}`);
+            log(`Attempting enhanced download with filename: ${cleanFilename}, custom location: ${useCustomLocation}`);
 
-            if (window.showSaveFilePicker) {
+            // Show file save progress UI
+            const fileSaveProgress = document.getElementById(`file_save_progress_${tag}`);
+            const saveProgressFill = fileSaveProgress?.querySelector('.save-progress-fill');
+            const saveProgressText = fileSaveProgress?.querySelector('.save-progress-text');
+
+            const showSaveProgress = (text, progress = 0) => {
+              try {
+                if (fileSaveProgress) {
+                  fileSaveProgress.classList.add('visible');
+                  if (saveProgressText) saveProgressText.textContent = text;
+                  if (saveProgressFill) saveProgressFill.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+                }
+              } catch (e) {
+                console.warn('[R-ServiceX-Downloader] Error showing save progress:', e);
+              }
+            };
+
+            const hideSaveProgress = () => {
+              try {
+                if (fileSaveProgress) {
+                  setTimeout(() => {
+                    fileSaveProgress.classList.remove('visible');
+                  }, 1000);
+                }
+              } catch (e) {
+                console.warn('[R-ServiceX-Downloader] Error hiding save progress:', e);
+              }
+            };
+
+            if ((window.showSaveFilePicker && useCustomLocation) || window.showSaveFilePicker) {
               const fileExtension = cleanFilename.includes('.') ? 
                 cleanFilename.split('.').pop().toLowerCase() : 'bin';
               
@@ -1539,15 +1673,17 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
                   accept: { [`application/${fileExtension}`]: [`.${fileExtension}`] }
                 }]
               }).then(async (handle) => {
+                showSaveProgress('Preparing to save file', 5);
                 setStatusText('Saving file to device');
-                setProgressIndeterminate(true);
                 
                 const writable = await handle.createWritable();
                 
-                // For large files, show progress during write
-                if (blob.size > 10 * 1024 * 1024) { // 10MB+
-                  const chunkSize = 1024 * 1024; // 1MB chunks
+                // ENHANCED: Real-time progress for file saving
+                if (blob.size > 5 * 1024 * 1024) { // 5MB+
+                  const chunkSize = Math.max(1024 * 512, Math.min(1024 * 1024 * 2, blob.size / 50)); // Dynamic chunk size
                   const totalChunks = Math.ceil(blob.size / chunkSize);
+                  
+                  showSaveProgress('Writing file to storage', 10);
                   
                   for (let i = 0; i < totalChunks; i++) {
                     const start = i * chunkSize;
@@ -1556,25 +1692,39 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
                     
                     await writable.write(chunk);
                     
-                    const progress = ((i + 1) / totalChunks) * 100;
-                    setProgressDeterminate(progress);
-                    setStatusText(`Saving file to device (${Math.round(progress)}%)`);
+                    const baseProgress = 10;
+                    const writeProgress = ((i + 1) / totalChunks) * 80;
+                    const totalProgress = baseProgress + writeProgress;
                     
-                    // Allow UI to update
-                    await new Promise(resolve => setTimeout(resolve, 1));
+                    showSaveProgress(`Writing file to storage (${Math.round(writeProgress)}%)`, totalProgress);
+                    setStatusText(`Saving file to device (${Math.round(writeProgress)}%)`);
+                    
+                    // Allow UI to update with proper throttling
+                    if (i % 5 === 0 || i === totalChunks - 1) {
+                      await new Promise(resolve => setTimeout(resolve, 1));
+                    }
                   }
                 } else {
+                  showSaveProgress('Writing file to storage', 50);
                   await writable.write(blob);
                 }
                 
+                showSaveProgress('Finalizing file save', 95);
                 await writable.close();
+                showSaveProgress('File saved successfully', 100);
+                
                 log(`File saved via File System Access API: ${cleanFilename}`);
+                hideSaveProgress();
                 resolve('success');
               }).catch((error) => {
-                if (error.name !== 'AbortError') {
+                hideSaveProgress();
+                if (error.name === 'AbortError') {
+                  log('File save cancelled by user');
+                  reject(new Error('File save was cancelled'));
+                } else {
                   log('File System Access API failed:', error);
+                  downloadBlobMethod2();
                 }
-                downloadBlobMethod2();
               });
             } else {
               downloadBlobMethod2();
@@ -1582,6 +1732,8 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
             function downloadBlobMethod2() {
               try {
+                showSaveProgress('Preparing download', 30);
+                
                 const url = URL.createObjectURL(blob);
                 const enhancedUrl = `${url}#filename=${encodeURIComponent(cleanFilename)}`;
                 const link = document.createElement('a');
@@ -1598,6 +1750,8 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
                 
                 document.body.appendChild(link);
                 
+                showSaveProgress('Initiating download', 70);
+                
                 try {
                   const clickEvent = new MouseEvent('click', {
                     view: window,
@@ -1612,6 +1766,8 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
                   log(`Download initiated via fallback click: ${cleanFilename}`);
                 }
                 
+                showSaveProgress('Download started', 100);
+                
                 setTimeout(() => {
                   try {
                     if (link.parentNode) {
@@ -1621,11 +1777,13 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
                   } catch (e) {
                     log('Cleanup error:', e);
                   }
+                  hideSaveProgress();
                 }, 2000);
                 
                 resolve('success');
                 
               } catch (error) {
+                hideSaveProgress();
                 log('Enhanced blob download failed:', error);
                 reject(error);
               }
@@ -1810,8 +1968,9 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
 
               if (blob && finalFileName) {
                 try {
-                  await downloadBlobWithRealFilename(blob, finalFileName);
-                  log(`File successfully downloaded with name: ${finalFileName}`);
+                  const { useCustomLocation } = readDownloadOptions();
+                  await downloadBlobWithRealFilename(blob, finalFileName, useCustomLocation);
+                  log(`File successfully downloaded with name: ${finalFileName}, custom location: ${useCustomLocation}`);
                 } catch (downloadError) {
                   log('Enhanced download failed, trying simple method:', downloadError);
                   
@@ -2287,19 +2446,24 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
             nodes.chunk.addEventListener('input', validateSettings);
             nodes.chunk.addEventListener('blur', validateSettings);
           }
+          if (nodes.location) {
+            nodes.location.addEventListener('change', validateSettings);
+          }
         } catch (e) {
           console.error('[R-ServiceX-Downloader] Error setting up event listeners:', e);
         }
       };
 
-      // Initialize UI state - fix browser button state after restart
+      // ENHANCED: Initialize UI state with proper resume handling
       setCancelState(false);
       showSettings();
       stopIconPulse();
-      showReadyMessage();
       hideProgressBar();
       hideStatusLine();
       hideMetrics();
+
+      // Don't show ready message initially - will be shown if no resume data
+      hideReadyMessage();
 
       // Enable buttons after validation - ensure they start enabled
       setTimeout(() => {
@@ -2437,6 +2601,7 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         }
       }
 
+      // ENHANCED: Final UI state setup with proper ready message handling
       if (!meta || !meta.completedStarts || meta.completedStarts.length === 0) {
         setActionButtonState('start');
         setStatusText('Ready to download');
@@ -2446,6 +2611,13 @@ function openIDBDownloaderDialog({ url, fileName = '', fileSizeBytes = 0, iconNa
         setProgressIndeterminate(true);
         currentProgressPercent = 0;
         hideMetrics();
+        hideStatusLine();
+        showReadyMessage(); // Only show ready message when no resume data
+      } else {
+        // Resume data available, show progress bar and hide ready message
+        hideReadyMessage();
+        showStatusLine();
+        showProgressBar();
       }
 
       try {
@@ -2483,5 +2655,5 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = { openIDBDownloaderDialog };
 } else if (typeof window !== 'undefined') {
   window.openIDBDownloaderDialog = openIDBDownloaderDialog;
-      console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.5.0 loaded successfully');
+      console.log('[R-ServiceX-Downloader] Enhanced Dialog v1.6.0 loaded successfully');
 }
