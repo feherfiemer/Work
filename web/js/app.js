@@ -70,6 +70,62 @@ class RServiceTracker {
             this.isInitialized = true;
             console.log('R-Service Tracker initialized successfully');
             
+            // Make system testing available globally
+            window.testNotifications = () => {
+                if (this.notifications) {
+                    this.notifications.testAllNotifications();
+                } else {
+                    console.error('Notifications not initialized');
+                }
+            };
+            
+            window.testAllSystems = async () => {
+                console.log('🧪 Testing all R-Service Tracker systems...');
+                
+                try {
+                    // Test database
+                    console.log('📊 Testing database...');
+                    const stats = await this.db.getEarningsStats();
+                    console.log('✅ Database working - Current stats:', stats);
+                    
+                    // Test notifications
+                    console.log('🔔 Testing notifications...');
+                    this.notifications.testAllNotifications();
+                    
+                    // Test charts
+                    console.log('📈 Testing charts...');
+                    if (this.charts) {
+                        await this.charts.updateCharts();
+                        console.log('✅ Charts system working');
+                    }
+                    
+                    // Test calendar
+                    console.log('📅 Testing calendar...');
+                    if (this.calendar) {
+                        this.calendar.render();
+                        console.log('✅ Calendar system working');
+                    }
+                    
+                    // Test utilities
+                    console.log('🛠️ Testing utilities...');
+                    const testDate = this.utils.formatDate(new Date());
+                    console.log('✅ Utilities working - Test date:', testDate);
+                    
+                    // Test PWA
+                    console.log('📱 Testing PWA features...');
+                    if ('serviceWorker' in navigator) {
+                        console.log('✅ Service Worker supported');
+                    }
+                    
+                    console.log('🎉 All systems test completed successfully!');
+                    this.notifications.showToast('All systems tested successfully!', 'success', 5000);
+                    
+                } catch (error) {
+                    console.error('❌ System test failed:', error);
+                    this.notifications.showToast('System test failed: ' + error.message, 'error', 5000);
+                }
+            };
+            
             // Check for advance payment notification after initialization
             setTimeout(() => {
                 this.checkAdvancePaymentNotification();

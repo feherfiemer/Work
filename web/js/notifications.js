@@ -42,25 +42,28 @@ class NotificationManager {
         return this.permission;
     }
 
-    // Show browser notification
+    // Show browser notification with enhanced delivery
     showNotification(title, options = {}) {
         // Update permission status first
         this.checkPermission();
         
         console.log('Attempting to show notification:', title, 'Permission:', this.permission);
         
+        // Always show toast notification as backup
+        this.showToast(title + (options.body ? ': ' + options.body : ''), options.toastType || 'info', options.toastDuration || 5000);
+        
         if ('Notification' in window && this.permission === 'granted') {
             const defaultOptions = {
-                icon: '/assets/favicon.ico',
-                badge: '/assets/favicon.ico',
+                icon: './assets/favicon.ico',
+                badge: './assets/favicon.ico',
                 dir: 'ltr',
                 lang: 'en',
                 renotify: true, // Allow repeated notifications
-                requireInteraction: true, // Make notification stay until user interacts
+                requireInteraction: false, // Allow auto-close for better UX
                 silent: false,
-                tag: options.tag || 'r-service-tracker-' + Date.now(), // Use provided tag or unique
+                tag: options.tag || 'r-service-tracker-' + Date.now(),
                 timestamp: Date.now(),
-                vibrate: [200, 100, 200, 100, 200], // Enhanced vibration pattern
+                vibrate: [200, 100, 200, 100, 200],
                 actions: options.actions || []
             };
 
@@ -68,14 +71,18 @@ class NotificationManager {
 
             try {
                 const notification = new Notification(title, finalOptions);
-                console.log('Browser notification created successfully');
+                console.log('Browser notification created successfully:', title);
                 
-                // Auto close after 10 seconds if requireInteraction is false
-                if (!finalOptions.requireInteraction) {
-                    setTimeout(() => {
+                // Auto close after duration or 8 seconds
+                const autoCloseTime = finalOptions.duration || 8000;
+                setTimeout(() => {
+                    try {
                         notification.close();
-                    }, 10000);
-                }
+                        console.log('Notification auto-closed after', autoCloseTime, 'ms');
+                    } catch (e) {
+                        // Notification might already be closed
+                    }
+                }, autoCloseTime);
 
                 // Handle notification click
                 notification.onclick = (event) => {
@@ -86,31 +93,40 @@ class NotificationManager {
                     
                     // Handle specific actions
                     if (options.onClick) {
-                        options.onClick();
+                        try {
+                            options.onClick();
+                        } catch (e) {
+                            console.error('Error in notification click handler:', e);
+                        }
                     }
                 };
 
                 // Handle notification error
                 notification.onerror = (error) => {
                     console.error('Notification error:', error);
+                    // Additional toast notification for errors
+                    this.showToast('Notification delivery failed', 'error', 3000);
                 };
 
                 // Handle notification close
                 notification.onclose = () => {
-                    console.log('Notification closed');
+                    console.log('Notification closed:', title);
                 };
 
                 return notification;
             } catch (error) {
                 console.error('Error creating notification:', error);
-                // Fallback to toast if notification fails
-                this.showToast(title, 'info');
+                this.showToast('Browser notification failed: ' + title, 'warning');
             }
+        } else if ('Notification' in window && this.permission === 'denied') {
+            console.log('Notifications denied by user');
+            this.showToast('Enable notifications in browser settings for better alerts', 'warning', 3000);
         } else {
-            console.log('Browser notifications not available or not granted, showing toast instead');
-            // Fallback to toast if notifications not available
-            this.showToast(title, 'info');
+            console.log('Browser notifications not supported');
+            this.showToast('Your browser doesn\'t support notifications', 'info', 3000);
         }
+        
+        return null;
     }
 
     // Show payday notification
@@ -553,6 +569,34 @@ class NotificationManager {
             };
             this.showNotification(title, options);
         }
+    }
+
+    // Test all notification types
+    testAllNotifications() {
+        console.log('Testing all notification types...');
+        
+        // Test toast notifications
+        this.showToast('Test Info Toast', 'info', 3000);
+        setTimeout(() => this.showToast('Test Success Toast', 'success', 3000), 1000);
+        setTimeout(() => this.showToast('Test Warning Toast', 'warning', 3000), 2000);
+        setTimeout(() => this.showToast('Test Error Toast', 'error', 3000), 3000);
+        
+        // Test browser notifications
+        setTimeout(() => {
+            this.showNotification('Test Browser Notification', {
+                body: 'This is a test browser notification',
+                toastType: 'info',
+                tag: 'test-notification'
+            });
+        }, 4000);
+        
+        // Test specific notifications
+        setTimeout(() => this.showPaydayNotification(), 5000);
+        setTimeout(() => this.showWorkCompletedNotification(), 6000);
+        setTimeout(() => this.showStreakNotification(5), 7000);
+        setTimeout(() => this.showAdvancePaymentNotification(), 8000);
+        
+        this.showToast('All notification tests scheduled! Check your browser and app.', 'success', 5000);
     }
 
     // Schedule daily reminders (enhanced implementation)
