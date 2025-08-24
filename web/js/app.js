@@ -674,6 +674,17 @@ class RServiceTracker {
     // Process the selected payment
     async processPayment(amount, closeModalCallback) {
         try {
+            console.log('Processing payment:', { amount, pendingDates: this.pendingUnpaidDates });
+            
+            // Validate input
+            if (!amount || amount <= 0) {
+                throw new Error('Invalid payment amount');
+            }
+            
+            if (!this.db) {
+                throw new Error('Database not available');
+            }
+            
             const pendingAmount = this.pendingUnpaidDates.length * 25;
             const isAdvancePayment = amount > pendingAmount;
             
@@ -683,10 +694,15 @@ class RServiceTracker {
                 // Calculate how many days this payment covers
                 const daysCovered = Math.min(Math.floor(amount / 25), this.pendingUnpaidDates.length);
                 workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
+                console.log('Work dates to pay:', workDatesToPay);
             }
             
-            // Add payment record
-            await this.db.addPayment(amount, workDatesToPay, new Date().toISOString().split('T')[0], isAdvancePayment);
+            // Add payment record with better date handling
+            const paymentDate = this.utils.getTodayString();
+            console.log('Adding payment to database:', { amount, workDatesToPay, paymentDate, isAdvancePayment });
+            
+            await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
+            console.log('Payment added successfully to database');
             
             // Close modal
             closeModalCallback();
@@ -715,6 +731,7 @@ class RServiceTracker {
             }
             
             // Update stats and UI
+            console.log('Updating stats and UI...');
             this.currentStats = await this.db.getEarningsStats();
             this.updateDashboard();
             
@@ -722,15 +739,44 @@ class RServiceTracker {
             this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
             this.updatePaidButtonVisibility();
             
-            // Update charts and calendar
-            await this.charts.updateCharts();
-            if (this.calendar) {
-                await this.calendar.updateCalendar();
+            // Update charts and calendar with error handling
+            try {
+                await this.charts.updateCharts();
+                console.log('Charts updated successfully');
+            } catch (chartError) {
+                console.error('Error updating charts:', chartError);
+                // Don't fail the entire operation for chart errors
+            }
+            
+            try {
+                if (this.calendar) {
+                    await this.calendar.updateCalendar();
+                    console.log('Calendar updated successfully');
+                }
+            } catch (calendarError) {
+                console.error('Error updating calendar:', calendarError);
+                // Don't fail the entire operation for calendar errors
             }
             
         } catch (error) {
             console.error('Error recording payment:', error);
-            this.notifications.showToast('Error recording payment. Please try again.', 'error');
+            
+            // Provide more specific error messages
+            let errorMessage = 'Error recording payment. Please try again.';
+            if (error.message.includes('Database not available')) {
+                errorMessage = 'Database connection error. Please refresh the page and try again.';
+            } else if (error.message.includes('Invalid payment amount')) {
+                errorMessage = 'Please enter a valid payment amount.';
+            }
+            
+            this.notifications.showToast(errorMessage, 'error');
+            
+            // Close modal on error to prevent user confusion
+            try {
+                closeModalCallback();
+            } catch (closeError) {
+                console.error('Error closing modal:', closeError);
+            }
         }
     }
 
@@ -841,24 +887,29 @@ class RServiceTracker {
 
     // Create balance sheet table
     createBalanceSheetTable(records, payments) {
+        // Create work records table
         let html = `
-            <table class="sheet-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Day</th>
-                        <th>Status</th>
-                        <th>Wage</th>
-                        <th>Payment Status</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="balance-sheet-section">
+                <h3><i class="fas fa-calendar-check"></i> Work Records</h3>
+                <table class="sheet-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Status</th>
+                            <th>Wage</th>
+                            <th>Payment Status</th>
+                            <th>Payment Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
         `;
         
         records.forEach(record => {
             const date = new Date(record.date);
             const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
             const isPaid = this.isRecordPaid(record, payments);
+            const paymentInfo = this.getPaymentInfoForRecord(record, payments);
             
             html += `
                 <tr>
@@ -875,16 +926,86 @@ class RServiceTracker {
                             ${isPaid ? 'Paid' : 'Pending'}
                         </span>
                     </td>
+                    <td>
+                        ${paymentInfo ? `
+                            <small class="payment-details">
+                                Paid on ${this.utils.formatDateShort(paymentInfo.paymentDate)}<br>
+                                Amount: ${this.utils.formatCurrency(paymentInfo.amount)}
+                            </small>
+                        ` : '-'}
+                    </td>
                 </tr>
             `;
         });
         
         html += `
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         `;
         
+        // Add payments section
+        if (payments.length > 0) {
+            // Sort payments by date (newest first)
+            const sortedPayments = payments.sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
+            
+            html += `
+                <div class="balance-sheet-section">
+                    <h3><i class="fas fa-money-bill-wave"></i> Payment History</h3>
+                    <table class="sheet-table">
+                        <thead>
+                            <tr>
+                                <th>Payment Date</th>
+                                <th>Amount</th>
+                                <th>Work Days Covered</th>
+                                <th>Type</th>
+                                <th>Work Period</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            sortedPayments.forEach(payment => {
+                const workDaysCovered = payment.workDates.length;
+                const paymentType = payment.isAdvance ? 'Advance' : 'Regular';
+                const workPeriod = payment.workDates.length > 0 ? 
+                    `${this.utils.formatDateShort(payment.workDates[0])} - ${this.utils.formatDateShort(payment.workDates[payment.workDates.length - 1])}` :
+                    'No work days covered';
+                
+                html += `
+                    <tr>
+                        <td>${this.utils.formatDateShort(payment.paymentDate)}</td>
+                        <td><strong>${this.utils.formatCurrency(payment.amount)}</strong></td>
+                        <td>${workDaysCovered} days</td>
+                        <td>
+                            <span class="payment-type ${payment.isAdvance ? 'advance' : 'regular'}">
+                                ${paymentType}
+                            </span>
+                        </td>
+                        <td>${workPeriod}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
         return html;
+    }
+
+    // Get payment information for a specific work record
+    getPaymentInfoForRecord(record, payments) {
+        const payment = payments.find(payment => 
+            payment.workDates.includes(record.date)
+        );
+        return payment ? {
+            paymentDate: payment.paymentDate,
+            amount: Math.floor(payment.amount / payment.workDates.length) // Calculate per-day amount
+        } : null;
     }
 
     // Update balance sheet filters

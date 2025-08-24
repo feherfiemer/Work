@@ -1602,6 +1602,87 @@ select:focus {
   margin-left: 0.5rem;
 }
 
+/* Payment Modal Sections */
+.payment-section {
+  margin-bottom: 1.5rem;
+}
+
+.payment-section h5 {
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.payment-summary {
+  background: var(--surface-alt);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.summary-item span:first-child {
+  color: var(--text-secondary);
+}
+
+.summary-item span:last-child {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#selectedAmountDisplay {
+  color: var(--primary) !important;
+  font-size: 1.1rem;
+}
+
+/* Balance Sheet Sections */
+.balance-sheet-section {
+    margin-bottom: 2rem;
+}
+
+.balance-sheet-section h3 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.payment-details {
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.payment-type {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.payment-type.regular {
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--success);
+}
+
+.payment-type.advance {
+    background: rgba(255, 152, 0, 0.1);
+    color: var(--warning);
+}
+
 @media (max-width: 768px) {
   .payment-buttons {
     grid-template-columns: repeat(3, 1fr);
@@ -1614,5 +1695,13 @@ select:focus {
   
   .custom-amount button {
     margin-left: 0;
+  }
+  
+  .balance-sheet-section {
+    margin-bottom: 1.5rem;
+  }
+  
+  .balance-sheet-section h3 {
+    font-size: 1.1rem;
   }
 }

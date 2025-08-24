@@ -41,7 +41,7 @@ class Utils {
         const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
         const thousands = ['', 'Thousand', 'Million', 'Billion'];
 
-        if (amount === 0) return 'Zero Rupees';
+        if (amount === 0) return 'Zero rupees';
 
         function convertChunk(n) {
             let str = '';
@@ -64,6 +64,7 @@ class Utils {
 
         let result = '';
         let chunkCount = 0;
+        const originalAmount = amount;
 
         while (amount > 0) {
             const chunk = amount % 1000;
@@ -74,12 +75,19 @@ class Utils {
             chunkCount++;
         }
 
-        return result.trim() + ' Rupees';
+        // Use lowercase 'rupees' for amounts less than 100, uppercase 'Rupees' for 100 and above
+        const rupeesText = originalAmount >= 100 ? 'Rupees' : 'rupees';
+        return result.trim() + ' ' + rupeesText;
     }
 
     // Get today's date in YYYY-MM-DD format
     getTodayString() {
-        return new Date().toISOString().split('T')[0];
+        // Use local date to avoid timezone issues
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     // Get date range for current week
@@ -92,8 +100,8 @@ class Utils {
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         
         return {
-            start: startOfWeek.toISOString().split('T')[0],
-            end: endOfWeek.toISOString().split('T')[0]
+            start: this.formatLocalDate(startOfWeek),
+            end: this.formatLocalDate(endOfWeek)
         };
     }
 
@@ -104,9 +112,17 @@ class Utils {
         const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         
         return {
-            start: startOfMonth.toISOString().split('T')[0],
-            end: endOfMonth.toISOString().split('T')[0]
+            start: this.formatLocalDate(startOfMonth),
+            end: this.formatLocalDate(endOfMonth)
         };
+    }
+
+    // Helper method to format date consistently
+    formatLocalDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     // Check if date is today

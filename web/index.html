@@ -377,19 +377,51 @@
                 </div>
                 <div class="payment-options">
                     <h4>Select payment amount:</h4>
-                    <div class="payment-buttons">
-                        <button class="payment-btn" data-amount="100">₹100</button>
-                        <button class="payment-btn" data-amount="200">₹200</button>
-                        <button class="payment-btn" data-amount="300">₹300</button>
-                        <button class="payment-btn" data-amount="400">₹400</button>
-                        <button class="payment-btn" data-amount="500">₹500</button>
-                        <button class="payment-btn" data-amount="600">₹600</button>
-                        <button class="payment-btn" data-amount="700">₹700</button>
-                        <button class="payment-btn" data-amount="800">₹800</button>
-                        <button class="payment-btn" data-amount="900">₹900</button>
-                        <button class="payment-btn" data-amount="1000">₹1000</button>
+                    
+                    <!-- Quick Amount Buttons -->
+                    <div class="payment-section">
+                        <h5>Quick Amounts:</h5>
+                        <div class="payment-buttons">
+                            <button class="payment-btn" data-amount="25">₹25</button>
+                            <button class="payment-btn" data-amount="50">₹50</button>
+                            <button class="payment-btn" data-amount="75">₹75</button>
+                            <button class="payment-btn" data-amount="100">₹100</button>
+                            <button class="payment-btn" data-amount="200">₹200</button>
+                            <button class="payment-btn" data-amount="300">₹300</button>
+                            <button class="payment-btn" data-amount="400">₹400</button>
+                            <button class="payment-btn" data-amount="500">₹500</button>
+                            <button class="payment-btn" data-amount="600">₹600</button>
+                            <button class="payment-btn" data-amount="1000">₹1000</button>
+                        </div>
                     </div>
 
+                    <!-- Custom Amount Input -->
+                    <div class="payment-section">
+                        <h5>Custom Amount:</h5>
+                        <div class="custom-amount">
+                            <input type="number" id="customPaymentAmount" placeholder="Enter amount" min="1" step="1">
+                            <button id="selectCustomAmount" class="btn btn-primary">Select</button>
+                        </div>
+                    </div>
+
+                    <!-- Payment Summary -->
+                    <div class="payment-summary" id="paymentSummary" style="display: none;">
+                        <div class="summary-item">
+                            <span>Selected Amount:</span>
+                            <span id="selectedAmountDisplay">₹0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Work Days Covered:</span>
+                            <span id="workDaysCovered">0 days</span>
+                        </div>
+                        <div class="summary-item" id="advanceIndicator" style="display: none;">
+                            <span>Payment Type:</span>
+                            <span class="payment-type advance">Advance Payment</span>
+                        </div>
+                        <button id="confirmPayment" class="btn btn-success" style="width: 100%; margin-top: 1rem;">
+                            <i class="fas fa-check"></i> Confirm Payment
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
