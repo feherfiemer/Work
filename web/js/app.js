@@ -70,6 +70,9 @@ class RServiceTracker {
             this.isInitialized = true;
             console.log('R-Service Tracker initialized successfully');
             
+            // Verify configuration is working
+            this.verifyConfiguration();
+            
             // Make system testing available globally
             window.testNotifications = () => {
                 if (this.notifications) {
@@ -133,7 +136,36 @@ class RServiceTracker {
             
         } catch (error) {
             console.error('Error initializing application:', error);
-            this.showError('Failed to initialize application. Please refresh the page.');
+            
+            // Try to initialize with basic functionality
+            try {
+                // Ensure minimal config is available
+                if (!window.R_SERVICE_CONFIG) {
+                    window.R_SERVICE_CONFIG = {
+                        DAILY_WAGE: 25,
+                        PAYMENT_THRESHOLD: 4,
+                        INCREMENT_VALUE: 25,
+                        PAYMENT_DAY_DURATION: 4,
+                        MAX_PAYMENT_AMOUNT: 1000
+                    };
+                    console.log('Fallback configuration set');
+                }
+                
+                // Initialize basic notifications if not already done
+                if (!this.notifications) {
+                    this.notifications = new NotificationManager();
+                    console.log('Fallback notifications initialized');
+                }
+                
+                // Hide loading screen and show basic UI
+                this.hideLoadingScreen();
+                this.showError('Application initialized with limited functionality. Some features may not work properly.');
+                
+            } catch (criticalError) {
+                console.error('Critical initialization error:', criticalError);
+                this.hideLoadingScreen();
+                this.showError('Critical error: Please refresh the page');
+            }
         }
     }
 
@@ -367,51 +399,92 @@ class RServiceTracker {
 
     // Setup settings event handlers
     setupSettingsHandlers() {
-        // Load current settings
-        this.loadSettings();
+        try {
+            // Check if settings elements exist
+            const settingsSection = document.querySelector('.menu-section .settings-group');
+            if (!settingsSection) {
+                console.warn('Settings section not found, skipping settings handlers');
+                return;
+            }
 
-        // Save settings
-        const saveSettingsBtn = document.getElementById('saveSettings');
-        if (saveSettingsBtn) {
-            saveSettingsBtn.addEventListener('click', () => this.saveSettings());
-        }
+            // Load current settings
+            this.loadSettings();
 
-        // Reset settings
-        const resetSettingsBtn = document.getElementById('resetSettings');
-        if (resetSettingsBtn) {
-            resetSettingsBtn.addEventListener('click', () => this.resetSettings());
-        }
+            // Save settings
+            const saveSettingsBtn = document.getElementById('saveSettings');
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', () => this.saveSettings());
+            }
 
-        // Real-time validation for increment value
-        const incrementInput = document.getElementById('incrementValue');
-        if (incrementInput) {
-            incrementInput.addEventListener('input', () => this.validateSettings());
-        }
+            // Reset settings
+            const resetSettingsBtn = document.getElementById('resetSettings');
+            if (resetSettingsBtn) {
+                resetSettingsBtn.addEventListener('click', () => this.resetSettings());
+            }
 
-        // Real-time validation for payment duration
-        const durationInput = document.getElementById('paymentDuration');
-        if (durationInput) {
-            durationInput.addEventListener('input', () => this.validateSettings());
-        }
+            // Real-time validation for increment value
+            const incrementInput = document.getElementById('incrementValue');
+            if (incrementInput) {
+                incrementInput.addEventListener('input', () => this.validateSettings());
+            }
 
-        // Real-time validation for max payment
-        const maxPaymentInput = document.getElementById('maxPaymentAmount');
-        if (maxPaymentInput) {
-            maxPaymentInput.addEventListener('input', () => this.validateSettings());
+            // Real-time validation for payment duration
+            const durationInput = document.getElementById('paymentDuration');
+            if (durationInput) {
+                durationInput.addEventListener('input', () => this.validateSettings());
+            }
+
+            // Real-time validation for max payment
+            const maxPaymentInput = document.getElementById('maxPaymentAmount');
+            if (maxPaymentInput) {
+                maxPaymentInput.addEventListener('input', () => this.validateSettings());
+            }
+            
+            console.log('Settings handlers setup completed');
+        } catch (error) {
+            console.error('Error setting up settings handlers:', error);
         }
     }
 
     // Load settings into UI
     loadSettings() {
-        const config = window.ConfigManager ? window.ConfigManager.getConfig() : window.R_SERVICE_CONFIG;
-        
-        const incrementInput = document.getElementById('incrementValue');
-        const durationInput = document.getElementById('paymentDuration');
-        const maxPaymentInput = document.getElementById('maxPaymentAmount');
+        try {
+            // Ensure config is available with fallbacks
+            let config = {};
+            if (window.ConfigManager && typeof window.ConfigManager.getConfig === 'function') {
+                config = window.ConfigManager.getConfig();
+            } else if (window.R_SERVICE_CONFIG) {
+                config = window.R_SERVICE_CONFIG;
+            } else {
+                // Ultimate fallback
+                config = {
+                    INCREMENT_VALUE: 25,
+                    PAYMENT_DAY_DURATION: 4,
+                    MAX_PAYMENT_AMOUNT: 1000
+                };
+                console.warn('Using fallback configuration');
+            }
+            
+            const incrementInput = document.getElementById('incrementValue');
+            const durationInput = document.getElementById('paymentDuration');
+            const maxPaymentInput = document.getElementById('maxPaymentAmount');
 
-        if (incrementInput) incrementInput.value = config.INCREMENT_VALUE || 25;
-        if (durationInput) durationInput.value = config.PAYMENT_DAY_DURATION || 4;
-        if (maxPaymentInput) maxPaymentInput.value = config.MAX_PAYMENT_AMOUNT || 1000;
+            if (incrementInput) incrementInput.value = config.INCREMENT_VALUE || 25;
+            if (durationInput) durationInput.value = config.PAYMENT_DAY_DURATION || 4;
+            if (maxPaymentInput) maxPaymentInput.value = config.MAX_PAYMENT_AMOUNT || 1000;
+            
+            console.log('Settings loaded successfully:', config);
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            // Set default values on error
+            const incrementInput = document.getElementById('incrementValue');
+            const durationInput = document.getElementById('paymentDuration');
+            const maxPaymentInput = document.getElementById('maxPaymentAmount');
+
+            if (incrementInput) incrementInput.value = 25;
+            if (durationInput) durationInput.value = 4;
+            if (maxPaymentInput) maxPaymentInput.value = 1000;
+        }
     }
 
     // Validate settings
@@ -467,37 +540,74 @@ class RServiceTracker {
 
     // Save settings
     saveSettings() {
-        if (!this.validateSettings()) {
-            this.notifications.showToast('Please fix the validation errors before saving', 'error');
-            return;
-        }
+        try {
+            if (!this.validateSettings()) {
+                if (this.notifications) {
+                    this.notifications.showToast('Please fix the validation errors before saving', 'error');
+                }
+                return;
+            }
 
-        const incrementInput = document.getElementById('incrementValue');
-        const durationInput = document.getElementById('paymentDuration');
-        const maxPaymentInput = document.getElementById('maxPaymentAmount');
+            const incrementInput = document.getElementById('incrementValue');
+            const durationInput = document.getElementById('paymentDuration');
+            const maxPaymentInput = document.getElementById('maxPaymentAmount');
 
-        const newConfig = {
-            INCREMENT_VALUE: parseInt(incrementInput.value),
-            PAYMENT_DAY_DURATION: parseInt(durationInput.value),
-            MAX_PAYMENT_AMOUNT: parseInt(maxPaymentInput.value)
-        };
+            if (!incrementInput || !durationInput || !maxPaymentInput) {
+                console.error('Settings input elements not found');
+                if (this.notifications) {
+                    this.notifications.showToast('Error: Settings form not available', 'error');
+                }
+                return;
+            }
 
-        // Also update the legacy DAILY_WAGE and PAYMENT_THRESHOLD for compatibility
-        newConfig.DAILY_WAGE = newConfig.INCREMENT_VALUE;
-        newConfig.PAYMENT_THRESHOLD = newConfig.PAYMENT_DAY_DURATION;
+            const newConfig = {
+                INCREMENT_VALUE: parseInt(incrementInput.value) || 25,
+                PAYMENT_DAY_DURATION: parseInt(durationInput.value) || 4,
+                MAX_PAYMENT_AMOUNT: parseInt(maxPaymentInput.value) || 1000
+            };
 
-        if (window.ConfigManager && window.ConfigManager.saveUserConfig(newConfig)) {
-            this.notifications.showToast('Settings saved successfully!', 'success');
-            
-            // Regenerate payment buttons
-            this.generatePaymentButtons();
-            
-            // Update any displays that might use these values
-            this.updateDashboard();
-            
-            this.closeMenu();
-        } else {
-            this.notifications.showToast('Error saving settings', 'error');
+            // Also update the legacy DAILY_WAGE and PAYMENT_THRESHOLD for compatibility
+            newConfig.DAILY_WAGE = newConfig.INCREMENT_VALUE;
+            newConfig.PAYMENT_THRESHOLD = newConfig.PAYMENT_DAY_DURATION;
+
+            let saved = false;
+            if (window.ConfigManager && typeof window.ConfigManager.saveUserConfig === 'function') {
+                saved = window.ConfigManager.saveUserConfig(newConfig);
+            } else {
+                // Fallback: save directly to global config and localStorage
+                try {
+                    localStorage.setItem('r-service-user-config', JSON.stringify(newConfig));
+                    window.R_SERVICE_CONFIG = { ...window.R_SERVICE_CONFIG, ...newConfig };
+                    saved = true;
+                } catch (e) {
+                    console.error('Fallback save failed:', e);
+                }
+            }
+
+            if (saved) {
+                if (this.notifications) {
+                    this.notifications.showToast('Settings saved successfully!', 'success');
+                }
+                
+                // Regenerate payment buttons
+                this.generatePaymentButtons();
+                
+                // Update any displays that might use these values
+                if (typeof this.updateDashboard === 'function') {
+                    this.updateDashboard();
+                }
+                
+                this.closeMenu();
+            } else {
+                if (this.notifications) {
+                    this.notifications.showToast('Error saving settings', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error in saveSettings:', error);
+            if (this.notifications) {
+                this.notifications.showToast('Error saving settings: ' + error.message, 'error');
+            }
         }
     }
 
@@ -1032,24 +1142,52 @@ class RServiceTracker {
     // Generate payment buttons dynamically based on increment value
     generatePaymentButtons() {
         const container = document.getElementById('paymentButtons');
-        if (!container) return;
+        if (!container) {
+            console.warn('Payment buttons container not found');
+            return;
+        }
 
-        // Clear existing buttons
-        container.innerHTML = '';
+        try {
+            // Clear existing buttons
+            container.innerHTML = '';
 
-        // Get payment amounts from config
-        const amounts = window.ConfigManager ? window.ConfigManager.generatePaymentAmounts() : [25, 50, 75, 100, 200, 300, 400, 500, 600, 1000];
-        
-        // Create buttons for each amount
-        amounts.forEach(amount => {
-            const button = document.createElement('button');
-            button.className = 'payment-btn';
-            button.dataset.amount = amount;
-            button.textContent = `₹${amount}`;
-            container.appendChild(button);
-        });
+            // Get payment amounts from config with fallbacks
+            let amounts = [];
+            if (window.ConfigManager && typeof window.ConfigManager.generatePaymentAmounts === 'function') {
+                amounts = window.ConfigManager.generatePaymentAmounts();
+            } else {
+                // Fallback amounts
+                amounts = [25, 50, 75, 100, 200, 300, 400, 500, 600, 1000];
+                console.warn('Using fallback payment amounts');
+            }
+            
+            // Ensure we have valid amounts
+            if (!Array.isArray(amounts) || amounts.length === 0) {
+                amounts = [25, 50, 75, 100, 200, 300, 400, 500, 600, 1000];
+            }
+            
+            // Create buttons for each amount
+            amounts.forEach(amount => {
+                const button = document.createElement('button');
+                button.className = 'payment-btn';
+                button.dataset.amount = amount;
+                button.textContent = `₹${amount}`;
+                container.appendChild(button);
+            });
 
-        console.log(`Generated ${amounts.length} payment buttons with amounts:`, amounts);
+            console.log(`Generated ${amounts.length} payment buttons with amounts:`, amounts);
+        } catch (error) {
+            console.error('Error generating payment buttons:', error);
+            // Create fallback buttons
+            const fallbackAmounts = [25, 50, 100, 200, 500, 1000];
+            fallbackAmounts.forEach(amount => {
+                const button = document.createElement('button');
+                button.className = 'payment-btn';
+                button.dataset.amount = amount;
+                button.textContent = `₹${amount}`;
+                container.appendChild(button);
+            });
+        }
     }
 
     // Setup payment modal event handlers
@@ -1859,6 +1997,45 @@ class RServiceTracker {
                 });
             }
         }, 100);
+    }
+
+    // Verify configuration is working
+    verifyConfiguration() {
+        console.log('Verifying configuration...');
+        const config = window.R_SERVICE_CONFIG || {};
+        console.log('Current Config:', config);
+
+        if (config.DAILY_WAGE !== undefined && config.PAYMENT_THRESHOLD !== undefined && config.INCREMENT_VALUE !== undefined) {
+            console.log('✅ Configuration values are present and valid.');
+            console.log('DAILY_WAGE:', config.DAILY_WAGE);
+            console.log('PAYMENT_THRESHOLD:', config.PAYMENT_THRESHOLD);
+            console.log('INCREMENT_VALUE:', config.INCREMENT_VALUE);
+            
+            // Also verify ConfigManager if available
+            if (window.ConfigManager) {
+                console.log('✅ ConfigManager is available');
+                try {
+                    const amounts = window.ConfigManager.generatePaymentAmounts();
+                    console.log('✅ Payment amounts generated:', amounts);
+                } catch (e) {
+                    console.error('❌ Error generating payment amounts:', e);
+                }
+            } else {
+                console.warn('⚠️ ConfigManager not available');
+            }
+        } else {
+            console.warn('⚠️ Configuration values are missing or invalid. Falling back to defaults.');
+            console.log('Current Config:', config);
+            // Fallback to defaults if config is missing or invalid
+            window.R_SERVICE_CONFIG = {
+                DAILY_WAGE: 25,
+                PAYMENT_THRESHOLD: 4,
+                INCREMENT_VALUE: 25,
+                PAYMENT_DAY_DURATION: 4,
+                MAX_PAYMENT_AMOUNT: 1000
+            };
+            console.log('Fallback to default config:', window.R_SERVICE_CONFIG);
+        }
     }
 }
 
