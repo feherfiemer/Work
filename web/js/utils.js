@@ -836,6 +836,55 @@ class Utils {
     setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         this.saveToLocalStorage('r-service-theme', theme);
+        
+        // Update browser theme-color meta tag based on current theme
+        this.updateBrowserThemeColor(theme);
+    }
+    
+    // Update browser theme-color meta tag dynamically
+    updateBrowserThemeColor(theme) {
+        const themeColorMap = {
+            'blue-light': '#2196F3',
+            'blue-dark': '#1976D2',
+            'orange-light': '#FF6B35',
+            'orange-dark': '#E55A2B',
+            'green-light': '#4CAF50',
+            'green-dark': '#388E3C',
+            'purple-light': '#9C27B0',
+            'purple-dark': '#7B1FA2'
+        };
+        
+        const color = themeColorMap[theme] || '#2196F3';
+        
+        // Update existing theme-color meta tags
+        const existingMetas = document.querySelectorAll('meta[name="theme-color"]');
+        existingMetas.forEach(meta => meta.remove());
+        
+        // Create new theme-color meta tag
+        const meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.content = color;
+        document.head.appendChild(meta);
+        
+        // Also update msapplication-navbutton-color for Edge
+        let navButtonMeta = document.querySelector('meta[name="msapplication-navbutton-color"]');
+        if (navButtonMeta) {
+            navButtonMeta.content = color;
+        } else {
+            navButtonMeta = document.createElement('meta');
+            navButtonMeta.name = 'msapplication-navbutton-color';
+            navButtonMeta.content = color;
+            document.head.appendChild(navButtonMeta);
+        }
+        
+        // Update apple-mobile-web-app-status-bar-style based on theme
+        let statusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        const statusBarStyle = theme.includes('dark') ? 'black-translucent' : 'default';
+        if (statusBarMeta) {
+            statusBarMeta.content = statusBarStyle;
+        }
+        
+        console.log(`Browser theme color updated to ${color} for theme: ${theme}`);
     }
 
     getTheme() {

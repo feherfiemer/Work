@@ -613,74 +613,95 @@ class NotificationManager {
             // Create AudioContext if not already created
             if (!this.audioContext) {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Resume audio context if suspended (required on mobile)
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume().then(() => {
+                        console.log('AudioContext resumed successfully');
+                        this.playSoundType(soundType);
+                    }).catch(error => {
+                        console.warn('Could not resume audio context:', error);
+                    });
+                    return;
+                }
             }
 
-            if (soundType === 'done') {
-                this.playSuccessSound();
-            } else if (soundType === 'paid') {
-                this.playPaymentSound();
-            }
+            this.playSoundType(soundType);
         } catch (error) {
             console.warn('Could not play sound:', error);
         }
     }
+    
+    // Helper method to play specific sound type
+    playSoundType(soundType) {
+        if (soundType === 'done') {
+            this.playSuccessSound();
+        } else if (soundType === 'paid') {
+            this.playPaymentSound();
+        }
+    }
 
-    // Play success sound (realistic work completion sound like modern apps)
+    // Play success sound (realistic work completion like actual task completion)
     playSuccessSound() {
         if (!this.audioContext) return;
 
         const ctx = this.audioContext;
         const now = ctx.currentTime;
         
-        // Create master gain node
+        // Create master gain node with gentle volume
         const masterGain = ctx.createGain();
         masterGain.connect(ctx.destination);
-        masterGain.gain.setValueAtTime(0.25, now);
+        masterGain.gain.setValueAtTime(0.3, now);
 
-        // Realistic work completion sound like iOS/Android success notifications
-        // Sound 1: Initial positive ding (like iOS notification)
-        const osc1 = ctx.createOscillator();
-        const gain1 = ctx.createGain();
-        osc1.connect(gain1);
-        gain1.connect(masterGain);
+        // Realistic task completion sound like checking off a box or pressing a button
+        // Sound 1: Satisfying "click" like a mechanical button press
+        const clickOsc = ctx.createOscillator();
+        const clickGain = ctx.createGain();
+        const clickFilter = ctx.createBiquadFilter();
         
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(1047, now); // C6 note
-        gain1.gain.setValueAtTime(0.7, now);
-        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        clickOsc.connect(clickFilter);
+        clickFilter.connect(clickGain);
+        clickGain.connect(masterGain);
         
-        osc1.start(now);
-        osc1.stop(now + 0.4);
+        clickOsc.type = 'square';
+        clickOsc.frequency.setValueAtTime(800, now);
+        clickFilter.type = 'lowpass';
+        clickFilter.frequency.setValueAtTime(1200, now);
+        clickGain.gain.setValueAtTime(0.8, now);
+        clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        
+        clickOsc.start(now);
+        clickOsc.stop(now + 0.1);
 
-        // Sound 2: Harmonious second note (like task apps)
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(masterGain);
+        // Sound 2: Gentle success chime (like WhatsApp message sent)
+        const chimeOsc = ctx.createOscillator();
+        const chimeGain = ctx.createGain();
+        chimeOsc.connect(chimeGain);
+        chimeGain.connect(masterGain);
         
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(1319, now + 0.15); // E6 note
-        gain2.gain.setValueAtTime(0.5, now + 0.15);
-        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
+        chimeOsc.type = 'sine';
+        chimeOsc.frequency.setValueAtTime(880, now + 0.12); // A5 note
+        chimeGain.gain.setValueAtTime(0.6, now + 0.12);
+        chimeGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
         
-        osc2.start(now + 0.15);
-        osc2.stop(now + 0.55);
+        chimeOsc.start(now + 0.12);
+        chimeOsc.stop(now + 0.5);
 
-        // Sound 3: Gentle completion chime (like Microsoft Teams success)
-        const osc3 = ctx.createOscillator();
-        const gain3 = ctx.createGain();
-        osc3.connect(gain3);
-        gain3.connect(masterGain);
+        // Sound 3: Subtle completion ding (like iOS message delivered)
+        const dingOsc = ctx.createOscillator();
+        const dingGain = ctx.createGain();
+        dingOsc.connect(dingGain);
+        dingGain.connect(masterGain);
         
-        osc3.type = 'triangle';
-        osc3.frequency.setValueAtTime(1568, now + 0.3); // G6 note
-        gain3.gain.setValueAtTime(0.4, now + 0.3);
-        gain3.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        dingOsc.type = 'triangle';
+        dingOsc.frequency.setValueAtTime(1100, now + 0.25);
+        dingGain.gain.setValueAtTime(0.4, now + 0.25);
+        dingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
         
-        osc3.start(now + 0.3);
-        osc3.stop(now + 0.8);
+        dingOsc.start(now + 0.25);
+        dingOsc.stop(now + 0.6);
 
-        console.log('Realistic work completion sound played');
+        console.log('Realistic task completion sound played');
     }
 
     // Play payment sound (API-based transaction sound)
@@ -700,7 +721,7 @@ class NotificationManager {
         }
     }
 
-    // Enhanced real-world payment sound (like bank apps and POS systems)
+    // Realistic payment sound like actual cash register and mobile payment apps
     createTransactionSound() {
         const ctx = this.audioContext;
         const now = ctx.currentTime;
@@ -708,87 +729,77 @@ class NotificationManager {
         // Create master gain node
         const masterGain = ctx.createGain();
         masterGain.connect(ctx.destination);
-        masterGain.gain.setValueAtTime(0.3, now);
+        masterGain.gain.setValueAtTime(0.35, now);
         
-        // Sound sequence like real payment terminals and banking apps
+        // Sound 1: Classic cash register "ka-ching" opening
+        const kaChingOsc1 = ctx.createOscillator();
+        const kaChingGain1 = ctx.createGain();
+        const kaChingFilter1 = ctx.createBiquadFilter();
         
-        // Sound 1: Payment initiated beep (like Square/PayPal)
-        const osc1 = ctx.createOscillator();
-        const gain1 = ctx.createGain();
-        osc1.connect(gain1);
-        gain1.connect(masterGain);
+        kaChingOsc1.connect(kaChingFilter1);
+        kaChingFilter1.connect(kaChingGain1);
+        kaChingGain1.connect(masterGain);
         
-        osc1.type = 'square';
-        osc1.frequency.setValueAtTime(880, now); // A5 note
-        gain1.gain.setValueAtTime(0.4, now);
-        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        kaChingOsc1.type = 'triangle';
+        kaChingFilter1.type = 'lowpass';
+        kaChingFilter1.frequency.setValueAtTime(3000, now);
+        kaChingOsc1.frequency.setValueAtTime(150, now);
+        kaChingOsc1.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+        kaChingGain1.gain.setValueAtTime(0.7, now);
+        kaChingGain1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
         
-        osc1.start(now);
-        osc1.stop(now + 0.2);
+        kaChingOsc1.start(now);
+        kaChingOsc1.stop(now + 0.3);
         
-        // Sound 2: Processing tone (like Apple Pay confirmation)
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(masterGain);
+        // Sound 2: Bell-like ding (like physical cash register bell)
+        const bellOsc = ctx.createOscillator();
+        const bellGain = ctx.createGain();
+        bellOsc.connect(bellGain);
+        bellGain.connect(masterGain);
         
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(1047, now + 0.4); // C6 note
-        gain2.gain.setValueAtTime(0.5, now + 0.4);
-        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+        bellOsc.type = 'sine';
+        bellOsc.frequency.setValueAtTime(2093, now + 0.15); // C7 note (high bell)
+        bellGain.gain.setValueAtTime(0.6, now + 0.15);
+        bellGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
         
-        osc2.start(now + 0.4);
-        osc2.stop(now + 0.7);
+        bellOsc.start(now + 0.15);
+        bellOsc.stop(now + 0.8);
         
-        // Sound 3: Success confirmation (like Google Pay success)
-        const osc3 = ctx.createOscillator();
-        const gain3 = ctx.createGain();
-        osc3.connect(gain3);
-        gain3.connect(masterGain);
+        // Sound 3: Coin drop simulation for authenticity
+        const coinOsc = ctx.createOscillator();
+        const coinGain = ctx.createGain();
+        const coinFilter = ctx.createBiquadFilter();
         
-        osc3.type = 'sine';
-        osc3.frequency.setValueAtTime(1319, now + 0.8); // E6 note
-        gain3.gain.setValueAtTime(0.6, now + 0.8);
-        gain3.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+        coinOsc.connect(coinFilter);
+        coinFilter.connect(coinGain);
+        coinGain.connect(masterGain);
         
-        osc3.start(now + 0.8);
-        osc3.stop(now + 1.2);
+        coinOsc.type = 'square';
+        coinFilter.type = 'highpass';
+        coinFilter.frequency.setValueAtTime(800, now + 0.4);
+        coinOsc.frequency.setValueAtTime(1200, now + 0.4);
+        coinOsc.frequency.exponentialRampToValueAtTime(400, now + 0.6);
+        coinGain.gain.setValueAtTime(0.4, now + 0.4);
+        coinGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
         
-        // Sound 4: Final payment complete chime (like banking apps)
-        const osc4 = ctx.createOscillator();
-        const gain4 = ctx.createGain();
-        osc4.connect(gain4);
-        gain4.connect(masterGain);
+        coinOsc.start(now + 0.4);
+        coinOsc.stop(now + 0.8);
         
-        osc4.type = 'triangle';
-        osc4.frequency.setValueAtTime(1568, now + 1.3); // G6 note
-        gain4.gain.setValueAtTime(0.5, now + 1.3);
-        gain4.gain.exponentialRampToValueAtTime(0.01, now + 1.8);
+        // Sound 4: Modern payment success (like Apple Pay/Google Pay)
+        const successOsc = ctx.createOscillator();
+        const successGain = ctx.createGain();
+        successOsc.connect(successGain);
+        successGain.connect(masterGain);
         
-        osc4.start(now + 1.3);
-        osc4.stop(now + 1.8);
+        successOsc.type = 'sine';
+        successOsc.frequency.setValueAtTime(880, now + 0.6); // A5 pleasant confirmation
+        successGain.gain.setValueAtTime(0.5, now + 0.6);
+        successGain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
         
-        // Sound 5: Subtle cash register "ka-ching" simulation
-        const cashOsc = ctx.createOscillator();
-        const cashGain = ctx.createGain();
-        const cashFilter = ctx.createBiquadFilter();
+        successOsc.start(now + 0.6);
+        successOsc.stop(now + 1.2);
         
-        cashOsc.connect(cashFilter);
-        cashFilter.connect(cashGain);
-        cashGain.connect(masterGain);
-        
-        cashOsc.type = 'sawtooth';
-        cashFilter.type = 'lowpass';
-        cashFilter.frequency.setValueAtTime(2000, now + 1.9);
-        cashOsc.frequency.setValueAtTime(220, now + 1.9); // A3 note
-        cashOsc.frequency.exponentialRampToValueAtTime(440, now + 2.1); // A4 note
-        cashGain.gain.setValueAtTime(0.3, now + 1.9);
-        cashGain.gain.exponentialRampToValueAtTime(0.01, now + 2.3);
-        
-        cashOsc.start(now + 1.9);
-        cashOsc.stop(now + 2.3);
-        
-        console.log('Realistic payment transaction sound sequence played');
+        console.log('Realistic cash register payment sound played');
     }
 
     // Fallback transaction sound for older browsers (improved)

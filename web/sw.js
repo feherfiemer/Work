@@ -1,5 +1,5 @@
 // Service Worker for R-Service Tracker PWA
-const CACHE_NAME = 'r-service-tracker-v1.0.0';
+const CACHE_NAME = 'r-service-tracker-v1.1.0';
 const urlsToCache = [
   '/',
   '/index.html',
