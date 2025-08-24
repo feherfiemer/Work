@@ -27,8 +27,8 @@
   --z-loading: 10000;
   --z-modal: 1000;
   --z-menu: 900;
+  --z-toast: 950;
   --z-header: 800;
-  --z-toast: 700;
   
   /* Performance optimizations */
   --gpu-acceleration: translateZ(0);
@@ -374,13 +374,15 @@ body {
   transition: font-size var(--transition-medium);
 }
 
-.logo span {
+.logo-text {
   font-size: inherit;
   transition: font-size var(--transition-medium);
 }
 
-.logo span:not(.always-visible) {
-  font-size: clamp(0.8rem, 3vw, 1rem);
+.logo-part {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 
 .menu-toggle {
@@ -1416,39 +1418,88 @@ body {
 
 /* ===== FOOTER ===== */
 .footer {
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  padding: 1rem 0;
-  margin-top: 2rem;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-alt) 100%);
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, var(--primary), var(--secondary)) 1;
+  padding: 1.5rem 0;
+  margin-top: 3rem;
   text-align: center;
   position: relative;
   z-index: 1;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme*="dark"] .footer {
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(30, 30, 30, 0.8) 100%);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .footer-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
+  position: relative;
+}
+
+.footer-content::before {
+  content: '';
+  position: absolute;
+  top: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 2px;
 }
 
 .footer-content p {
   margin: 0;
-  color: #000000;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  opacity: 0.9;
+  color: #1a1a1a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 1px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  opacity: 0.85;
+  position: relative;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 [data-theme*="dark"] .footer-content p {
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.1);
+  color: #f0f0f0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.footer-content p::before {
+  content: '✨';
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.footer-content p::after {
+  content: '✨';
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .footer-content p ❤️ {
   color: #ff4757;
+  font-size: 1rem;
+  animation: heartbeat 2s infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 /* ===== TOAST NOTIFICATIONS ===== */
@@ -1617,6 +1668,14 @@ body {
     max-width: 100%;
   }
   
+  .logo {
+    gap: 0.5rem;
+  }
+  
+  .logo i {
+    font-size: 1.5rem;
+  }
+  
   .main-content {
     padding: 1rem;
   }
@@ -1747,7 +1806,17 @@ body {
   }
   
   .footer {
-    padding: 0.75rem 0;
+    padding: 1.25rem 0;
+    margin-top: 2.5rem;
+  }
+  
+  .footer-content p {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .footer-content::before {
+    width: 50px;
   }
   
   .main-content {
@@ -1851,6 +1920,18 @@ body {
   
   .footer-content p {
     font-size: 0.65rem;
+    padding: 0.3rem 0.7rem;
+    letter-spacing: 0.5px;
+  }
+  
+  .footer {
+    padding: 1rem 0;
+    margin-top: 2rem;
+  }
+  
+  .footer-content::before {
+    width: 40px;
+    height: 2px;
   }
   
   .main-content {
@@ -3303,6 +3384,47 @@ select:focus {
   
   .dashboard-grid {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+/* Large screens (1400px and above) */
+@media (min-width: 1400px) {
+  .header-content {
+    max-width: 1600px;
+    padding: 1.5rem 2rem;
+  }
+  
+  .logo {
+    font-size: 2rem;
+  }
+  
+  .logo i {
+    font-size: 2.2rem;
+  }
+  
+  .footer-content p {
+    font-size: 0.9rem;
+    padding: 0.7rem 1.3rem;
+  }
+  
+  .footer-content::before {
+    width: 80px;
+    height: 4px;
+  }
+}
+
+/* Ultra-wide screens (1920px and above) */
+@media (min-width: 1920px) {
+  .header-content {
+    max-width: 2000px;
+  }
+  
+  .logo {
+    font-size: 2.2rem;
+  }
+  
+  .logo i {
+    font-size: 2.5rem;
   }
 }
 

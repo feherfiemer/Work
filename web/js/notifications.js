@@ -25,7 +25,7 @@ class NotificationManager {
             position: fixed;
             top: 1rem;
             right: 1rem;
-            z-index: 10000;
+            z-index: 9999;
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
