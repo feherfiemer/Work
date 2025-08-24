@@ -273,7 +273,7 @@ class CalendarManager {
             if (isPaid) {
                 const payment = this.getPaymentForDate(workRecord.date);
                 // Calculate the actual payment amount for this specific date
-                const paymentAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : 25;
+                const paymentAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
                 
                 const paidIndicator = document.createElement('span');
                 paidIndicator.className = 'paid-indicator';
@@ -333,7 +333,7 @@ class CalendarManager {
 
             if (isPaid) {
                 const payment = this.getPaymentForDate(dateString);
-                const paidAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : 25;
+                const paidAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
                 content += `
                     <div class="payment-status success">
                         <i class="fas fa-money-bill-wave"></i>
@@ -573,13 +573,13 @@ class CalendarManager {
             record.status === 'completed'
         ).length;
         
-        const totalEarnings = workedDays * 25;
+        const totalEarnings = workedDays * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
         
         const paidDays = monthRecords.filter(record => 
             record.status === 'completed' && this.isDatePaid(record.date)
         ).length;
         
-        const paidAmount = paidDays * 25;
+        const paidAmount = paidDays * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
         const pendingAmount = totalEarnings - paidAmount;
         
         return {
@@ -662,7 +662,7 @@ class CalendarManager {
             }
 
             // Create a force payment for this specific date
-            const paymentAmount = 25; // Standard daily wage
+            const paymentAmount = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             const today = new Date();
             const paymentDate = today.getFullYear() + '-' + 
                               String(today.getMonth() + 1).padStart(2, '0') + '-' + 

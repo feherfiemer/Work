@@ -732,7 +732,7 @@ class RServiceTracker {
             }
             
             // Add work record
-            const result = await this.db.addWorkRecord(today, 25, 'completed');
+            const result = await this.db.addWorkRecord(today, window.R_SERVICE_CONFIG?.DAILY_WAGE || 25, 'completed');
             console.log('Work record added successfully:', result);
             
             // Add visual feedback to done button
@@ -747,7 +747,7 @@ class RServiceTracker {
             
             // Show success notification
             this.notifications.showWorkCompletedNotification();
-            this.notifications.showToast('Great job! You earned ₹25 today', 'success');
+            this.notifications.showToast(`Great job! You earned ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} today`, 'success');
             
             // Update stats and UI
             this.currentStats = await this.db.getEarningsStats();

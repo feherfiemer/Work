@@ -366,6 +366,10 @@ body {
 
 .logo i {
   font-size: 2rem;
+  position: relative;
+  z-index: 10;
+  color: var(--primary);
+  transition: all var(--transition-fast);
 }
 
 .menu-toggle {
@@ -663,6 +667,7 @@ body {
 
 .card-header i {
   color: var(--primary);
+  font-size: 0.9rem;
 }
 
 /* ===== STATUS CARD ===== */
@@ -808,7 +813,7 @@ body {
 }
 
 .action-btn i {
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 /* ===== BUTTONS ===== */
@@ -1898,7 +1903,7 @@ body {
 }
 
 .action-btn i {
-  font-size: 1.2rem;
+  font-size: 1rem;
   margin-bottom: 0.25rem;
 }
 

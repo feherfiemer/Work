@@ -141,7 +141,7 @@ class NotificationManager {
     showWorkCompletedNotification() {
         const title = 'Work Marked Complete';
         const options = {
-            body: 'Great job! You\'ve earned ₹25 today.',
+            body: `Great job! You've earned ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} today.`,
             icon: 'assets/favicon.ico',
             tag: 'work-completed'
         };
@@ -633,7 +633,7 @@ class NotificationManager {
                     const extraDays = unpaidWork % 4;
                     
                     this.showNotification('Daily Payment Reminder - R-Service Tracker', {
-                        body: `Good morning! You have ${unpaidWork} unpaid work days (₹${unpaidWork * 25}). ${paydayAmount > 0 ? `You can collect ₹${paydayAmount} right now!` : ''} ${extraDays > 0 ? `Plus ${extraDays} extra days pending.` : ''}`,
+                        body: `Good morning! You have ${unpaidWork} unpaid work days (₹${unpaidWork * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)}). ${paydayAmount > 0 ? `You can collect ₹${paydayAmount} right now!` : ''} ${extraDays > 0 ? `Plus ${extraDays} extra days pending.` : ''}`,
                         tag: 'payment-reminder-7am',
                         requireInteraction: true,
                         icon: '/assets/icon-192.png',
@@ -648,7 +648,7 @@ class NotificationManager {
                     });
                     
                     // Enhanced in-app notification
-                    this.showToast(`🌅 Morning reminder: ${unpaidWork} work days (₹${unpaidWork * 25}) are ready for payment collection!`, 'warning', 8000);
+                    this.showToast(`🌅 Morning reminder: ${unpaidWork} work days (₹${unpaidWork * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)}) are ready for payment collection!`, 'warning', 8000);
                     
                     // Play attention sound
                     this.playPaymentSound();
@@ -670,7 +670,7 @@ class NotificationManager {
                     const currentStreak = (await this.db.getEarningsStats()).currentStreak || 0;
                     
                     this.showNotification('📝 Daily Work Reminder - R-Service Tracker', {
-                        body: `Good evening! Don't forget to mark your work as completed for ${dayName}! (₹25 pending) ${currentStreak > 0 ? `Your ${currentStreak}-day streak is waiting!` : 'Start your work streak today!'}`,
+                        body: `Good evening! Don't forget to mark your work as completed for ${dayName}! (₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} pending) ${currentStreak > 0 ? `Your ${currentStreak}-day streak is waiting!` : 'Start your work streak today!'}`,
                         tag: 'work-reminder-6pm',
                         requireInteraction: false,
                         icon: '/assets/icon-192.png',
@@ -685,7 +685,7 @@ class NotificationManager {
                     });
                     
                     // Enhanced in-app notification
-                    this.showToast(`🌇 Evening reminder: Mark today's work as completed to earn ₹25 ${currentStreak > 0 ? `and maintain your ${currentStreak}-day streak!` : 'and start building your streak!'}`, 'info', 8000);
+                    this.showToast(`🌇 Evening reminder: Mark today's work as completed to earn ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} ${currentStreak > 0 ? `and maintain your ${currentStreak}-day streak!` : 'and start building your streak!'}`, 'info', 8000);
                     
                     // Play gentle reminder sound
                     this.playSuccessSound();

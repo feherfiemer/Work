@@ -34,50 +34,15 @@ class Utils {
         return `₹${amount.toLocaleString('en-IN')}`;
     }
 
-    // Format currency for PDF (convert numbers to words)
+    // Format currency for PDF (use numeric format instead of words)
     formatCurrencyForPDF(amount) {
-        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-        const thousands = ['', 'Thousand', 'Million', 'Billion'];
-
-        if (amount === 0) return 'Zero rupees';
-
-        function convertChunk(n) {
-            let str = '';
-            if (n >= 100) {
-                str += ones[Math.floor(n / 100)] + ' Hundred ';
-                n %= 100;
-            }
-            if (n >= 20) {
-                str += tens[Math.floor(n / 10)] + ' ';
-                n %= 10;
-            } else if (n >= 10) {
-                str += teens[n - 10] + ' ';
-                return str;
-            }
-            if (n > 0) {
-                str += ones[n] + ' ';
-            }
-            return str;
-        }
-
-        let result = '';
-        let chunkCount = 0;
-        const originalAmount = amount;
-
-        while (amount > 0) {
-            const chunk = amount % 1000;
-            if (chunk !== 0) {
-                result = convertChunk(chunk) + thousands[chunkCount] + ' ' + result;
-            }
-            amount = Math.floor(amount / 1000);
-            chunkCount++;
-        }
-
-        // Use lowercase 'rupees' for amounts less than 100, uppercase 'Rupees' for 100 and above
-        const rupeesText = originalAmount >= 100 ? 'Rupees' : 'rupees';
-        return result.trim() + ' ' + rupeesText;
+        if (amount === 0) return '0 rupees';
+        
+        // Format the number with proper thousands separators
+        const formattedAmount = amount.toLocaleString('en-IN');
+        
+        // Use lowercase 'rupees' for all amounts
+        return formattedAmount + ' rupees';
     }
 
     // Get today's date in YYYY-MM-DD format
@@ -189,127 +154,254 @@ class Utils {
             // Set font
             doc.setFont('helvetica');
             
-            // Header
-            doc.setFontSize(20);
+            // Header with logo-like design
+            doc.setFontSize(24);
             doc.setTextColor(255, 107, 53); // Orange color
-            doc.text('R-Service Tracker', 20, 20);
+            doc.text('R-Service Tracker', 20, 25);
             
-            doc.setFontSize(14);
+            doc.setFontSize(16);
             doc.setTextColor(33, 33, 33);
-            doc.text('Work & Payment Report', 20, 30);
+            doc.text('Professional Work & Payment Report', 20, 35);
             
-            // Report date
+            // Add a line under header
+            doc.setDrawColor(255, 107, 53);
+            doc.setLineWidth(0.5);
+            doc.line(20, 40, 190, 40);
+            
+            // Report metadata
             doc.setFontSize(10);
             doc.setTextColor(117, 117, 117);
-            doc.text(`Generated on: ${this.formatDateTime(new Date())}`, 20, 40);
+            doc.text(`Report Generated: ${this.formatDateTime(new Date())}`, 20, 48);
+            doc.text(`Report Period: ${data.summary ? this.getReportPeriod(data) : 'All Time'}`, 20, 53);
             
-            let yPos = 55;
+            let yPos = 65;
             
-            // Summary section
+            // Summary section with enhanced design
             if (data.summary) {
+                // Section header with background
+                doc.setFillColor(248, 249, 250);
+                doc.rect(15, yPos - 5, 180, 22, 'F');
+                
                 doc.setFontSize(16);
                 doc.setTextColor(33, 33, 33);
-                doc.text('Summary', 20, yPos);
-                yPos += 10;
+                doc.setFont('helvetica', 'bold');
+                doc.text('📊 Financial Summary', 20, yPos + 5);
+                yPos += 20;
                 
-                doc.setFontSize(12);
-                const summaryItems = [
-                    `Total Days Worked: ${data.summary.totalWorked}`,
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                
+                // Create two columns for better organization
+                const leftColumn = [
+                    `Days Worked: ${data.summary.totalWorked} days`,
                     `Total Earnings: ${this.formatCurrencyForPDF(data.summary.totalEarned)}`,
-                    `Amount Paid: ${this.formatCurrencyForPDF(data.summary.totalPaid)}`,
-                    `Current Balance: ${this.formatCurrencyForPDF(data.summary.currentBalance)}`,
                     `Current Streak: ${data.summary.currentStreak} days`
                 ];
                 
-                summaryItems.forEach(item => {
-                    doc.text(item, 20, yPos);
-                    yPos += 8;
+                const rightColumn = [
+                    `Amount Paid: ${this.formatCurrencyForPDF(data.summary.totalPaid)}`,
+                    `Outstanding Balance: ${this.formatCurrencyForPDF(data.summary.currentBalance)}`,
+                    `Daily Rate: ${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} rupees`
+                ];
+                
+                // Left column
+                leftColumn.forEach((item, index) => {
+                    doc.text(item, 25, yPos + (index * 8));
                 });
                 
-                yPos += 10;
+                // Right column
+                rightColumn.forEach((item, index) => {
+                    doc.text(item, 110, yPos + (index * 8));
+                });
+                
+                yPos += 30;
+                
+                // Add performance indicators if available
+                if (data.summary.currentBalance > 0) {
+                    doc.setTextColor(220, 53, 69); // Red for outstanding balance
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`⚠️ Outstanding: ${this.formatCurrencyForPDF(data.summary.currentBalance)}`, 25, yPos);
+                    yPos += 10;
+                } else if (data.summary.currentBalance < 0) {
+                    doc.setTextColor(40, 167, 69); // Green for advance
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`✅ Advance Paid: ${this.formatCurrencyForPDF(Math.abs(data.summary.currentBalance))}`, 25, yPos);
+                    yPos += 10;
+                }
+                
+                doc.setTextColor(33, 33, 33);
+                doc.setFont('helvetica', 'normal');
+                yPos += 5;
             }
             
-            // Work records section
+            // Work records section with enhanced design
             if (data.workRecords && data.workRecords.length > 0) {
+                // Section header with background
+                doc.setFillColor(248, 249, 250);
+                doc.rect(15, yPos - 5, 180, 15, 'F');
+                
                 doc.setFontSize(16);
                 doc.setTextColor(33, 33, 33);
-                doc.text('Work Records', 20, yPos);
-                yPos += 15;
+                doc.setFont('helvetica', 'bold');
+                doc.text('📅 Work Records Detail', 20, yPos + 5);
+                yPos += 20;
                 
-                // Table headers
+                // Enhanced table headers with background
+                doc.setFillColor(240, 240, 240);
+                doc.rect(15, yPos - 3, 180, 12, 'F');
+                
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Date', 20, yPos);
-                doc.text('Day', 60, yPos);
-                doc.text('Status', 100, yPos);
-                doc.text('Wage', 140, yPos);
-                doc.text('Payment', 170, yPos);
-                yPos += 5;
+                doc.setTextColor(33, 33, 33);
+                doc.text('Date', 20, yPos + 5);
+                doc.text('Day', 55, yPos + 5);
+                doc.text('Status', 85, yPos + 5);
+                doc.text('Earnings', 120, yPos + 5);
+                doc.text('Payment Status', 155, yPos + 5);
+                yPos += 15;
                 
-                // Line under headers
-                doc.line(20, yPos, 190, yPos);
-                yPos += 8;
-                
-                // Work records
+                // Enhanced work records with alternating colors
                 doc.setFont('helvetica', 'normal');
-                data.workRecords.forEach(record => {
+                data.workRecords.forEach((record, index) => {
                     if (yPos > 270) { // New page if needed
                         doc.addPage();
                         yPos = 20;
+                        
+                        // Repeat headers on new page
+                        doc.setFillColor(240, 240, 240);
+                        doc.rect(15, yPos - 3, 180, 12, 'F');
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Date', 20, yPos + 5);
+                        doc.text('Day', 55, yPos + 5);
+                        doc.text('Status', 85, yPos + 5);
+                        doc.text('Earnings', 120, yPos + 5);
+                        doc.text('Payment Status', 155, yPos + 5);
+                        yPos += 15;
+                        doc.setFont('helvetica', 'normal');
+                    }
+                    
+                    // Alternating row colors
+                    if (index % 2 === 0) {
+                        doc.setFillColor(252, 252, 252);
+                        doc.rect(15, yPos - 2, 180, 8, 'F');
                     }
                     
                     const date = new Date(record.date);
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                     
-                    doc.text(this.formatDateShort(record.date), 20, yPos);
-                    doc.text(dayName, 60, yPos);
-                    doc.text(record.status === 'completed' ? 'Done' : 'Not Done', 100, yPos);
-                    doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '-', 140, yPos);
-                    doc.text(record.paid ? 'Paid' : 'Pending', 170, yPos);
+                    // Set colors based on status
+                    if (record.status === 'completed') {
+                        doc.setTextColor(40, 167, 69); // Green for completed
+                    } else {
+                        doc.setTextColor(220, 53, 69); // Red for not completed
+                    }
                     
-                    yPos += 8;
+                    doc.text(this.formatDateShort(record.date), 20, yPos + 3);
+                    doc.text(dayName, 55, yPos + 3);
+                    doc.text(record.status === 'completed' ? '✅ Completed' : '❌ Not Done', 85, yPos + 3);
+                    
+                    // Reset color for earnings
+                    doc.setTextColor(33, 33, 33);
+                    doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '0 rupees', 120, yPos + 3);
+                    
+                    // Payment status with color
+                    if (record.paid) {
+                        doc.setTextColor(40, 167, 69);
+                        doc.text('✅ Paid', 155, yPos + 3);
+                    } else {
+                        doc.setTextColor(255, 193, 7);
+                        doc.text('⏳ Pending', 155, yPos + 3);
+                    }
+                    
+                    doc.setTextColor(33, 33, 33);
+                    yPos += 10;
                 });
                 
                 yPos += 10;
             }
             
-            // Payments section
+            // Payments section with enhanced design
             if (data.payments && data.payments.length > 0) {
                 if (yPos > 200) {
                     doc.addPage();
                     yPos = 20;
                 }
                 
+                // Section header with background
+                doc.setFillColor(248, 249, 250);
+                doc.rect(15, yPos - 5, 180, 15, 'F');
+                
                 doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(33, 33, 33);
-                doc.text('Payment History', 20, yPos);
+                doc.text('💰 Payment History', 20, yPos + 5);
+                yPos += 20;
+                
+                // Enhanced payment table headers with background
+                doc.setFillColor(240, 240, 240);
+                doc.rect(15, yPos - 3, 180, 12, 'F');
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Payment Date', 20, yPos + 5);
+                doc.text('Amount', 70, yPos + 5);
+                doc.text('Work Days', 115, yPos + 5);
+                doc.text('Type', 155, yPos + 5);
                 yPos += 15;
                 
-                // Payment table headers
-                doc.setFontSize(10);
-                doc.text('Date', 20, yPos);
-                doc.text('Amount', 60, yPos);
-                doc.text('Work Dates', 100, yPos);
-                yPos += 5;
-                
-                doc.line(20, yPos, 190, yPos);
-                yPos += 8;
-                
-                // Payment records
+                // Payment records with enhanced styling
                 doc.setFont('helvetica', 'normal');
-                data.payments.forEach(payment => {
+                data.payments.forEach((payment, index) => {
                     if (yPos > 270) {
                         doc.addPage();
                         yPos = 20;
+                        
+                        // Repeat headers on new page
+                        doc.setFillColor(240, 240, 240);
+                        doc.rect(15, yPos - 3, 180, 12, 'F');
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Payment Date', 20, yPos + 5);
+                        doc.text('Amount', 70, yPos + 5);
+                        doc.text('Work Days', 115, yPos + 5);
+                        doc.text('Type', 155, yPos + 5);
+                        yPos += 15;
+                        doc.setFont('helvetica', 'normal');
                     }
                     
-                    doc.text(this.formatDateShort(payment.paymentDate), 20, yPos);
-                    doc.text(this.formatCurrencyForPDF(payment.amount), 60, yPos);
-                    doc.text(`${payment.workDates.length} days`, 100, yPos);
+                    // Alternating row colors
+                    if (index % 2 === 0) {
+                        doc.setFillColor(252, 252, 252);
+                        doc.rect(15, yPos - 2, 180, 8, 'F');
+                    }
                     
-                    yPos += 8;
+                    doc.setTextColor(33, 33, 33);
+                    doc.text(this.formatDateShort(payment.paymentDate), 20, yPos + 3);
+                    
+                    // Color code amount based on type
+                    if (payment.isAdvance) {
+                        doc.setTextColor(255, 193, 7); // Orange for advance
+                    } else {
+                        doc.setTextColor(40, 167, 69); // Green for regular
+                    }
+                    doc.text(this.formatCurrencyForPDF(payment.amount), 70, yPos + 3);
+                    
+                    doc.setTextColor(33, 33, 33);
+                    doc.text(`${payment.workDates.length} days`, 115, yPos + 3);
+                    
+                    // Payment type with appropriate color
+                    if (payment.isAdvance) {
+                        doc.setTextColor(255, 193, 7);
+                        doc.text('🔄 Advance', 155, yPos + 3);
+                    } else {
+                        doc.setTextColor(40, 167, 69);
+                        doc.text('✅ Regular', 155, yPos + 3);
+                    }
+                    
+                    doc.setTextColor(33, 33, 33);
+                    yPos += 10;
                 });
+                
+                yPos += 10;
             }
             
             // Footer
@@ -331,6 +423,19 @@ class Utils {
             console.error('Error exporting PDF:', error);
             throw error; // Re-throw to allow proper error handling
         }
+    }
+
+    // Helper function to get report period
+    getReportPeriod(data) {
+        if (!data.workRecords || data.workRecords.length === 0) {
+            return 'No records available';
+        }
+        
+        const dates = data.workRecords.map(record => new Date(record.date));
+        const startDate = new Date(Math.min(...dates));
+        const endDate = new Date(Math.max(...dates));
+        
+        return `${this.formatDateShort(startDate.toISOString().split('T')[0])} to ${this.formatDateShort(endDate.toISOString().split('T')[0])}`;
     }
 
     // Data validation utilities

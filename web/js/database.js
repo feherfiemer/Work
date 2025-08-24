@@ -101,10 +101,11 @@ class DatabaseManager {
     }
 
     // Work Records Methods
-    async addWorkRecord(date, wage = 25, status = 'completed') {
+    async addWorkRecord(date, wage = null, status = 'completed') {
+        const DAILY_WAGE = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
         const record = {
             date: date,
-            wage: wage,
+            wage: wage || DAILY_WAGE,
             status: status,
             timestamp: new Date().toISOString(),
             month: new Date(date).getMonth() + 1,
@@ -295,7 +296,7 @@ class DatabaseManager {
 
     // Unified Amount Calculation System
     calculateAmounts(workRecords, payments) {
-        const DAILY_WAGE = 25; // Centralized wage constant
+        const DAILY_WAGE = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
         
         // Basic calculations
         const totalWorked = workRecords.filter(record => record.status === 'completed').length;
@@ -408,13 +409,27 @@ class DatabaseManager {
                 };
             }
             
-            // Calculate total advance amount (pure advance, not counting work covered)
-            const totalAdvanceAmount = advancePayments.reduce((sum, payment) => {
-                return sum + payment.amount;
-            }, 0);
+            // Calculate actual advance amount (only the excess over work done)
+            let totalAdvanceAmount = 0;
+            const amounts = this.calculateAmounts(workRecords, payments);
+            
+            for (const payment of advancePayments) {
+                // Get work done up to this payment date
+                const workUpToPayment = workRecords.filter(record => {
+                    return record.status === 'completed' && 
+                           new Date(record.date) <= new Date(payment.date) &&
+                           !this.isRecordPaid(record, payments.filter(p => new Date(p.date) < new Date(payment.date)));
+                });
+                
+                // Calculate work value at time of payment
+                const workValueAtPayment = workUpToPayment.length * amounts.dailyWage;
+                
+                // Only count the excess as advance
+                const advanceForThisPayment = Math.max(0, payment.amount - workValueAtPayment);
+                totalAdvanceAmount += advanceForThisPayment;
+            }
             
             // Calculate work required to clear advance using unified system
-            const amounts = this.calculateAmounts(workRecords, payments);
             const workRequiredForAdvance = Math.ceil(totalAdvanceAmount / amounts.dailyWage);
             
             // Find the most recent advance payment date

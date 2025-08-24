@@ -573,8 +573,9 @@ class ChartsManager {
                 return recordKey === lastMonthKey && record.status === 'completed';
             });
             
-            const thisMonthEarnings = thisMonthRecords.length * 25;
-            const lastMonthEarnings = lastMonthRecords.length * 25;
+            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+            const thisMonthEarnings = thisMonthRecords.length * dailyWage;
+            const lastMonthEarnings = lastMonthRecords.length * dailyWage;
             const monthlyGrowth = lastMonthEarnings > 0 ? 
                 ((thisMonthEarnings - lastMonthEarnings) / lastMonthEarnings * 100).toFixed(1) : 0;
             
@@ -586,7 +587,7 @@ class ChartsManager {
                 lastMonthEarnings,
                 monthlyGrowth: parseFloat(monthlyGrowth),
                 averageEarningsPerMonth: stats.totalEarned / Math.max(1, new Set(workRecords.map(r => `${r.year}-${r.month}`)).size),
-                workEfficiency: stats.totalWorked > 0 ? (stats.totalEarned / (stats.totalWorked * 25) * 100).toFixed(1) : 0
+                workEfficiency: stats.totalWorked > 0 ? (stats.totalEarned / (stats.totalWorked * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)) * 100).toFixed(1) : 0
             };
         } catch (error) {
             console.error('Error getting chart stats:', error);
