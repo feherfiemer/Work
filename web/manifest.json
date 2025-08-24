@@ -1,14 +1,19 @@
 {
-  "name": "R-Service Tracker",
+  "name": "R-Service Tracker - Premium Work Management",
   "short_name": "R-Service",
-  "description": "Premium job tracking and payment management system",
+  "description": "Premium work tracking and payment management system with advanced analytics and notifications",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1a1a",
-  "theme_color": "#FF6B35",
-  "orientation": "portrait",
+  "background_color": "#2196F3",
+  "theme_color": "#2196F3",
+  "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
+  "prefer_related_applications": false,
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
   "icons": [
     {
       "src": "assets/favicon.ico",
@@ -18,20 +23,43 @@
     {
       "src": "assets/favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/logo-premium.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     },
     {
       "src": "assets/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "assets/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "categories": ["productivity", "finance", "business"],
+  "categories": ["productivity", "finance", "business", "utilities"],
+  "screenshots": [
+    {
+      "src": "assets/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "assets/screenshot-narrow.png", 
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Mark Work Done",
@@ -46,6 +74,23 @@
       "description": "View work and payment calendar",
       "url": "/?action=calendar",
       "icons": [{ "src": "assets/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Analytics Dashboard",
+      "short_name": "Analytics",
+      "description": "View earnings and work analytics",
+      "url": "/?action=analytics",
+      "icons": [{ "src": "assets/favicon.svg", "sizes": "any" }]
     }
-  ]
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+rservice",
+      "url": "/?action=%s"
+    }
+  ],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
 }

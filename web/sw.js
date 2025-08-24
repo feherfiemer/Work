@@ -115,7 +115,7 @@ self.addEventListener('sync', event => {
   }
 });
 
-// Push notification handling
+// Enhanced push notification handling for cross-platform compatibility
 self.addEventListener('push', event => {
   console.log('[SW] Push message received');
   
@@ -124,20 +124,34 @@ self.addEventListener('push', event => {
     body: 'R-Service Tracker notification',
     icon: '/assets/favicon.svg',
     badge: '/assets/favicon.ico',
-    vibrate: [100, 50, 100],
+    image: '/assets/logo-premium.svg', // Rich notification image
+    dir: 'ltr',
+    lang: 'en',
+    renotify: true,
+    requireInteraction: true, // Keep visible until user interacts
+    silent: false,
+    timestamp: Date.now(),
+    vibrate: [200, 100, 200, 100, 200], // Enhanced vibration pattern
     data: {
       dateOfArrival: Date.now(),
-      primaryKey: 1
+      primaryKey: 1,
+      url: '/',
+      type: 'general'
     },
     actions: [
       {
-        action: 'explore', 
+        action: 'open', 
         title: 'Open App',
         icon: '/assets/favicon.svg'
       },
       {
-        action: 'close', 
-        title: 'Close',
+        action: 'mark-done', 
+        title: 'Mark Work Done',
+        icon: '/assets/favicon.svg'
+      },
+      {
+        action: 'dismiss', 
+        title: 'Dismiss',
         icon: '/assets/favicon.svg'
       }
     ]
@@ -149,7 +163,27 @@ self.addEventListener('push', event => {
       const data = event.data.json();
       title = data.title || title;
       options = { ...options, ...data.options };
+      
+      // Enhanced options for specific notification types
+      if (data.type === 'payday') {
+        options.requireInteraction = true;
+        options.vibrate = [300, 100, 300, 100, 300];
+        options.actions = [
+          { action: 'collect-payment', title: 'Collect Payment', icon: '/assets/favicon.svg' },
+          { action: 'view-earnings', title: 'View Earnings', icon: '/assets/favicon.svg' },
+          { action: 'dismiss', title: 'Later', icon: '/assets/favicon.svg' }
+        ];
+      } else if (data.type === 'reminder') {
+        options.requireInteraction = false;
+        options.vibrate = [150, 50, 150];
+        options.actions = [
+          { action: 'mark-done', title: 'Mark Done', icon: '/assets/favicon.svg' },
+          { action: 'open', title: 'Open App', icon: '/assets/favicon.svg' },
+          { action: 'dismiss', title: 'Dismiss', icon: '/assets/favicon.svg' }
+        ];
+      }
     } catch (e) {
+      console.error('[SW] Error parsing push data:', e);
       // Fallback to text data
       options.body = event.data.text();
     }
@@ -157,27 +191,102 @@ self.addEventListener('push', event => {
 
   event.waitUntil(
     self.registration.showNotification(title, options)
+      .then(() => {
+        console.log('[SW] Notification displayed successfully');
+        
+        // Try to focus the client if notification is critical
+        if (options.data && options.data.type === 'payday') {
+          return self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then(clients => {
+              if (clients.length > 0) {
+                // Focus existing window
+                return clients[0].focus();
+              }
+            });
+        }
+      })
+      .catch(error => {
+        console.error('[SW] Failed to show notification:', error);
+      })
   );
 });
 
-// Notification click handling
+// Enhanced notification click handling
 self.addEventListener('notificationclick', event => {
-  console.log('[SW] Notification click received');
+  console.log('[SW] Notification click received. Action:', event.action);
   
   event.notification.close();
   
-  if (event.action === 'explore' || event.action === 'get-started') {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
-  } else if (event.action === 'learn-more') {
-    event.waitUntil(
-      clients.openWindow('/#about')
-    );
-  } else if (!event.action) {
-    // Default click action
-    event.waitUntil(
-      clients.openWindow('/')
-    );
+  const notificationData = event.notification.data || {};
+  const baseUrl = self.location.origin;
+  
+  // Handle different actions
+  let actionPromise;
+  
+  switch (event.action) {
+    case 'open':
+    case 'explore':
+    case 'get-started':
+      actionPromise = openOrFocusApp('/');
+      break;
+      
+    case 'mark-done':
+      actionPromise = openOrFocusApp('/?action=mark-done');
+      break;
+      
+    case 'collect-payment':
+      actionPromise = openOrFocusApp('/?action=collect-payment');
+      break;
+      
+    case 'view-earnings':
+      actionPromise = openOrFocusApp('/?action=view-earnings');
+      break;
+      
+    case 'learn-more':
+      actionPromise = openOrFocusApp('/#about');
+      break;
+      
+    case 'dismiss':
+      // Just close the notification, no further action
+      actionPromise = Promise.resolve();
+      break;
+      
+    default:
+      // Default click action (no specific action button clicked)
+      const targetUrl = notificationData.url || '/';
+      actionPromise = openOrFocusApp(targetUrl);
+      break;
   }
+  
+  event.waitUntil(actionPromise);
 });
+
+// Helper function to open or focus the app
+async function openOrFocusApp(url) {
+  try {
+    // Get all clients (open windows/tabs)
+    const clients = await self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    });
+    
+    // Check if app is already open
+    for (const client of clients) {
+      if (client.url.startsWith(self.location.origin)) {
+        // Focus existing window and navigate if needed
+        await client.focus();
+        if (url !== '/' && !client.url.includes(url.replace('/', ''))) {
+          client.navigate(url);
+        }
+        return client;
+      }
+    }
+    
+    // No existing client found, open new window
+    return self.clients.openWindow(url);
+  } catch (error) {
+    console.error('[SW] Error in openOrFocusApp:', error);
+    // Fallback: just open new window
+    return self.clients.openWindow(url);
+  }
+}

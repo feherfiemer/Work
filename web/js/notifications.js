@@ -9,7 +9,28 @@ class NotificationManager {
     // Initialize notification manager
     init() {
         this.toastContainer = document.getElementById('toastContainer');
+        if (!this.toastContainer) {
+            console.warn('Toast container not found, creating one...');
+            this.createToastContainer();
+        }
         this.checkPermission();
+    }
+
+    // Create toast container if missing (bug fix)
+    createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            pointer-events: none;
+        `;
+        document.body.appendChild(container);
+        this.toastContainer = container;
+        console.log('Toast container created successfully');
     }
 
     // Check current notification permission
@@ -19,27 +40,121 @@ class NotificationManager {
         }
     }
 
-    // Request notification permission
+    // Request notification and sound permissions
     async requestPermission() {
+        const results = {
+            notification: this.permission,
+            sound: 'granted' // Default to granted for sound
+        };
+
+        // Request notification permission
         if ('Notification' in window && Notification.permission === 'default') {
             try {
                 this.permission = await Notification.requestPermission();
+                results.notification = this.permission;
+                
                 if (this.permission === 'granted') {
                     this.showToast('Notifications enabled! You\'ll be notified about paydays.', 'success');
                 } else {
                     this.showToast('Notifications denied. Enable them in browser settings for payday alerts.', 'warning');
                 }
-                return this.permission;
             } catch (error) {
                 console.error('Error requesting notification permission:', error);
                 this.showToast('Error enabling notifications.', 'error');
-                return 'denied';
+                results.notification = 'denied';
             }
         } else if ('Notification' in window && Notification.permission === 'denied') {
             this.showToast('Notifications are blocked. Enable them in browser settings.', 'warning');
-            return 'denied';
+            results.notification = 'denied';
         }
-        return this.permission;
+
+        // Request sound/audio permission
+        try {
+            // Check if browser supports getUserMedia for audio permission
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Request microphone permission as a way to enable audio playback
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // Immediately stop the stream as we don't need it
+                    stream.getTracks().forEach(track => track.stop());
+                    results.sound = 'granted';
+                    
+                    // Test audio context for sound permission
+                    if (window.AudioContext || window.webkitAudioContext) {
+                        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                        const audioContext = new AudioContextClass();
+                        if (audioContext.state === 'suspended') {
+                            await audioContext.resume();
+                        }
+                        audioContext.close();
+                    }
+                    
+                    this.showToast('Sound permissions enabled! Audio notifications will work.', 'success');
+                } catch (audioError) {
+                    console.log('Audio permission not granted or not needed:', audioError.message);
+                    results.sound = 'denied';
+                    
+                    // Try alternative audio permission method
+                    try {
+                        if (window.AudioContext || window.webkitAudioContext) {
+                            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                            const audioContext = new AudioContextClass();
+                            
+                            // Create a silent audio buffer to test audio permission
+                            const buffer = audioContext.createBuffer(1, 1, 22050);
+                            const source = audioContext.createBufferSource();
+                            source.buffer = buffer;
+                            source.connect(audioContext.destination);
+                            source.start(0);
+                            
+                            if (audioContext.state === 'suspended') {
+                                await audioContext.resume();
+                            }
+                            
+                            audioContext.close();
+                            results.sound = 'granted';
+                            this.showToast('Sound permissions enabled via audio context!', 'success');
+                        }
+                    } catch (contextError) {
+                        console.log('Audio context permission failed:', contextError.message);
+                        this.showToast('Sound permission denied. Sounds may not work until you interact with the page.', 'warning');
+                    }
+                }
+            } else {
+                // Fallback: try to create audio context without getUserMedia
+                if (window.AudioContext || window.webkitAudioContext) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    const audioContext = new AudioContextClass();
+                    
+                    if (audioContext.state === 'suspended') {
+                        // Show user instruction for audio permission
+                        this.showToast('Click anywhere to enable sounds!', 'info', 3000);
+                        
+                        // Add one-time click listener to resume audio context
+                        const resumeAudio = async () => {
+                            try {
+                                await audioContext.resume();
+                                results.sound = 'granted';
+                                this.showToast('Sounds enabled!', 'success');
+                                document.removeEventListener('click', resumeAudio);
+                                audioContext.close();
+                            } catch (error) {
+                                console.error('Failed to resume audio context:', error);
+                            }
+                        };
+                        document.addEventListener('click', resumeAudio, { once: true });
+                    } else {
+                        results.sound = 'granted';
+                        audioContext.close();
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error requesting sound permission:', error);
+            results.sound = 'denied';
+        }
+
+        return results;
     }
 
     // Show browser notification with enhanced delivery for mobile
@@ -199,7 +314,7 @@ class NotificationManager {
         };
 
         this.showNotification(title, options);
-        this.showToast('<i class="fas fa-party-horn"></i> Welcome! Your work tracker is being set up...', 'success', 8000);
+        this.showToast('Welcome! Your work tracker is being set up...', 'success', 8000);
         
         console.log('Welcome notification shown for first-time user');
     }
@@ -212,7 +327,7 @@ class NotificationManager {
             
             if (permission === 'default') {
                 // Show a friendly prompt before requesting permission
-                this.showToast('<i class="fas fa-mobile-alt"></i> Enable notifications to get daily work reminders and payment alerts!', 'info', 6000);
+                this.showToast('Enable notifications to get daily work reminders and payment alerts!', 'info', 6000);
                 
                 // Wait a bit then show the browser permission request
                 setTimeout(async () => {
@@ -226,7 +341,7 @@ class NotificationManager {
                         this.permission = result;
                         
                         if (result === 'granted') {
-                            this.showToast('<i class="fas fa-check-circle"></i> Notifications enabled successfully!', 'success', 4000);
+                            this.showToast('Notifications enabled successfully!', 'success', 4000);
                             
                             // Show welcome notification for new users after permission is granted
                             const hasShownWelcome = localStorage.getItem('welcomeNotificationShown');
@@ -246,9 +361,9 @@ class NotificationManager {
                                 }, 1500);
                             }
                         } else if (result === 'denied') {
-                            this.showToast('<i class="fas fa-times-circle"></i> Notifications were denied. You can enable them later in browser settings.', 'warning', 6000);
+                            this.showToast('Notifications were denied. You can enable them later in browser settings.', 'warning', 6000);
                         } else {
-                            this.showToast('<i class="fas fa-exclamation-triangle"></i> Notification permission was dismissed. You can enable them later.', 'info', 4000);
+                            this.showToast('Notification permission was dismissed. You can enable them later.', 'info', 4000);
                         }
                     } catch (error) {
                         console.error('Error requesting notification permission:', error);
@@ -262,11 +377,11 @@ class NotificationManager {
                                   '1. Click the 🔒 icon in your address bar\n' +
                                   '2. Set Notifications to "Allow"\n' +
                                   '3. Refresh the page';
-                this.showToast('<i class="fas fa-times-circle"></i> ' + helpMessage.replace(/\n/g, ' '), 'warning', 10000);
+                this.showToast(helpMessage.replace(/\n/g, ' '), 'warning', 10000);
                 
                 // Also show a clickable notification to help users
                 setTimeout(() => {
-                    this.showToast('<i class="fas fa-lightbulb"></i> Click here for help enabling notifications', 'info', 8000);
+                    this.showToast('Click here for help enabling notifications', 'info', 8000);
                 }, 2000);
                 
             } else if (permission === 'granted') {
@@ -290,7 +405,7 @@ class NotificationManager {
             }
         } else {
             console.warn('Notifications not supported in this browser');
-            this.showToast('<i class="fas fa-exclamation-triangle"></i> Notifications are not supported in your browser', 'warning', 5000);
+            this.showToast('Notifications are not supported in your browser', 'warning', 5000);
         }
     }
 
@@ -548,48 +663,68 @@ class NotificationManager {
         }
     }
 
-    // Play success sound (enhanced task completion sound)
+    // Play success sound (ultra-realistic task completion sound)
     playSuccessSound() {
         if (!this.audioContext) return;
 
         const ctx = this.audioContext;
         const now = ctx.currentTime;
         
-        // Create master gain node
+        // Create master gain node with better volume control
         const masterGain = ctx.createGain();
         masterGain.connect(ctx.destination);
-        masterGain.gain.setValueAtTime(0.3, now);
-
-        // Modern task completion sound pattern (like app notifications)
-        // Sound 1: Quick positive chirp
+        masterGain.gain.setValueAtTime(0.25, now); // Slightly lower for better UX
+        
+        // Create realistic task completion sound similar to iOS/Android notifications
+        
+        // Sound 1: Initial pleasant ding (like a notification bell)
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         osc1.connect(gain1);
         gain1.connect(masterGain);
         
-        osc1.frequency.setValueAtTime(800, now);
-        osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+        osc1.type = 'sine'; // Pure sine wave for clean sound
+        osc1.frequency.setValueAtTime(1046.5, now); // C6 note - pleasant and recognizable
         gain1.gain.setValueAtTime(0.8, now);
-        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
         
         osc1.start(now);
-        osc1.stop(now + 0.2);
+        osc1.stop(now + 0.4);
 
-        // Sound 2: Confirmation tone
+        // Sound 2: Harmonic confirmation (perfect fifth)
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
         osc2.connect(gain2);
         gain2.connect(masterGain);
         
-        osc2.frequency.setValueAtTime(600, now + 0.1);
-        osc2.frequency.exponentialRampToValueAtTime(800, now + 0.25);
-        gain2.gain.setValueAtTime(0.6, now + 0.1);
-        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1568.0, now + 0.12); // G6 - creates pleasant harmony
+        gain2.gain.setValueAtTime(0.6, now + 0.12);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
         
-        osc2.start(now + 0.1);
-        osc2.stop(now + 0.3);
+        osc2.start(now + 0.12);
+        osc2.stop(now + 0.45);
 
-        console.log('Task completion sound played');
+        // Sound 3: Gentle reverb tail for richness
+        const osc3 = ctx.createOscillator();
+        const gain3 = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        
+        osc3.connect(filter);
+        filter.connect(gain3);
+        gain3.connect(masterGain);
+        
+        osc3.type = 'triangle'; // Softer waveform for reverb effect
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(800, now + 0.2);
+        osc3.frequency.setValueAtTime(523.25, now + 0.2); // C5 - octave lower for depth
+        gain3.gain.setValueAtTime(0.3, now + 0.2);
+        gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        
+        osc3.start(now + 0.2);
+        osc3.stop(now + 0.8);
+
+        console.log('Enhanced task completion sound played');
     }
 
     // Play payment sound (API-based transaction sound)
@@ -609,98 +744,127 @@ class NotificationManager {
         }
     }
 
-    // Enhanced API-style transaction sound (more realistic)
+    // Ultra-realistic banking transaction sound (like real POS terminals)
     createTransactionSound() {
         const ctx = this.audioContext;
         const now = ctx.currentTime;
         
-        // Create master gain node
+        // Create master gain node with proper banking volume
         const masterGain = ctx.createGain();
         masterGain.connect(ctx.destination);
-        masterGain.gain.setValueAtTime(0.4, now);
+        masterGain.gain.setValueAtTime(0.3, now); // Professional volume level
         
-        // Sound sequence like real payment terminals
+        // Authentic banking transaction sequence
         
-        // Sound 1: Card reader beep (start of transaction)
+        // Sound 1: Initial card read beep (very characteristic POS sound)
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         osc1.connect(gain1);
         gain1.connect(masterGain);
         
-        osc1.frequency.setValueAtTime(1000, now);
-        gain1.gain.setValueAtTime(0.6, now);
-        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc1.type = 'square'; // Square wave for that classic digital beep
+        osc1.frequency.setValueAtTime(880, now); // A5 note
+        gain1.gain.setValueAtTime(0.5, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
         
         osc1.start(now);
-        osc1.stop(now + 0.1);
+        osc1.stop(now + 0.15);
         
-        // Sound 2: Processing beep (API call)
+        // Sound 2: Network processing chirp (API communication)
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
-        osc2.connect(gain2);
+        const filter2 = ctx.createBiquadFilter();
+        
+        osc2.connect(filter2);
+        filter2.connect(gain2);
         gain2.connect(masterGain);
         
-        osc2.frequency.setValueAtTime(800, now + 0.3);
-        gain2.gain.setValueAtTime(0.5, now + 0.3);
-        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc2.type = 'sawtooth'; // More digital sounding
+        filter2.type = 'lowpass';
+        filter2.frequency.setValueAtTime(1200, now + 0.4);
+        osc2.frequency.setValueAtTime(660, now + 0.4); // E5
+        gain2.gain.setValueAtTime(0.4, now + 0.4);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
         
-        osc2.start(now + 0.3);
-        osc2.stop(now + 0.4);
+        osc2.start(now + 0.4);
+        osc2.stop(now + 0.6);
         
-        // Sound 3: Approval confirmation (higher pitch success)
+        // Sound 3: Bank approval tone (distinctive upward sweep)
         const osc3 = ctx.createOscillator();
         const gain3 = ctx.createGain();
         osc3.connect(gain3);
         gain3.connect(masterGain);
         
-        osc3.frequency.setValueAtTime(1400, now + 0.6);
-        osc3.frequency.exponentialRampToValueAtTime(1600, now + 0.8);
-        gain3.gain.setValueAtTime(0.7, now + 0.6);
-        gain3.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+        osc3.type = 'sine'; // Clean sine for approval
+        osc3.frequency.setValueAtTime(784, now + 0.8); // G5
+        osc3.frequency.exponentialRampToValueAtTime(1174.66, now + 1.1); // D6 - perfect fifth up
+        gain3.gain.setValueAtTime(0.6, now + 0.8);
+        gain3.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
         
-        osc3.start(now + 0.6);
-        osc3.stop(now + 0.9);
+        osc3.start(now + 0.8);
+        osc3.stop(now + 1.2);
         
-        // Sound 4: Transaction complete (final confirmation like ATM)
-        const osc4 = ctx.createOscillator();
-        const gain4 = ctx.createGain();
-        osc4.connect(gain4);
-        gain4.connect(masterGain);
+        // Sound 4: Final confirmation (classic banking double-beep)
+        const osc4a = ctx.createOscillator();
+        const gain4a = ctx.createGain();
+        osc4a.connect(gain4a);
+        gain4a.connect(masterGain);
         
-        osc4.frequency.setValueAtTime(1200, now + 1.0);
-        osc4.frequency.setValueAtTime(1000, now + 1.1);
-        osc4.frequency.setValueAtTime(1200, now + 1.2);
-        gain4.gain.setValueAtTime(0.6, now + 1.0);
-        gain4.gain.exponentialRampToValueAtTime(0.01, now + 1.4);
+        osc4a.type = 'sine';
+        osc4a.frequency.setValueAtTime(1046.5, now + 1.4); // C6
+        gain4a.gain.setValueAtTime(0.7, now + 1.4);
+        gain4a.gain.exponentialRampToValueAtTime(0.001, now + 1.55);
         
-        osc4.start(now + 1.0);
-        osc4.stop(now + 1.4);
+        osc4a.start(now + 1.4);
+        osc4a.stop(now + 1.55);
         
-        // Sound 5: Receipt printing sound (final touch)
-        const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
-        const noiseData = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < noiseData.length; i++) {
-            noiseData[i] = (Math.random() * 2 - 1) * 0.1;
+        const osc4b = ctx.createOscillator();
+        const gain4b = ctx.createGain();
+        osc4b.connect(gain4b);
+        gain4b.connect(masterGain);
+        
+        osc4b.type = 'sine';
+        osc4b.frequency.setValueAtTime(1046.5, now + 1.65); // Same note
+        gain4b.gain.setValueAtTime(0.7, now + 1.65);
+        gain4b.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+        
+        osc4b.start(now + 1.65);
+        osc4b.stop(now + 1.8);
+        
+        // Sound 5: Realistic receipt printing mechanism
+        const printDuration = 0.4;
+        const printBuffer = ctx.createBuffer(1, ctx.sampleRate * printDuration, ctx.sampleRate);
+        const printData = printBuffer.getChannelData(0);
+        
+        // Generate realistic printer noise with mechanical rhythm
+        for (let i = 0; i < printData.length; i++) {
+            const time = i / ctx.sampleRate;
+            const mechanicalFreq = 40; // 40Hz mechanical printing rhythm
+            const envelope = Math.exp(-time * 3); // Decay envelope
+            const mechanical = Math.sin(time * mechanicalFreq * 2 * Math.PI) * 0.5;
+            const noise = (Math.random() * 2 - 1) * 0.3;
+            printData[i] = (mechanical + noise) * envelope * 0.15;
         }
         
-        const noiseSource = ctx.createBufferSource();
-        const noiseGain = ctx.createGain();
-        const noiseFilter = ctx.createBiquadFilter();
+        const printSource = ctx.createBufferSource();
+        const printGain = ctx.createGain();
+        const printFilter = ctx.createBiquadFilter();
         
-        noiseSource.buffer = noiseBuffer;
-        noiseSource.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(masterGain);
+        printSource.buffer = printBuffer;
+        printSource.connect(printFilter);
+        printFilter.connect(printGain);
+        printGain.connect(masterGain);
         
-        noiseFilter.type = 'highpass';
-        noiseFilter.frequency.setValueAtTime(2000, now + 1.5);
-        noiseGain.gain.setValueAtTime(0.3, now + 1.5);
-        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 1.8);
+        printFilter.type = 'bandpass';
+        printFilter.frequency.setValueAtTime(1500, now + 2.0);
+        printFilter.Q.setValueAtTime(2, now + 2.0);
+        printGain.gain.setValueAtTime(0.8, now + 2.0);
+        printGain.gain.exponentialRampToValueAtTime(0.001, now + 2.4);
         
-        noiseSource.start(now + 1.5);
-        noiseSource.stop(now + 1.8);
+        printSource.start(now + 2.0);
+        printSource.stop(now + 2.4);
         
-        console.log('Realistic API transaction sound sequence played');
+        console.log('Ultra-realistic banking transaction sound sequence completed');
     }
 
     // Fallback transaction sound for older browsers (improved)
@@ -756,6 +920,48 @@ class NotificationManager {
 
         oscillator.start(this.audioContext.currentTime);
         oscillator.stop(this.audioContext.currentTime + 0.2);
+    }
+
+    // Play subtle error sound for validation
+    playErrorSound() {
+        if (!this.audioContext) return;
+
+        const ctx = this.audioContext;
+        const now = ctx.currentTime;
+        
+        // Create a gentle error sound (not harsh)
+        const masterGain = ctx.createGain();
+        masterGain.connect(ctx.destination);
+        masterGain.gain.setValueAtTime(0.15, now); // Very subtle volume
+        
+        // Error tone (descending minor third)
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.connect(gain1);
+        gain1.connect(masterGain);
+        
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(523.25, now); // C5
+        osc1.frequency.exponentialRampToValueAtTime(440, now + 0.2); // A4
+        gain1.gain.setValueAtTime(0.6, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        
+        osc1.start(now);
+        osc1.stop(now + 0.3);
+        
+        // Subtle second tone for depth
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(masterGain);
+        
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(311.13, now + 0.1); // Eb4
+        gain2.gain.setValueAtTime(0.3, now + 0.1);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        
+        osc2.start(now + 0.1);
+        osc2.stop(now + 0.4);
     }
 
     // Show daily reminder notification
@@ -911,7 +1117,7 @@ class NotificationManager {
                     });
                     
                     // Enhanced in-app notification
-                    this.showToast(`<i class="fas fa-sun"></i> Morning reminder: ${unpaidWork} work days (₹${unpaidWork * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)}) are ready for payment collection!`, 'warning', 8000);
+                    this.showToast(`Morning reminder: ${unpaidWork} work days (₹${unpaidWork * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)}) are ready for payment collection!`, 'warning', 8000);
                     
                     // Play attention sound
                     this.playPaymentSound();
@@ -948,7 +1154,7 @@ class NotificationManager {
                     });
                     
                     // Enhanced in-app notification
-                    this.showToast(`<i class="fas fa-moon"></i> Evening reminder: Mark today's work as completed to earn ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} ${currentStreak > 0 ? `and maintain your ${currentStreak}-day streak!` : 'and start building your streak!'}`, 'info', 8000);
+                    this.showToast(`Evening reminder: Mark today's work as completed to earn ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} ${currentStreak > 0 ? `and maintain your ${currentStreak}-day streak!` : 'and start building your streak!'}`, 'info', 8000);
                     
                     // Play gentle reminder sound
                     this.playSuccessSound();

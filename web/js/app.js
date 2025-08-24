@@ -646,28 +646,99 @@ class RServiceTracker {
         return isValid;
     }
 
-    // Show simple validation error with vibration
+    // Show enhanced validation error with premium styling
     showValidationError(input, message) {
         input.classList.add('error');
-        input.style.borderColor = '#ff4757';
-        input.style.boxShadow = '0 0 0 3px rgba(255, 71, 87, 0.1)';
+        input.classList.remove('success', 'warning');
         
-        // Add shake animation
-        input.style.animation = 'shake 0.5s ease-in-out';
-        setTimeout(() => {
-            input.style.animation = '';
-        }, 500);
-        
-        // Add vibration for mobile devices
+        // Enhanced vibration for mobile devices
         if ('vibrate' in navigator) {
-            navigator.vibrate([100, 50, 100]); // Short vibration pattern
+            navigator.vibrate([150, 80, 150, 80, 150]); // More pronounced pattern
         }
         
-        // Add tiny red error message
+        // Create premium error message with icon
         const errorEl = document.createElement('div');
         errorEl.className = 'validation-error';
-        errorEl.textContent = message;
+        
+        const iconEl = document.createElement('i');
+        iconEl.className = 'fas fa-exclamation-triangle';
+        iconEl.style.marginRight = '0.5rem';
+        
+        const textEl = document.createElement('span');
+        textEl.textContent = message;
+        
+        errorEl.appendChild(iconEl);
+        errorEl.appendChild(textEl);
         input.parentElement.appendChild(errorEl);
+        
+        // Play subtle error sound
+        if (this.notifications && typeof this.notifications.playErrorSound === 'function') {
+            this.notifications.playErrorSound();
+        }
+        
+        // Auto-remove error styling when user starts typing
+        const removeError = () => {
+            input.classList.remove('error');
+            errorEl.remove();
+            input.removeEventListener('input', removeError);
+        };
+        input.addEventListener('input', removeError);
+    }
+
+    // Show validation success
+    showValidationSuccess(input, message) {
+        input.classList.add('success');
+        input.classList.remove('error', 'warning');
+        
+        const successEl = document.createElement('div');
+        successEl.className = 'validation-success';
+        
+        const iconEl = document.createElement('i');
+        iconEl.className = 'fas fa-check-circle';
+        iconEl.style.marginRight = '0.5rem';
+        
+        const textEl = document.createElement('span');
+        textEl.textContent = message;
+        
+        successEl.appendChild(iconEl);
+        successEl.appendChild(textEl);
+        input.parentElement.appendChild(successEl);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (successEl.parentElement) {
+                successEl.remove();
+                input.classList.remove('success');
+            }
+        }, 3000);
+    }
+
+    // Show validation warning
+    showValidationWarning(input, message) {
+        input.classList.add('warning');
+        input.classList.remove('error', 'success');
+        
+        const warningEl = document.createElement('div');
+        warningEl.className = 'validation-warning';
+        
+        const iconEl = document.createElement('i');
+        iconEl.className = 'fas fa-exclamation-circle';
+        iconEl.style.marginRight = '0.5rem';
+        
+        const textEl = document.createElement('span');
+        textEl.textContent = message;
+        
+        warningEl.appendChild(iconEl);
+        warningEl.appendChild(textEl);
+        input.parentElement.appendChild(warningEl);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (warningEl.parentElement) {
+                warningEl.remove();
+                input.classList.remove('warning');
+            }
+        }, 5000);
     }
 
     // Enhanced save settings with better feedback and system updates
@@ -718,11 +789,14 @@ class RServiceTracker {
 
             if (saved) {
                 if (this.notifications) {
-                    this.notifications.showToast('<i class="fas fa-check-circle"></i> Settings saved successfully!', 'success');
+                    this.notifications.showToast('Settings saved successfully!', 'success');
                 }
                 
                 // Show loading toast for regeneration
-                const loadingToast = this.notifications ? this.notifications.showLoadingToast('Updating payment options...') : null;
+                const loadingToast = this.notifications ? this.notifications.showLoadingToast('Updating system and resetting amounts...') : null;
+                
+                // Reset all saved amount details when saving settings
+                this.resetSavedAmountDetails();
                 
                 // Regenerate payment buttons with new settings
                 setTimeout(() => {
@@ -738,12 +812,12 @@ class RServiceTracker {
                     
                     // Complete loading toast
                     if (loadingToast && this.notifications) {
-                        this.notifications.updateLoadingToast(loadingToast, 'Payment options updated!', 'success');
+                        this.notifications.updateLoadingToast(loadingToast, 'System updated and amounts reset!', 'success');
                     }
                     
                     // Show completion feedback
                     if (this.notifications) {
-                        this.notifications.showToast(`<i class="fas fa-cogs"></i> Configuration updated! Payment options: ${this.getGeneratedAmountPreview()}`, 'success', 6000);
+                        this.notifications.showToast(`Configuration updated! Payment options: ${this.getGeneratedAmountPreview()}<br>All saved amounts have been reset`, 'success', 7000);
                     }
                     
                     this.closeMenu();
@@ -818,7 +892,7 @@ class RServiceTracker {
                                 this.notifications.updateLoadingToast(loadingToast, 'Settings reset to defaults!', 'success');
                             }
                             
-                            this.notifications.showToast('<i class="fas fa-undo"></i> All settings reset to default values', 'success', 5000);
+                            this.notifications.showToast('All settings reset to default values', 'success', 5000);
                         }, 1000);
                     }
                 } catch (error) {
@@ -1669,15 +1743,16 @@ class RServiceTracker {
         }
     }
 
-    // Request notification permission
+    // Request notification and sound permissions
     async requestNotificationPermission() {
         try {
-            // Use the new enhanced permission checker
-            await this.notifications.checkAndRequestPermission();
-            return this.notifications.permission;
+            // Use the enhanced permission checker that includes sound
+            const results = await this.notifications.requestPermission();
+            console.log('Permission results:', results);
+            return results;
         } catch (error) {
-            console.error('Error requesting notification permission:', error);
-            return 'denied';
+            console.error('Error requesting permissions:', error);
+            return { notification: 'denied', sound: 'denied' };
         }
     }
 
@@ -2017,6 +2092,45 @@ class RServiceTracker {
             : 'Start your work streak by completing tasks consistently!';
             
         this.notifications.showToast(message, 'info');
+    }
+
+    // Reset saved amount details when saving settings
+    async resetSavedAmountDetails() {
+        try {
+            console.log('Resetting saved amount details...');
+            
+            // Clear payments data but keep work records and settings
+            if (this.db && typeof this.db.performTransaction === 'function') {
+                await this.db.performTransaction(this.db.stores.payments, 'readwrite', (store) => {
+                    return store.clear();
+                });
+                console.log('Payment data cleared successfully');
+            }
+            
+            // Reset any in-memory cached data
+            this.currentStats = {};
+            this.pendingUnpaidDates = [];
+            this.selectedPaymentAmount = null;
+            
+            // Clear any amount-related localStorage
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('payment') || key.includes('amount') || key.includes('earnings'))) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            console.log('Saved amount details reset successfully');
+            return true;
+        } catch (error) {
+            console.error('Error resetting saved amount details:', error);
+            if (this.notifications) {
+                this.notifications.showToast('Warning: Could not reset all amount details', 'warning');
+            }
+            return false;
+        }
     }
 
     // Handle clear data
