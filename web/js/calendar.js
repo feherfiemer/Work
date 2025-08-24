@@ -320,6 +320,10 @@ class CalendarManager {
                 <p class="date">${formattedDate}</p>
         `;
 
+        // Check if this is a past date (not future)
+        const today = new Date();
+        const isPastDate = date < today || this.isSameDate(date, today);
+
         if (workRecord && workRecord.status === 'completed') {
             content += `
                 <div class="work-status success">
@@ -354,71 +358,38 @@ class CalendarManager {
                         <i class="fas fa-clock"></i>
                         <span>Payment Pending</span>
                     </div>
-                    <button class="force-paid-btn" data-date="${dateString}" style="
-                        margin-top: 1rem;
-                        width: 100%;
-                        padding: 0.5rem;
-                        background: var(--success);
-                        color: white;
-                        border: none;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-family: var(--font-family);
-                        font-weight: 500;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                    ">
-                        <i class="fas fa-hand-holding-usd"></i>
-                        Force Mark as Paid
-                    </button>
                 `;
+                
+                // Only show force paid button for past completed work dates
+                if (isPastDate) {
+                    content += `
+                        <button class="force-paid-btn" data-date="${dateString}" style="
+                            margin-top: 1rem;
+                            width: 100%;
+                            padding: 0.5rem;
+                            background: var(--success);
+                            color: white;
+                            border: none;
+                            border-radius: var(--border-radius);
+                            cursor: pointer;
+                            font-family: var(--font-family);
+                            font-weight: 500;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                        ">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            Force Mark as Paid
+                        </button>
+                    `;
+                }
             }
         } else {
             content += `
                 <div class="work-status not-worked">
                     <i class="fas fa-times-circle"></i>
                     <span>No Work Recorded</span>
-                </div>
-                <div class="day-actions" style="margin-top: 1rem;">
-                    <button class="mark-done-btn" data-date="${dateString}" style="
-                        width: 100%;
-                        padding: 0.5rem;
-                        background: var(--primary);
-                        color: white;
-                        border: none;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-family: var(--font-family);
-                        font-weight: 500;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        margin-bottom: 0.5rem;
-                    ">
-                        <i class="fas fa-check"></i>
-                        Mark Work as Done
-                    </button>
-                    <button class="force-paid-btn" data-date="${dateString}" style="
-                        width: 100%;
-                        padding: 0.5rem;
-                        background: var(--success);
-                        color: white;
-                        border: none;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-family: var(--font-family);
-                        font-weight: 500;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                    ">
-                        <i class="fas fa-hand-holding-usd"></i>
-                        Force Mark as Paid
-                    </button>
                 </div>
             `;
         }
@@ -506,16 +477,7 @@ class CalendarManager {
             });
         }
 
-        // Mark done button handler  
-        const markDoneBtn = modalContent.querySelector('.mark-done-btn');
-        if (markDoneBtn) {
-            markDoneBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const targetDate = e.target.closest('.mark-done-btn').dataset.date;
-                this.handleMarkDone(targetDate);
-                closeModal();
-            });
-        }
+        // No mark done functionality needed
 
         // ESC key to close
         const handleEsc = (e) => {
@@ -621,18 +583,38 @@ class CalendarManager {
     // Handle force paid action
     async handleForcePaid(dateString) {
         try {
-            // First check if work record exists, if not create one
-            let workRecord = await this.db.getWorkRecord(dateString);
-            if (!workRecord) {
-                await this.db.addWorkRecord(dateString, 25, 'completed');
-                console.log('Created work record for force paid:', dateString);
+            console.log('Force paid clicked for date:', dateString);
+            
+            // Check if work record exists and is completed
+            const workRecord = await this.db.getWorkRecord(dateString);
+            if (!workRecord || workRecord.status !== 'completed') {
+                if (window.app && window.app.notifications) {
+                    window.app.notifications.showToast('Can only force payment for completed work days!', 'warning');
+                }
+                return;
+            }
+
+            // Check if already paid
+            const payments = await this.db.getAllPayments();
+            const isAlreadyPaid = payments.some(payment => 
+                payment.workDates.includes(dateString)
+            );
+            
+            if (isAlreadyPaid) {
+                if (window.app && window.app.notifications) {
+                    window.app.notifications.showToast('This work day is already paid!', 'warning');
+                }
+                return;
             }
 
             // Create a force payment for this specific date
             const paymentAmount = 25; // Standard daily wage
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date();
+            const paymentDate = today.getFullYear() + '-' + 
+                              String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                              String(today.getDate()).padStart(2, '0');
             
-            await this.db.addPayment(paymentAmount, [dateString], today, false);
+            await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
             console.log('Force payment added for date:', dateString);
 
             // Update calendar and notify main app
@@ -666,52 +648,7 @@ class CalendarManager {
         }
     }
 
-    // Handle mark done action for any date
-    async handleMarkDone(dateString) {
-        try {
-            // Check if work record already exists
-            const existingRecord = await this.db.getWorkRecord(dateString);
-            if (existingRecord && existingRecord.status === 'completed') {
-                if (window.app && window.app.notifications) {
-                    window.app.notifications.showToast('Work already marked as done for this date!', 'warning');
-                }
-                return;
-            }
 
-            // Add work record
-            await this.db.addWorkRecord(dateString, 25, 'completed');
-            console.log('Work record added for date:', dateString);
-
-            // Update calendar and notify main app
-            await this.loadData();
-            this.render();
-
-            // Trigger update in main app if available
-            if (window.app && typeof window.app.updateDashboard === 'function') {
-                window.app.currentStats = await this.db.getEarningsStats();
-                window.app.updateDashboard();
-                await window.app.updatePendingUnpaidDates();
-                window.app.updatePaidButtonVisibility();
-                
-                // Update charts if available
-                if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
-                    await window.app.charts.updateCharts();
-                }
-                
-                // Show success notification
-                if (window.app.notifications) {
-                    window.app.notifications.showToast(`✅ Work marked as done for ${new Date(dateString).toLocaleDateString()} - ₹25 earned!`, 'success');
-                    window.app.notifications.playSound('done');
-                }
-            }
-
-        } catch (error) {
-            console.error('Error marking work as done:', error);
-            if (window.app && window.app.notifications) {
-                window.app.notifications.showToast('Error marking work as done. Please try again.', 'error');
-            }
-        }
-    }
 
     // Highlight specific dates
     highlightDates(dates, className = 'highlighted') {
