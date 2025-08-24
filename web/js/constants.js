@@ -78,9 +78,10 @@
                 amounts.push(amount);
             }
             
-            // Ensure we have at least a few default amounts
+            // Ensure we have at least a few default amounts based on daily wage
             if (amounts.length === 0) {
-                return [25, 50, 75, 100, 200, 300, 400, 500, 600, 1000];
+                const dailyWage = config.DAILY_WAGE || 25;
+                return [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 1000];
             }
             
             return amounts;

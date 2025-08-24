@@ -655,11 +655,9 @@ class RServiceTracker {
         return isValid;
     }
 
-    // Show simple validation error with vibration
+    // Show contextual validation error with reduced vibration
     showValidationError(input, message) {
         input.classList.add('error');
-        input.style.borderColor = '#ff4757';
-        input.style.boxShadow = '0 0 0 3px rgba(255, 71, 87, 0.1)';
         
         // Add shake animation
         input.style.animation = 'shake 0.5s ease-in-out';
@@ -667,15 +665,58 @@ class RServiceTracker {
             input.style.animation = '';
         }, 500);
         
-        // Add vibration for mobile devices
+        // Reduced vibration for mobile devices
         if ('vibrate' in navigator) {
-            navigator.vibrate([100, 50, 100]); // Short vibration pattern
+            navigator.vibrate([50]); // Single gentle vibration
         }
         
-        // Add tiny red error message
+        // Create contextual error message based on field
+        let contextualMessage = message;
+        const fieldId = input.id;
+        const currentValue = input.value;
+        
+        if (fieldId === 'incrementValue') {
+            const min = parseInt(input.min) || 1;
+            const max = parseInt(input.max) || 100;
+            if (currentValue < min) {
+                contextualMessage = `Daily wage must be at least ₹${min}. Enter a value between ₹${min} and ₹${max}.`;
+            } else if (currentValue > max) {
+                contextualMessage = `Daily wage cannot exceed ₹${max}. Enter a value between ₹${min} and ₹${max}.`;
+            } else if (!currentValue) {
+                contextualMessage = `Please enter your daily wage amount (₹${min}-₹${max}).`;
+            }
+        } else if (fieldId === 'paymentDuration') {
+            const min = parseInt(input.min) || 1;
+            const max = parseInt(input.max) || 30;
+            if (currentValue < min) {
+                contextualMessage = `Payment period must be at least ${min} day. Enter a value between ${min} and ${max} days.`;
+            } else if (currentValue > max) {
+                contextualMessage = `Payment period cannot exceed ${max} days. Enter a value between ${min} and ${max} days.`;
+            } else if (!currentValue) {
+                contextualMessage = `Please enter how often you want to collect payments (${min}-${max} days).`;
+            }
+        } else if (fieldId === 'maxPaymentAmount') {
+            const min = parseInt(input.min) || 100;
+            const max = parseInt(input.max) || 10000;
+            if (currentValue < min) {
+                contextualMessage = `Maximum amount must be at least ₹${min}. Enter a value between ₹${min} and ₹${max}.`;
+            } else if (currentValue > max) {
+                contextualMessage = `Maximum amount cannot exceed ₹${max}. Enter a value between ₹${min} and ₹${max}.`;
+            } else if (!currentValue) {
+                contextualMessage = `Please set your maximum payment limit (₹${min}-₹${max}).`;
+            }
+        } else if (fieldId === 'customAmount') {
+            if (currentValue <= 0) {
+                contextualMessage = `Please enter a valid payment amount greater than ₹0.`;
+            } else if (currentValue > 10000) {
+                contextualMessage = `Payment amount cannot exceed ₹10,000. Please enter a smaller amount.`;
+            }
+        }
+        
+        // Add enhanced error message
         const errorEl = document.createElement('div');
         errorEl.className = 'validation-error';
-        errorEl.textContent = message;
+        errorEl.textContent = contextualMessage;
         input.parentElement.appendChild(errorEl);
     }
 
@@ -819,7 +860,8 @@ class RServiceTracker {
 
     // Get preview of generated amounts for user feedback
     getGeneratedAmountPreview() {
-        const amounts = window.ConfigManager ? window.ConfigManager.generatePaymentAmounts() : [25, 50, 75, 100];
+        const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+        const amounts = window.ConfigManager ? window.ConfigManager.generatePaymentAmounts() : [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4];
         const preview = amounts.slice(0, 5).map(amt => `₹${amt}`).join(', ');
         return amounts.length > 5 ? `${preview}...` : preview;
     }
@@ -827,7 +869,7 @@ class RServiceTracker {
     // Enhanced reset settings with better UX
     resetSettings() {
         this.notifications.showConfirmation(
-            'Are you sure you want to reset all settings to default values?\n\nThis will:\n• Set increment to ₹25\n• Set payment period to 4 days\n• Set maximum amount to ₹1000\n• Regenerate payment options',
+            'Are you sure you want to reset all settings to default values?\n\nThis will:\n• Set daily wage to ₹25\n• Set payment period to 4 days\n• Set maximum amount to ₹1000\n• Regenerate payment options',
             () => {
                 try {
                     if (window.ConfigManager) {
@@ -1375,7 +1417,7 @@ class RServiceTracker {
             // Refresh pending dates before showing modal
             await this.updatePendingUnpaidDates();
             
-            const pendingAmount = this.pendingUnpaidDates.length * 25;
+            const pendingAmount = this.pendingUnpaidDates.length * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
             unpaidDaysEl.textContent = this.pendingUnpaidDates.length;
             pendingAmountEl.textContent = pendingAmount;
             
@@ -1403,14 +1445,16 @@ class RServiceTracker {
             if (window.ConfigManager && typeof window.ConfigManager.generatePaymentAmounts === 'function') {
                 amounts = window.ConfigManager.generatePaymentAmounts();
             } else {
-                // Fallback amounts
-                amounts = [25, 50, 75, 100, 200, 300, 400, 500, 600, 1000];
-                console.warn('Using fallback payment amounts');
+                // Fallback amounts based on daily wage
+                const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+                amounts = [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 1000];
+                console.warn('Using fallback payment amounts based on daily wage:', dailyWage);
             }
             
             // Ensure we have valid amounts
             if (!Array.isArray(amounts) || amounts.length === 0) {
-                amounts = [25, 50, 75, 100, 200, 300, 400, 500, 600, 1000];
+                const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+                amounts = [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 1000];
             }
             
             // Create buttons for each amount
@@ -1425,8 +1469,9 @@ class RServiceTracker {
             console.log(`Generated ${amounts.length} payment buttons with amounts:`, amounts);
         } catch (error) {
             console.error('Error generating payment buttons:', error);
-            // Create fallback buttons
-            const fallbackAmounts = [25, 50, 100, 200, 500, 1000];
+            // Create fallback buttons based on daily wage
+            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+            const fallbackAmounts = [dailyWage, dailyWage*2, dailyWage*4, dailyWage*8, dailyWage*20, 1000];
             fallbackAmounts.forEach(amount => {
                 const button = document.createElement('button');
                 button.className = 'payment-btn';
@@ -1541,9 +1586,10 @@ class RServiceTracker {
         const workDaysCoveredEl = document.getElementById('workDaysCoveredDisplay');
         
         if (summaryEl && selectedAmountEl && paymentTypeEl && workDaysCoveredEl) {
-            const pendingAmount = this.pendingUnpaidDates.length * 25;
+            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+            const pendingAmount = this.pendingUnpaidDates.length * dailyWage;
             const isAdvance = amount > pendingAmount;
-            const workDaysCovered = Math.min(Math.floor(amount / 25), this.pendingUnpaidDates.length);
+            const workDaysCovered = Math.min(Math.floor(amount / dailyWage), this.pendingUnpaidDates.length);
             
             selectedAmountEl.textContent = `₹${amount}`;
             paymentTypeEl.textContent = isAdvance ? 'Advance Payment' : 'Regular Payment';

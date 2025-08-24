@@ -399,7 +399,7 @@ class NotificationManager {
     showWorkCompletedNotification() {
         const title = 'Work Marked Complete';
         const options = {
-            body: `Great job! You've earned ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} today.`,
+            body: `Great job! You've earned ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || window.R_SERVICE_CONFIG?.INCREMENT_VALUE || 25} today.`,
             icon: 'assets/favicon.ico',
             tag: 'work-completed'
         };
