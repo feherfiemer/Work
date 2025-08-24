@@ -70,19 +70,19 @@ class NotificationManager {
             const finalOptions = { ...defaultOptions, ...options };
 
             try {
-                // Check if service worker is available and active
-                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                    // Use service worker registration for notifications
+                // Always prefer service worker if available
+                if ('serviceWorker' in navigator) {
                     return navigator.serviceWorker.ready.then(registration => {
                         console.log('Using service worker for notification:', title);
                         return registration.showNotification(title, finalOptions);
                     }).catch(error => {
                         console.error('Service worker notification failed:', error);
-                        // Fallback to regular notification
-                        return this.createRegularNotification(title, finalOptions);
+                        // Don't fallback to regular notification as it causes the error
+                        console.log('Notification shown via toast only due to service worker error');
+                        return null;
                     });
                 } else {
-                    // Use regular notification API
+                    // Only use regular notification if no service worker support
                     return this.createRegularNotification(title, finalOptions);
                 }
             } catch (error) {
@@ -100,8 +100,14 @@ class NotificationManager {
         return null;
     }
 
-    // Create regular notification (fallback method)
+    // Create regular notification (fallback method) - only when no service worker
     createRegularNotification(title, finalOptions) {
+        // Check if service worker is available - if so, don't use regular notification
+        if ('serviceWorker' in navigator) {
+            console.log('Service worker available, skipping regular notification to avoid constructor error');
+            return null;
+        }
+
         try {
             const notification = new Notification(title, finalOptions);
             console.log('Browser notification created successfully:', title);

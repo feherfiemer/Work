@@ -487,7 +487,7 @@ class RServiceTracker {
         }
     }
 
-    // Validate settings with enhanced multi-layered system
+    // Simplified validation system with minimal feedback
     validateSettings() {
         const incrementInput = document.getElementById('incrementValue');
         const durationInput = document.getElementById('paymentDuration');
@@ -495,172 +495,84 @@ class RServiceTracker {
         const saveBtn = document.getElementById('saveSettings');
 
         let isValid = true;
-        let errors = [];
 
         // Reset all styles first
         [incrementInput, durationInput, maxPaymentInput].forEach(input => {
             if (input) {
-                input.classList.remove('error', 'warning', 'success');
+                input.classList.remove('error');
                 input.style.borderColor = '';
                 input.style.boxShadow = '';
             }
         });
 
         // Clear existing error messages
-        document.querySelectorAll('.validation-error, .validation-warning').forEach(el => el.remove());
+        document.querySelectorAll('.validation-error').forEach(el => el.remove());
 
-        // Validate increment value with multiple layers
+        // Validate increment value
         if (incrementInput) {
             const increment = parseInt(incrementInput.value);
-            const container = incrementInput.parentElement;
             
             if (isNaN(increment) || increment < 1) {
-                this.addValidationError(incrementInput, 'Increment value must be at least 1');
+                this.showValidationError(incrementInput, 'Must be at least 1');
                 isValid = false;
-                errors.push('Invalid increment value');
             } else if (increment > 100) {
-                this.addValidationError(incrementInput, 'Increment value cannot exceed 100');
+                this.showValidationError(incrementInput, 'Cannot exceed 100');
                 isValid = false;
-                errors.push('Increment value too high');
-            } else if (increment < 5) {
-                this.addValidationWarning(incrementInput, 'Very low increment values may not be practical');
-                incrementInput.classList.add('warning');
-            } else {
-                this.addValidationSuccess(incrementInput, '✓ Valid increment value');
-                incrementInput.classList.add('success');
             }
         }
 
-        // Validate payment duration with multiple layers
+        // Validate payment duration
         if (durationInput) {
             const duration = parseInt(durationInput.value);
             
             if (isNaN(duration) || duration < 1) {
-                this.addValidationError(durationInput, 'Payment duration must be at least 1 day');
+                this.showValidationError(durationInput, 'Must be at least 1 day');
                 isValid = false;
-                errors.push('Invalid payment duration');
             } else if (duration > 30) {
-                this.addValidationError(durationInput, 'Payment duration cannot exceed 30 days');
+                this.showValidationError(durationInput, 'Cannot exceed 30 days');
                 isValid = false;
-                errors.push('Payment duration too long');
-            } else if (duration > 14) {
-                this.addValidationWarning(durationInput, 'Long payment periods may delay your payments');
-                durationInput.classList.add('warning');
-            } else {
-                this.addValidationSuccess(durationInput, '✓ Valid payment duration');
-                durationInput.classList.add('success');
             }
         }
 
-        // Validate max payment with multiple layers
+        // Validate max payment
         if (maxPaymentInput) {
             const maxPayment = parseInt(maxPaymentInput.value);
-            const increment = parseInt(incrementInput?.value) || 25;
             
             if (isNaN(maxPayment) || maxPayment < 100) {
-                this.addValidationError(maxPaymentInput, 'Maximum payment must be at least ₹100');
+                this.showValidationError(maxPaymentInput, 'Must be at least ₹100');
                 isValid = false;
-                errors.push('Maximum payment too low');
             } else if (maxPayment > 50000) {
-                this.addValidationError(maxPaymentInput, 'Maximum payment cannot exceed ₹50,000');
+                this.showValidationError(maxPaymentInput, 'Cannot exceed ₹50,000');
                 isValid = false;
-                errors.push('Maximum payment too high');
-            } else if (maxPayment < increment * 5) {
-                this.addValidationWarning(maxPaymentInput, 'Max payment should be at least 5x the increment for better options');
-                maxPaymentInput.classList.add('warning');
-            } else if (maxPayment % increment !== 0) {
-                this.addValidationWarning(maxPaymentInput, 'Max payment should be divisible by increment for clean amounts');
-                maxPaymentInput.classList.add('warning');
-            } else {
-                this.addValidationSuccess(maxPaymentInput, '✓ Valid maximum payment');
-                maxPaymentInput.classList.add('success');
             }
         }
 
-        // Enhanced save button state management
+        // Simple save button state
         if (saveBtn) {
-            if (isValid) {
-                saveBtn.disabled = false;
-                saveBtn.classList.remove('disabled');
-                saveBtn.classList.add('ready');
-                saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Settings';
-                saveBtn.style.opacity = '1';
-                saveBtn.style.cursor = 'pointer';
-                saveBtn.title = 'Save your settings';
-            } else {
-                saveBtn.disabled = true;
-                saveBtn.classList.add('disabled');
-                saveBtn.classList.remove('ready');
-                saveBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Fix Errors First';
-                saveBtn.style.opacity = '0.5';
-                saveBtn.style.cursor = 'not-allowed';
-                saveBtn.title = `Cannot save: ${errors.join(', ')}`;
-            }
+            saveBtn.disabled = !isValid;
+            saveBtn.style.opacity = isValid ? '1' : '0.5';
         }
-
-        // Show overall validation status
-        this.showValidationSummary(isValid, errors);
 
         return isValid;
     }
 
-    // Add validation error message and styling
-    addValidationError(input, message) {
+    // Show simple validation error
+    showValidationError(input, message) {
         input.classList.add('error');
         input.style.borderColor = '#ff4757';
         input.style.boxShadow = '0 0 0 3px rgba(255, 71, 87, 0.1)';
         
+        // Add shake animation
+        input.style.animation = 'shake 0.5s ease-in-out';
+        setTimeout(() => {
+            input.style.animation = '';
+        }, 500);
+        
+        // Add tiny red error message
         const errorEl = document.createElement('div');
         errorEl.className = 'validation-error';
-        errorEl.innerHTML = `<i class="fas fa-times-circle"></i> ${message}`;
+        errorEl.textContent = message;
         input.parentElement.appendChild(errorEl);
-    }
-
-    // Add validation warning message and styling
-    addValidationWarning(input, message) {
-        input.style.borderColor = '#ffa726';
-        input.style.boxShadow = '0 0 0 3px rgba(255, 167, 38, 0.1)';
-        
-        const warningEl = document.createElement('div');
-        warningEl.className = 'validation-warning';
-        warningEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
-        input.parentElement.appendChild(warningEl);
-    }
-
-    // Add validation success message and styling
-    addValidationSuccess(input, message) {
-        input.style.borderColor = '#2ed573';
-        input.style.boxShadow = '0 0 0 3px rgba(46, 213, 115, 0.1)';
-        
-        const successEl = document.createElement('div');
-        successEl.className = 'validation-success';
-        successEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-        input.parentElement.appendChild(successEl);
-    }
-
-    // Show validation summary
-    showValidationSummary(isValid, errors) {
-        // Remove existing summary
-        const existingSummary = document.querySelector('.validation-summary');
-        if (existingSummary) existingSummary.remove();
-
-        // Create new summary
-        const summaryEl = document.createElement('div');
-        summaryEl.className = 'validation-summary';
-        
-        if (isValid) {
-            summaryEl.className += ' success';
-            summaryEl.innerHTML = '<i class="fas fa-check-circle"></i> All settings are valid and ready to save!';
-        } else {
-            summaryEl.className += ' error';
-            summaryEl.innerHTML = `<i class="fas fa-times-circle"></i> ${errors.length} error${errors.length > 1 ? 's' : ''} found: ${errors.join(', ')}`;
-        }
-
-        // Insert summary before settings actions
-        const actionsSection = document.querySelector('.settings-actions');
-        if (actionsSection) {
-            actionsSection.parentElement.insertBefore(summaryEl, actionsSection);
-        }
     }
 
     // Enhanced save settings with better feedback and system updates
