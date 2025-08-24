@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="blue-light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="R-Service Tracker - Premium job tracking and payment management system">
+    <meta name="keywords" content="job tracker, payment tracker, work tracker, R-Service">
+    <meta name="author" content="R-Service">
+    <title>R-Service Tracker</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="loading-text">R-Service Tracker</div>
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+            <div class="loading-subtitle">Daily Work Tracker</div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="mainContainer" class="main-container" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-check-circle"></i>
+                    <span><span class="always-visible">R-Service</span><span> Tracker</span></span>
+                </div>
+                <div class="header-actions">
+                    <button id="menuToggle" class="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Side Menu -->
+        <div id="sideMenu" class="side-menu">
+            <div class="menu-header">
+                <h3>Settings</h3>
+                <button id="closeMenu" class="close-menu">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="menu-content">
+                <!-- Theme Section -->
+                <div class="menu-section">
+                    <h4><i class="fas fa-palette"></i> Theme</h4>
+                    <div class="theme-options">
+                        <button class="theme-btn active" data-theme="orange-light">
+                            <span class="theme-color orange"></span>
+                            Orange Light
+                        </button>
+                        <button class="theme-btn" data-theme="orange-dark">
+                            <span class="theme-color orange-dark"></span>
+                            Orange Dark
+                        </button>
+                        <button class="theme-btn" data-theme="blue-light">
+                            <span class="theme-color blue"></span>
+                            Blue Light
+                        </button>
+                        <button class="theme-btn" data-theme="blue-dark">
+                            <span class="theme-color blue-dark"></span>
+                            Blue Dark
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div class="menu-section">
+                    <h4><i class="fas fa-history"></i> History</h4>
+                    <button id="viewHistory" class="menu-option">
+                        <i class="fas fa-list"></i>
+                        View Work History
+                    </button>
+                    <button id="viewAnalytics" class="menu-option">
+                        <i class="fas fa-chart-bar"></i>
+                        Analytics
+                    </button>
+                </div>
+
+                <!-- Data Section -->
+                <div class="menu-section">
+                    <h4><i class="fas fa-database"></i> Data</h4>
+                    <button id="exportPDF" class="menu-option">
+                        <i class="fas fa-file-pdf"></i>
+                        Export PDF
+                    </button>
+                    <button id="clearData" class="menu-option danger">
+                        <i class="fas fa-trash"></i>
+                        Clear All Data
+                    </button>
+                </div>
+
+                <!-- About Section -->
+                <div class="menu-section">
+                    <h4><i class="fas fa-info-circle"></i> About</h4>
+                    <button id="aboutApp" class="menu-option">
+                        <i class="fas fa-question-circle"></i>
+                        About R-Service
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard -->
+            <div id="dashboard" class="dashboard">
+                <div class="dashboard-grid">
+                    <!-- Current Status Card -->
+                    <div class="card status-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-calendar-day"></i> Today's Status</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="status-info">
+                                <div class="date-display">
+                                    <span id="currentDate"></span>
+                                </div>
+                                <div class="work-status">
+                                    <div id="workStatus" class="status-badge pending">
+                                        <i class="fas fa-clock"></i>
+                                        Not Started
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="doneBtn" class="btn btn-primary">
+                                    <i class="fas fa-check"></i>
+                                    Mark as Done
+                                </button>
+                                <button id="paidBtn" class="btn btn-success" style="display: none;">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    Mark as Paid
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Earnings Card -->
+                    <div class="card earnings-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-coins"></i> Earnings</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="earnings-info">
+                                <div class="current-earnings">
+                                    <span class="amount">₹<span id="currentEarnings">0</span></span>
+                                    <span class="label">Current Balance</span>
+                                </div>
+                                <div class="days-worked">
+                                    <span class="count" id="daysWorked">0</span>
+                                    <span class="label">Days Worked</span>
+                                </div>
+                                <div class="total-earned">
+                                    <span class="amount">₹<span id="totalEarned">0</span></span>
+                                    <span class="label">Total Earned</span>
+                                </div>
+                            </div>
+                            <div class="progress-section">
+                                <div class="progress-label">
+                                    <span>Progress to Payday</span>
+                                    <span id="progressText">0/4 days</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Card -->
+                    <div class="card actions-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="quick-actions">
+                                <button id="viewBalanceSheet" class="action-btn">
+                                    <i class="fas fa-table"></i>
+                                    <span>Balance Sheet</span>
+                                </button>
+                                <button id="viewCalendar" class="action-btn">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Calendar</span>
+                                </button>
+                                <button id="viewCharts" class="action-btn">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Analytics</span>
+                                </button>
+                                <button id="dailyStreak" class="action-btn">
+                                    <i class="fas fa-fire"></i>
+                                    <span>Streak: <span id="streakCount">0</span></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance Sheet View -->
+            <div id="balanceSheetView" class="view-section" style="display: none;">
+                <div class="view-header">
+                    <h2><i class="fas fa-table"></i> Balance Sheet</h2>
+                    <button id="closeBalanceSheet" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+                <div class="balance-sheet-content">
+                    <div class="sheet-filters">
+                        <select id="monthFilter">
+                            <option value="all">All Months</option>
+                        </select>
+                        <select id="yearFilter">
+                            <option value="all">All Years</option>
+                        </select>
+                    </div>
+                    <div id="balanceSheetTable" class="balance-sheet-table"></div>
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div id="analyticsView" class="view-section" style="display: none;">
+                <div class="view-header">
+                    <h2><i class="fas fa-chart-bar"></i> Analytics</h2>
+                    <button id="closeAnalytics" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+                <div class="analytics-content">
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <canvas id="earningsChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="workDaysChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="calendarView" class="view-section" style="display: none;">
+                <div class="view-header">
+                    <h2><i class="fas fa-calendar-alt"></i> Calendar</h2>
+                    <button id="closeCalendar" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+                <div class="calendar-content">
+                    <div class="calendar-controls">
+                        <button id="prevMonth" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <h3 id="calendarTitle"></h3>
+                        <button id="nextMonth" class="btn btn-secondary">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div id="calendarGrid" class="calendar-grid"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>About R-Service Tracker</h3>
+                <button class="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="about-content">
+                    <div class="app-info">
+                        <div class="app-title">
+                            <i class="fas fa-check-circle app-icon"></i>
+                            <h4>R-Service Tracker v1.0.0</h4>
+                        </div>
+                        <p class="app-description">A premium job tracking and payment management system designed to help you track your daily work and manage earnings efficiently.</p>
+                    </div>
+                    <div class="features-list">
+                        <h5><i class="fas fa-star"></i> Features:</h5>
+                        <ul class="features-items">
+                            <li><i class="fas fa-calendar-check"></i> Daily work tracking with ₹25 per day</li>
+                            <li><i class="fas fa-calculator"></i> Automatic payment calculation every 4 days</li>
+                            <li><i class="fas fa-chart-line"></i> Comprehensive balance sheet and analytics</li>
+                            <li><i class="fas fa-file-pdf"></i> PDF export functionality</li>
+                            <li><i class="fas fa-palette"></i> Multiple theme options</li>
+                            <li><i class="fas fa-database"></i> Offline data storage</li>
+                        </ul>
+                    </div>
+                    <div class="tech-info">
+                        <h5><i class="fas fa-cog"></i> Technical Info:</h5>
+                        <ul class="tech-items">
+                            <li><i class="fas fa-code"></i> Built with vanilla JavaScript</li>
+                            <li><i class="fas fa-hdd"></i> Uses IndexedDB for local storage</li>
+                            <li><i class="fas fa-mobile-alt"></i> Responsive design for all devices</li>
+                            <li><i class="fas fa-shield-alt"></i> Privacy-focused offline operation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+                <div class="modal-actions">
+                    <button id="confirmYes" class="btn btn-danger">Yes, Continue</button>
+                    <button id="confirmNo" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Selection Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Select Payment Amount</h3>
+                <button class="close-modal" id="closePaymentModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-info">
+                    <p>You have <span id="unpaidDaysCount">4</span> unpaid work days.</p>
+                    <p>Pending amount: ₹<span id="pendingAmount">100</span></p>
+                </div>
+                <div class="payment-options">
+                    <h4>Select payment amount:</h4>
+                    <div class="payment-buttons">
+                        <button class="payment-btn" data-amount="100">₹100</button>
+                        <button class="payment-btn" data-amount="200">₹200</button>
+                        <button class="payment-btn" data-amount="300">₹300</button>
+                        <button class="payment-btn" data-amount="400">₹400</button>
+                        <button class="payment-btn" data-amount="500">₹500</button>
+                        <button class="payment-btn" data-amount="600">₹600</button>
+                        <button class="payment-btn" data-amount="700">₹700</button>
+                        <button class="payment-btn" data-amount="800">₹800</button>
+                        <button class="payment-btn" data-amount="900">₹900</button>
+                        <button class="payment-btn" data-amount="1000">₹1000</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Audio Elements (now handled by Web Audio API in notifications.js) -->
+
+    <!-- Scripts -->
+    <script src="js/database.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
