@@ -338,10 +338,15 @@ class CalendarManager {
 
             if (isPaid) {
                 const payment = this.getPaymentForDate(dateString);
+                const paidAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : 25;
                 content += `
                     <div class="payment-status success">
                         <i class="fas fa-money-bill-wave"></i>
                         <span>Payment Received</span>
+                    </div>
+                    <div class="payment-details">
+                        <span class="label">Amount Paid:</span>
+                        <span class="amount">₹${paidAmount}</span>
                     </div>
                 `;
                 if (payment) {

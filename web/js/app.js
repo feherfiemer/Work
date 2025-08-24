@@ -104,9 +104,23 @@ class RServiceTracker {
                         const cards = document.querySelectorAll('.card');
                         cards.forEach((card, index) => {
                             setTimeout(() => {
-                                card.classList.add('animate-slide-up');
-                            }, index * 100);
+                                if (index === 0) {
+                                    card.classList.add('animate-slide-left');
+                                } else if (index === 1) {
+                                    card.classList.add('animate-rotate-in');
+                                } else {
+                                    card.classList.add('animate-slide-right');
+                                }
+                            }, index * 150);
                         });
+                        
+                        // Add floating animation to logo
+                        setTimeout(() => {
+                            const logo = document.querySelector('.logo i');
+                            if (logo) {
+                                logo.classList.add('animate-float');
+                            }
+                        }, 1000);
                     }
                 }, 500);
             } else if (mainContainer) {
@@ -422,7 +436,7 @@ class RServiceTracker {
                 console.log('Advance progress:', { workCompleted: safeWorkCompleted, workRequired: safeWorkRequired, progressPercent });
                 
                 if (progressLabelEl) {
-                    progressLabelEl.textContent = 'Progress to Work Complete';
+                    progressLabelEl.textContent = `Advance Payment Progress (₹${advanceStatus.totalAdvanceAmount} paid)`;
                 }
                 if (progressTextEl) {
                     // Determine time unit based on work required

@@ -396,14 +396,21 @@ class DatabaseManager {
             // Calculate work required to clear advance
             const workRequiredForAdvance = Math.ceil(totalAdvanceAmount / 25);
             
-            // Find all unpaid work (regardless of when it was done)
-            // This represents work that can be used to pay back the advance
+            // Find all completed work since advance payments were made
+            const completedWork = workRecords.filter(record => {
+                return record.status === 'completed';
+            });
+            
+            // Calculate total work done towards advance (paid + unpaid)
+            const totalWorkDone = completedWork.length;
+            
+            // Find unpaid work that can still be used for advance
             const unpaidWork = workRecords.filter(record => {
                 return record.status === 'completed' && !this.isRecordPaid(record, payments);
             });
             
-            const workCompletedForAdvance = unpaidWork.length;
-            const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workCompletedForAdvance);
+            const workCompletedForAdvance = totalWorkDone;
+            const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - unpaidWork.length);
             
             return {
                 hasAdvancePayments: true,

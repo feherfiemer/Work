@@ -831,15 +831,18 @@ body {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  background: var(--border);
-  border-radius: var(--border-radius-small);
+  gap: 3px;
+  background: linear-gradient(135deg, var(--border), var(--surface-alt));
+  border-radius: 12px;
   overflow: hidden;
   width: 100%;
   max-width: 900px;
   min-width: 600px;
   margin: 0 auto;
-  box-shadow: var(--shadow-light);
+  box-shadow: var(--shadow-medium);
+  padding: 4px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
 }
 
 .calendar-cell {
@@ -858,14 +861,17 @@ body {
   justify-content: flex-start;
   align-items: center;
   text-align: center;
-  border-radius: var(--border-radius-small);
+  border-radius: 8px;
   cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
 }
 
 .calendar-cell:hover {
   background: var(--surface-alt);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-light);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--primary);
 }
 
 .calendar-cell.worked {
@@ -1345,23 +1351,55 @@ body {
 .btn-primary {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   box-shadow: var(--shadow-light);
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-primary:hover {
   background: linear-gradient(135deg, var(--primary-light), var(--primary));
   transform: translateY(-2px);
   box-shadow: var(--shadow-medium);
+  animation: pulseGlow 2s infinite;
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.4);
 }
 
 .btn-success {
   background: linear-gradient(135deg, var(--success), #45a049);
   box-shadow: var(--shadow-light);
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-success:hover {
   background: linear-gradient(135deg, #5cbf60, var(--success));
   transform: translateY(-2px);
   box-shadow: var(--shadow-medium);
+}
+
+.btn-success:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--surface-alt), var(--border));
+  box-shadow: var(--shadow-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, var(--border), var(--surface-alt));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.btn-secondary:active {
+  transform: translateY(0) scale(0.98);
 }
 
 /* ===== ANIMATIONS ===== */
@@ -1410,6 +1448,57 @@ body {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes rotateIn {
+  from {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .animate-slide-up {
   animation: slideInUp 0.5s ease-out;
 }
@@ -1420,6 +1509,119 @@ body {
 
 .animate-bounce-in {
   animation: bounceIn 0.4s ease-out;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-alt) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-rotate-in {
+  animation: rotateIn 0.6s ease-out;
+}
+
+.animate-slide-left {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.animate-slide-right {
+  animation: slideInRight 0.5s ease-out;
+}
+
+/* Premium card effects */
+.card {
+  transition: all var(--transition-medium);
+}
+
+.card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: var(--shadow-heavy);
+}
+
+/* Action button premium effects */
+.action-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--shadow-medium);
+}
+
+.action-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Menu toggle animation */
+.menu-toggle {
+  transition: all var(--transition-fast);
+}
+
+.menu-toggle:hover {
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* Theme-based button effects */
+[data-theme="blue-light"] .btn:active::before,
+[data-theme="blue-dark"] .btn:active::before {
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.4) 0%, transparent 70%);
+}
+
+[data-theme="orange-light"] .btn:active::before,
+[data-theme="orange-dark"] .btn:active::before {
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.4) 0%, transparent 70%);
+}
+
+/* Enhanced calendar cell effects */
+.calendar-cell.worked {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+  border-left: 4px solid var(--success);
+  position: relative;
+}
+
+.calendar-cell.worked::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.calendar-cell.worked:hover::after {
+  opacity: 1;
+}
+
+.calendar-cell.paid {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
+  border-left: 4px solid var(--info);
+  position: relative;
+}
+
+.calendar-cell.paid::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(33, 150, 243, 0.1), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.calendar-cell.paid:hover::after {
+  opacity: 1;
 }
 
 /* ===== SCROLLBAR STYLING ===== */
