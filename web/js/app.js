@@ -67,6 +67,9 @@ class RServiceTracker {
             // Initialize views
             await this.initializeViews();
             
+            // Update current year in footer
+            this.updateCurrentYear();
+            
             this.isInitialized = true;
             console.log('R-Service Tracker initialized successfully');
             
@@ -808,6 +811,9 @@ class RServiceTracker {
                         // Update payment period display if it exists
                         this.updatePaymentPeriodDisplay(newConfig.PAYMENT_DAY_DURATION);
                         
+                        // Update original settings to reflect the saved values
+                        this.storeOriginalSettings();
+                        
                         // Complete loading toast
                         if (loadingToast && this.notifications) {
                             this.notifications.updateLoadingToast(loadingToast, 'System reset and updated!', 'success');
@@ -838,6 +844,14 @@ class RServiceTracker {
             if (this.notifications) {
                 this.notifications.showToast('Error saving settings: ' + error.message, 'error');
             }
+        }
+    }
+
+    // Update current year in footer
+    updateCurrentYear() {
+        const currentYearElement = document.getElementById('currentYear');
+        if (currentYearElement) {
+            currentYearElement.textContent = new Date().getFullYear();
         }
     }
 

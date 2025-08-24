@@ -23,13 +23,15 @@ class NotificationManager {
         container.className = 'toast-container';
         container.style.cssText = `
             position: fixed;
-            top: 1rem;
+            top: 5rem;
             right: 1rem;
             z-index: 10000;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.75rem;
             pointer-events: none;
+            max-height: calc(100vh - 6rem);
+            overflow-y: auto;
         `;
         document.body.appendChild(container);
         this.toastContainer = container;
@@ -645,13 +647,14 @@ class NotificationManager {
     playSuccessSound() {
         if (!this.audioContext) return;
 
-        const ctx = this.audioContext;
-        const now = ctx.currentTime;
-        
-        // Create master gain node with gentle volume
-        const masterGain = ctx.createGain();
-        masterGain.connect(ctx.destination);
-        masterGain.gain.setValueAtTime(0.3, now);
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create master gain node with gentle volume
+            const masterGain = ctx.createGain();
+            masterGain.connect(ctx.destination);
+            masterGain.gain.setValueAtTime(0.3, now);
 
         // Realistic task completion sound like checking off a box or pressing a button
         // Sound 1: Satisfying "click" like a mechanical button press
@@ -702,6 +705,9 @@ class NotificationManager {
         dingOsc.stop(now + 0.6);
 
         console.log('Realistic task completion sound played');
+        } catch (error) {
+            console.warn('Error playing success sound:', error);
+        }
     }
 
     // Play payment sound (API-based transaction sound)
@@ -723,8 +729,9 @@ class NotificationManager {
 
     // Realistic payment sound like actual cash register and mobile payment apps
     createTransactionSound() {
-        const ctx = this.audioContext;
-        const now = ctx.currentTime;
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
         
         // Create master gain node
         const masterGain = ctx.createGain();
@@ -800,6 +807,9 @@ class NotificationManager {
         successOsc.stop(now + 1.2);
         
         console.log('Realistic cash register payment sound played');
+        } catch (error) {
+            console.warn('Error playing payment sound:', error);
+        }
     }
 
     // Fallback transaction sound for older browsers (improved)

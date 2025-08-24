@@ -12,8 +12,7 @@ const urlsToCache = [
   '/js/utils.js',
   '/assets/favicon.ico',
   '/assets/favicon.svg',
-  '/assets/sounds/done.mp3',
-  '/assets/sounds/paid.mp3',
+
   '/manifest.json',
   // External resources
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',

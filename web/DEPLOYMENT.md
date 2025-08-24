@@ -23,9 +23,7 @@ web/
 └── assets/
     ├── favicon.ico     # Website favicon
     ├── favicon.svg     # SVG favicon
-    └── sounds/
-        ├── done.mp3    # Sound for work completion
-        └── paid.mp3    # Sound for payment recording
+
 ```
 
 ## 🚀 Deployment Options
