@@ -129,8 +129,8 @@ class Utils {
         return dates;
     }
 
-    // Enhanced Professional PDF Export functionality
-    async exportToPDF(data, filename = 'R-Service-Tracker-Professional-Report.pdf') {
+    // Enhanced PDF Export functionality
+    async exportToPDF(data, filename = 'R-Service-Tracker-Report.pdf') {
         try {
             console.log('PDF Export: Starting with data:', data);
             
@@ -155,8 +155,8 @@ class Utils {
             const colors = this.getPDFColorsFromTheme();
             console.log('PDF Export: Using theme colors:', colors);
             
-            // Professional header design
-            this.addProfessionalHeader(doc, colors);
+            // Header design
+            this.addHeader(doc, colors);
             
             let yPos = 70;
             
@@ -188,8 +188,8 @@ class Utils {
                 yPos = this.addPerformanceMetrics(doc, colors, data.summary, yPos);
             }
             
-            // Professional footer with page numbers and metadata
-            this.addProfessionalFooter(doc, colors, data);
+            // Footer with page numbers and metadata
+            this.addFooter(doc, colors, data);
             
             // Save the PDF
             console.log('PDF Export: Saving PDF with filename:', filename);
@@ -202,8 +202,8 @@ class Utils {
         }
     }
 
-    // Professional header with branding
-    addProfessionalHeader(doc, colors) {
+    // Header with branding
+    addHeader(doc, colors) {
         // Premium gradient background effect (simulated with rectangles)
         doc.setFillColor(...colors.primary);
         doc.rect(0, 0, 210, 45, 'F');
@@ -216,7 +216,7 @@ class Utils {
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(12);
-        doc.text('Professional Work & Payment Management System', 25, 33);
+        doc.text('Work & Payment Management System', 25, 33);
         
         // Report title
         doc.setFont('helvetica', 'bold');
@@ -249,8 +249,8 @@ class Utils {
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
-        doc.text('Service: R-Service Professional Work Tracking', 25, yPos + 13);
-        doc.text('System Version: 1.0.0 Professional', 25, yPos + 18);
+        doc.text('Service: R-Service Work Tracking', 25, yPos + 13);
+        doc.text('System Version: 2.1.2', 25, yPos + 18);
         doc.text(`Daily Rate: ${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} rupees per day`, 110, yPos + 13);
         doc.text('Currency: Indian Rupees', 110, yPos + 18);
         
@@ -659,8 +659,8 @@ class Utils {
         return yPos + 30;
     }
 
-    // Professional footer with enhanced metadata
-    addProfessionalFooter(doc, colors, data) {
+    // Footer with enhanced metadata
+    addFooter(doc, colors, data) {
         const pageCount = doc.internal.getNumberOfPages();
         const now = new Date();
         
@@ -679,7 +679,7 @@ class Utils {
             
             // System info
             doc.setFont('helvetica', 'normal');
-            doc.text('R-Service Tracker Professional v1.0.0', 80, 292);
+            doc.text('R-Service Tracker v2.1.2', 80, 292);
             
             // Generation timestamp
             doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 155, 292);
