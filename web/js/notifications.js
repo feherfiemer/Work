@@ -637,7 +637,6 @@ class NotificationManager {
                         tag: 'payment-reminder-7am',
                         requireInteraction: true,
                         icon: '/assets/icon-192.png',
-                        image: '/assets/icon-512.png',
                         vibrate: [200, 100, 200, 100, 200, 100, 200],
                         actions: [
                             { action: 'open-app', title: '💳 Collect Payment' },
@@ -645,10 +644,6 @@ class NotificationManager {
                         ],
                         onClick: () => {
                             window.focus();
-                            // Automatically show payment modal if possible
-                            if (window.app && window.app.showPaymentModal) {
-                                setTimeout(() => window.app.showPaymentModal(), 1000);
-                            }
                         }
                     });
                     
@@ -679,7 +674,6 @@ class NotificationManager {
                         tag: 'work-reminder-6pm',
                         requireInteraction: false,
                         icon: '/assets/icon-192.png',
-                        image: '/assets/icon-512.png',
                         vibrate: [200, 100, 200],
                         actions: [
                             { action: 'open-app', title: '✅ Mark Complete' },
@@ -687,17 +681,6 @@ class NotificationManager {
                         ],
                         onClick: () => {
                             window.focus();
-                            // Auto-focus on the done button if possible
-                            setTimeout(() => {
-                                const doneBtn = document.getElementById('doneBtn');
-                                if (doneBtn && !doneBtn.disabled) {
-                                    doneBtn.focus();
-                                    doneBtn.style.animation = 'pulse 1s infinite';
-                                    setTimeout(() => {
-                                        doneBtn.style.animation = '';
-                                    }, 3000);
-                                }
-                            }, 1000);
                         }
                     });
                     

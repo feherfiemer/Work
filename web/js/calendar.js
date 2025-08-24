@@ -221,8 +221,7 @@ class CalendarManager {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: ${window.innerWidth <= 768 ? '0.25rem' : '0.5rem'};
-            min-height: ${window.innerWidth <= 768 ? '60px' : '80px'};
+            padding: 0.5rem;
         `;
 
         // Day number
@@ -231,25 +230,22 @@ class CalendarManager {
         dayNumber.textContent = day;
         dayNumber.style.cssText = `
             font-weight: ${isToday ? 'bold' : '500'};
-            font-size: ${window.innerWidth <= 768 ? '0.8rem' : '1rem'};
+            font-size: 1rem;
             color: ${isToday ? 'white' : 'var(--text-primary)'};
-            line-height: 1;
         `;
 
-        // Status indicators container
+        // Status indicators
         const indicators = document.createElement('div');
         indicators.className = 'day-indicators';
         indicators.style.cssText = `
             display: flex;
-            gap: 0.15rem;
-            margin-top: 0.2rem;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
             flex-wrap: wrap;
             justify-content: center;
-            align-items: center;
         `;
 
         if (workRecord && workRecord.status === 'completed') {
-            // Work completed indicator
             const workIndicator = document.createElement('span');
             workIndicator.className = 'work-indicator';
             workIndicator.innerHTML = '<i class="fas fa-check"></i>';
@@ -257,81 +253,48 @@ class CalendarManager {
                 background: var(--success);
                 color: white;
                 border-radius: 50%;
-                width: ${window.innerWidth <= 768 ? '16px' : '20px'};
-                height: ${window.innerWidth <= 768 ? '16px' : '20px'};
+                width: 20px;
+                height: 20px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: ${window.innerWidth <= 768 ? '0.6rem' : '0.75rem'};
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                font-size: 0.75rem;
             `;
             indicators.appendChild(workIndicator);
 
-            // Payment indicator and amount if paid
             if (isPaid) {
-                const payment = this.getPaymentForDate(workRecord.date);
-                let actualPaymentAmount = 25; // Default wage
-                
-                if (payment) {
-                    // Calculate the actual payment amount for this specific date
-                    // If advance payment, show the portion allocated to this date
-                    if (payment.isAdvance && payment.workDates.length > 0) {
-                        actualPaymentAmount = Math.floor(payment.amount / payment.workDates.length);
-                    } else if (payment.workDates.length > 0) {
-                        actualPaymentAmount = Math.floor(payment.amount / payment.workDates.length);
-                    }
-                }
+                const payment = this.getPaymentForDate(dateString);
+                // Calculate the actual payment amount for this specific date
+                const paymentAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : 25;
                 
                 const paidIndicator = document.createElement('span');
                 paidIndicator.className = 'paid-indicator';
-                paidIndicator.innerHTML = '<i class="fas fa-rupee-sign"></i>';
+                paidIndicator.innerHTML = '<i class="fas fa-money-bill-wave"></i>';
                 paidIndicator.style.cssText = `
                     background: var(--info);
                     color: white;
                     border-radius: 50%;
-                    width: ${window.innerWidth <= 768 ? '16px' : '20px'};
-                    height: ${window.innerWidth <= 768 ? '16px' : '20px'};
+                    width: 20px;
+                    height: 20px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: ${window.innerWidth <= 768 ? '0.5rem' : '0.6rem'};
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    font-size: 0.75rem;
                 `;
                 indicators.appendChild(paidIndicator);
 
-                // Add payment amount text
+                // Add payment amount text below indicators
                 const paymentText = document.createElement('div');
                 paymentText.className = 'payment-amount';
-                paymentText.textContent = `₹${actualPaymentAmount}`;
+                paymentText.textContent = `₹${paymentAmount}`;
                 paymentText.style.cssText = `
-                    font-size: ${window.innerWidth <= 768 ? '0.5rem' : '0.6rem'};
+                    font-size: 0.6rem;
                     color: var(--info);
-                    font-weight: 700;
-                    text-align: center;
-                    margin-top: 0.1rem;
-                    background: rgba(33, 150, 243, 0.1);
-                    padding: 0.1rem 0.2rem;
-                    border-radius: 4px;
-                    line-height: 1;
-                `;
-                content.appendChild(paymentText);
-            } else {
-                // Show pending payment amount
-                const pendingText = document.createElement('div');
-                pendingText.className = 'pending-amount';
-                pendingText.textContent = '₹25';
-                pendingText.style.cssText = `
-                    font-size: ${window.innerWidth <= 768 ? '0.5rem' : '0.6rem'};
-                    color: var(--warning);
                     font-weight: 600;
                     text-align: center;
-                    margin-top: 0.1rem;
-                    background: rgba(255, 152, 0, 0.1);
-                    padding: 0.1rem 0.2rem;
-                    border-radius: 4px;
-                    line-height: 1;
+                    margin-top: 0.2rem;
                 `;
-                content.appendChild(pendingText);
+                content.appendChild(paymentText);
             }
         }
 

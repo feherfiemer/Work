@@ -71,11 +71,6 @@ class RServiceTracker {
                 this.checkAdvancePaymentNotification();
             }, 2000);
             
-            // Show occasional PWA recommendations based on usage
-            setTimeout(() => {
-                this.showOccasionalPWARecommendation();
-            }, 5000);
-            
         } catch (error) {
             console.error('Error initializing application:', error);
             this.showError('Failed to initialize application. Please refresh the page.');
@@ -1152,146 +1147,61 @@ class RServiceTracker {
         }
     }
     
-    // Show PWA install recommendation (enhanced)
+    // Show PWA install recommendation
     showPWARecommendation(deferredPrompt) {
         if (!deferredPrompt) return;
         
-        // Check if user has previously dismissed permanently
-        const permanentDismiss = localStorage.getItem('pwa-install-permanent-dismiss');
-        const lastDismiss = localStorage.getItem('pwa-install-last-dismiss');
-        const now = Date.now();
+        // Check if user has previously dismissed
+        const dismissed = localStorage.getItem('pwa-install-dismissed');
+        if (dismissed) return;
         
-        // If permanently dismissed, don't show
-        if (permanentDismiss) return;
-        
-        // If recently dismissed (within 7 days), don't show
-        if (lastDismiss && (now - parseInt(lastDismiss)) < 7 * 24 * 60 * 60 * 1000) {
-            return;
-        }
-        
-        // Show recommendation based on usage patterns
+        // Create install prompt
         const installMessage = `
-            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: var(--border-radius); color: white;">
-                <div style="font-size: 2rem;">📱</div>
-                <div style="flex: 1;">
-                    <strong style="display: block; margin-bottom: 0.25rem;">Install R-Service Tracker</strong>
-                    <small style="opacity: 0.9;">Get faster access, offline support, and a native app experience!</small>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <i class="fas fa-mobile-alt" style="font-size: 1.5rem; color: var(--primary);"></i>
+                <div>
+                    <strong>Install R-Service Tracker</strong><br>
+                    <small>Get quick access and offline support!</small>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button id="pwa-install-btn" style="padding: 0.5rem 1rem; background: white; color: var(--primary); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">
-                        Install Now
-                    </button>
-                    <button id="pwa-dismiss-btn" style="padding: 0.5rem; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 8px; cursor: pointer;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <button id="pwa-never-btn" style="padding: 0.5rem; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem;">
-                        Never
-                    </button>
-                </div>
+                <button id="pwa-install-btn" style="margin-left: auto; padding: 0.5rem 1rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    Install
+                </button>
+                <button id="pwa-dismiss-btn" style="padding: 0.5rem; background: none; border: none; color: var(--text-secondary); cursor: pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         `;
         
-        const toast = this.notifications.showToast(installMessage, 'info', 0); // Show indefinitely
+        this.notifications.showToast(installMessage, 'info', 0); // Show indefinitely
         
         // Handle install button click
         setTimeout(() => {
             const installBtn = document.getElementById('pwa-install-btn');
             const dismissBtn = document.getElementById('pwa-dismiss-btn');
-            const neverBtn = document.getElementById('pwa-never-btn');
             
             if (installBtn) {
                 installBtn.addEventListener('click', async () => {
-                    try {
-                        if (deferredPrompt) {
-                            deferredPrompt.prompt();
-                            const { outcome } = await deferredPrompt.userChoice;
-                            console.log(`[PWA] User response: ${outcome}`);
-                            
-                            if (outcome === 'accepted') {
-                                this.notifications.showToast('🎉 Installing R-Service Tracker...', 'success', 3000);
-                            } else {
-                                localStorage.setItem('pwa-install-last-dismiss', now.toString());
-                            }
-                            
-                            deferredPrompt = null;
-                            this.removePWAToast();
-                        }
-                    } catch (error) {
-                        console.error('Error prompting PWA install:', error);
-                        this.notifications.showToast('Install available through browser menu', 'info');
-                        this.removePWAToast();
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`[PWA] User response: ${outcome}`);
+                        deferredPrompt = null;
+                        
+                        // Remove the toast
+                        const toasts = document.querySelectorAll('.toast');
+                        toasts.forEach(toast => toast.remove());
                     }
                 });
             }
             
             if (dismissBtn) {
                 dismissBtn.addEventListener('click', () => {
-                    localStorage.setItem('pwa-install-last-dismiss', now.toString());
-                    this.removePWAToast();
-                });
-            }
-            
-            if (neverBtn) {
-                neverBtn.addEventListener('click', () => {
-                    localStorage.setItem('pwa-install-permanent-dismiss', 'true');
-                    this.removePWAToast();
-                    this.notifications.showToast('PWA suggestions disabled. You can still install via browser menu.', 'info', 3000);
+                    localStorage.setItem('pwa-install-dismissed', 'true');
+                    const toasts = document.querySelectorAll('.toast');
+                    toasts.forEach(toast => toast.remove());
                 });
             }
         }, 100);
-    }
-    
-    // Remove PWA toast
-    removePWAToast() {
-        const toasts = document.querySelectorAll('.toast');
-        toasts.forEach(toast => {
-            if (toast.innerHTML.includes('Install R-Service Tracker')) {
-                toast.remove();
-            }
-        });
-    }
-    
-    // Show occasional PWA recommendations based on usage
-    showOccasionalPWARecommendation() {
-        // Only show if not installed and not permanently dismissed
-        if (window.matchMedia('(display-mode: standalone)').matches || 
-            window.navigator.standalone ||
-            localStorage.getItem('pwa-install-permanent-dismiss')) {
-            return;
-        }
-        
-        // Track app usage
-        let usageCount = parseInt(localStorage.getItem('app-usage-count') || '0');
-        usageCount++;
-        localStorage.setItem('app-usage-count', usageCount.toString());
-        
-        // Show recommendation after certain usage milestones
-        if (usageCount === 5) {
-            setTimeout(() => {
-                this.notifications.showToast(
-                    `💡 You're using R-Service Tracker regularly! Consider installing it for faster access and offline support.`, 
-                    'info', 
-                    6000
-                );
-            }, 3000);
-        } else if (usageCount === 15) {
-            setTimeout(() => {
-                this.notifications.showToast(
-                    `🚀 Ready to take R-Service Tracker to the next level? Install it as an app for the best experience!`, 
-                    'info', 
-                    8000
-                );
-            }, 2000);
-        } else if (usageCount % 25 === 0) {
-            // Show occasionally after heavy usage
-            setTimeout(() => {
-                this.notifications.showToast(
-                    `📲 Pro tip: Install R-Service Tracker as an app for instant access and better performance!`, 
-                    'info', 
-                    5000
-                );
-            }, 5000);
-        }
     }
 }
 
