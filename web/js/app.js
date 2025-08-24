@@ -966,14 +966,16 @@ class RServiceTracker {
                 throw new Error('Database not available');
             }
             
-            const pendingAmount = this.pendingUnpaidDates.length * 25;
+            // Use unified amount calculation system
+            const DAILY_WAGE = 25; // Should match database constant
+            const pendingAmount = this.pendingUnpaidDates.length * DAILY_WAGE;
             const isAdvancePayment = amount > pendingAmount;
             
             // Determine which work dates to mark as paid
             let workDatesToPay = [];
             if (pendingAmount > 0) {
                 // Calculate how many days this payment covers
-                const daysCovered = Math.min(Math.floor(amount / 25), this.pendingUnpaidDates.length);
+                const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
                 workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
                 console.log('Work dates to pay:', workDatesToPay);
             }

@@ -18,10 +18,10 @@
   --blur-medium: blur(12px);
   --blur-heavy: blur(20px);
   
-  /* Transitions (reduced for performance) */
-  --transition-fast: 0.1s ease-out;
-  --transition-medium: 0.2s ease-out;
-  --transition-slow: 0.3s ease-out;
+  /* Transitions (optimized for fluidity) */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+  --transition-medium: 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+  --transition-slow: 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
   
   /* Z-Index */
   --z-loading: 10000;
@@ -252,6 +252,12 @@ button, a, .calendar-cell, .action-btn, .payment-btn, .theme-btn {
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+/* Improved smooth scrolling for all elements */
+* {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -333,7 +339,9 @@ body {
 }
 
 [data-theme="orange-dark"] .header,
-[data-theme="blue-dark"] .header {
+[data-theme="blue-dark"] .header,
+[data-theme="green-dark"] .header,
+[data-theme="red-dark"] .header {
   background: linear-gradient(135deg, rgba(30, 30, 30, 0.95), rgba(30, 30, 30, 0.9));
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
@@ -408,7 +416,9 @@ body {
 }
 
 [data-theme="orange-dark"] .side-menu,
-[data-theme="blue-dark"] .side-menu {
+[data-theme="blue-dark"] .side-menu,
+[data-theme="green-dark"] .side-menu,
+[data-theme="red-dark"] .side-menu {
   background: linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(30, 30, 30, 0.95));
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
 }
@@ -600,9 +610,10 @@ body {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
   margin-bottom: 2rem;
+  align-items: start;
 }
 
 /* ===== CARDS ===== */
@@ -797,7 +808,7 @@ body {
 }
 
 .action-btn i {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 /* ===== BUTTONS ===== */
@@ -1116,10 +1127,12 @@ body {
   border: 2px solid rgba(var(--primary-rgb), 0.1);
   max-width: 500px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 85vh;
   overflow-y: auto;
   animation: slideInUp var(--transition-medium);
   backdrop-filter: blur(20px);
+  margin: 1rem;
+  position: relative;
 }
 
 .modal-header {
@@ -1293,7 +1306,7 @@ body {
 /* Large tablet and small desktop (768px - 1024px) */
 @media (max-width: 1024px) {
   .dashboard-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
   }
   
@@ -1885,7 +1898,7 @@ body {
 }
 
 .action-btn i {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   margin-bottom: 0.25rem;
 }
 
@@ -2243,26 +2256,28 @@ select:focus {
   box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6) !important;
 }
 
-/* Enhanced Card Animations */
+/* Enhanced Card Animations - Updated for better fluidity */
 .card {
-  transition: all 0.3s ease;
+  transition: all var(--transition-medium);
+  will-change: transform, box-shadow;
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px) scale(1.015);
+  box-shadow: 0 12px 35px rgba(var(--primary-rgb), 0.15);
 }
 
-/* Enhanced Button Animations */
+/* Enhanced Button Animations - Updated for better fluidity */
 .btn {
-  transition: all 0.3s ease;
+  transition: all var(--transition-medium);
   position: relative;
   overflow: hidden;
+  will-change: transform, box-shadow;
 }
 
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.2);
 }
 
 .btn::before {

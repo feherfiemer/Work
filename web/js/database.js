@@ -293,24 +293,46 @@ class DatabaseManager {
         });
     }
 
+    // Unified Amount Calculation System
+    calculateAmounts(workRecords, payments) {
+        const DAILY_WAGE = 25; // Centralized wage constant
+        
+        // Basic calculations
+        const totalWorked = workRecords.filter(record => record.status === 'completed').length;
+        const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
+        
+        // Calculate pending work value (work done but not paid for)
+        const unpaidWork = workRecords.filter(record => 
+            record.status === 'completed' && !this.isRecordPaid(record, payments)
+        );
+        const pendingWorkValue = unpaidWork.length * DAILY_WAGE;
+        
+        // Total Earned = Total Payments (actual money received)
+        const totalEarned = totalPaid;
+        
+        // Current Balance = Pending Work Value (money owed to user)
+        const currentBalance = pendingWorkValue;
+        
+        return {
+            totalWorked,
+            totalPaid,
+            totalEarned,
+            currentBalance,
+            pendingWorkValue,
+            unpaidWorkDays: unpaidWork.length,
+            dailyWage: DAILY_WAGE
+        };
+    }
+
     // Analytics Methods
     async getEarningsStats() {
         try {
             const workRecords = await this.getAllWorkRecords();
             const payments = await this.getAllPayments();
             
-            const totalWorked = workRecords.filter(record => record.status === 'completed').length;
-            const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
-            
-            // Calculate pending work value (work done but not paid for)
-            const pendingWork = workRecords.reduce((sum, record) => 
-                record.status === 'completed' && !this.isRecordPaid(record, payments) ? sum + record.wage : sum, 0);
-            
-            // Total Earned = Total Payments (actual money received)
-            const totalEarned = totalPaid;
-            
-            // Current Balance = Pending Work Value (money owed to user)
-            const currentBalance = pendingWork;
+            // Use unified calculation system
+            const amounts = this.calculateAmounts(workRecords, payments);
+            const { totalWorked, totalPaid, totalEarned, currentBalance } = amounts;
             
             // Calculate streak
             const sortedRecords = workRecords
@@ -391,18 +413,21 @@ class DatabaseManager {
                 return sum + payment.amount;
             }, 0);
             
-            // Calculate work required to clear advance
-            const workRequiredForAdvance = Math.ceil(totalAdvanceAmount / 25);
+            // Calculate work required to clear advance using unified system
+            const amounts = this.calculateAmounts(workRecords, payments);
+            const workRequiredForAdvance = Math.ceil(totalAdvanceAmount / amounts.dailyWage);
             
-            // Find unpaid completed work (this is what counts towards paying back advance)
-            const unpaidWork = workRecords.filter(record => {
-                return record.status === 'completed' && !this.isRecordPaid(record, payments);
+            // Find the most recent advance payment date
+            const latestAdvanceDate = new Date(Math.max(...advancePayments.map(p => new Date(p.date))));
+            
+            // Find all completed work done after the latest advance payment
+            const workAfterAdvance = workRecords.filter(record => {
+                return record.status === 'completed' && new Date(record.date) >= latestAdvanceDate;
             });
             
-            // Only unpaid work counts towards paying back the advance
-            // But we should show progress for work done, even if it's not yet paid
-            const workCompletedForAdvance = unpaidWork.length;
-            const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - unpaidWork.length);
+            // All work done after advance counts towards paying it back
+            const workCompletedForAdvance = workAfterAdvance.length;
+            const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workAfterAdvance.length);
             
             return {
                 hasAdvancePayments: true,
