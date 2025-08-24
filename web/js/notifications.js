@@ -154,9 +154,9 @@ class NotificationManager {
         }
     }
 
-    // Show welcome notification for first-time users
+    // Show enhanced welcome notification for first-time users
     showWelcomeNotification() {
-        const title = 'Welcome to R-Service Tracker!';
+        const title = 'Welcome to R-Service Tracker! 🎉';
         const options = {
             body: 'Setting up your daily work tracker... We\'re configuring notifications, initializing your dashboard, and preparing your work tracking system. You\'ll be ready to track your daily work and earnings in just a moment!',
             icon: './assets/favicon.ico',
@@ -177,34 +177,79 @@ class NotificationManager {
 
         this.showNotification(title, options);
         this.showToast('🎉 Welcome! Your work tracker is being set up...', 'success', 8000);
+        
+        console.log('Welcome notification shown for first-time user');
     }
 
-    // Request permission on every visit if not granted
+    // Request notification permission on every visit if not granted
     async checkAndRequestPermission() {
         if ('Notification' in window) {
             const permission = Notification.permission;
+            console.log('Current notification permission:', permission);
             
             if (permission === 'default') {
                 // Show a friendly prompt before requesting permission
                 this.showToast('📱 Enable notifications to get daily work reminders and payment alerts!', 'info', 6000);
                 
-                // Request permission after a brief delay
+                // Wait a bit then show the browser permission request
                 setTimeout(async () => {
-                    const result = await this.requestPermission();
-                    if (result === 'granted') {
-                        // Show welcome notification for new users or first-time permission grants
-                        const hasShownWelcome = localStorage.getItem('welcomeNotificationShown');
-                        if (!hasShownWelcome) {
-                            setTimeout(() => {
-                                this.showWelcomeNotification();
-                                localStorage.setItem('welcomeNotificationShown', 'true');
-                            }, 1000);
+                    try {
+                        console.log('Requesting notification permission from browser...');
+                        
+                        // Request permission using the browser's native dialog
+                        const result = await Notification.requestPermission();
+                        console.log('Permission request result:', result);
+                        
+                        this.permission = result;
+                        
+                        if (result === 'granted') {
+                            this.showToast('✅ Notifications enabled successfully!', 'success', 4000);
+                            
+                            // Show welcome notification for new users after permission is granted
+                            const hasShownWelcome = localStorage.getItem('welcomeNotificationShown');
+                            if (!hasShownWelcome) {
+                                setTimeout(() => {
+                                    this.showWelcomeNotification();
+                                    localStorage.setItem('welcomeNotificationShown', 'true');
+                                }, 2000); // Wait 2 seconds after permission granted
+                            } else {
+                                // Show a quick check-in notification for returning users
+                                setTimeout(() => {
+                                    this.showNotification('Daily Check-in', {
+                                        body: 'Welcome back! Ready to track your work today? Don\'t forget to mark your tasks as completed.',
+                                        tag: 'daily-checkin',
+                                        icon: './assets/favicon.ico'
+                                    });
+                                }, 1500);
+                            }
+                        } else if (result === 'denied') {
+                            this.showToast('❌ Notifications were denied. You can enable them later in browser settings.', 'warning', 6000);
+                        } else {
+                            this.showToast('⚠️ Notification permission was dismissed. You can enable them later.', 'info', 4000);
                         }
+                    } catch (error) {
+                        console.error('Error requesting notification permission:', error);
+                        this.showToast('Error requesting notification permission', 'error', 4000);
                     }
-                }, 2000);
+                }, 3000); // Wait 3 seconds before showing permission request
+                
             } else if (permission === 'denied') {
-                this.showToast('❌ Notifications are blocked. Click here to enable them for better experience!', 'warning', 8000);
+                // Create a more helpful message for denied permissions
+                const helpMessage = 'Notifications are blocked. To enable:\n' +
+                                  '1. Click the 🔒 icon in your address bar\n' +
+                                  '2. Set Notifications to "Allow"\n' +
+                                  '3. Refresh the page';
+                this.showToast('❌ ' + helpMessage.replace(/\n/g, ' '), 'warning', 10000);
+                
+                // Also show a clickable notification to help users
+                setTimeout(() => {
+                    this.showToast('💡 Click here for help enabling notifications', 'info', 8000);
+                }, 2000);
+                
             } else if (permission === 'granted') {
+                console.log('Notifications already granted');
+                this.permission = permission;
+                
                 // Check if this is a new session and show appropriate notification
                 const lastSessionDate = localStorage.getItem('lastSessionDate');
                 const today = new Date().toISOString().split('T')[0];
@@ -217,9 +262,12 @@ class NotificationManager {
                             tag: 'daily-checkin',
                             icon: './assets/favicon.ico'
                         });
-                    }, 3000);
+                    }, 2000);
                 }
             }
+        } else {
+            console.warn('Notifications not supported in this browser');
+            this.showToast('⚠️ Notifications are not supported in your browser', 'warning', 5000);
         }
     }
 
@@ -766,9 +814,10 @@ class NotificationManager {
                 const stats = await this.db.getEarningsStats();
                 const unpaidWork = stats.unpaidWork || 0;
                 
-                if (unpaidWork >= 4) {
-                    const paydayAmount = Math.floor(unpaidWork / 4) * 100;
-                    const extraDays = unpaidWork % 4;
+                const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+                if (unpaidWork >= paymentThreshold) {
+                    const paydayAmount = Math.floor(unpaidWork / paymentThreshold) * 100;
+                    const extraDays = unpaidWork % paymentThreshold;
                     
                     this.showNotification('Daily Payment Reminder - R-Service Tracker', {
                         body: `Good morning! You have ${unpaidWork} unpaid work days (₹${unpaidWork * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)}). ${paydayAmount > 0 ? `You can collect ₹${paydayAmount} right now!` : ''} ${extraDays > 0 ? `Plus ${extraDays} extra days pending.` : ''}`,

@@ -487,7 +487,7 @@ class RServiceTracker {
         }
     }
 
-    // Validate settings
+    // Validate settings with enhanced multi-layered system
     validateSettings() {
         const incrementInput = document.getElementById('incrementValue');
         const durationInput = document.getElementById('paymentDuration');
@@ -495,50 +495,175 @@ class RServiceTracker {
         const saveBtn = document.getElementById('saveSettings');
 
         let isValid = true;
+        let errors = [];
 
-        // Validate increment value
+        // Reset all styles first
+        [incrementInput, durationInput, maxPaymentInput].forEach(input => {
+            if (input) {
+                input.classList.remove('error', 'warning', 'success');
+                input.style.borderColor = '';
+                input.style.boxShadow = '';
+            }
+        });
+
+        // Clear existing error messages
+        document.querySelectorAll('.validation-error, .validation-warning').forEach(el => el.remove());
+
+        // Validate increment value with multiple layers
         if (incrementInput) {
             const increment = parseInt(incrementInput.value);
-            if (increment < 1 || increment > 100) {
-                incrementInput.style.borderColor = '#ff4444';
+            const container = incrementInput.parentElement;
+            
+            if (isNaN(increment) || increment < 1) {
+                this.addValidationError(incrementInput, 'Increment value must be at least 1');
                 isValid = false;
+                errors.push('Invalid increment value');
+            } else if (increment > 100) {
+                this.addValidationError(incrementInput, 'Increment value cannot exceed 100');
+                isValid = false;
+                errors.push('Increment value too high');
+            } else if (increment < 5) {
+                this.addValidationWarning(incrementInput, 'Very low increment values may not be practical');
+                incrementInput.classList.add('warning');
             } else {
-                incrementInput.style.borderColor = '';
+                this.addValidationSuccess(incrementInput, '✓ Valid increment value');
+                incrementInput.classList.add('success');
             }
         }
 
-        // Validate duration
+        // Validate payment duration with multiple layers
         if (durationInput) {
             const duration = parseInt(durationInput.value);
-            if (duration < 1 || duration > 30) {
-                durationInput.style.borderColor = '#ff4444';
+            
+            if (isNaN(duration) || duration < 1) {
+                this.addValidationError(durationInput, 'Payment duration must be at least 1 day');
                 isValid = false;
+                errors.push('Invalid payment duration');
+            } else if (duration > 30) {
+                this.addValidationError(durationInput, 'Payment duration cannot exceed 30 days');
+                isValid = false;
+                errors.push('Payment duration too long');
+            } else if (duration > 14) {
+                this.addValidationWarning(durationInput, 'Long payment periods may delay your payments');
+                durationInput.classList.add('warning');
             } else {
-                durationInput.style.borderColor = '';
+                this.addValidationSuccess(durationInput, '✓ Valid payment duration');
+                durationInput.classList.add('success');
             }
         }
 
-        // Validate max payment
+        // Validate max payment with multiple layers
         if (maxPaymentInput) {
             const maxPayment = parseInt(maxPaymentInput.value);
-            if (maxPayment < 100 || maxPayment > 10000) {
-                maxPaymentInput.style.borderColor = '#ff4444';
+            const increment = parseInt(incrementInput?.value) || 25;
+            
+            if (isNaN(maxPayment) || maxPayment < 100) {
+                this.addValidationError(maxPaymentInput, 'Maximum payment must be at least ₹100');
                 isValid = false;
+                errors.push('Maximum payment too low');
+            } else if (maxPayment > 50000) {
+                this.addValidationError(maxPaymentInput, 'Maximum payment cannot exceed ₹50,000');
+                isValid = false;
+                errors.push('Maximum payment too high');
+            } else if (maxPayment < increment * 5) {
+                this.addValidationWarning(maxPaymentInput, 'Max payment should be at least 5x the increment for better options');
+                maxPaymentInput.classList.add('warning');
+            } else if (maxPayment % increment !== 0) {
+                this.addValidationWarning(maxPaymentInput, 'Max payment should be divisible by increment for clean amounts');
+                maxPaymentInput.classList.add('warning');
             } else {
-                maxPaymentInput.style.borderColor = '';
+                this.addValidationSuccess(maxPaymentInput, '✓ Valid maximum payment');
+                maxPaymentInput.classList.add('success');
             }
         }
 
-        // Enable/disable save button
+        // Enhanced save button state management
         if (saveBtn) {
-            saveBtn.disabled = !isValid;
-            saveBtn.style.opacity = isValid ? '1' : '0.5';
+            if (isValid) {
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('disabled');
+                saveBtn.classList.add('ready');
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Settings';
+                saveBtn.style.opacity = '1';
+                saveBtn.style.cursor = 'pointer';
+                saveBtn.title = 'Save your settings';
+            } else {
+                saveBtn.disabled = true;
+                saveBtn.classList.add('disabled');
+                saveBtn.classList.remove('ready');
+                saveBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Fix Errors First';
+                saveBtn.style.opacity = '0.5';
+                saveBtn.style.cursor = 'not-allowed';
+                saveBtn.title = `Cannot save: ${errors.join(', ')}`;
+            }
         }
+
+        // Show overall validation status
+        this.showValidationSummary(isValid, errors);
 
         return isValid;
     }
 
-    // Save settings
+    // Add validation error message and styling
+    addValidationError(input, message) {
+        input.classList.add('error');
+        input.style.borderColor = '#ff4757';
+        input.style.boxShadow = '0 0 0 3px rgba(255, 71, 87, 0.1)';
+        
+        const errorEl = document.createElement('div');
+        errorEl.className = 'validation-error';
+        errorEl.innerHTML = `<i class="fas fa-times-circle"></i> ${message}`;
+        input.parentElement.appendChild(errorEl);
+    }
+
+    // Add validation warning message and styling
+    addValidationWarning(input, message) {
+        input.style.borderColor = '#ffa726';
+        input.style.boxShadow = '0 0 0 3px rgba(255, 167, 38, 0.1)';
+        
+        const warningEl = document.createElement('div');
+        warningEl.className = 'validation-warning';
+        warningEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+        input.parentElement.appendChild(warningEl);
+    }
+
+    // Add validation success message and styling
+    addValidationSuccess(input, message) {
+        input.style.borderColor = '#2ed573';
+        input.style.boxShadow = '0 0 0 3px rgba(46, 213, 115, 0.1)';
+        
+        const successEl = document.createElement('div');
+        successEl.className = 'validation-success';
+        successEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+        input.parentElement.appendChild(successEl);
+    }
+
+    // Show validation summary
+    showValidationSummary(isValid, errors) {
+        // Remove existing summary
+        const existingSummary = document.querySelector('.validation-summary');
+        if (existingSummary) existingSummary.remove();
+
+        // Create new summary
+        const summaryEl = document.createElement('div');
+        summaryEl.className = 'validation-summary';
+        
+        if (isValid) {
+            summaryEl.className += ' success';
+            summaryEl.innerHTML = '<i class="fas fa-check-circle"></i> All settings are valid and ready to save!';
+        } else {
+            summaryEl.className += ' error';
+            summaryEl.innerHTML = `<i class="fas fa-times-circle"></i> ${errors.length} error${errors.length > 1 ? 's' : ''} found: ${errors.join(', ')}`;
+        }
+
+        // Insert summary before settings actions
+        const actionsSection = document.querySelector('.settings-actions');
+        if (actionsSection) {
+            actionsSection.parentElement.insertBefore(summaryEl, actionsSection);
+        }
+    }
+
+    // Enhanced save settings with better feedback and system updates
     saveSettings() {
         try {
             if (!this.validateSettings()) {
@@ -586,18 +711,37 @@ class RServiceTracker {
 
             if (saved) {
                 if (this.notifications) {
-                    this.notifications.showToast('Settings saved successfully!', 'success');
+                    this.notifications.showToast('✅ Settings saved successfully!', 'success');
                 }
                 
-                // Regenerate payment buttons
-                this.generatePaymentButtons();
+                // Show loading toast for regeneration
+                const loadingToast = this.notifications ? this.notifications.showLoadingToast('Updating payment options...') : null;
                 
-                // Update any displays that might use these values
-                if (typeof this.updateDashboard === 'function') {
-                    this.updateDashboard();
-                }
+                // Regenerate payment buttons with new settings
+                setTimeout(() => {
+                    this.generatePaymentButtons();
+                    
+                    // Update dashboard with new configuration
+                    if (typeof this.updateDashboard === 'function') {
+                        this.updateDashboard();
+                    }
+                    
+                    // Update payment period display if it exists
+                    this.updatePaymentPeriodDisplay(newConfig.PAYMENT_DAY_DURATION);
+                    
+                    // Complete loading toast
+                    if (loadingToast && this.notifications) {
+                        this.notifications.updateLoadingToast(loadingToast, 'Payment options updated!', 'success');
+                    }
+                    
+                    // Show completion feedback
+                    if (this.notifications) {
+                        this.notifications.showToast(`🎉 Configuration updated! Payment options: ${this.getGeneratedAmountPreview()}`, 'success', 6000);
+                    }
+                    
+                    this.closeMenu();
+                }, 500);
                 
-                this.closeMenu();
             } else {
                 if (this.notifications) {
                     this.notifications.showToast('Error saving settings', 'error');
@@ -611,17 +755,68 @@ class RServiceTracker {
         }
     }
 
-    // Reset settings to defaults
+    // Update payment period display throughout the app
+    updatePaymentPeriodDisplay(days) {
+        // Update dashboard progress display
+        const progressToPaydayEl = document.querySelector('.progress-to-payday, .payday-progress');
+        if (progressToPaydayEl) {
+            const currentProgress = parseInt(progressToPaydayEl.textContent.split('/')[0]) || 0;
+            progressToPaydayEl.textContent = `${currentProgress}/${days}`;
+        }
+
+        // Update any text mentioning "4 days"
+        document.querySelectorAll('[data-payment-period]').forEach(el => {
+            el.textContent = el.textContent.replace(/\d+ days?/, `${days} day${days > 1 ? 's' : ''}`);
+        });
+
+        console.log(`Payment period display updated to ${days} days`);
+    }
+
+    // Get preview of generated amounts for user feedback
+    getGeneratedAmountPreview() {
+        const amounts = window.ConfigManager ? window.ConfigManager.generatePaymentAmounts() : [25, 50, 75, 100];
+        const preview = amounts.slice(0, 5).map(amt => `₹${amt}`).join(', ');
+        return amounts.length > 5 ? `${preview}...` : preview;
+    }
+
+    // Enhanced reset settings with better UX
     resetSettings() {
         this.notifications.showConfirmation(
-            'Are you sure you want to reset all settings to default values?',
+            'Are you sure you want to reset all settings to default values?\n\nThis will:\n• Set increment to ₹25\n• Set payment period to 4 days\n• Set maximum amount to ₹1000\n• Regenerate payment options',
             () => {
-                if (window.ConfigManager) {
-                    window.ConfigManager.resetToDefaults();
-                    this.loadSettings();
-                    this.generatePaymentButtons();
-                    this.updateDashboard();
-                    this.notifications.showToast('Settings reset to defaults', 'success');
+                try {
+                    if (window.ConfigManager) {
+                        window.ConfigManager.resetToDefaults();
+                        this.loadSettings();
+                        
+                        // Show loading for regeneration
+                        const loadingToast = this.notifications.showLoadingToast('Resetting to defaults...');
+                        
+                        setTimeout(() => {
+                            this.generatePaymentButtons();
+                            this.updateDashboard();
+                            this.updatePaymentPeriodDisplay(4);
+                            
+                            // Clear validation messages
+                            document.querySelectorAll('.validation-error, .validation-warning, .validation-success, .validation-summary').forEach(el => el.remove());
+                            
+                            // Reset input styles
+                            document.querySelectorAll('.settings-input').forEach(input => {
+                                input.classList.remove('error', 'warning', 'success');
+                                input.style.borderColor = '';
+                                input.style.boxShadow = '';
+                            });
+                            
+                            if (loadingToast) {
+                                this.notifications.updateLoadingToast(loadingToast, 'Settings reset to defaults!', 'success');
+                            }
+                            
+                            this.notifications.showToast('🔄 All settings reset to default values', 'success', 5000);
+                        }, 1000);
+                    }
+                } catch (error) {
+                    console.error('Error resetting settings:', error);
+                    this.notifications.showToast('Error resetting settings: ' + error.message, 'error');
                 }
             }
         );
@@ -809,12 +1004,14 @@ class RServiceTracker {
         
         if (progressTextEl) {
             const progress = this.currentStats?.progressToPayday || 0;
-            progressTextEl.textContent = `${progress}/4 days`;
+            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+            progressTextEl.textContent = `${progress}/${paymentThreshold} days`;
         }
         
         if (progressFillEl) {
             const progress = this.currentStats?.progressToPayday || 0;
-            const progressPercent = (progress / 4) * 100;
+            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+            const progressPercent = (progress / paymentThreshold) * 100;
             progressFillEl.style.width = `${progressPercent}%`;
         }
         
@@ -892,12 +1089,14 @@ class RServiceTracker {
                 }
                 if (progressTextEl) {
                     const progress = this.currentStats?.progressToPayday || 0;
-                    progressTextEl.textContent = `${progress}/4 days`;
+                    const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+                    progressTextEl.textContent = `${progress}/${paymentThreshold} days`;
                 }
                 
                 if (progressFillEl) {
                     const progress = this.currentStats?.progressToPayday || 0;
-                    const progressPercent = (progress / 4) * 100;
+                    const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+                    const progressPercent = (progress / paymentThreshold) * 100;
                     progressFillEl.style.width = `${progressPercent}%`;
                     progressFillEl.style.backgroundColor = 'var(--primary)'; // Normal color
                 }
@@ -907,12 +1106,14 @@ class RServiceTracker {
             // Fallback to normal progress
             if (progressTextEl) {
                 const progress = this.currentStats?.progressToPayday || 0;
-                progressTextEl.textContent = `${progress}/4 days`;
+                const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+                progressTextEl.textContent = `${progress}/${paymentThreshold} days`;
             }
             
             if (progressFillEl) {
                 const progress = this.currentStats?.progressToPayday || 0;
-                const progressPercent = (progress / 4) * 100;
+                const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+                const progressPercent = (progress / paymentThreshold) * 100;
                 progressFillEl.style.width = `${progressPercent}%`;
                 progressFillEl.style.backgroundColor = 'var(--primary)';
             }
@@ -994,9 +1195,10 @@ class RServiceTracker {
             const advanceStatus = await this.db.getAdvancePaymentStatus();
             
             // Show paid button if:
-            // 1. There are 4+ unpaid work days for regular payment, OR
+            // 1. There are enough unpaid work days for regular payment (based on settings), OR
             // 2. There are any unpaid work days and there's an outstanding advance to pay back
-            const shouldShowPaidBtn = this.pendingUnpaidDates.length >= 4 || 
+            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+            const shouldShowPaidBtn = this.pendingUnpaidDates.length >= paymentThreshold || 
                                     (this.pendingUnpaidDates.length > 0 && advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0);
             
             if (shouldShowPaidBtn) {

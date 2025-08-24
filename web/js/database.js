@@ -362,8 +362,9 @@ class DatabaseManager {
                 record.status === 'completed' && !this.isRecordPaid(record, payments)
             ).length;
             
-            // Calculate progress: if we have 4 or more unpaid days, show 4/4, otherwise show actual count
-            const progressToPayday = unpaidWork >= 4 ? 4 : unpaidWork;
+            // Calculate progress: if we have enough unpaid days, show threshold/threshold, otherwise show actual count
+            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+            const progressToPayday = unpaidWork >= paymentThreshold ? paymentThreshold : unpaidWork;
             
             return {
                 totalWorked,
@@ -373,7 +374,7 @@ class DatabaseManager {
                 currentStreak,
                 progressToPayday,
                 unpaidWork,
-                canGetPaid: unpaidWork >= 4
+                canGetPaid: unpaidWork >= paymentThreshold
             };
         } catch (error) {
             console.error('Error getting earnings stats:', error);
