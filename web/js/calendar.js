@@ -263,7 +263,7 @@ class CalendarManager {
             indicators.appendChild(workIndicator);
 
             if (isPaid) {
-                const payment = this.getPaymentForDate(dateString);
+                const payment = this.getPaymentForDate(workRecord.date);
                 // Calculate the actual payment amount for this specific date
                 const paymentAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : 25;
                 
@@ -366,18 +366,21 @@ class CalendarManager {
                         <button class="force-paid-btn" data-date="${dateString}" style="
                             margin-top: 1rem;
                             width: 100%;
-                            padding: 0.5rem;
-                            background: var(--success);
+                            padding: 0.75rem;
+                            background: linear-gradient(135deg, var(--success), #45a049);
                             color: white;
                             border: none;
                             border-radius: var(--border-radius);
                             cursor: pointer;
                             font-family: var(--font-family);
-                            font-weight: 500;
+                            font-weight: 600;
+                            font-size: 0.9rem;
                             display: flex;
                             align-items: center;
                             justify-content: center;
                             gap: 0.5rem;
+                            box-shadow: var(--shadow-light);
+                            transition: all var(--transition-fast);
                         ">
                             <i class="fas fa-hand-holding-usd"></i>
                             Force Mark as Paid
@@ -669,7 +672,7 @@ class CalendarManager {
 
             // Show success notification first
             if (window.app && window.app.notifications) {
-                window.app.notifications.showToast(`✅ Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
+                window.app.notifications.showToast(`Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
                 try {
                     window.app.notifications.playSound('paid');
                 } catch (soundError) {
@@ -679,8 +682,17 @@ class CalendarManager {
 
             // Update calendar and notify main app with better error handling
             try {
+                // Force reload data from database
                 await this.loadData();
+                
+                // Clear and re-render the calendar
+                const gridElement = document.getElementById('calendarGrid');
+                if (gridElement) {
+                    gridElement.innerHTML = '';
+                }
                 this.render();
+                
+                console.log('Calendar refreshed after force payment');
 
                 // Trigger update in main app if available
                 if (window.app && typeof window.app.updateDashboard === 'function') {
@@ -702,9 +714,15 @@ class CalendarManager {
             } catch (renderError) {
                 console.error('Error updating calendar after force payment:', renderError);
                 // Don't throw - the payment was successful, just refresh manually
-                setTimeout(() => {
+                setTimeout(async () => {
                     try {
-                        this.loadData().then(() => this.render());
+                        await this.loadData();
+                        const gridElement = document.getElementById('calendarGrid');
+                        if (gridElement) {
+                            gridElement.innerHTML = '';
+                        }
+                        this.render();
+                        console.log('Calendar force refreshed after error');
                     } catch (retryError) {
                         console.error('Retry render failed:', retryError);
                     }
@@ -752,16 +770,21 @@ calendarStyle.textContent = `
     
     .day-details {
         text-align: center;
+        padding: 1rem;
     }
     
     .day-details h3 {
         color: var(--primary);
         margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
     }
     
     .day-details .date {
         color: var(--text-secondary);
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+        font-weight: 500;
     }
     
     .work-status, .payment-status {

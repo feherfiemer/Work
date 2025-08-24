@@ -705,6 +705,21 @@ body {
   box-shadow: var(--shadow-light);
   border: 1px solid var(--border);
   animation: fadeInUp var(--transition-medium);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+/* Calendar specific view styling */
+#calendarView {
+  padding: 1rem;
+}
+
+#calendarView .calendar-container {
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  background: var(--surface-alt);
 }
 
 .view-header {
@@ -788,6 +803,8 @@ body {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  position: relative;
+  min-height: 400px;
 }
 
 .calendar-container::-webkit-scrollbar {
@@ -812,6 +829,8 @@ body {
   overflow: hidden;
   width: 100%;
   max-width: 100%;
+  min-width: 700px;
+  margin: 0 auto;
 }
 
 .calendar-cell {
@@ -824,6 +843,11 @@ body {
   line-height: 1.3;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
 }
 
 .calendar-cell:hover {
@@ -1102,6 +1126,14 @@ body {
     gap: 1rem;
   }
   
+  .calendar-grid {
+    min-width: 600px;
+  }
+  
+  #calendarView {
+    padding: 1rem 0.5rem;
+  }
+  
   .charts-grid {
     grid-template-columns: 1fr;
   }
@@ -1151,7 +1183,11 @@ body {
   }
   
   .calendar-grid {
-    min-width: 260px;
+    min-width: 320px;
+  }
+  
+  .calendar-container {
+    padding: 0.25rem;
   }
   
   .quick-actions {

@@ -632,7 +632,7 @@ class NotificationManager {
                     const paydayAmount = Math.floor(unpaidWork / 4) * 100;
                     const extraDays = unpaidWork % 4;
                     
-                    this.showNotification('💰 Daily Payment Reminder - R-Service Tracker', {
+                    this.showNotification('Daily Payment Reminder - R-Service Tracker', {
                         body: `Good morning! You have ${unpaidWork} unpaid work days (₹${unpaidWork * 25}). ${paydayAmount > 0 ? `You can collect ₹${paydayAmount} right now!` : ''} ${extraDays > 0 ? `Plus ${extraDays} extra days pending.` : ''}`,
                         tag: 'payment-reminder-7am',
                         requireInteraction: true,
@@ -676,8 +676,8 @@ class NotificationManager {
                         icon: '/assets/icon-192.png',
                         vibrate: [200, 100, 200],
                         actions: [
-                            { action: 'open-app', title: '✅ Mark Complete' },
-                            { action: 'dismiss', title: '💭 Later' }
+                            { action: 'open-app', title: 'Mark Complete' },
+                            { action: 'dismiss', title: 'Later' }
                         ],
                         onClick: () => {
                             window.focus();
