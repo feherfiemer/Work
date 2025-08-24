@@ -119,16 +119,14 @@ class CalendarManager {
             dayHeader.className = 'calendar-header-cell';
             dayHeader.textContent = dayName;
             dayHeader.style.cssText = `
-                padding: 1rem;
-                background: linear-gradient(135deg, var(--surface-alt), var(--surface));
-                font-weight: 700;
+                padding: 0.75rem;
+                background: var(--surface);
+                font-weight: 600;
                 text-align: center;
-                color: var(--primary);
-                border-bottom: 2px solid var(--primary);
-                border-radius: 8px 8px 0 0;
-                text-transform: uppercase;
-                font-size: 0.85rem;
-                letter-spacing: 1px;
+                color: var(--text-primary);
+                border-bottom: 1px solid var(--primary);
+                border-radius: 6px 6px 0 0;
+                font-size: 0.8rem;
             `;
             fragment.appendChild(dayHeader);
         });
@@ -208,15 +206,13 @@ class CalendarManager {
             this.showDayDetails(cellDate, workRecord, isPaid);
         });
 
-        // Add hover effect
+        // Add hover effect (using CSS instead of JS for better performance)
         cell.addEventListener('mouseenter', () => {
-            cell.style.transform = 'scale(1.05)';
-            cell.style.zIndex = '10';
+            cell.classList.add('calendar-cell-hover');
         });
 
         cell.addEventListener('mouseleave', () => {
-            cell.style.transform = 'scale(1)';
-            cell.style.zIndex = '1';
+            cell.classList.remove('calendar-cell-hover');
         });
 
         return cell;
@@ -766,16 +762,14 @@ window.CalendarManager = CalendarManager;
 const calendarStyle = document.createElement('style');
 calendarStyle.textContent = `
     .calendar-header-cell {
-        padding: 1rem;
-        background: linear-gradient(135deg, var(--surface-alt), var(--surface));
-        font-weight: 700;
+        padding: 0.75rem;
+        background: var(--surface);
+        font-weight: 600;
         text-align: center;
-        color: var(--primary);
-        border-bottom: 2px solid var(--primary);
-        border-radius: 8px 8px 0 0;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 1px;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--primary);
+        border-radius: 6px 6px 0 0;
+        font-size: 0.8rem;
     }
     
     .day-details {

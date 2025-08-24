@@ -400,7 +400,8 @@ class DatabaseManager {
             });
             
             // Only unpaid work counts towards paying back the advance
-            const workCompletedForAdvance = Math.min(unpaidWork.length, workRequiredForAdvance);
+            // But we should show progress for work done, even if it's not yet paid
+            const workCompletedForAdvance = unpaidWork.length;
             const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - unpaidWork.length);
             
             return {

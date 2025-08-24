@@ -10,6 +10,10 @@ class RServiceTracker {
         this.currentStats = {};
         this.isInitialized = false;
         this.pendingUnpaidDates = [];
+        this.selectedPaymentAmount = null;
+        this.currentColor = 'blue';
+        this.currentMode = 'light';
+        this.updateDashboardTimeout = null;
         
         this.init();
     }
@@ -132,20 +136,53 @@ class RServiceTracker {
 
     // Load theme
     loadTheme() {
-        const savedTheme = this.utils.getTheme();
-        this.utils.setTheme(savedTheme);
-        this.updateThemeButtons(savedTheme);
+        // Load saved color and mode, or use defaults
+        this.currentColor = localStorage.getItem('selected-color') || 'blue';
+        this.currentMode = localStorage.getItem('selected-mode') || 'light';
+        
+        // Update UI to reflect current selections
+        this.updateColorSelection(this.currentColor);
+        this.updateModeSelection(this.currentMode);
+        
+        // Apply the theme
+        this.applyTheme();
     }
 
-    // Update theme buttons
-    updateThemeButtons(activeTheme) {
-        const themeButtons = document.querySelectorAll('.theme-btn');
-        themeButtons.forEach(btn => {
+    // Update color selection
+    updateColorSelection(color) {
+        this.currentColor = color;
+        const colorButtons = document.querySelectorAll('.color-btn');
+        colorButtons.forEach(btn => {
             btn.classList.remove('active');
-            if (btn.dataset.theme === activeTheme) {
+            if (btn.dataset.color === color) {
                 btn.classList.add('active');
             }
         });
+        // Save to localStorage
+        localStorage.setItem('selected-color', color);
+    }
+
+    // Update mode selection
+    updateModeSelection(mode) {
+        this.currentMode = mode;
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        modeButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('active');
+            }
+        });
+        // Save to localStorage
+        localStorage.setItem('selected-mode', mode);
+    }
+
+    // Apply current theme
+    applyTheme() {
+        const theme = `${this.currentColor}-${this.currentMode}`;
+        this.utils.setTheme(theme);
+        if (this.charts) {
+            this.charts.updateCharts(); // Update charts with new theme colors
+        }
     }
 
     // Setup event listeners
@@ -179,14 +216,23 @@ class RServiceTracker {
             });
         }
 
-        // Theme buttons
-        const themeButtons = document.querySelectorAll('.theme-btn');
-        themeButtons.forEach(btn => {
+        // Color buttons
+        const colorButtons = document.querySelectorAll('.color-btn');
+        colorButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                const theme = btn.dataset.theme;
-                this.utils.setTheme(theme);
-                this.updateThemeButtons(theme);
-                this.charts.updateCharts(); // Update charts with new theme colors
+                const color = btn.dataset.color;
+                this.updateColorSelection(color);
+                this.applyTheme();
+            });
+        });
+
+        // Mode buttons
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                this.updateModeSelection(mode);
+                this.applyTheme();
             });
         });
 
@@ -513,8 +559,8 @@ class RServiceTracker {
                     } else if (safeWorkCompleted >= safeWorkRequired) {
                         finalPercent = 100; // Full if work is complete or more
                     } else {
-                        // Show proportional progress, but ensure minimum visibility
-                        finalPercent = Math.max(progressPercent, 8); // Minimum 8% visibility when work is started
+                        // Show proportional progress, ensure it shows when work is done
+                        finalPercent = Math.max(progressPercent, 10); // Minimum 10% visibility when work is started
                     }
                     
                     progressFillEl.style.width = `${finalPercent}%`;
@@ -796,6 +842,9 @@ class RServiceTracker {
             // Clear selections
             paymentButtons.forEach(btn => btn.classList.remove('selected'));
             this.selectedPaymentAmount = null;
+            // Hide payment summary
+            const summaryEl = document.getElementById('paymentSummary');
+            if (summaryEl) summaryEl.style.display = 'none';
         };
 
         // Remove existing listeners to prevent duplicates
@@ -830,14 +879,41 @@ class RServiceTracker {
                 // Update payment summary
                 this.updatePaymentSummary(amount);
                 
-                // Auto-process payment after selection with confirmation
-                setTimeout(() => {
-                    if (this.selectedPaymentAmount === amount) {
-                        this.showPaymentConfirmation(amount, closeModal);
-                    }
-                }, 800);
+                // Don't auto-process, wait for confirmation button
             });
         });
+
+        // Setup confirmation buttons
+        const confirmBtn = document.getElementById('confirmPaymentBtn');
+        const cancelBtn = document.getElementById('cancelPaymentBtn');
+        
+        if (confirmBtn) {
+            // Remove existing listeners to prevent duplicates
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            
+            newConfirmBtn.addEventListener('click', () => {
+                if (this.selectedPaymentAmount && this.selectedPaymentAmount > 0) {
+                    this.processPayment(this.selectedPaymentAmount, closeModal);
+                } else {
+                    this.notifications.showToast('Please select a payment amount first', 'warning');
+                }
+            });
+        }
+        
+        if (cancelBtn) {
+            // Remove existing listeners to prevent duplicates
+            const newCancelBtn = cancelBtn.cloneNode(true);
+            cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+            
+            newCancelBtn.addEventListener('click', () => {
+                // Clear selection and hide summary
+                document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
+                this.selectedPaymentAmount = null;
+                const summaryEl = document.getElementById('paymentSummary');
+                if (summaryEl) summaryEl.style.display = 'none';
+            });
+        }
     }
 
     // Update payment summary display
@@ -857,9 +933,8 @@ class RServiceTracker {
             paymentTypeEl.style.color = isAdvance ? 'var(--warning)' : 'var(--success)';
             workDaysCoveredEl.textContent = `${workDaysCovered} days`;
             
-            // Show summary with animation
+            // Show summary
             summaryEl.style.display = 'block';
-            summaryEl.classList.add('animate-slide-up');
         }
     }
 
