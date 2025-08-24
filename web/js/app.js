@@ -302,20 +302,7 @@ class RServiceTracker {
             
             if (button && view) {
                 button.addEventListener('click', () => {
-                    // Animate view closing
-                    view.style.opacity = '0';
-                    view.style.transform = 'translateY(20px)';
-                    
-                    setTimeout(() => {
-                        view.style.display = 'none';
-                        view.style.opacity = '1';
-                        view.style.transform = 'translateY(0)';
-                        
-                        // Show dashboard with animation
-                        const dashboard = document.getElementById('dashboard');
-                        dashboard.style.display = 'block';
-                        dashboard.classList.add('animate-fade-scale');
-                    }, 200);
+                    this.closeCurrentView(view);
                 });
             }
         });
@@ -340,6 +327,47 @@ class RServiceTracker {
                     aboutModal.classList.remove('show');
                 }
             });
+        }
+    }
+
+    // Close current view and show dashboard
+    closeCurrentView(view) {
+        try {
+            // Hide all views first
+            const allViews = ['balanceSheetView', 'analyticsView', 'calendarView'];
+            allViews.forEach(viewId => {
+                const viewElement = document.getElementById(viewId);
+                if (viewElement) {
+                    viewElement.style.display = 'none';
+                    viewElement.style.opacity = '1';
+                    viewElement.style.transform = 'translateY(0)';
+                }
+            });
+
+            // Show dashboard with proper reset
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard) {
+                dashboard.style.display = 'block';
+                dashboard.style.opacity = '1';
+                dashboard.style.transform = 'translateY(0)';
+                
+                // Remove any existing animation classes
+                dashboard.classList.remove('animate-fade-scale', 'animate-slide-up', 'animate-bounce-in');
+                
+                // Add fresh animation
+                setTimeout(() => {
+                    dashboard.classList.add('animate-fade-scale');
+                }, 50);
+            }
+        } catch (error) {
+            console.error('Error closing view:', error);
+            // Fallback - just show dashboard
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard) {
+                dashboard.style.display = 'block';
+                dashboard.style.opacity = '1';
+                dashboard.style.transform = 'translateY(0)';
+            }
         }
     }
 

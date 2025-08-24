@@ -1303,103 +1303,71 @@ body {
   }
 }
 
-/* ===== PREMIUM BUTTON EFFECTS ===== */
+/* ===== SIMPLIFIED BUTTON EFFECTS ===== */
 .btn, button {
-  position: relative;
-  overflow: hidden;
-  transform-origin: center;
   transition: all var(--transition-fast);
-}
-
-.btn:active, button:active {
-  transform: scale(0.95);
-}
-
-.btn::before, button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.btn:active::before, button:active::before {
-  width: 300px;
-  height: 300px;
-}
-
-.btn-primary:active::before {
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.btn-success:active::before {
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.btn-secondary:active::before {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-/* Premium gradient effects */
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  box-shadow: var(--shadow-light);
+  border: 2px solid transparent;
   position: relative;
-  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: 2px solid var(--primary);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--primary-light), var(--primary));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-  animation: pulseGlow 2s infinite;
+  background: var(--primary-light);
+  border: 2px solid var(--primary-light);
+  outline: 2px solid rgba(var(--primary-rgb), 0.3);
+  outline-offset: 2px;
 }
 
 .btn-primary:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.4);
+  background: var(--primary-dark);
+  border: 2px solid var(--primary-dark);
+  outline: 2px solid rgba(var(--primary-rgb), 0.5);
+  outline-offset: 1px;
 }
 
 .btn-success {
-  background: linear-gradient(135deg, var(--success), #45a049);
-  box-shadow: var(--shadow-light);
-  position: relative;
-  overflow: hidden;
+  background: var(--success);
+  color: white;
+  border: 2px solid var(--success);
 }
 
 .btn-success:hover {
-  background: linear-gradient(135deg, #5cbf60, var(--success));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
+  background: #5cbf60;
+  border: 2px solid #5cbf60;
+  outline: 2px solid rgba(76, 175, 80, 0.3);
+  outline-offset: 2px;
 }
 
 .btn-success:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+  background: #45a049;
+  border: 2px solid #45a049;
+  outline: 2px solid rgba(76, 175, 80, 0.5);
+  outline-offset: 1px;
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, var(--surface-alt), var(--border));
-  box-shadow: var(--shadow-light);
-  position: relative;
-  overflow: hidden;
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 2px solid var(--border);
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(135deg, var(--border), var(--surface-alt));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
+  background: var(--surface-alt);
+  border: 2px solid var(--primary);
+  outline: 2px solid rgba(var(--primary-rgb), 0.3);
+  outline-offset: 2px;
 }
 
 .btn-secondary:active {
-  transform: translateY(0) scale(0.98);
+  background: var(--border);
+  border: 2px solid var(--primary-dark);
+  outline: 2px solid rgba(var(--primary-rgb), 0.5);
+  outline-offset: 1px;
 }
 
 /* ===== ANIMATIONS ===== */
@@ -1533,39 +1501,31 @@ body {
   animation: slideInRight 0.5s ease-out;
 }
 
-/* Premium card effects */
+/* Optimized card effects */
 .card {
-  transition: all var(--transition-medium);
+  transition: box-shadow var(--transition-fast);
 }
 
 .card:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: var(--shadow-heavy);
+  box-shadow: var(--shadow-medium);
 }
 
-/* Action button premium effects */
+/* Optimized action button effects */
 .action-btn {
-  position: relative;
-  overflow: hidden;
   transition: all var(--transition-fast);
 }
 
 .action-btn:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: var(--shadow-medium);
+  box-shadow: var(--shadow-light);
 }
 
-.action-btn:active {
-  transform: translateY(0) scale(0.98);
-}
-
-/* Menu toggle animation */
+/* Optimized menu toggle */
 .menu-toggle {
-  transition: all var(--transition-fast);
+  transition: transform var(--transition-fast);
 }
 
 .menu-toggle:hover {
-  transform: rotate(90deg) scale(1.1);
+  transform: rotate(45deg);
 }
 
 /* Theme-based button effects */
@@ -1579,49 +1539,159 @@ body {
   background: radial-gradient(circle, rgba(255, 107, 53, 0.4) 0%, transparent 70%);
 }
 
-/* Enhanced calendar cell effects */
+/* Optimized calendar cell effects */
 .calendar-cell.worked {
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+  background: rgba(76, 175, 80, 0.1);
   border-left: 4px solid var(--success);
-  position: relative;
-}
-
-.calendar-cell.worked::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent, rgba(76, 175, 80, 0.1), transparent);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.calendar-cell.worked:hover::after {
-  opacity: 1;
 }
 
 .calendar-cell.paid {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
+  background: rgba(33, 150, 243, 0.1);
   border-left: 4px solid var(--info);
-  position: relative;
 }
 
-.calendar-cell.paid::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent, rgba(33, 150, 243, 0.1), transparent);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
+/* ===== ALIGNMENT AND LAYOUT FIXES ===== */
+.btn, button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  text-align: center;
+  line-height: 1.2;
+  min-height: 44px; /* Better touch target */
 }
 
-.calendar-cell.paid:hover::after {
-  opacity: 1;
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.action-btn i {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.action-btn span {
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: center;
+}
+
+.earnings-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  text-align: center;
+}
+
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+/* Calendar alignment fixes */
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-controls h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+  flex: 1;
+}
+
+.calendar-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+.day-indicators {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* View header alignment */
+.view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.view-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
 }
 
 /* ===== SCROLLBAR STYLING ===== */

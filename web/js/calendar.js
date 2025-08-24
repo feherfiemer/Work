@@ -282,19 +282,6 @@ class CalendarManager {
                     font-size: 0.75rem;
                 `;
                 indicators.appendChild(paidIndicator);
-
-                // Add payment amount text below indicators
-                const paymentText = document.createElement('div');
-                paymentText.className = 'payment-amount';
-                paymentText.textContent = `₹${paymentAmount}`;
-                paymentText.style.cssText = `
-                    font-size: 0.6rem;
-                    color: var(--info);
-                    font-weight: 600;
-                    text-align: center;
-                    margin-top: 0.2rem;
-                `;
-                content.appendChild(paymentText);
             }
         }
 
