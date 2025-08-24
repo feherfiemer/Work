@@ -401,24 +401,45 @@ class RServiceTracker {
                 if (progressTextEl) {
                     // Determine time unit based on work required
                     let timeUnit = 'days';
-                    let displayValue = safeWorkRequired;
+                    let completedDisplay = safeWorkCompleted;
+                    let requiredDisplay = safeWorkRequired;
                     
                     if (safeWorkRequired >= 365) {
                         timeUnit = 'years';
-                        displayValue = Math.ceil(safeWorkRequired / 365);
+                        completedDisplay = (safeWorkCompleted / 365).toFixed(1);
+                        requiredDisplay = (safeWorkRequired / 365).toFixed(1);
                     } else if (safeWorkRequired >= 30) {
                         timeUnit = 'months';
-                        displayValue = Math.ceil(safeWorkRequired / 30);
+                        completedDisplay = (safeWorkCompleted / 30).toFixed(1);
+                        requiredDisplay = (safeWorkRequired / 30).toFixed(1);
                     }
                     
-                    progressTextEl.textContent = `${safeWorkCompleted}/${safeWorkRequired} ${timeUnit}`;
+                    // For days, show whole numbers; for months/years, show decimals if needed
+                    if (timeUnit === 'days') {
+                        progressTextEl.textContent = `${completedDisplay}/${requiredDisplay} ${timeUnit}`;
+                    } else {
+                        // Remove .0 from display for cleaner look
+                        const cleanCompleted = completedDisplay.replace('.0', '');
+                        const cleanRequired = requiredDisplay.replace('.0', '');
+                        progressTextEl.textContent = `${cleanCompleted}/${cleanRequired} ${timeUnit}`;
+                    }
                 }
                 
                 if (progressFillEl) {
-                    // Make sure the progress is visible if work is completed
-                    const finalPercent = Math.max(progressPercent, safeWorkCompleted > 0 ? 5 : 0); // Minimum 5% if any work done
+                    // Ensure progress bar shows completion properly
+                    let finalPercent;
+                    if (safeWorkCompleted === 0) {
+                        finalPercent = 0; // Empty if no work done
+                    } else if (safeWorkCompleted >= safeWorkRequired) {
+                        finalPercent = 100; // Full if work is complete or more
+                    } else {
+                        // Show proportional progress, but ensure minimum visibility
+                        finalPercent = Math.max(progressPercent, 8); // Minimum 8% visibility when work is started
+                    }
+                    
                     progressFillEl.style.width = `${finalPercent}%`;
-                    progressFillEl.style.backgroundColor = 'var(--warning)'; // Orange color for advance
+                    // Change color to green if work is completed, orange otherwise
+                    progressFillEl.style.backgroundColor = safeWorkCompleted >= safeWorkRequired ? 'var(--success)' : 'var(--warning)';
                 }
             } else if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance === 0) {
                 // Advance fully paid back

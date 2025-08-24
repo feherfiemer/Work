@@ -479,15 +479,40 @@ class CalendarManager {
                     
                     if (!targetDate) {
                         console.error('No target date found');
+                        if (window.app && window.app.notifications) {
+                            window.app.notifications.showToast('Error: No date selected', 'error');
+                        }
                         return;
                     }
                     
+                    // Disable button to prevent double clicks
+                    forcePaidBtn.disabled = true;
+                    forcePaidBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    
+                    // Close modal first, then process payment
                     closeModal();
-                    await this.handleForcePaid(targetDate);
+                    
+                    // Add small delay to ensure modal is fully closed
+                    setTimeout(async () => {
+                        try {
+                            await this.handleForcePaid(targetDate);
+                        } catch (paymentError) {
+                            console.error('Error processing force payment:', paymentError);
+                            if (window.app && window.app.notifications) {
+                                window.app.notifications.showToast('Error processing force payment. Please try again.', 'error');
+                            }
+                        }
+                    }, 200);
+                    
                 } catch (error) {
                     console.error('Error in force paid button handler:', error);
                     if (window.app && window.app.notifications) {
                         window.app.notifications.showToast('Error processing force payment', 'error');
+                    }
+                    // Re-enable button on error
+                    if (forcePaidBtn) {
+                        forcePaidBtn.disabled = false;
+                        forcePaidBtn.innerHTML = '<i class="fas fa-hand-holding-usd"></i> Force Mark as Paid';
                     }
                 }
             });
@@ -645,17 +670,21 @@ class CalendarManager {
             // Show success notification first
             if (window.app && window.app.notifications) {
                 window.app.notifications.showToast(`✅ Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
-                window.app.notifications.playSound('paid');
+                try {
+                    window.app.notifications.playSound('paid');
+                } catch (soundError) {
+                    console.log('Sound playback failed (non-critical):', soundError);
+                }
             }
 
-            // Update calendar and notify main app
-            setTimeout(async () => {
-                try {
-                    await this.loadData();
-                    this.render();
+            // Update calendar and notify main app with better error handling
+            try {
+                await this.loadData();
+                this.render();
 
-                    // Trigger update in main app if available
-                    if (window.app && typeof window.app.updateDashboard === 'function') {
+                // Trigger update in main app if available
+                if (window.app && typeof window.app.updateDashboard === 'function') {
+                    try {
                         window.app.currentStats = await this.db.getEarningsStats();
                         window.app.updateDashboard();
                         await window.app.updatePendingUnpaidDates();
@@ -665,17 +694,29 @@ class CalendarManager {
                         if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
                             await window.app.charts.updateCharts();
                         }
+                    } catch (appUpdateError) {
+                        console.error('Error updating app components:', appUpdateError);
+                        // Don't throw - the payment was successful
                     }
-                } catch (updateError) {
-                    console.error('Error updating UI after force payment:', updateError);
                 }
-            }, 100);
+            } catch (renderError) {
+                console.error('Error updating calendar after force payment:', renderError);
+                // Don't throw - the payment was successful, just refresh manually
+                setTimeout(() => {
+                    try {
+                        this.loadData().then(() => this.render());
+                    } catch (retryError) {
+                        console.error('Retry render failed:', retryError);
+                    }
+                }, 500);
+            }
 
         } catch (error) {
             console.error('Error processing force payment:', error);
             if (window.app && window.app.notifications) {
                 window.app.notifications.showToast('Error processing force payment. Please try again.', 'error');
             }
+            throw error; // Re-throw to be handled by the caller
         }
     }
 
