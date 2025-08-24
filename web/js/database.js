@@ -432,17 +432,15 @@ class DatabaseManager {
             // Calculate work required to clear advance using unified system
             const workRequiredForAdvance = Math.ceil(totalAdvanceAmount / amounts.dailyWage);
             
-            // Find the most recent advance payment date
-            const latestAdvanceDate = new Date(Math.max(...advancePayments.map(p => new Date(p.date))));
-            
-            // Find all completed work done after the latest advance payment
-            const workAfterAdvance = workRecords.filter(record => {
-                return record.status === 'completed' && new Date(record.date) >= latestAdvanceDate;
+            // Find all unpaid work records (regardless of when advance was given)
+            const unpaidWork = workRecords.filter(record => {
+                return record.status === 'completed' && !this.isRecordPaid(record, payments);
             });
             
-            // All work done after advance counts towards paying it back
-            const workCompletedForAdvance = workAfterAdvance.length;
-            const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workAfterAdvance.length);
+            // Count all unpaid work as progress towards advance payment
+            // This ensures days worked before payment day count towards advance progress
+            const workCompletedForAdvance = unpaidWork.length;
+            const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - unpaidWork.length);
             
             return {
                 hasAdvancePayments: true,

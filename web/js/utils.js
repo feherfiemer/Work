@@ -129,8 +129,8 @@ class Utils {
         return dates;
     }
 
-    // PDF Export functionality
-    async exportToPDF(data, filename = 'R-Service-Tracker-Report.pdf') {
+    // Enhanced Professional PDF Export functionality
+    async exportToPDF(data, filename = 'R-Service-Tracker-Professional-Report.pdf') {
         try {
             console.log('PDF Export: Starting with data:', data);
             
@@ -151,268 +151,52 @@ class Utils {
             const doc = new jsPDF();
             console.log('PDF Export: jsPDF document created');
             
-            // Set font
-            doc.setFont('helvetica');
+            // Premium color scheme
+            const colors = {
+                primary: [255, 107, 53],     // Orange
+                secondary: [33, 37, 41],     // Dark gray
+                success: [40, 167, 69],      // Green
+                warning: [255, 193, 7],      // Yellow
+                danger: [220, 53, 69],       // Red
+                light: [248, 249, 250],      // Light gray
+                muted: [117, 117, 117]       // Muted gray
+            };
             
-            // Header with logo-like design
-            doc.setFontSize(24);
-            doc.setTextColor(255, 107, 53); // Orange color
-            doc.text('R-Service Tracker', 20, 25);
+            // Professional header design
+            this.addProfessionalHeader(doc, colors);
             
-            doc.setFontSize(16);
-            doc.setTextColor(33, 33, 33);
-            doc.text('Professional Work & Payment Report', 20, 35);
+            let yPos = 70;
             
-            // Add a line under header
-            doc.setDrawColor(255, 107, 53);
-            doc.setLineWidth(0.5);
-            doc.line(20, 40, 190, 40);
+            // Company/Service information section
+            yPos = this.addCompanyInfo(doc, colors, yPos);
             
-            // Report metadata
-            doc.setFontSize(10);
-            doc.setTextColor(117, 117, 117);
-            doc.text(`Report Generated: ${this.formatDateTime(new Date())}`, 20, 48);
-            doc.text(`Report Period: ${data.summary ? this.getReportPeriod(data) : 'All Time'}`, 20, 53);
-            
-            let yPos = 65;
-            
-            // Summary section with enhanced design
+            // Executive Summary with KPIs
             if (data.summary) {
-                // Section header with background
-                doc.setFillColor(248, 249, 250);
-                doc.rect(15, yPos - 5, 180, 22, 'F');
-                
-                doc.setFontSize(16);
-                doc.setTextColor(33, 33, 33);
-                doc.setFont('helvetica', 'bold');
-                doc.text('📊 Financial Summary', 20, yPos + 5);
-                yPos += 20;
-                
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(11);
-                
-                // Create two columns for better organization
-                const leftColumn = [
-                    `Days Worked: ${data.summary.totalWorked} days`,
-                    `Total Earnings: ${this.formatCurrencyForPDF(data.summary.totalEarned)}`,
-                    `Current Streak: ${data.summary.currentStreak} days`
-                ];
-                
-                const rightColumn = [
-                    `Amount Paid: ${this.formatCurrencyForPDF(data.summary.totalPaid)}`,
-                    `Outstanding Balance: ${this.formatCurrencyForPDF(data.summary.currentBalance)}`,
-                    `Daily Rate: ${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} rupees`
-                ];
-                
-                // Left column
-                leftColumn.forEach((item, index) => {
-                    doc.text(item, 25, yPos + (index * 8));
-                });
-                
-                // Right column
-                rightColumn.forEach((item, index) => {
-                    doc.text(item, 110, yPos + (index * 8));
-                });
-                
-                yPos += 30;
-                
-                // Add performance indicators if available
-                if (data.summary.currentBalance > 0) {
-                    doc.setTextColor(220, 53, 69); // Red for outstanding balance
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`⚠️ Outstanding: ${this.formatCurrencyForPDF(data.summary.currentBalance)}`, 25, yPos);
-                    yPos += 10;
-                } else if (data.summary.currentBalance < 0) {
-                    doc.setTextColor(40, 167, 69); // Green for advance
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`✅ Advance Paid: ${this.formatCurrencyForPDF(Math.abs(data.summary.currentBalance))}`, 25, yPos);
-                    yPos += 10;
-                }
-                
-                doc.setTextColor(33, 33, 33);
-                doc.setFont('helvetica', 'normal');
-                yPos += 5;
+                yPos = this.addExecutiveSummary(doc, colors, data.summary, yPos);
             }
             
-            // Work records section with enhanced design
+            // Financial Analytics Section
+            if (data.summary) {
+                yPos = this.addFinancialAnalytics(doc, colors, data.summary, yPos);
+            }
+            
+            // Detailed Work Records
             if (data.workRecords && data.workRecords.length > 0) {
-                // Section header with background
-                doc.setFillColor(248, 249, 250);
-                doc.rect(15, yPos - 5, 180, 15, 'F');
-                
-                doc.setFontSize(16);
-                doc.setTextColor(33, 33, 33);
-                doc.setFont('helvetica', 'bold');
-                doc.text('📅 Work Records Detail', 20, yPos + 5);
-                yPos += 20;
-                
-                // Enhanced table headers with background
-                doc.setFillColor(240, 240, 240);
-                doc.rect(15, yPos - 3, 180, 12, 'F');
-                
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(33, 33, 33);
-                doc.text('Date', 20, yPos + 5);
-                doc.text('Day', 55, yPos + 5);
-                doc.text('Status', 85, yPos + 5);
-                doc.text('Earnings', 120, yPos + 5);
-                doc.text('Payment Status', 155, yPos + 5);
-                yPos += 15;
-                
-                // Enhanced work records with alternating colors
-                doc.setFont('helvetica', 'normal');
-                data.workRecords.forEach((record, index) => {
-                    if (yPos > 270) { // New page if needed
-                        doc.addPage();
-                        yPos = 20;
-                        
-                        // Repeat headers on new page
-                        doc.setFillColor(240, 240, 240);
-                        doc.rect(15, yPos - 3, 180, 12, 'F');
-                        doc.setFont('helvetica', 'bold');
-                        doc.text('Date', 20, yPos + 5);
-                        doc.text('Day', 55, yPos + 5);
-                        doc.text('Status', 85, yPos + 5);
-                        doc.text('Earnings', 120, yPos + 5);
-                        doc.text('Payment Status', 155, yPos + 5);
-                        yPos += 15;
-                        doc.setFont('helvetica', 'normal');
-                    }
-                    
-                    // Alternating row colors
-                    if (index % 2 === 0) {
-                        doc.setFillColor(252, 252, 252);
-                        doc.rect(15, yPos - 2, 180, 8, 'F');
-                    }
-                    
-                    const date = new Date(record.date);
-                    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                    
-                    // Set colors based on status
-                    if (record.status === 'completed') {
-                        doc.setTextColor(40, 167, 69); // Green for completed
-                    } else {
-                        doc.setTextColor(220, 53, 69); // Red for not completed
-                    }
-                    
-                    doc.text(this.formatDateShort(record.date), 20, yPos + 3);
-                    doc.text(dayName, 55, yPos + 3);
-                    doc.text(record.status === 'completed' ? '✅ Completed' : '❌ Not Done', 85, yPos + 3);
-                    
-                    // Reset color for earnings
-                    doc.setTextColor(33, 33, 33);
-                    doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '0 rupees', 120, yPos + 3);
-                    
-                    // Payment status with color
-                    if (record.paid) {
-                        doc.setTextColor(40, 167, 69);
-                        doc.text('✅ Paid', 155, yPos + 3);
-                    } else {
-                        doc.setTextColor(255, 193, 7);
-                        doc.text('⏳ Pending', 155, yPos + 3);
-                    }
-                    
-                    doc.setTextColor(33, 33, 33);
-                    yPos += 10;
-                });
-                
-                yPos += 10;
+                yPos = this.addDetailedWorkRecords(doc, colors, data.workRecords, yPos);
             }
             
-            // Payments section with enhanced design
+            // Payment History with Analysis
             if (data.payments && data.payments.length > 0) {
-                if (yPos > 200) {
-                    doc.addPage();
-                    yPos = 20;
-                }
-                
-                // Section header with background
-                doc.setFillColor(248, 249, 250);
-                doc.rect(15, yPos - 5, 180, 15, 'F');
-                
-                doc.setFontSize(16);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(33, 33, 33);
-                doc.text('💰 Payment History', 20, yPos + 5);
-                yPos += 20;
-                
-                // Enhanced payment table headers with background
-                doc.setFillColor(240, 240, 240);
-                doc.rect(15, yPos - 3, 180, 12, 'F');
-                
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Payment Date', 20, yPos + 5);
-                doc.text('Amount', 70, yPos + 5);
-                doc.text('Work Days', 115, yPos + 5);
-                doc.text('Type', 155, yPos + 5);
-                yPos += 15;
-                
-                // Payment records with enhanced styling
-                doc.setFont('helvetica', 'normal');
-                data.payments.forEach((payment, index) => {
-                    if (yPos > 270) {
-                        doc.addPage();
-                        yPos = 20;
-                        
-                        // Repeat headers on new page
-                        doc.setFillColor(240, 240, 240);
-                        doc.rect(15, yPos - 3, 180, 12, 'F');
-                        doc.setFont('helvetica', 'bold');
-                        doc.text('Payment Date', 20, yPos + 5);
-                        doc.text('Amount', 70, yPos + 5);
-                        doc.text('Work Days', 115, yPos + 5);
-                        doc.text('Type', 155, yPos + 5);
-                        yPos += 15;
-                        doc.setFont('helvetica', 'normal');
-                    }
-                    
-                    // Alternating row colors
-                    if (index % 2 === 0) {
-                        doc.setFillColor(252, 252, 252);
-                        doc.rect(15, yPos - 2, 180, 8, 'F');
-                    }
-                    
-                    doc.setTextColor(33, 33, 33);
-                    doc.text(this.formatDateShort(payment.paymentDate), 20, yPos + 3);
-                    
-                    // Color code amount based on type
-                    if (payment.isAdvance) {
-                        doc.setTextColor(255, 193, 7); // Orange for advance
-                    } else {
-                        doc.setTextColor(40, 167, 69); // Green for regular
-                    }
-                    doc.text(this.formatCurrencyForPDF(payment.amount), 70, yPos + 3);
-                    
-                    doc.setTextColor(33, 33, 33);
-                    doc.text(`${payment.workDates.length} days`, 115, yPos + 3);
-                    
-                    // Payment type with appropriate color
-                    if (payment.isAdvance) {
-                        doc.setTextColor(255, 193, 7);
-                        doc.text('🔄 Advance', 155, yPos + 3);
-                    } else {
-                        doc.setTextColor(40, 167, 69);
-                        doc.text('✅ Regular', 155, yPos + 3);
-                    }
-                    
-                    doc.setTextColor(33, 33, 33);
-                    yPos += 10;
-                });
-                
-                yPos += 10;
+                yPos = this.addPaymentHistory(doc, colors, data.payments, yPos);
             }
             
-            // Footer
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(117, 117, 117);
-                doc.text(`Page ${i} of ${pageCount}`, 20, 290);
-                doc.text('Generated by R-Service Tracker v1.0.0', 140, 290);
+            // Performance Metrics
+            if (data.summary) {
+                yPos = this.addPerformanceMetrics(doc, colors, data.summary, yPos);
             }
+            
+            // Professional footer with page numbers and metadata
+            this.addProfessionalFooter(doc, colors, data);
             
             // Save the PDF
             console.log('PDF Export: Saving PDF with filename:', filename);
@@ -422,6 +206,501 @@ class Utils {
         } catch (error) {
             console.error('Error exporting PDF:', error);
             throw error; // Re-throw to allow proper error handling
+        }
+    }
+
+    // Professional header with branding
+    addProfessionalHeader(doc, colors) {
+        // Premium gradient background effect (simulated with rectangles)
+        doc.setFillColor(...colors.primary);
+        doc.rect(0, 0, 210, 45, 'F');
+        
+        // Company logo area (icon representation)
+        doc.setFontSize(32);
+        doc.setTextColor(255, 255, 255);
+        doc.text('R', 15, 25);
+        
+        // Company name and tagline
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(28);
+        doc.text('R-Service Tracker', 25, 25);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(12);
+        doc.text('Professional Work & Payment Management System', 25, 33);
+        
+        // Report title
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text('COMPREHENSIVE WORK REPORT', 25, 42);
+        
+        // Decorative line
+        doc.setDrawColor(255, 255, 255);
+        doc.setLineWidth(1);
+        doc.line(15, 47, 195, 47);
+        
+        // Report metadata in header
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(255, 255, 255);
+        const now = new Date();
+        doc.text(`Generated: ${this.formatDateTime(now)}`, 145, 55);
+        doc.text(`Report ID: RST-${now.getTime().toString().slice(-8)}`, 145, 60);
+    }
+
+    // Company information section
+    addCompanyInfo(doc, colors, yPos) {
+        doc.setFillColor(...colors.light);
+        doc.rect(15, yPos - 5, 180, 25, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(...colors.secondary);
+        doc.text('🏢 SERVICE PROVIDER INFORMATION', 20, yPos + 5);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text('Service: R-Service Professional Work Tracking', 25, yPos + 13);
+        doc.text('System Version: 1.0.0 Professional', 25, yPos + 18);
+        doc.text(`Daily Rate: ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} per day`, 110, yPos + 13);
+        doc.text('Currency: Indian Rupees (₹)', 110, yPos + 18);
+        
+        return yPos + 35;
+    }
+
+    // Executive summary with key metrics
+    addExecutiveSummary(doc, colors, summary, yPos) {
+        if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        // Section header
+        doc.setFillColor(...colors.primary);
+        doc.rect(15, yPos - 5, 180, 15, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text('📊 EXECUTIVE SUMMARY', 20, yPos + 5);
+        yPos += 20;
+        
+        // Key metrics in cards
+        const metrics = [
+            { label: 'Total Days Worked', value: `${summary.totalWorked} days`, icon: '📅' },
+            { label: 'Total Earnings', value: this.formatCurrencyForPDF(summary.totalEarned), icon: '💰' },
+            { label: 'Amount Received', value: this.formatCurrencyForPDF(summary.totalPaid), icon: '✅' },
+            { label: 'Outstanding Balance', value: this.formatCurrencyForPDF(summary.currentBalance), icon: '⚖️' }
+        ];
+        
+        metrics.forEach((metric, index) => {
+            const x = 20 + (index % 2) * 90;
+            const y = yPos + Math.floor(index / 2) * 25;
+            
+            // Metric card background
+            doc.setFillColor(252, 252, 252);
+            doc.rect(x - 2, y - 3, 85, 20, 'F');
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${metric.icon} ${metric.label}`, x, y + 5);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.setTextColor(...colors.primary);
+            doc.text(metric.value, x, y + 13);
+        });
+        
+        return yPos + 60;
+    }
+
+    // Financial analytics section
+    addFinancialAnalytics(doc, colors, summary, yPos) {
+        if (yPos > 220) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        // Section header
+        doc.setFillColor(...colors.light);
+        doc.rect(15, yPos - 5, 180, 15, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(...colors.secondary);
+        doc.text('📈 FINANCIAL ANALYTICS', 20, yPos + 5);
+        yPos += 25;
+        
+        // Calculate additional metrics
+        const avgEarningsPerDay = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
+        const paymentEfficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
+        const workStreak = summary.currentStreak || 0;
+        
+        // Analytics grid
+        const analytics = [
+            { label: 'Average Daily Earnings', value: this.formatCurrencyForPDF(avgEarningsPerDay) },
+            { label: 'Payment Efficiency', value: `${paymentEfficiency.toFixed(1)}%` },
+            { label: 'Current Work Streak', value: `${workStreak} days` },
+            { label: 'Work Frequency', value: summary.totalWorked > 0 ? 'Active' : 'Inactive' }
+        ];
+        
+        analytics.forEach((item, index) => {
+            const x = 25 + (index % 2) * 90;
+            const y = yPos + Math.floor(index / 2) * 12;
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${item.label}:`, x, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...colors.primary);
+            doc.text(item.value, x + 65, y);
+        });
+        
+        // Financial status indicator
+        yPos += 35;
+        let statusText = '';
+        let statusColor = colors.success;
+        
+        if (summary.currentBalance > 0) {
+            statusText = `⚠️ Outstanding Payment Due: ${this.formatCurrencyForPDF(summary.currentBalance)}`;
+            statusColor = colors.danger;
+        } else if (summary.currentBalance < 0) {
+            statusText = `✅ Advance Payment Made: ${this.formatCurrencyForPDF(Math.abs(summary.currentBalance))}`;
+            statusColor = colors.warning;
+        } else {
+            statusText = '✅ All payments up to date';
+            statusColor = colors.success;
+        }
+        
+        doc.setFillColor(...statusColor);
+        doc.rect(15, yPos - 3, 180, 12, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(255, 255, 255);
+        doc.text(statusText, 20, yPos + 4);
+        
+        return yPos + 20;
+    }
+
+    // Detailed work records with enhanced formatting
+    addDetailedWorkRecords(doc, colors, workRecords, yPos) {
+        if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        // Section header
+        doc.setFillColor(...colors.secondary);
+        doc.rect(15, yPos - 5, 180, 15, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text('📋 DETAILED WORK RECORDS', 20, yPos + 5);
+        yPos += 25;
+        
+        // Enhanced table headers
+        doc.setFillColor(...colors.light);
+        doc.rect(15, yPos - 3, 180, 12, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text('DATE', 20, yPos + 5);
+        doc.text('DAY', 50, yPos + 5);
+        doc.text('STATUS', 75, yPos + 5);
+        doc.text('EARNINGS', 110, yPos + 5);
+        doc.text('PAYMENT STATUS', 145, yPos + 5);
+        doc.text('NOTES', 175, yPos + 5);
+        yPos += 15;
+        
+        // Work records with enhanced styling
+        doc.setFont('helvetica', 'normal');
+        workRecords.forEach((record, index) => {
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+                
+                // Repeat headers on new page
+                doc.setFillColor(...colors.light);
+                doc.rect(15, yPos - 3, 180, 12, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(...colors.secondary);
+                doc.text('DATE', 20, yPos + 5);
+                doc.text('DAY', 50, yPos + 5);
+                doc.text('STATUS', 75, yPos + 5);
+                doc.text('EARNINGS', 110, yPos + 5);
+                doc.text('PAYMENT STATUS', 145, yPos + 5);
+                doc.text('NOTES', 175, yPos + 5);
+                yPos += 15;
+                doc.setFont('helvetica', 'normal');
+            }
+            
+            // Alternating row colors with better contrast
+            if (index % 2 === 0) {
+                doc.setFillColor(250, 250, 250);
+                doc.rect(15, yPos - 2, 180, 10, 'F');
+            }
+            
+            const date = new Date(record.date);
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+            
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            doc.text(this.formatDateShort(record.date), 20, yPos + 3);
+            doc.text(dayName, 50, yPos + 3);
+            
+            // Status with appropriate styling
+            if (record.status === 'completed') {
+                doc.setTextColor(...colors.success);
+                doc.text('✓ DONE', 75, yPos + 3);
+            } else {
+                doc.setTextColor(...colors.danger);
+                doc.text('✗ MISS', 75, yPos + 3);
+            }
+            
+            // Earnings
+            doc.setTextColor(...colors.secondary);
+            doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '₹0', 110, yPos + 3);
+            
+            // Payment status
+            if (record.paid) {
+                doc.setTextColor(...colors.success);
+                doc.text('PAID', 145, yPos + 3);
+            } else {
+                doc.setTextColor(...colors.warning);
+                doc.text('PENDING', 145, yPos + 3);
+            }
+            
+            // Notes
+            doc.setTextColor(...colors.muted);
+            doc.text(record.status === 'completed' ? 'OK' : 'X', 175, yPos + 3);
+            
+            yPos += 10;
+        });
+        
+        return yPos + 15;
+    }
+
+    // Payment history with analysis
+    addPaymentHistory(doc, colors, payments, yPos) {
+        if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        // Section header
+        doc.setFillColor(...colors.success);
+        doc.rect(15, yPos - 5, 180, 15, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text('💳 PAYMENT TRANSACTION HISTORY', 20, yPos + 5);
+        yPos += 25;
+        
+        // Payment summary
+        const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+        const advancePayments = payments.filter(p => p.isAdvance);
+        const regularPayments = payments.filter(p => !p.isAdvance);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(...colors.secondary);
+        doc.text(`Total Transactions: ${payments.length} | Regular: ${regularPayments.length} | Advance: ${advancePayments.length}`, 20, yPos);
+        yPos += 15;
+        
+        // Enhanced payment table
+        doc.setFillColor(...colors.light);
+        doc.rect(15, yPos - 3, 180, 12, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text('PAYMENT DATE', 20, yPos + 5);
+        doc.text('AMOUNT', 65, yPos + 5);
+        doc.text('WORK DAYS', 95, yPos + 5);
+        doc.text('TYPE', 125, yPos + 5);
+        doc.text('TRANSACTION ID', 155, yPos + 5);
+        yPos += 15;
+        
+        // Payment records
+        doc.setFont('helvetica', 'normal');
+        payments.forEach((payment, index) => {
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+                
+                // Repeat headers
+                doc.setFillColor(...colors.light);
+                doc.rect(15, yPos - 3, 180, 12, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(...colors.secondary);
+                doc.text('PAYMENT DATE', 20, yPos + 5);
+                doc.text('AMOUNT', 65, yPos + 5);
+                doc.text('WORK DAYS', 95, yPos + 5);
+                doc.text('TYPE', 125, yPos + 5);
+                doc.text('TRANSACTION ID', 155, yPos + 5);
+                yPos += 15;
+                doc.setFont('helvetica', 'normal');
+            }
+            
+            if (index % 2 === 0) {
+                doc.setFillColor(250, 250, 250);
+                doc.rect(15, yPos - 2, 180, 10, 'F');
+            }
+            
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            doc.text(this.formatDateShort(payment.paymentDate), 20, yPos + 3);
+            
+            // Amount with color coding
+            if (payment.isAdvance) {
+                doc.setTextColor(...colors.warning);
+            } else {
+                doc.setTextColor(...colors.success);
+            }
+            doc.text(this.formatCurrencyForPDF(payment.amount), 65, yPos + 3);
+            
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${payment.workDates.length}`, 95, yPos + 3);
+            
+            // Type with styling
+            if (payment.isAdvance) {
+                doc.setTextColor(...colors.warning);
+                doc.text('ADVANCE', 125, yPos + 3);
+            } else {
+                doc.setTextColor(...colors.success);
+                doc.text('REGULAR', 125, yPos + 3);
+            }
+            
+            // Transaction ID
+            doc.setTextColor(...colors.muted);
+            doc.text(`TXN-${(payment.id || index).toString().padStart(3, '0')}`, 155, yPos + 3);
+            
+            yPos += 10;
+        });
+        
+        return yPos + 15;
+    }
+
+    // Performance metrics and insights
+    addPerformanceMetrics(doc, colors, summary, yPos) {
+        if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        // Section header
+        doc.setFillColor(...colors.warning);
+        doc.rect(15, yPos - 5, 180, 15, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text('⚡ PERFORMANCE INSIGHTS & RECOMMENDATIONS', 20, yPos + 5);
+        yPos += 25;
+        
+        // Performance indicators
+        const workDays = summary.totalWorked || 0;
+        const earnings = summary.totalEarned || 0;
+        const streak = summary.currentStreak || 0;
+        
+        // Insights based on data
+        const insights = [];
+        
+        if (workDays >= 30) {
+            insights.push('🌟 Excellent work consistency - Over 30 days completed');
+        } else if (workDays >= 15) {
+            insights.push('👍 Good work progress - Over 15 days completed');
+        } else if (workDays >= 7) {
+            insights.push('📈 Building momentum - Weekly target achieved');
+        } else {
+            insights.push('🎯 Getting started - Continue building your work record');
+        }
+        
+        if (streak >= 7) {
+            insights.push('🔥 Outstanding streak - 7+ consecutive days');
+        } else if (streak >= 3) {
+            insights.push('💪 Good momentum - 3+ consecutive days');
+        }
+        
+        if (summary.currentBalance <= 0) {
+            insights.push('✅ Payment status healthy - No outstanding dues');
+        } else {
+            insights.push('⚠️ Payment attention needed - Outstanding balance exists');
+        }
+        
+        // Display insights
+        insights.forEach((insight, index) => {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${index + 1}. ${insight}`, 25, yPos + (index * 8));
+        });
+        
+        yPos += insights.length * 8 + 15;
+        
+        // Recommendations
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(...colors.primary);
+        doc.text('💡 RECOMMENDATIONS:', 20, yPos);
+        yPos += 12;
+        
+        const recommendations = [
+            'Maintain consistent daily work schedule for optimal earnings',
+            'Review payment cycles to ensure timely settlement',
+            'Track performance metrics regularly for improvement',
+            'Consider setting milestone goals for motivation'
+        ];
+        
+        recommendations.forEach((rec, index) => {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`• ${rec}`, 25, yPos + (index * 6));
+        });
+        
+        return yPos + 30;
+    }
+
+    // Professional footer with enhanced metadata
+    addProfessionalFooter(doc, colors, data) {
+        const pageCount = doc.internal.getNumberOfPages();
+        const now = new Date();
+        
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            
+            // Footer background
+            doc.setFillColor(...colors.light);
+            doc.rect(0, 285, 210, 12, 'F');
+            
+            // Page numbers
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`Page ${i} of ${pageCount}`, 20, 292);
+            
+            // System info
+            doc.setFont('helvetica', 'normal');
+            doc.text('R-Service Tracker Professional v1.0.0', 80, 292);
+            
+            // Generation timestamp
+            doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 155, 292);
+            
+            // Confidentiality notice on last page
+            if (i === pageCount) {
+                doc.setFontSize(7);
+                doc.setTextColor(...colors.muted);
+                doc.text('This report contains confidential work and payment information. Handle with care.', 20, 280);
+            }
         }
     }
 

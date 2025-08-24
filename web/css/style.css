@@ -362,6 +362,8 @@ body {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--primary);
+  height: 40px; /* Fixed height to prevent movement */
+  line-height: 1;
 }
 
 .logo i {
@@ -369,7 +371,13 @@ body {
   position: relative;
   z-index: 10;
   color: var(--primary);
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; /* Fixed width */
+  height: 32px; /* Fixed height */
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 .menu-toggle {
@@ -1329,6 +1337,7 @@ body {
 @media (max-width: 768px) {
   .header-content {
     padding: 1rem;
+    min-height: 60px; /* Consistent header height */
   }
   
   .main-content {
@@ -1446,6 +1455,7 @@ body {
 @media (max-width: 480px) {
   .header-content {
     padding: 0.75rem;
+    min-height: 56px; /* Consistent header height */
   }
   
   .logo span {
@@ -1540,6 +1550,7 @@ body {
 @media (max-width: 360px) {
   .header-content {
     padding: 0.5rem;
+    min-height: 52px; /* Consistent header height */
   }
   
   .logo {
