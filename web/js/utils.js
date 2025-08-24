@@ -208,15 +208,11 @@ class Utils {
         doc.setFillColor(...colors.primary);
         doc.rect(0, 0, 210, 45, 'F');
         
-        // Company logo area (icon representation)
-        doc.setFontSize(32);
-        doc.setTextColor(255, 255, 255);
-        doc.text('R', 15, 25);
-        
         // Company name and tagline
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(28);
-        doc.text('R-Service Tracker', 25, 25);
+        doc.setTextColor(255, 255, 255);
+        doc.text('R-Service Tracker', 15, 25);
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(12);
@@ -255,8 +251,8 @@ class Utils {
         doc.setFontSize(10);
         doc.text('Service: R-Service Professional Work Tracking', 25, yPos + 13);
         doc.text('System Version: 1.0.0 Professional', 25, yPos + 18);
-        doc.text(`Daily Rate: ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} per day`, 110, yPos + 13);
-        doc.text('Currency: Indian Rupees (₹)', 110, yPos + 18);
+        doc.text(`Daily Rate: ${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} rupees per day`, 110, yPos + 13);
+        doc.text('Currency: Indian Rupees', 110, yPos + 18);
         
         return yPos + 35;
     }
@@ -458,7 +454,7 @@ class Utils {
             
             // Earnings
             doc.setTextColor(...colors.secondary);
-            doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '₹0', 110, yPos + 3);
+            doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '0 rupees', 110, yPos + 3);
             
             // Payment status
             if (record.paid) {

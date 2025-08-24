@@ -472,23 +472,28 @@ class RServiceTracker {
         const streakCountEl = document.getElementById('streakCount');
 
         if (currentEarningsEl) {
-            this.utils.animateNumber(currentEarningsEl, 0, this.currentStats.currentBalance, 1500);
+            const currentBalance = this.currentStats?.currentBalance || 0;
+            this.utils.animateNumber(currentEarningsEl, 0, currentBalance, 1500);
         }
         
         if (daysWorkedEl) {
-            this.utils.animateValue(daysWorkedEl, 0, this.currentStats.totalWorked, 1000);
+            const totalWorked = this.currentStats?.totalWorked || 0;
+            this.utils.animateValue(daysWorkedEl, 0, totalWorked, 1000);
         }
         
         if (totalEarnedEl) {
-            this.utils.animateNumber(totalEarnedEl, 0, this.currentStats.totalEarned, 2000);
+            const totalEarned = this.currentStats?.totalEarned || 0;
+            this.utils.animateNumber(totalEarnedEl, 0, totalEarned, 2000);
         }
         
         if (progressTextEl) {
-            progressTextEl.textContent = `${this.currentStats.progressToPayday}/4 days`;
+            const progress = this.currentStats?.progressToPayday || 0;
+            progressTextEl.textContent = `${progress}/4 days`;
         }
         
         if (progressFillEl) {
-            const progressPercent = (this.currentStats.progressToPayday / 4) * 100;
+            const progress = this.currentStats?.progressToPayday || 0;
+            const progressPercent = (progress / 4) * 100;
             progressFillEl.style.width = `${progressPercent}%`;
         }
         
@@ -496,7 +501,8 @@ class RServiceTracker {
         this.updateProgressBar(progressTextEl, progressFillEl);
         
         if (streakCountEl) {
-            this.utils.animateValue(streakCountEl, 0, this.currentStats.currentStreak, 1200);
+            const currentStreak = this.currentStats?.currentStreak || 0;
+            this.utils.animateValue(streakCountEl, 0, currentStreak, 1200);
         }
     }
 
@@ -564,11 +570,13 @@ class RServiceTracker {
                     progressLabelEl.textContent = 'Progress to Payday';
                 }
                 if (progressTextEl) {
-                    progressTextEl.textContent = `${this.currentStats.progressToPayday}/4 days`;
+                    const progress = this.currentStats?.progressToPayday || 0;
+                    progressTextEl.textContent = `${progress}/4 days`;
                 }
                 
                 if (progressFillEl) {
-                    const progressPercent = (this.currentStats.progressToPayday / 4) * 100;
+                    const progress = this.currentStats?.progressToPayday || 0;
+                    const progressPercent = (progress / 4) * 100;
                     progressFillEl.style.width = `${progressPercent}%`;
                     progressFillEl.style.backgroundColor = 'var(--primary)'; // Normal color
                 }
@@ -577,11 +585,13 @@ class RServiceTracker {
             console.error('Error updating progress bar:', error);
             // Fallback to normal progress
             if (progressTextEl) {
-                progressTextEl.textContent = `${this.currentStats.progressToPayday}/4 days`;
+                const progress = this.currentStats?.progressToPayday || 0;
+                progressTextEl.textContent = `${progress}/4 days`;
             }
             
             if (progressFillEl) {
-                const progressPercent = (this.currentStats.progressToPayday / 4) * 100;
+                const progress = this.currentStats?.progressToPayday || 0;
+                const progressPercent = (progress / 4) * 100;
                 progressFillEl.style.width = `${progressPercent}%`;
                 progressFillEl.style.backgroundColor = 'var(--primary)';
             }

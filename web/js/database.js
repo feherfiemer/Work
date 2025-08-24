@@ -409,12 +409,18 @@ class DatabaseManager {
                 };
             }
             
-            // Calculate actual advance amount (only the excess over work done)
-            let totalAdvanceAmount = 0;
+            // Calculate advance payment progress properly
             const amounts = this.calculateAmounts(workRecords, payments);
             
+            // For advance payments, we need to show progress as: work_done / payment_received_in_days
+            // Example: 1 day worked, paid ₹50 (2 days) = 1/2 progress
+            
+            let totalAdvanceAmount = 0;
+            let totalWorkCoveredByAdvance = 0;
+            let totalWorkDoneForAdvance = 0;
+            
             for (const payment of advancePayments) {
-                // Get work done up to this payment date
+                // Get work done up to this payment date (unpaid work at time of payment)
                 const workUpToPayment = workRecords.filter(record => {
                     return record.status === 'completed' && 
                            new Date(record.date) <= new Date(payment.date) &&
@@ -423,24 +429,25 @@ class DatabaseManager {
                 
                 // Calculate work value at time of payment
                 const workValueAtPayment = workUpToPayment.length * amounts.dailyWage;
+                const workDaysAtPayment = workUpToPayment.length;
+                
+                // Total days this payment covers
+                const daysCoveredByPayment = Math.ceil(payment.amount / amounts.dailyWage);
                 
                 // Only count the excess as advance
                 const advanceForThisPayment = Math.max(0, payment.amount - workValueAtPayment);
-                totalAdvanceAmount += advanceForThisPayment;
+                
+                if (advanceForThisPayment > 0) {
+                    totalAdvanceAmount += advanceForThisPayment;
+                    totalWorkCoveredByAdvance += daysCoveredByPayment;
+                    totalWorkDoneForAdvance += workDaysAtPayment;
+                }
             }
             
-            // Calculate work required to clear advance using unified system
-            const workRequiredForAdvance = Math.ceil(totalAdvanceAmount / amounts.dailyWage);
-            
-            // Find all unpaid work records (regardless of when advance was given)
-            const unpaidWork = workRecords.filter(record => {
-                return record.status === 'completed' && !this.isRecordPaid(record, payments);
-            });
-            
-            // Count all unpaid work as progress towards advance payment
-            // This ensures days worked before payment day count towards advance progress
-            const workCompletedForAdvance = unpaidWork.length;
-            const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - unpaidWork.length);
+            // Progress calculation: work done out of total work covered by advance payments
+            const workRequiredForAdvance = totalWorkCoveredByAdvance;
+            const workCompletedForAdvance = totalWorkDoneForAdvance;
+            const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workCompletedForAdvance);
             
             return {
                 hasAdvancePayments: true,
