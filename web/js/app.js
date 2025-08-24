@@ -96,10 +96,22 @@ class RServiceTracker {
                 loadingScreen.style.opacity = '0';
                 setTimeout(() => {
                     loadingScreen.style.display = 'none';
-                    if (mainContainer) mainContainer.style.display = 'block';
+                    if (mainContainer) {
+                        mainContainer.style.display = 'block';
+                        mainContainer.classList.add('animate-fade-scale');
+                        
+                        // Add staggered animations to dashboard cards
+                        const cards = document.querySelectorAll('.card');
+                        cards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.classList.add('animate-slide-up');
+                            }, index * 100);
+                        });
+                    }
                 }, 500);
             } else if (mainContainer) {
                 mainContainer.style.display = 'block';
+                mainContainer.classList.add('animate-fade-scale');
             }
         }, 2000); // Show loading for 2 seconds
     }
@@ -276,8 +288,20 @@ class RServiceTracker {
             
             if (button && view) {
                 button.addEventListener('click', () => {
-                    view.style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
+                    // Animate view closing
+                    view.style.opacity = '0';
+                    view.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        view.style.display = 'none';
+                        view.style.opacity = '1';
+                        view.style.transform = 'translateY(0)';
+                        
+                        // Show dashboard with animation
+                        const dashboard = document.getElementById('dashboard');
+                        dashboard.style.display = 'block';
+                        dashboard.classList.add('animate-fade-scale');
+                    }, 200);
                 });
             }
         });
@@ -381,6 +405,8 @@ class RServiceTracker {
         try {
             const progressLabelEl = document.getElementById('progressLabel');
             const advanceStatus = await this.db.getAdvancePaymentStatus();
+            
+            console.log('Progress bar update - advance status:', advanceStatus);
             
             if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0) {
                 // Show advance payment progress
@@ -1169,8 +1195,33 @@ class RServiceTracker {
     // Show calendar
     async showCalendar() {
         try {
-            document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('calendarView').style.display = 'block';
+            const dashboard = document.getElementById('dashboard');
+            const calendarView = document.getElementById('calendarView');
+            
+            // Hide dashboard with fade out
+            if (dashboard) {
+                dashboard.style.opacity = '0';
+                dashboard.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    dashboard.style.display = 'none';
+                }, 200);
+            }
+            
+            // Show calendar with animations
+            if (calendarView) {
+                setTimeout(() => {
+                    calendarView.style.display = 'block';
+                    calendarView.classList.add('animate-slide-up');
+                    
+                    // Add animation to calendar grid after a delay
+                    setTimeout(() => {
+                        const calendarGrid = document.getElementById('calendarGrid');
+                        if (calendarGrid) {
+                            calendarGrid.classList.add('animate-fade-scale');
+                        }
+                    }, 300);
+                }, 200);
+            }
             
             // Update calendar
             if (this.calendar) {

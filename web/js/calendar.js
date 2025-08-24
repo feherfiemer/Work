@@ -490,7 +490,9 @@ class CalendarManager {
                     
                     // Disable button to prevent double clicks
                     forcePaidBtn.disabled = true;
+                    forcePaidBtn.style.background = 'linear-gradient(135deg, #ccc, #999)';
                     forcePaidBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    forcePaidBtn.style.transform = 'scale(0.95)';
                     
                     // Close modal first, then process payment
                     closeModal();
