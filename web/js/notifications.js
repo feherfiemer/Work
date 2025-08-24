@@ -70,50 +70,21 @@ class NotificationManager {
             const finalOptions = { ...defaultOptions, ...options };
 
             try {
-                const notification = new Notification(title, finalOptions);
-                console.log('Browser notification created successfully:', title);
-                
-                // Auto close after duration or 8 seconds
-                const autoCloseTime = finalOptions.duration || 8000;
-                setTimeout(() => {
-                    try {
-                        notification.close();
-                        console.log('Notification auto-closed after', autoCloseTime, 'ms');
-                    } catch (e) {
-                        // Notification might already be closed
-                    }
-                }, autoCloseTime);
-
-                // Handle notification click
-                notification.onclick = (event) => {
-                    event.preventDefault();
-                    window.focus();
-                    notification.close();
-                    console.log('Notification clicked and closed');
-                    
-                    // Handle specific actions
-                    if (options.onClick) {
-                        try {
-                            options.onClick();
-                        } catch (e) {
-                            console.error('Error in notification click handler:', e);
-                        }
-                    }
-                };
-
-                // Handle notification error
-                notification.onerror = (error) => {
-                    console.error('Notification error:', error);
-                    // Additional toast notification for errors
-                    this.showToast('Notification delivery failed', 'error', 3000);
-                };
-
-                // Handle notification close
-                notification.onclose = () => {
-                    console.log('Notification closed:', title);
-                };
-
-                return notification;
+                // Check if service worker is available and active
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    // Use service worker registration for notifications
+                    return navigator.serviceWorker.ready.then(registration => {
+                        console.log('Using service worker for notification:', title);
+                        return registration.showNotification(title, finalOptions);
+                    }).catch(error => {
+                        console.error('Service worker notification failed:', error);
+                        // Fallback to regular notification
+                        return this.createRegularNotification(title, finalOptions);
+                    });
+                } else {
+                    // Use regular notification API
+                    return this.createRegularNotification(title, finalOptions);
+                }
             } catch (error) {
                 console.error('Error creating notification:', error);
                 this.showToast('Browser notification failed: ' + title, 'warning');
@@ -127,6 +98,129 @@ class NotificationManager {
         }
         
         return null;
+    }
+
+    // Create regular notification (fallback method)
+    createRegularNotification(title, finalOptions) {
+        try {
+            const notification = new Notification(title, finalOptions);
+            console.log('Browser notification created successfully:', title);
+            
+            // Auto close after duration or 8 seconds
+            const autoCloseTime = finalOptions.duration || 8000;
+            setTimeout(() => {
+                try {
+                    notification.close();
+                    console.log('Notification auto-closed after', autoCloseTime, 'ms');
+                } catch (e) {
+                    // Notification might already be closed
+                }
+            }, autoCloseTime);
+
+            // Handle notification click
+            notification.onclick = (event) => {
+                event.preventDefault();
+                window.focus();
+                notification.close();
+                console.log('Notification clicked and closed');
+                
+                // Handle specific actions
+                if (finalOptions.onClick) {
+                    try {
+                        finalOptions.onClick();
+                    } catch (e) {
+                        console.error('Error in notification click handler:', e);
+                    }
+                }
+            };
+
+            // Handle notification error
+            notification.onerror = (error) => {
+                console.error('Notification error:', error);
+                // Additional toast notification for errors
+                this.showToast('Notification delivery failed', 'error', 3000);
+            };
+
+            // Handle notification close
+            notification.onclose = () => {
+                console.log('Notification closed:', title);
+            };
+
+            return notification;
+        } catch (error) {
+            console.error('Error creating regular notification:', error);
+            this.showToast('Browser notification failed: ' + title, 'warning');
+            return null;
+        }
+    }
+
+    // Show welcome notification for first-time users
+    showWelcomeNotification() {
+        const title = 'Welcome to R-Service Tracker!';
+        const options = {
+            body: 'Setting up your daily work tracker... We\'re configuring notifications, initializing your dashboard, and preparing your work tracking system. You\'ll be ready to track your daily work and earnings in just a moment!',
+            icon: './assets/favicon.ico',
+            tag: 'welcome-setup',
+            requireInteraction: true,
+            vibrate: [200, 100, 200, 100, 200],
+            actions: [
+                {
+                    action: 'get-started',
+                    title: '🚀 Get Started'
+                },
+                {
+                    action: 'learn-more',
+                    title: '📖 Learn More'
+                }
+            ]
+        };
+
+        this.showNotification(title, options);
+        this.showToast('🎉 Welcome! Your work tracker is being set up...', 'success', 8000);
+    }
+
+    // Request permission on every visit if not granted
+    async checkAndRequestPermission() {
+        if ('Notification' in window) {
+            const permission = Notification.permission;
+            
+            if (permission === 'default') {
+                // Show a friendly prompt before requesting permission
+                this.showToast('📱 Enable notifications to get daily work reminders and payment alerts!', 'info', 6000);
+                
+                // Request permission after a brief delay
+                setTimeout(async () => {
+                    const result = await this.requestPermission();
+                    if (result === 'granted') {
+                        // Show welcome notification for new users or first-time permission grants
+                        const hasShownWelcome = localStorage.getItem('welcomeNotificationShown');
+                        if (!hasShownWelcome) {
+                            setTimeout(() => {
+                                this.showWelcomeNotification();
+                                localStorage.setItem('welcomeNotificationShown', 'true');
+                            }, 1000);
+                        }
+                    }
+                }, 2000);
+            } else if (permission === 'denied') {
+                this.showToast('❌ Notifications are blocked. Click here to enable them for better experience!', 'warning', 8000);
+            } else if (permission === 'granted') {
+                // Check if this is a new session and show appropriate notification
+                const lastSessionDate = localStorage.getItem('lastSessionDate');
+                const today = new Date().toISOString().split('T')[0];
+                
+                if (lastSessionDate !== today) {
+                    localStorage.setItem('lastSessionDate', today);
+                    setTimeout(() => {
+                        this.showNotification('Daily Check-in', {
+                            body: 'Welcome back! Ready to track your work today? Don\'t forget to mark your tasks as completed.',
+                            tag: 'daily-checkin',
+                            icon: './assets/favicon.ico'
+                        });
+                    }, 3000);
+                }
+            }
+        }
     }
 
     // Show payday notification

@@ -141,6 +141,49 @@
                     </button>
                 </div>
 
+                <!-- App Settings Section -->
+                <div class="menu-section">
+                    <h4><i class="fas fa-cog"></i> App Settings</h4>
+                    
+                    <div class="settings-group">
+                        <label for="incrementValue">
+                            <i class="fas fa-plus-circle"></i>
+                            Increment Value (₹)
+                        </label>
+                        <input type="number" id="incrementValue" min="1" max="100" value="25" class="settings-input">
+                        <small>Amount increment for payment options</small>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label for="paymentDuration">
+                            <i class="fas fa-calendar-days"></i>
+                            Payment Day Duration
+                        </label>
+                        <input type="number" id="paymentDuration" min="1" max="30" value="4" class="settings-input">
+                        <small>Days before payment can be collected</small>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <label for="maxPaymentAmount">
+                            <i class="fas fa-money-bill-wave"></i>
+                            Maximum Payment (₹)
+                        </label>
+                        <input type="number" id="maxPaymentAmount" min="100" max="10000" step="100" value="1000" class="settings-input">
+                        <small>Maximum amount shown in payment options</small>
+                    </div>
+                    
+                    <div class="settings-actions">
+                        <button id="saveSettings" class="menu-option success">
+                            <i class="fas fa-save"></i>
+                            Save Settings
+                        </button>
+                        <button id="resetSettings" class="menu-option">
+                            <i class="fas fa-undo"></i>
+                            Reset to Defaults
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Data Section -->
                 <div class="menu-section">
                     <h4><i class="fas fa-database"></i> Data</h4>
@@ -403,20 +446,11 @@
                 <div class="payment-options">
                     <h4>Select payment amount:</h4>
                     
-                    <!-- Quick Amount Buttons -->
+                    <!-- Quick Amount Buttons (Dynamically Generated) -->
                     <div class="payment-section">
                         <h5>Quick Amounts:</h5>
-                        <div class="payment-buttons">
-                            <button class="payment-btn" data-amount="25">₹25</button>
-                            <button class="payment-btn" data-amount="50">₹50</button>
-                            <button class="payment-btn" data-amount="75">₹75</button>
-                            <button class="payment-btn" data-amount="100">₹100</button>
-                            <button class="payment-btn" data-amount="200">₹200</button>
-                            <button class="payment-btn" data-amount="300">₹300</button>
-                            <button class="payment-btn" data-amount="400">₹400</button>
-                            <button class="payment-btn" data-amount="500">₹500</button>
-                            <button class="payment-btn" data-amount="600">₹600</button>
-                            <button class="payment-btn" data-amount="1000">₹1000</button>
+                        <div class="payment-buttons" id="paymentButtons">
+                            <!-- Buttons will be generated dynamically based on increment value -->
                         </div>
                     </div>
 

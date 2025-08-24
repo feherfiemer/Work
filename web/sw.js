@@ -119,8 +119,9 @@ self.addEventListener('sync', event => {
 self.addEventListener('push', event => {
   console.log('[SW] Push message received');
   
-  const options = {
-    body: event.data ? event.data.text() : 'R-Service Tracker notification',
+  let title = 'R-Service Tracker';
+  let options = {
+    body: 'R-Service Tracker notification',
     icon: '/assets/favicon.svg',
     badge: '/assets/favicon.ico',
     vibrate: [100, 50, 100],
@@ -142,8 +143,20 @@ self.addEventListener('push', event => {
     ]
   };
 
+  // Parse push data if available
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      title = data.title || title;
+      options = { ...options, ...data.options };
+    } catch (e) {
+      // Fallback to text data
+      options.body = event.data.text();
+    }
+  }
+
   event.waitUntil(
-    self.registration.showNotification('R-Service Tracker', options)
+    self.registration.showNotification(title, options)
   );
 });
 
@@ -153,7 +166,16 @@ self.addEventListener('notificationclick', event => {
   
   event.notification.close();
   
-  if (event.action === 'explore') {
+  if (event.action === 'explore' || event.action === 'get-started') {
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  } else if (event.action === 'learn-more') {
+    event.waitUntil(
+      clients.openWindow('/#about')
+    );
+  } else if (!event.action) {
+    // Default click action
     event.waitUntil(
       clients.openWindow('/')
     );

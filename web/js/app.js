@@ -360,6 +360,161 @@ class RServiceTracker {
                 this.showAnalytics();
             });
         }
+
+        // Settings handlers
+        this.setupSettingsHandlers();
+    }
+
+    // Setup settings event handlers
+    setupSettingsHandlers() {
+        // Load current settings
+        this.loadSettings();
+
+        // Save settings
+        const saveSettingsBtn = document.getElementById('saveSettings');
+        if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener('click', () => this.saveSettings());
+        }
+
+        // Reset settings
+        const resetSettingsBtn = document.getElementById('resetSettings');
+        if (resetSettingsBtn) {
+            resetSettingsBtn.addEventListener('click', () => this.resetSettings());
+        }
+
+        // Real-time validation for increment value
+        const incrementInput = document.getElementById('incrementValue');
+        if (incrementInput) {
+            incrementInput.addEventListener('input', () => this.validateSettings());
+        }
+
+        // Real-time validation for payment duration
+        const durationInput = document.getElementById('paymentDuration');
+        if (durationInput) {
+            durationInput.addEventListener('input', () => this.validateSettings());
+        }
+
+        // Real-time validation for max payment
+        const maxPaymentInput = document.getElementById('maxPaymentAmount');
+        if (maxPaymentInput) {
+            maxPaymentInput.addEventListener('input', () => this.validateSettings());
+        }
+    }
+
+    // Load settings into UI
+    loadSettings() {
+        const config = window.ConfigManager ? window.ConfigManager.getConfig() : window.R_SERVICE_CONFIG;
+        
+        const incrementInput = document.getElementById('incrementValue');
+        const durationInput = document.getElementById('paymentDuration');
+        const maxPaymentInput = document.getElementById('maxPaymentAmount');
+
+        if (incrementInput) incrementInput.value = config.INCREMENT_VALUE || 25;
+        if (durationInput) durationInput.value = config.PAYMENT_DAY_DURATION || 4;
+        if (maxPaymentInput) maxPaymentInput.value = config.MAX_PAYMENT_AMOUNT || 1000;
+    }
+
+    // Validate settings
+    validateSettings() {
+        const incrementInput = document.getElementById('incrementValue');
+        const durationInput = document.getElementById('paymentDuration');
+        const maxPaymentInput = document.getElementById('maxPaymentAmount');
+        const saveBtn = document.getElementById('saveSettings');
+
+        let isValid = true;
+
+        // Validate increment value
+        if (incrementInput) {
+            const increment = parseInt(incrementInput.value);
+            if (increment < 1 || increment > 100) {
+                incrementInput.style.borderColor = '#ff4444';
+                isValid = false;
+            } else {
+                incrementInput.style.borderColor = '';
+            }
+        }
+
+        // Validate duration
+        if (durationInput) {
+            const duration = parseInt(durationInput.value);
+            if (duration < 1 || duration > 30) {
+                durationInput.style.borderColor = '#ff4444';
+                isValid = false;
+            } else {
+                durationInput.style.borderColor = '';
+            }
+        }
+
+        // Validate max payment
+        if (maxPaymentInput) {
+            const maxPayment = parseInt(maxPaymentInput.value);
+            if (maxPayment < 100 || maxPayment > 10000) {
+                maxPaymentInput.style.borderColor = '#ff4444';
+                isValid = false;
+            } else {
+                maxPaymentInput.style.borderColor = '';
+            }
+        }
+
+        // Enable/disable save button
+        if (saveBtn) {
+            saveBtn.disabled = !isValid;
+            saveBtn.style.opacity = isValid ? '1' : '0.5';
+        }
+
+        return isValid;
+    }
+
+    // Save settings
+    saveSettings() {
+        if (!this.validateSettings()) {
+            this.notifications.showToast('Please fix the validation errors before saving', 'error');
+            return;
+        }
+
+        const incrementInput = document.getElementById('incrementValue');
+        const durationInput = document.getElementById('paymentDuration');
+        const maxPaymentInput = document.getElementById('maxPaymentAmount');
+
+        const newConfig = {
+            INCREMENT_VALUE: parseInt(incrementInput.value),
+            PAYMENT_DAY_DURATION: parseInt(durationInput.value),
+            MAX_PAYMENT_AMOUNT: parseInt(maxPaymentInput.value)
+        };
+
+        // Also update the legacy DAILY_WAGE and PAYMENT_THRESHOLD for compatibility
+        newConfig.DAILY_WAGE = newConfig.INCREMENT_VALUE;
+        newConfig.PAYMENT_THRESHOLD = newConfig.PAYMENT_DAY_DURATION;
+
+        if (window.ConfigManager && window.ConfigManager.saveUserConfig(newConfig)) {
+            this.notifications.showToast('Settings saved successfully!', 'success');
+            
+            // Regenerate payment buttons
+            this.generatePaymentButtons();
+            
+            // Update any displays that might use these values
+            this.updateDashboard();
+            
+            this.closeMenu();
+        } else {
+            this.notifications.showToast('Error saving settings', 'error');
+        }
+    }
+
+    // Reset settings to defaults
+    resetSettings() {
+        this.notifications.showConfirmation(
+            'Are you sure you want to reset all settings to default values?',
+            () => {
+                if (window.ConfigManager) {
+                    window.ConfigManager.resetToDefaults();
+                    this.loadSettings();
+                    this.generatePaymentButtons();
+                    this.updateDashboard();
+                    this.notifications.showToast('Settings reset to defaults', 'success');
+                }
+            }
+        );
     }
 
     // Setup quick actions
@@ -874,18 +1029,43 @@ class RServiceTracker {
         }
     }
 
+    // Generate payment buttons dynamically based on increment value
+    generatePaymentButtons() {
+        const container = document.getElementById('paymentButtons');
+        if (!container) return;
+
+        // Clear existing buttons
+        container.innerHTML = '';
+
+        // Get payment amounts from config
+        const amounts = window.ConfigManager ? window.ConfigManager.generatePaymentAmounts() : [25, 50, 75, 100, 200, 300, 400, 500, 600, 1000];
+        
+        // Create buttons for each amount
+        amounts.forEach(amount => {
+            const button = document.createElement('button');
+            button.className = 'payment-btn';
+            button.dataset.amount = amount;
+            button.textContent = `₹${amount}`;
+            container.appendChild(button);
+        });
+
+        console.log(`Generated ${amounts.length} payment buttons with amounts:`, amounts);
+    }
+
     // Setup payment modal event handlers
     setupPaymentModalHandlers() {
         const modal = document.getElementById('paymentModal');
         const closeBtn = document.getElementById('closePaymentModal');
-        const paymentButtons = document.querySelectorAll('.payment-btn');
+        
+        // Generate payment buttons first
+        this.generatePaymentButtons();
 
         // Close modal handlers
         const closeModal = () => {
             this.notifications.playCloseSound();
             modal.classList.remove('show');
             // Clear selections
-            paymentButtons.forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
             this.selectedPaymentAmount = null;
             // Hide payment summary
             const summaryEl = document.getElementById('paymentSummary');
@@ -893,40 +1073,47 @@ class RServiceTracker {
         };
 
         // Remove existing listeners to prevent duplicates
-        const newCloseBtn = closeBtn.cloneNode(true);
-        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        if (closeBtn) {
+            const newCloseBtn = closeBtn.cloneNode(true);
+            closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+            newCloseBtn.addEventListener('click', closeModal);
+        }
         
-        newCloseBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
         });
 
-        // Enhanced payment button handlers
-        paymentButtons.forEach(btn => {
-            const newBtn = btn.cloneNode(true);
-            btn.parentNode.replaceChild(newBtn, btn);
-            newBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                // Remove previous selections
-                document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
-                
-                // Select current button
-                newBtn.classList.add('selected');
-                
-                const amount = parseInt(newBtn.dataset.amount);
-                this.selectedPaymentAmount = amount;
-                
-                // Add visual feedback
-                newBtn.style.animation = 'bounceIn 0.6s ease-out';
-                setTimeout(() => newBtn.style.animation = '', 600);
-                
-                // Update payment summary
-                this.updatePaymentSummary(amount);
-                
-                // Don't auto-process, wait for confirmation button
+        // Enhanced payment button handlers using event delegation
+        const container = document.getElementById('paymentButtons');
+        if (container) {
+            // Remove existing listeners to prevent duplicates
+            const newContainer = container.cloneNode(true);
+            container.parentNode.replaceChild(newContainer, container);
+            
+            newContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('payment-btn')) {
+                    e.preventDefault();
+                    
+                    // Remove previous selections
+                    document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
+                    
+                    // Select current button
+                    e.target.classList.add('selected');
+                    
+                    const amount = parseInt(e.target.dataset.amount);
+                    this.selectedPaymentAmount = amount;
+                    
+                    // Add visual feedback
+                    e.target.style.animation = 'bounceIn 0.6s ease-out';
+                    setTimeout(() => e.target.style.animation = '', 600);
+                    
+                    // Update payment summary
+                    this.updatePaymentSummary(amount);
+                    
+                    // Don't auto-process, wait for confirmation button
+                }
             });
-        });
+        }
 
         // Setup confirmation buttons
         const confirmBtn = document.getElementById('confirmPaymentBtn');
@@ -1138,12 +1325,8 @@ class RServiceTracker {
     // Request notification permission
     async requestNotificationPermission() {
         try {
-            // Always check and request permission if not granted
-            if (this.notifications.permission !== 'granted') {
-                const permission = await this.notifications.requestPermission();
-                console.log('Notification permission status:', permission);
-                return permission;
-            }
+            // Use the new enhanced permission checker
+            await this.notifications.checkAndRequestPermission();
             return this.notifications.permission;
         } catch (error) {
             console.error('Error requesting notification permission:', error);
