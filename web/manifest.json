@@ -1,0 +1,51 @@
+{
+  "name": "R-Service Tracker",
+  "short_name": "R-Service",
+  "description": "Premium job tracking and payment management system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#FF6B35",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "assets/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "finance", "business"],
+  "shortcuts": [
+    {
+      "name": "Mark Work Done",
+      "short_name": "Work Done",
+      "description": "Quickly mark today's work as completed",
+      "url": "/?action=mark-done",
+      "icons": [{ "src": "assets/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "View Calendar",
+      "short_name": "Calendar",
+      "description": "View work and payment calendar",
+      "url": "/?action=calendar",
+      "icons": [{ "src": "assets/favicon.svg", "sizes": "any" }]
+    }
+  ]
+}

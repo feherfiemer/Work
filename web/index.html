@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="orange-light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="R-Service Tracker - Professional work tracking and payment management system with advanced features">
+    <meta name="keywords" content="work tracker, payment tracker, job tracking, earnings management, R-Service, productivity">
+    <meta name="author" content="R-Service">
+    <title>R-Service Tracker</title>
+    
+    <!-- Enhanced Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    
+    <!-- Enhanced PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF6B35">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="R-Service Tracker">
+    <meta name="msapplication-TileColor" content="#FF6B35">
+    <meta name="msapplication-config" content="browserconfig.xml">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="assets/icon-512.png">
+    
+    <!-- Enhanced Security and Performance -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js" integrity="sha512-A2VkO0seMUHlzP6F9cUqePy8LUU5Lmh1w6oBAPf3KF4qd5qz0j0kdwO2R6mPTOvBR8QOiC+/8ygDzXVgZWh1Q==" crossorigin="anonymous"></script>
+    
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-ZN8W1Z35BTPe9LKdDcm1I6mV4nKAWUqShyT4KZKcCe2k4rSMPE1iJHH2qPiN7qdKNGV2YAmYS3yBGnvWK8zEQ==" crossorigin="anonymous"></script>
+    
+    <!-- Enhanced CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Additional PWA and Performance Optimizations -->
+    <script>
+        // Register service worker for better PWA experience
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+        
+        // Prevent zoom on iOS
+        document.addEventListener('touchmove', function(event) {
+            if (event.scale !== 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Optimize loading performance
+        window.addEventListener('beforeunload', function() {
+            // Cleanup any pending operations
+            if (window.app && window.app.cleanup) {
+                window.app.cleanup();
+            }
+        });
+    </script>
+</head>
+<body>
+    <!-- Enhanced Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="loading-text">R-Service Tracker</div>
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+            <div class="loading-subtitle">Professional Work Management</div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="mainContainer" class="main-container" style="display: none;">
+        <!-- Enhanced Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-check-circle"></i>
+                    <span><span class="always-visible">R-Service</span><span> Tracker</span></span>
+                </div>
+                <div class="header-actions">
+                    <button id="menuToggle" class="menu-toggle" aria-label="Open menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Enhanced Side Menu -->
+        <div id="sideMenu" class="side-menu">
+            <div class="menu-header">
+                <h3>Settings & Actions</h3>
+                <button id="closeMenu" class="close-menu" aria-label="Close menu">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="menu-content">
+                <!-- Theme Section -->
+                <div class="menu-section">
+                    <h4><i class="fas fa-palette"></i> Theme</h4>
+                    <div class="theme-options">
+                        <button class="theme-btn active" data-theme="orange-light" aria-label="Orange Light Theme">
+                            <span class="theme-color orange"></span>
+                            Orange Light
+                        </button>
+                        <button class="theme-btn" data-theme="orange-dark" aria-label="Orange Dark Theme">
+                            <span class="theme-color orange-dark"></span>
+                            Orange Dark
+                        </button>
+                        <button class="theme-btn" data-theme="blue-light" aria-label="Blue Light Theme">
+                            <span class="theme-color blue"></span>
+                            Blue Light
+                        </button>
+                        <button class="theme-btn" data-theme="blue-dark" aria-label="Blue Dark Theme">
+                            <span class="theme-color blue-dark"></span>
+                            Blue Dark
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div class="menu-section">
+                    <h4><i class="fas fa-history"></i> History & Analytics</h4>
+                    <button id="viewHistory" class="menu-option">
+                        <i class="fas fa-list"></i>
+                        Work History
+                    </button>
+                    <button id="viewAnalytics" class="menu-option">
+                        <i class="fas fa-chart-bar"></i>
+                        Analytics Dashboard
+                    </button>
+                </div>
+
+                <!-- Data Section -->
+                <div class="menu-section">
+                    <h4><i class="fas fa-database"></i> Data Management</h4>
+                    <button id="exportPDF" class="menu-option">
+                        <i class="fas fa-file-pdf"></i>
+                        Export PDF Report
+                    </button>
+                    <button id="clearData" class="menu-option danger">
+                        <i class="fas fa-trash"></i>
+                        Clear All Data
+                    </button>
+                </div>
+
+                <!-- About Section -->
+                <div class="menu-section">
+                    <h4><i class="fas fa-info-circle"></i> Information</h4>
+                    <button id="aboutApp" class="menu-option">
+                        <i class="fas fa-question-circle"></i>
+                        About R-Service
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Enhanced Dashboard -->
+            <div id="dashboard" class="dashboard">
+                <div class="dashboard-grid">
+                    <!-- Current Status Card -->
+                    <div class="card status-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-calendar-day"></i> Today's Status</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="status-info">
+                                <div class="date-display">
+                                    <span id="currentDate"></span>
+                                </div>
+                                <div class="work-status">
+                                    <div id="workStatus" class="status-badge pending">
+                                        <i class="fas fa-clock"></i>
+                                        Not Started
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="doneBtn" class="btn btn-primary" aria-label="Mark work as completed">
+                                    <i class="fas fa-check"></i>
+                                    Mark as Done
+                                </button>
+                                <button id="paidBtn" class="btn btn-success" style="display: none;" aria-label="Record payment">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    Record Payment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Earnings Card -->
+                    <div class="card earnings-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-coins"></i> Earnings Overview</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="earnings-info">
+                                <div class="current-earnings">
+                                    <span class="amount">₹<span id="currentEarnings">0</span></span>
+                                    <span class="label">Current Balance</span>
+                                </div>
+                                <div class="days-worked">
+                                    <span class="count" id="daysWorked">0</span>
+                                    <span class="label">Days Worked</span>
+                                </div>
+                                <div class="total-earned">
+                                    <span class="amount">₹<span id="totalEarned">0</span></span>
+                                    <span class="label">Total Earned</span>
+                                </div>
+                            </div>
+                            <div class="progress-section">
+                                <div class="progress-label">
+                                    <span id="progressLabel">Progress to Payday</span>
+                                    <span id="progressText">0/4 days</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Quick Actions Card -->
+                    <div class="card actions-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="quick-actions">
+                                <button id="viewBalanceSheet" class="action-btn" aria-label="View balance sheet">
+                                    <i class="fas fa-table"></i>
+                                    <span>Balance Sheet</span>
+                                </button>
+                                <button id="viewCalendar" class="action-btn" aria-label="View calendar">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Calendar View</span>
+                                </button>
+                                <button id="viewCharts" class="action-btn" aria-label="View analytics">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Analytics</span>
+                                </button>
+                                <button id="dailyStreak" class="action-btn" aria-label="View current streak">
+                                    <i class="fas fa-fire"></i>
+                                    <span>Streak: <span id="streakCount">0</span></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance Sheet View -->
+            <div id="balanceSheetView" class="view-section" style="display: none;">
+                <div class="view-header">
+                    <h2><i class="fas fa-table"></i> Work History & Balance Sheet</h2>
+                    <button id="closeBalanceSheet" class="btn btn-secondary" aria-label="Close balance sheet">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+                <div class="balance-sheet-content">
+                    <div class="sheet-filters">
+                        <select id="monthFilter" aria-label="Filter by month">
+                            <option value="all">All Months</option>
+                        </select>
+                        <select id="yearFilter" aria-label="Filter by year">
+                            <option value="all">All Years</option>
+                        </select>
+                    </div>
+                    <div id="balanceSheetTable" class="balance-sheet-table"></div>
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div id="analyticsView" class="view-section" style="display: none;">
+                <div class="view-header">
+                    <h2><i class="fas fa-chart-bar"></i> Analytics Dashboard</h2>
+                    <button id="closeAnalytics" class="btn btn-secondary" aria-label="Close analytics">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+                <div class="analytics-content">
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <canvas id="earningsChart" aria-label="Monthly earnings chart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="workDaysChart" aria-label="Work days and payments chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Calendar View -->
+            <div id="calendarView" class="view-section" style="display: none;">
+                <div class="view-header">
+                    <h2><i class="fas fa-calendar-alt"></i> Calendar View</h2>
+                    <button id="closeCalendar" class="btn btn-secondary" aria-label="Close calendar">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+                <div class="calendar-content">
+                    <div class="calendar-controls">
+                        <button id="prevMonth" class="btn btn-secondary" aria-label="Previous month">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <h3 id="calendarTitle"></h3>
+                        <button id="nextMonth" class="btn btn-secondary" aria-label="Next month">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="calendar-container">
+                        <div id="calendarGrid" class="calendar-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Enhanced Modals -->
+    <div id="aboutModal" class="modal" role="dialog" aria-labelledby="aboutTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="aboutTitle">About R-Service Tracker</h3>
+                <button class="close-modal" aria-label="Close about dialog">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="about-content">
+                    <div class="app-info">
+                        <div class="app-title">
+                            <i class="fas fa-check-circle app-icon"></i>
+                            <h4>R-Service Tracker v2.0.0</h4>
+                        </div>
+                        <p class="app-description">A professional work tracking and payment management system designed to help you efficiently track daily work, manage earnings, and maintain payment records with advanced features.</p>
+                    </div>
+                    <div class="features-list">
+                        <h5><i class="fas fa-star"></i> Enhanced Features:</h5>
+                        <ul class="features-items">
+                            <li><i class="fas fa-calendar-check"></i> Daily work tracking with automatic ₹25 calculation</li>
+                            <li><i class="fas fa-calculator"></i> Smart payment system every 4 days with advance payment support</li>
+                            <li><i class="fas fa-chart-line"></i> Comprehensive analytics and visual charts</li>
+                            <li><i class="fas fa-file-pdf"></i> Enhanced PDF export with proper formatting</li>
+                            <li><i class="fas fa-bell"></i> Smart daily notifications (7 AM & 6 PM)</li>
+                            <li><i class="fas fa-palette"></i> Multiple themes and responsive design</li>
+                            <li><i class="fas fa-mobile-alt"></i> Progressive Web App with offline support</li>
+                            <li><i class="fas fa-database"></i> Secure local data storage</li>
+                        </ul>
+                    </div>
+                    <div class="tech-info">
+                        <h5><i class="fas fa-cog"></i> Technical Information:</h5>
+                        <ul class="tech-items">
+                            <li><i class="fas fa-code"></i> Built with modern vanilla JavaScript</li>
+                            <li><i class="fas fa-hdd"></i> IndexedDB for reliable local storage</li>
+                            <li><i class="fas fa-mobile-alt"></i> Fully responsive for all device sizes</li>
+                            <li><i class="fas fa-shield-alt"></i> Privacy-focused offline operation</li>
+                            <li><i class="fas fa-rocket"></i> Optimized performance and accessibility</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal" role="dialog" aria-labelledby="confirmTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="confirmTitle">Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+                <div class="modal-actions">
+                    <button id="confirmYes" class="btn btn-danger">Yes, Continue</button>
+                    <button id="confirmNo" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Payment Selection Modal -->
+    <div id="paymentModal" class="modal" role="dialog" aria-labelledby="paymentTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="paymentTitle">Record Payment</h3>
+                <button class="close-modal" id="closePaymentModal" aria-label="Close payment dialog">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-info">
+                    <p>You have <strong><span id="unpaidDaysCount">4</span> unpaid work days</strong>.</p>
+                    <p>Pending amount: <strong>₹<span id="pendingAmount">100</span></strong></p>
+                </div>
+                <div class="payment-options">
+                    <h4>Select payment amount:</h4>
+                    <div class="payment-buttons">
+                        <button class="payment-btn" data-amount="100" aria-label="Record 100 rupees payment">₹100</button>
+                        <button class="payment-btn" data-amount="200" aria-label="Record 200 rupees payment">₹200</button>
+                        <button class="payment-btn" data-amount="300" aria-label="Record 300 rupees payment">₹300</button>
+                        <button class="payment-btn" data-amount="400" aria-label="Record 400 rupees payment">₹400</button>
+                        <button class="payment-btn" data-amount="500" aria-label="Record 500 rupees payment">₹500</button>
+                        <button class="payment-btn" data-amount="600" aria-label="Record 600 rupees payment">₹600</button>
+                        <button class="payment-btn" data-amount="700" aria-label="Record 700 rupees payment">₹700</button>
+                        <button class="payment-btn" data-amount="800" aria-label="Record 800 rupees payment">₹800</button>
+                        <button class="payment-btn" data-amount="900" aria-label="Record 900 rupees payment">₹900</button>
+                        <button class="payment-btn" data-amount="1000" aria-label="Record 1000 rupees payment">₹1000</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Toast Notifications -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <!-- Application Scripts -->
+    <script src="js/database.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Additional Performance Optimizations -->
+    <script>
+        // Optimize for better performance
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+                // Preload critical resources during idle time
+                const preloadLinks = [
+                    '/assets/icon-192.png',
+                    '/assets/icon-512.png'
+                ];
+                
+                preloadLinks.forEach(href => {
+                    const link = document.createElement('link');
+                    link.rel = 'preload';
+                    link.as = 'image';
+                    link.href = href;
+                    document.head.appendChild(link);
+                });
+            });
+        }
+        
+        // Enhanced error handling
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+            if (window.app && window.app.notifications) {
+                window.app.notifications.showToast('An error occurred. Please refresh if issues persist.', 'error');
+            }
+        });
+        
+        // Performance monitoring
+        window.addEventListener('load', () => {
+            if ('performance' in window) {
+                const loadTime = performance.now();
+                console.log(`App loaded in ${loadTime.toFixed(2)}ms`);
+            }
+        });
+    </script>
+</body>
+</html>
