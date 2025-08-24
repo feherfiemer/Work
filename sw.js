@@ -1,42 +1,85 @@
-// Service Worker for R-Service Tracker
+// Service Worker for R-Service Tracker PWA
 const CACHE_NAME = 'r-service-tracker-v1.0.0';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/app.js',
-  '/styles.css',
+  '/css/style.css',
+  '/js/app.js',
+  '/js/database.js',
+  '/js/notifications.js',
+  '/js/calendar.js',
+  '/js/charts.js',
+  '/js/utils.js',
+  '/assets/favicon.ico',
+  '/assets/favicon.svg',
+  '/assets/sounds/done.mp3',
+  '/assets/sounds/paid.mp3',
   '/manifest.json',
-  'https://unpkg.com/mdui@2/mdui.css',
-  'https://unpkg.com/mdui@2/mdui.global.js',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
+  // External resources
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/chart.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
 ];
 
-// Install Service Worker
-self.addEventListener('install', (event) => {
+// Install event - cache resources
+self.addEventListener('install', event => {
+  console.log('[SW] Installing service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Cache opened');
+      .then(cache => {
+        console.log('[SW] Caching app shell');
         return cache.addAll(urlsToCache);
       })
+      .catch(err => {
+        console.error('[SW] Failed to cache resources:', err);
+      })
   );
+  self.skipWaiting();
 });
 
-// Fetch Strategy: Cache First, then Network
-self.addEventListener('fetch', (event) => {
+// Activate event - clean up old caches
+self.addEventListener('activate', event => {
+  console.log('[SW] Activating service worker...');
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// Fetch event - serve cached content when offline
+self.addEventListener('fetch', event => {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Skip chrome-extension and other non-http requests
+  if (!event.request.url.startsWith('http')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
+      .then(response => {
+        // Return cached version or fetch from network
         if (response) {
+          console.log('[SW] Serving from cache:', event.request.url);
           return response;
         }
 
         return fetch(event.request)
-          .then((response) => {
-            // Check if we received a valid response
+          .then(response => {
+            // Don't cache if not a valid response
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
@@ -44,53 +87,42 @@ self.addEventListener('fetch', (event) => {
             // Clone the response
             const responseToCache = response.clone();
 
+            // Add to cache for future use
             caches.open(CACHE_NAME)
-              .then((cache) => {
+              .then(cache => {
                 cache.put(event.request, responseToCache);
               });
 
             return response;
           })
-          .catch(() => {
-            // Network failed, try to return offline page for navigation requests
-            if (event.request.destination === 'document') {
-              return caches.match('/index.html');
-            }
+          .catch(err => {
+            console.log('[SW] Network request failed, serving offline page');
+            // You could return a cached offline page here
+            throw err;
           });
       })
   );
 });
 
-// Activate Service Worker
-self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-});
-
-// Background Sync for work records
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-work-records') {
-    event.waitUntil(syncWorkRecords());
+// Background sync for when connection is restored
+self.addEventListener('sync', event => {
+  console.log('[SW] Background sync triggered:', event.tag);
+  if (event.tag === 'background-sync') {
+    event.waitUntil(
+      // Handle background sync tasks here
+      console.log('[SW] Performing background sync...')
+    );
   }
 });
 
-// Push notifications
-self.addEventListener('push', (event) => {
+// Push notification handling
+self.addEventListener('push', event => {
+  console.log('[SW] Push message received');
+  
   const options = {
-    body: event.data ? event.data.text() : 'Time to record your work!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    body: event.data ? event.data.text() : 'R-Service Tracker notification',
+    icon: '/assets/favicon.svg',
+    badge: '/assets/favicon.ico',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -98,14 +130,14 @@ self.addEventListener('push', (event) => {
     },
     actions: [
       {
-        action: 'record-work',
-        title: 'Record Work',
-        icon: '/icons/record-work.png'
+        action: 'explore', 
+        title: 'Open App',
+        icon: '/assets/favicon.svg'
       },
       {
-        action: 'view-stats',
-        title: 'View Stats',
-        icon: '/icons/stats.png'
+        action: 'close', 
+        title: 'Close',
+        icon: '/assets/favicon.svg'
       }
     ]
   };
@@ -116,25 +148,14 @@ self.addEventListener('push', (event) => {
 });
 
 // Notification click handling
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', event => {
+  console.log('[SW] Notification click received');
+  
   event.notification.close();
-
-  if (event.action === 'record-work') {
-    event.waitUntil(
-      clients.openWindow('/?action=record-work')
-    );
-  } else if (event.action === 'view-stats') {
-    event.waitUntil(
-      clients.openWindow('/?section=analytics')
-    );
-  } else {
+  
+  if (event.action === 'explore') {
     event.waitUntil(
       clients.openWindow('/')
     );
   }
 });
-
-async function syncWorkRecords() {
-  // This function would handle syncing work records when connection is restored
-  console.log('Syncing work records...');
-}

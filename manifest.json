@@ -1,76 +1,51 @@
 {
   "name": "R-Service Tracker",
   "short_name": "R-Service",
-  "description": "Track your daily driving service work and earnings with ease",
-  "version": "1.0.0",
+  "description": "Premium job tracking and payment management system",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1976d2",
-  "theme_color": "#1976d2",
-  "orientation": "portrait-primary",
+  "background_color": "#1a1a1a",
+  "theme_color": "#FF6B35",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "en",
   "icons": [
     {
-      "src": "icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "src": "assets/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
     },
     {
-      "src": "icons/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     },
     {
-      "src": "icons/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-192x192.png",
+      "src": "assets/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
-      "src": "icons/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-512x512.png",
+      "src": "assets/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     }
   ],
-  "categories": ["productivity", "business", "utilities"],
-  "screenshots": [
+  "categories": ["productivity", "finance", "business"],
+  "shortcuts": [
     {
-      "src": "screenshots/desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
+      "name": "Mark Work Done",
+      "short_name": "Work Done",
+      "description": "Quickly mark today's work as completed",
+      "url": "/?action=mark-done",
+      "icons": [{ "src": "assets/favicon.svg", "sizes": "any" }]
     },
     {
-      "src": "screenshots/mobile.png",
-      "sizes": "375x667",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "name": "View Calendar",
+      "short_name": "Calendar",
+      "description": "View work and payment calendar",
+      "url": "/?action=calendar",
+      "icons": [{ "src": "assets/favicon.svg", "sizes": "any" }]
     }
   ]
 }

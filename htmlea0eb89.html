@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="R-Service Tracker - Premium job tracking and payment management system">
     <meta name="keywords" content="job tracker, payment tracker, work tracker, R-Service">
     <meta name="author" content="R-Service">
@@ -10,16 +10,6 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#FF6B35">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="R-Service">
-    <meta name="msapplication-TileColor" content="#FF6B35">
-    <meta name="msapplication-config" content="browserconfig.xml">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -197,7 +187,7 @@
                             </div>
                             <div class="progress-section">
                                 <div class="progress-label">
-                                    <span id="progressLabel">Progress to Payday</span>
+                                    <span>Progress to Payday</span>
                                     <span id="progressText">0/4 days</span>
                                 </div>
                                 <div class="progress-bar">
@@ -295,9 +285,7 @@
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
-                    <div class="calendar-container">
-                        <div id="calendarGrid" class="calendar-grid"></div>
-                    </div>
+                    <div id="calendarGrid" class="calendar-grid"></div>
                 </div>
             </div>
         </main>
@@ -389,7 +377,11 @@
                         <button class="payment-btn" data-amount="900">₹900</button>
                         <button class="payment-btn" data-amount="1000">₹1000</button>
                     </div>
-
+                    <div class="custom-amount">
+                        <label for="customAmount">Or enter custom amount:</label>
+                        <input type="number" id="customAmount" min="100" max="1000" step="25" placeholder="Enter amount">
+                        <button id="confirmCustomAmount" class="btn btn-primary">Confirm</button>
+                    </div>
                 </div>
             </div>
         </div>

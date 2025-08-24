@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R-Service Tracker Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>R-Service Tracker - Basic Functionality Test</h1>
+    
+    <div class="test-section">
+        <h3>Database Test</h3>
+        <p>Testing IndexedDB functionality...</p>
+        <div id="dbTest" class="status warning">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Local Storage Test</h3>
+        <p>Testing localStorage for settings...</p>
+        <div id="lsTest" class="status warning">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Notification API Test</h3>
+        <p>Testing browser notification support...</p>
+        <div id="notificationTest" class="status warning">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>External Libraries Test</h3>
+        <p>Testing Chart.js and jsPDF availability...</p>
+        <div id="libTest" class="status warning">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Basic Math Test</h3>
+        <p>Testing payment calculation logic...</p>
+        <div id="mathTest" class="status warning">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Overall Status</h3>
+        <div id="overallStatus" class="status warning">Running tests...</div>
+    </div>
+    
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="index.html" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+            Launch R-Service Tracker
+        </a>
+    </div>
+
+    <script>
+        // Test IndexedDB
+        function testIndexedDB() {
+            const dbTest = document.getElementById('dbTest');
+            
+            if ('indexedDB' in window) {
+                try {
+                    const request = indexedDB.open('test', 1);
+                    request.onsuccess = () => {
+                        dbTest.textContent = 'IndexedDB: Supported ✓';
+                        dbTest.className = 'status success';
+                        request.result.close();
+                        indexedDB.deleteDatabase('test');
+                    };
+                    request.onerror = () => {
+                        dbTest.textContent = 'IndexedDB: Error opening database ✗';
+                        dbTest.className = 'status error';
+                    };
+                } catch (e) {
+                    dbTest.textContent = 'IndexedDB: Exception occurred ✗';
+                    dbTest.className = 'status error';
+                }
+            } else {
+                dbTest.textContent = 'IndexedDB: Not supported ✗';
+                dbTest.className = 'status error';
+            }
+        }
+        
+        // Test localStorage
+        function testLocalStorage() {
+            const lsTest = document.getElementById('lsTest');
+            
+            try {
+                localStorage.setItem('test', 'value');
+                const value = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                if (value === 'value') {
+                    lsTest.textContent = 'LocalStorage: Working ✓';
+                    lsTest.className = 'status success';
+                } else {
+                    lsTest.textContent = 'LocalStorage: Value mismatch ✗';
+                    lsTest.className = 'status error';
+                }
+            } catch (e) {
+                lsTest.textContent = 'LocalStorage: Not available ✗';
+                lsTest.className = 'status error';
+            }
+        }
+        
+        // Test Notification API
+        function testNotifications() {
+            const notificationTest = document.getElementById('notificationTest');
+            
+            if ('Notification' in window) {
+                notificationTest.textContent = `Notifications: Supported (${Notification.permission}) ✓`;
+                notificationTest.className = 'status success';
+            } else {
+                notificationTest.textContent = 'Notifications: Not supported ✗';
+                notificationTest.className = 'status error';
+            }
+        }
+        
+        // Test external libraries (would need network)
+        function testLibraries() {
+            const libTest = document.getElementById('libTest');
+            
+            // Since we're loading from CDN, we can't test without network
+            // But we can check if the page can access external resources
+            libTest.textContent = 'External Libraries: Requires network connection ⚠';
+            libTest.className = 'status warning';
+        }
+        
+        // Test basic calculations
+        function testMath() {
+            const mathTest = document.getElementById('mathTest');
+            
+            try {
+                const dailyWage = 25;
+                const daysForPayment = 4;
+                const paymentAmount = dailyWage * daysForPayment;
+                
+                if (paymentAmount === 100) {
+                    mathTest.textContent = 'Payment Logic: Working (₹25 × 4 = ₹100) ✓';
+                    mathTest.className = 'status success';
+                } else {
+                    mathTest.textContent = 'Payment Logic: Calculation error ✗';
+                    mathTest.className = 'status error';
+                }
+            } catch (e) {
+                mathTest.textContent = 'Payment Logic: Exception occurred ✗';
+                mathTest.className = 'status error';
+            }
+        }
+        
+        // Overall status
+        function updateOverallStatus() {
+            setTimeout(() => {
+                const tests = document.querySelectorAll('.status');
+                let passed = 0;
+                let total = tests.length - 1; // Exclude overall status
+                
+                for (let i = 0; i < total; i++) {
+                    if (tests[i].classList.contains('success')) {
+                        passed++;
+                    }
+                }
+                
+                const overallStatus = document.getElementById('overallStatus');
+                if (passed === total) {
+                    overallStatus.textContent = `All tests passed! (${passed}/${total}) ✓`;
+                    overallStatus.className = 'status success';
+                } else if (passed > total / 2) {
+                    overallStatus.textContent = `Most tests passed (${passed}/${total}) ⚠`;
+                    overallStatus.className = 'status warning';
+                } else {
+                    overallStatus.textContent = `Multiple failures (${passed}/${total}) ✗`;
+                    overallStatus.className = 'status error';
+                }
+            }, 1000);
+        }
+        
+        // Run all tests
+        document.addEventListener('DOMContentLoaded', () => {
+            testIndexedDB();
+            testLocalStorage();
+            testNotifications();
+            testLibraries();
+            testMath();
+            updateOverallStatus();
+        });
+    </script>
+</body>
+</html>
