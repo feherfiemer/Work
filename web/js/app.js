@@ -525,30 +525,9 @@ class RServiceTracker {
                     progressLabelEl.textContent = `Advance Payment Progress (₹${advanceStatus.totalAdvanceAmount} paid)`;
                 }
                 if (progressTextEl) {
-                    // Determine time unit based on work required
-                    let timeUnit = 'days';
-                    let completedDisplay = safeWorkCompleted;
-                    let requiredDisplay = safeWorkRequired;
-                    
-                    if (safeWorkRequired >= 365) {
-                        timeUnit = 'years';
-                        completedDisplay = (safeWorkCompleted / 365).toFixed(1);
-                        requiredDisplay = (safeWorkRequired / 365).toFixed(1);
-                    } else if (safeWorkRequired >= 30) {
-                        timeUnit = 'months';
-                        completedDisplay = (safeWorkCompleted / 30).toFixed(1);
-                        requiredDisplay = (safeWorkRequired / 30).toFixed(1);
-                    }
-                    
-                    // For days, show whole numbers; for months/years, show decimals if needed
-                    if (timeUnit === 'days') {
-                        progressTextEl.textContent = `${completedDisplay}/${requiredDisplay} ${timeUnit}`;
-                    } else {
-                        // Remove .0 from display for cleaner look
-                        const cleanCompleted = completedDisplay.replace('.0', '');
-                        const cleanRequired = requiredDisplay.replace('.0', '');
-                        progressTextEl.textContent = `${cleanCompleted}/${cleanRequired} ${timeUnit}`;
-                    }
+                    // Always show in days for advance payment progress to match user expectations
+                    // Example: user worked 2 days, advance payment of ₹200 (8 days), show "2/8 days"
+                    progressTextEl.textContent = `${safeWorkCompleted}/${safeWorkRequired} days`;
                 }
                 
                 if (progressFillEl) {

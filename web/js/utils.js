@@ -151,16 +151,9 @@ class Utils {
             const doc = new jsPDF();
             console.log('PDF Export: jsPDF document created');
             
-            // Premium color scheme
-            const colors = {
-                primary: [255, 107, 53],     // Orange
-                secondary: [33, 37, 41],     // Dark gray
-                success: [40, 167, 69],      // Green
-                warning: [255, 193, 7],      // Yellow
-                danger: [220, 53, 69],       // Red
-                light: [248, 249, 250],      // Light gray
-                muted: [117, 117, 117]       // Muted gray
-            };
+            // Get current theme colors from the web app
+            const colors = this.getPDFColorsFromTheme();
+            console.log('PDF Export: Using theme colors:', colors);
             
             // Professional header design
             this.addProfessionalHeader(doc, colors);
@@ -256,7 +249,7 @@ class Utils {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
         doc.setTextColor(...colors.secondary);
-        doc.text('🏢 SERVICE PROVIDER INFORMATION', 20, yPos + 5);
+        doc.text('SERVICE PROVIDER INFORMATION', 20, yPos + 5);
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
@@ -282,15 +275,15 @@ class Utils {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
         doc.setTextColor(255, 255, 255);
-        doc.text('📊 EXECUTIVE SUMMARY', 20, yPos + 5);
+        doc.text('EXECUTIVE SUMMARY', 20, yPos + 5);
         yPos += 20;
         
         // Key metrics in cards
         const metrics = [
-            { label: 'Total Days Worked', value: `${summary.totalWorked} days`, icon: '📅' },
-            { label: 'Total Earnings', value: this.formatCurrencyForPDF(summary.totalEarned), icon: '💰' },
-            { label: 'Amount Received', value: this.formatCurrencyForPDF(summary.totalPaid), icon: '✅' },
-            { label: 'Outstanding Balance', value: this.formatCurrencyForPDF(summary.currentBalance), icon: '⚖️' }
+            { label: 'Total Days Worked', value: `${summary.totalWorked} days` },
+            { label: 'Total Earnings', value: this.formatCurrencyForPDF(summary.totalEarned) },
+            { label: 'Amount Received', value: this.formatCurrencyForPDF(summary.totalPaid) },
+            { label: 'Outstanding Balance', value: this.formatCurrencyForPDF(summary.currentBalance) }
         ];
         
         metrics.forEach((metric, index) => {
@@ -304,7 +297,7 @@ class Utils {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
             doc.setTextColor(...colors.secondary);
-            doc.text(`${metric.icon} ${metric.label}`, x, y + 5);
+            doc.text(metric.label, x, y + 5);
             
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(13);
@@ -329,7 +322,7 @@ class Utils {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
         doc.setTextColor(...colors.secondary);
-        doc.text('📈 FINANCIAL ANALYTICS', 20, yPos + 5);
+        doc.text('FINANCIAL ANALYTICS', 20, yPos + 5);
         yPos += 25;
         
         // Calculate additional metrics
@@ -365,13 +358,13 @@ class Utils {
         let statusColor = colors.success;
         
         if (summary.currentBalance > 0) {
-            statusText = `⚠️ Outstanding Payment Due: ${this.formatCurrencyForPDF(summary.currentBalance)}`;
+            statusText = `Outstanding Payment Due: ${this.formatCurrencyForPDF(summary.currentBalance)}`;
             statusColor = colors.danger;
         } else if (summary.currentBalance < 0) {
-            statusText = `✅ Advance Payment Made: ${this.formatCurrencyForPDF(Math.abs(summary.currentBalance))}`;
+            statusText = `Advance Payment Made: ${this.formatCurrencyForPDF(Math.abs(summary.currentBalance))}`;
             statusColor = colors.warning;
         } else {
-            statusText = '✅ All payments up to date';
+            statusText = 'All payments up to date';
             statusColor = colors.success;
         }
         
@@ -399,7 +392,7 @@ class Utils {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
         doc.setTextColor(255, 255, 255);
-        doc.text('📋 DETAILED WORK RECORDS', 20, yPos + 5);
+        doc.text('DETAILED WORK RECORDS', 20, yPos + 5);
         yPos += 25;
         
         // Enhanced table headers
@@ -457,10 +450,10 @@ class Utils {
             // Status with appropriate styling
             if (record.status === 'completed') {
                 doc.setTextColor(...colors.success);
-                doc.text('✓ DONE', 75, yPos + 3);
+                doc.text('COMPLETED', 75, yPos + 3);
             } else {
                 doc.setTextColor(...colors.danger);
-                doc.text('✗ MISS', 75, yPos + 3);
+                doc.text('MISSED', 75, yPos + 3);
             }
             
             // Earnings
@@ -478,7 +471,7 @@ class Utils {
             
             // Notes
             doc.setTextColor(...colors.muted);
-            doc.text(record.status === 'completed' ? 'OK' : 'X', 175, yPos + 3);
+            doc.text(record.status === 'completed' ? 'OK' : 'FAILED', 175, yPos + 3);
             
             yPos += 10;
         });
@@ -500,7 +493,7 @@ class Utils {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
         doc.setTextColor(255, 255, 255);
-        doc.text('💳 PAYMENT TRANSACTION HISTORY', 20, yPos + 5);
+        doc.text('PAYMENT TRANSACTION HISTORY', 20, yPos + 5);
         yPos += 25;
         
         // Payment summary
@@ -603,7 +596,7 @@ class Utils {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
         doc.setTextColor(255, 255, 255);
-        doc.text('⚡ PERFORMANCE INSIGHTS & RECOMMENDATIONS', 20, yPos + 5);
+        doc.text('PERFORMANCE INSIGHTS AND RECOMMENDATIONS', 20, yPos + 5);
         yPos += 25;
         
         // Performance indicators
@@ -615,25 +608,25 @@ class Utils {
         const insights = [];
         
         if (workDays >= 30) {
-            insights.push('🌟 Excellent work consistency - Over 30 days completed');
+            insights.push('Excellent work consistency - Over 30 days completed');
         } else if (workDays >= 15) {
-            insights.push('👍 Good work progress - Over 15 days completed');
+            insights.push('Good work progress - Over 15 days completed');
         } else if (workDays >= 7) {
-            insights.push('📈 Building momentum - Weekly target achieved');
+            insights.push('Building momentum - Weekly target achieved');
         } else {
-            insights.push('🎯 Getting started - Continue building your work record');
+            insights.push('Getting started - Continue building your work record');
         }
         
         if (streak >= 7) {
-            insights.push('🔥 Outstanding streak - 7+ consecutive days');
+            insights.push('Outstanding streak - 7+ consecutive days');
         } else if (streak >= 3) {
-            insights.push('💪 Good momentum - 3+ consecutive days');
+            insights.push('Good momentum - 3+ consecutive days');
         }
         
         if (summary.currentBalance <= 0) {
-            insights.push('✅ Payment status healthy - No outstanding dues');
+            insights.push('Payment status healthy - No outstanding dues');
         } else {
-            insights.push('⚠️ Payment attention needed - Outstanding balance exists');
+            insights.push('Payment attention needed - Outstanding balance exists');
         }
         
         // Display insights
@@ -650,7 +643,7 @@ class Utils {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
         doc.setTextColor(...colors.primary);
-        doc.text('💡 RECOMMENDATIONS:', 20, yPos);
+        doc.text('RECOMMENDATIONS:', 20, yPos);
         yPos += 12;
         
         const recommendations = [
@@ -702,6 +695,91 @@ class Utils {
                 doc.text('This report contains confidential work and payment information. Handle with care.', 20, 280);
             }
         }
+    }
+
+    // Get PDF colors based on current web theme
+    getPDFColorsFromTheme() {
+        // Get current theme from document
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'blue-light';
+        
+        // Define color schemes for each theme
+        const themeColors = {
+            'blue-light': {
+                primary: [74, 144, 226],      // Blue
+                secondary: [33, 37, 41],      // Dark gray
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'blue-dark': {
+                primary: [74, 144, 226],      // Blue
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            },
+            'orange-light': {
+                primary: [255, 107, 53],      // Orange
+                secondary: [33, 37, 41],      // Dark gray
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'orange-dark': {
+                primary: [255, 107, 53],      // Orange
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            },
+            'green-light': {
+                primary: [40, 167, 69],       // Green
+                secondary: [33, 37, 41],      // Dark gray
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'green-dark': {
+                primary: [40, 167, 69],       // Green
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            },
+            'red-light': {
+                primary: [220, 53, 69],       // Red
+                secondary: [33, 37, 41],      // Dark gray
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'red-dark': {
+                primary: [220, 53, 69],       // Red
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            }
+        };
+        
+        // Return colors for current theme, fallback to blue-light if theme not found
+        return themeColors[currentTheme] || themeColors['blue-light'];
     }
 
     // Helper function to get report period

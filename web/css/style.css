@@ -371,7 +371,9 @@ body {
   position: relative;
   z-index: 10;
   color: var(--primary);
-  transition: color var(--transition-fast);
+  transition: none !important; /* Disable all transitions */
+  animation: none !important; /* Disable all animations */
+  transform: none !important; /* Disable all transforms */
   display: flex;
   align-items: center;
   justify-content: center;
