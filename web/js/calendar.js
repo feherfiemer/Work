@@ -354,6 +354,25 @@ class CalendarManager {
                         <i class="fas fa-clock"></i>
                         <span>Payment Pending</span>
                     </div>
+                    <button class="force-paid-btn" data-date="${dateString}" style="
+                        margin-top: 1rem;
+                        width: 100%;
+                        padding: 0.5rem;
+                        background: var(--success);
+                        color: white;
+                        border: none;
+                        border-radius: var(--border-radius);
+                        cursor: pointer;
+                        font-family: var(--font-family);
+                        font-weight: 500;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                    ">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        Force Mark as Paid
+                    </button>
                 `;
             }
         } else {
@@ -362,17 +381,56 @@ class CalendarManager {
                     <i class="fas fa-times-circle"></i>
                     <span>No Work Recorded</span>
                 </div>
+                <div class="day-actions" style="margin-top: 1rem;">
+                    <button class="mark-done-btn" data-date="${dateString}" style="
+                        width: 100%;
+                        padding: 0.5rem;
+                        background: var(--primary);
+                        color: white;
+                        border: none;
+                        border-radius: var(--border-radius);
+                        cursor: pointer;
+                        font-family: var(--font-family);
+                        font-weight: 500;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                        margin-bottom: 0.5rem;
+                    ">
+                        <i class="fas fa-check"></i>
+                        Mark Work as Done
+                    </button>
+                    <button class="force-paid-btn" data-date="${dateString}" style="
+                        width: 100%;
+                        padding: 0.5rem;
+                        background: var(--success);
+                        color: white;
+                        border: none;
+                        border-radius: var(--border-radius);
+                        cursor: pointer;
+                        font-family: var(--font-family);
+                        font-weight: 500;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                    ">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        Force Mark as Paid
+                    </button>
+                </div>
             `;
         }
 
         content += `</div>`;
 
         // Show in toast or create a simple modal
-        this.showDayModal(content);
+        this.showDayModal(content, dateString);
     }
 
     // Show day modal
-    showDayModal(content) {
+    showDayModal(content, dateString) {
         // Create modal
         const modal = document.createElement('div');
         modal.className = 'day-modal';
@@ -421,22 +479,48 @@ class CalendarManager {
         modal.appendChild(modalContent);
         document.body.appendChild(modal);
 
+        const closeModal = () => {
+            if (document.body.contains(modal)) {
+                document.body.removeChild(modal);
+            }
+        };
+
         // Close handlers
         const closeBtn = modalContent.querySelector('.close-day-modal');
-        closeBtn.addEventListener('click', () => {
-            document.body.removeChild(modal);
-        });
+        closeBtn.addEventListener('click', closeModal);
 
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                document.body.removeChild(modal);
+                closeModal();
             }
         });
+
+        // Force paid button handler
+        const forcePaidBtn = modalContent.querySelector('.force-paid-btn');
+        if (forcePaidBtn) {
+            forcePaidBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetDate = e.target.closest('.force-paid-btn').dataset.date;
+                this.handleForcePaid(targetDate);
+                closeModal();
+            });
+        }
+
+        // Mark done button handler  
+        const markDoneBtn = modalContent.querySelector('.mark-done-btn');
+        if (markDoneBtn) {
+            markDoneBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetDate = e.target.closest('.mark-done-btn').dataset.date;
+                this.handleMarkDone(targetDate);
+                closeModal();
+            });
+        }
 
         // ESC key to close
         const handleEsc = (e) => {
             if (e.key === 'Escape') {
-                document.body.removeChild(modal);
+                closeModal();
                 document.removeEventListener('keydown', handleEsc);
             }
         };
@@ -532,6 +616,101 @@ class CalendarManager {
         };
         
         return exportData;
+    }
+
+    // Handle force paid action
+    async handleForcePaid(dateString) {
+        try {
+            // First check if work record exists, if not create one
+            let workRecord = await this.db.getWorkRecord(dateString);
+            if (!workRecord) {
+                await this.db.addWorkRecord(dateString, 25, 'completed');
+                console.log('Created work record for force paid:', dateString);
+            }
+
+            // Create a force payment for this specific date
+            const paymentAmount = 25; // Standard daily wage
+            const today = new Date().toISOString().split('T')[0];
+            
+            await this.db.addPayment(paymentAmount, [dateString], today, false);
+            console.log('Force payment added for date:', dateString);
+
+            // Update calendar and notify main app
+            await this.loadData();
+            this.render();
+
+            // Trigger update in main app if available
+            if (window.app && typeof window.app.updateDashboard === 'function') {
+                window.app.currentStats = await this.db.getEarningsStats();
+                window.app.updateDashboard();
+                await window.app.updatePendingUnpaidDates();
+                window.app.updatePaidButtonVisibility();
+                
+                // Update charts if available
+                if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
+                    await window.app.charts.updateCharts();
+                }
+                
+                // Show success notification
+                if (window.app.notifications) {
+                    window.app.notifications.showToast(`✅ Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
+                    window.app.notifications.playSound('paid');
+                }
+            }
+
+        } catch (error) {
+            console.error('Error processing force payment:', error);
+            if (window.app && window.app.notifications) {
+                window.app.notifications.showToast('Error processing force payment. Please try again.', 'error');
+            }
+        }
+    }
+
+    // Handle mark done action for any date
+    async handleMarkDone(dateString) {
+        try {
+            // Check if work record already exists
+            const existingRecord = await this.db.getWorkRecord(dateString);
+            if (existingRecord && existingRecord.status === 'completed') {
+                if (window.app && window.app.notifications) {
+                    window.app.notifications.showToast('Work already marked as done for this date!', 'warning');
+                }
+                return;
+            }
+
+            // Add work record
+            await this.db.addWorkRecord(dateString, 25, 'completed');
+            console.log('Work record added for date:', dateString);
+
+            // Update calendar and notify main app
+            await this.loadData();
+            this.render();
+
+            // Trigger update in main app if available
+            if (window.app && typeof window.app.updateDashboard === 'function') {
+                window.app.currentStats = await this.db.getEarningsStats();
+                window.app.updateDashboard();
+                await window.app.updatePendingUnpaidDates();
+                window.app.updatePaidButtonVisibility();
+                
+                // Update charts if available
+                if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
+                    await window.app.charts.updateCharts();
+                }
+                
+                // Show success notification
+                if (window.app.notifications) {
+                    window.app.notifications.showToast(`✅ Work marked as done for ${new Date(dateString).toLocaleDateString()} - ₹25 earned!`, 'success');
+                    window.app.notifications.playSound('done');
+                }
+            }
+
+        } catch (error) {
+            console.error('Error marking work as done:', error);
+            if (window.app && window.app.notifications) {
+                window.app.notifications.showToast('Error marking work as done. Please try again.', 'error');
+            }
+        }
     }
 
     // Highlight specific dates

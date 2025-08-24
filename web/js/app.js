@@ -389,7 +389,7 @@ class RServiceTracker {
                 const progressPercent = Math.min((workCompleted / workRequired) * 100, 100);
                 
                 if (progressLabelEl) {
-                    progressLabelEl.textContent = 'Progress to Workday';
+                    progressLabelEl.textContent = 'Advance Payment Progress';
                 }
                 if (progressTextEl) {
                     progressTextEl.textContent = `${workCompleted}/${workRequired} work days (Advance)`;

@@ -339,7 +339,8 @@ class DatabaseManager {
                 record.status === 'completed' && !this.isRecordPaid(record, payments)
             ).length;
             
-            const progressToPayday = unpaidWork % 4;
+            // Calculate progress: if we have 4 or more unpaid days, show 4/4, otherwise show actual count
+            const progressToPayday = unpaidWork >= 4 ? 4 : unpaidWork;
             
             return {
                 totalWorked,
