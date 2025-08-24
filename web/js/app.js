@@ -83,48 +83,48 @@ class RServiceTracker {
             };
             
             window.testAllSystems = async () => {
-                console.log('🧪 Testing all R-Service Tracker systems...');
+                console.log('[SYSTEM] Testing all R-Service Tracker systems...');
                 
                 try {
                     // Test database
-                    console.log('📊 Testing database...');
-                    const stats = await this.db.getEarningsStats();
-                    console.log('✅ Database working - Current stats:', stats);
-                    
-                    // Test notifications
-                    console.log('🔔 Testing notifications...');
-                    this.notifications.testAllNotifications();
-                    
-                    // Test charts
-                    console.log('📈 Testing charts...');
-                    if (this.charts) {
-                        await this.charts.updateCharts();
-                        console.log('✅ Charts system working');
-                    }
-                    
-                    // Test calendar
-                    console.log('📅 Testing calendar...');
-                    if (this.calendar) {
-                        this.calendar.render();
-                        console.log('✅ Calendar system working');
-                    }
-                    
-                    // Test utilities
-                    console.log('🛠️ Testing utilities...');
-                    const testDate = this.utils.formatDate(new Date());
-                    console.log('✅ Utilities working - Test date:', testDate);
-                    
-                    // Test PWA
-                    console.log('📱 Testing PWA features...');
-                    if ('serviceWorker' in navigator) {
-                        console.log('✅ Service Worker supported');
-                    }
-                    
-                    console.log('🎉 All systems test completed successfully!');
+                                    console.log('[DATABASE] Testing database...');
+                const stats = await this.db.getEarningsStats();
+                console.log('[DATABASE] Database working - Current stats:', stats);
+                
+                // Test notifications
+                console.log('[NOTIFICATIONS] Testing notifications...');
+                this.notifications.testAllNotifications();
+                
+                // Test charts
+                console.log('[CHARTS] Testing charts...');
+                if (this.charts) {
+                    await this.charts.updateCharts();
+                    console.log('[CHARTS] Charts system working');
+                }
+                
+                // Test calendar
+                console.log('[CALENDAR] Testing calendar...');
+                if (this.calendar) {
+                    this.calendar.render();
+                    console.log('[CALENDAR] Calendar system working');
+                }
+                
+                // Test utilities
+                console.log('[UTILITIES] Testing utilities...');
+                const testDate = this.utils.formatDate(new Date());
+                console.log('[UTILITIES] Utilities working - Test date:', testDate);
+                
+                // Test PWA
+                console.log('[PWA] Testing PWA features...');
+                if ('serviceWorker' in navigator) {
+                    console.log('[PWA] Service Worker supported');
+                }
+                
+                console.log('[SYSTEM] All systems test completed successfully!');
                     this.notifications.showToast('All systems tested successfully!', 'success', 5000);
                     
                 } catch (error) {
-                    console.error('❌ System test failed:', error);
+                    console.error('[SYSTEM] System test failed:', error);
                     this.notifications.showToast('System test failed: ' + error.message, 'error', 5000);
                 }
             };
@@ -174,8 +174,17 @@ class RServiceTracker {
         const loadingScreen = document.getElementById('loadingScreen');
         const mainContainer = document.getElementById('mainContainer');
         
-        if (loadingScreen) loadingScreen.style.display = 'flex';
-        if (mainContainer) mainContainer.style.display = 'none';
+        if (loadingScreen) {
+            loadingScreen.style.display = 'flex';
+        } else {
+            console.warn('Loading screen element not found');
+        }
+        
+        if (mainContainer) {
+            mainContainer.style.display = 'none';
+        } else {
+            console.warn('Main container element not found');
+        }
     }
 
     // Hide loading screen
@@ -718,32 +727,61 @@ class RServiceTracker {
 
             if (saved) {
                 if (this.notifications) {
-                    this.notifications.showToast('<i class="fas fa-check-circle"></i> Settings saved successfully!', 'success');
+                    this.notifications.showToast('Settings saved successfully!', 'success');
                 }
                 
-                // Show loading toast for regeneration
-                const loadingToast = this.notifications ? this.notifications.showLoadingToast('Updating payment options...') : null;
+                // Show loading toast for regeneration and reset
+                const loadingToast = this.notifications ? this.notifications.showLoadingToast('Updating payment options and resetting saved amounts...') : null;
                 
-                // Regenerate payment buttons with new settings
-                setTimeout(() => {
-                    this.generatePaymentButtons();
-                    
-                    // Update dashboard with new configuration
-                    if (typeof this.updateDashboard === 'function') {
-                        this.updateDashboard();
-                    }
-                    
-                    // Update payment period display if it exists
-                    this.updatePaymentPeriodDisplay(newConfig.PAYMENT_DAY_DURATION);
-                    
-                    // Complete loading toast
-                    if (loadingToast && this.notifications) {
-                        this.notifications.updateLoadingToast(loadingToast, 'Payment options updated!', 'success');
-                    }
-                    
-                    // Show completion feedback
-                    if (this.notifications) {
-                        this.notifications.showToast(`<i class="fas fa-cogs"></i> Configuration updated! Payment options: ${this.getGeneratedAmountPreview()}`, 'success', 6000);
+                // Reset all saved amount details when settings are saved
+                setTimeout(async () => {
+                    try {
+                        // Clear all saved payments and work records to reset the system
+                        if (this.db) {
+                            console.log('Resetting all saved amount details...');
+                            
+                            // Clear work records and payments (but keep settings)
+                            await this.db.performTransaction(this.db.stores.workRecords, 'readwrite', (store) => {
+                                return store.clear();
+                            });
+                            
+                            await this.db.performTransaction(this.db.stores.payments, 'readwrite', (store) => {
+                                return store.clear();
+                            });
+                            
+                            console.log('All saved amount details have been reset');
+                            
+                            if (this.notifications) {
+                                this.notifications.showToast('All saved amount details reset! Starting fresh with new settings.', 'info', 5000);
+                            }
+                        }
+                        
+                        // Regenerate payment buttons with new settings
+                        this.generatePaymentButtons();
+                        
+                        // Update dashboard with new configuration and reset data
+                        if (typeof this.updateDashboard === 'function') {
+                            this.updateDashboard();
+                        }
+                        
+                        // Update payment period display if it exists
+                        this.updatePaymentPeriodDisplay(newConfig.PAYMENT_DAY_DURATION);
+                        
+                        // Complete loading toast
+                        if (loadingToast && this.notifications) {
+                            this.notifications.updateLoadingToast(loadingToast, 'System reset and updated!', 'success');
+                        }
+                        
+                        // Show completion feedback
+                        if (this.notifications) {
+                            this.notifications.showToast(`Configuration updated! Payment options: ${this.getGeneratedAmountPreview()}`, 'success', 6000);
+                        }
+                        
+                    } catch (resetError) {
+                        console.error('Error resetting saved amounts:', resetError);
+                        if (this.notifications) {
+                            this.notifications.showToast('Settings saved but failed to reset data. Please clear data manually if needed.', 'warning', 8000);
+                        }
                     }
                     
                     this.closeMenu();
@@ -818,7 +856,7 @@ class RServiceTracker {
                                 this.notifications.updateLoadingToast(loadingToast, 'Settings reset to defaults!', 'success');
                             }
                             
-                            this.notifications.showToast('<i class="fas fa-undo"></i> All settings reset to default values', 'success', 5000);
+                            this.notifications.showToast('All settings reset to default values', 'success', 5000);
                         }, 1000);
                     }
                 } catch (error) {
@@ -2184,25 +2222,25 @@ class RServiceTracker {
         console.log('Current Config:', config);
 
         if (config.DAILY_WAGE !== undefined && config.PAYMENT_THRESHOLD !== undefined && config.INCREMENT_VALUE !== undefined) {
-            console.log('✅ Configuration values are present and valid.');
+            console.log('[CONFIG] Configuration values are present and valid.');
             console.log('DAILY_WAGE:', config.DAILY_WAGE);
             console.log('PAYMENT_THRESHOLD:', config.PAYMENT_THRESHOLD);
             console.log('INCREMENT_VALUE:', config.INCREMENT_VALUE);
             
             // Also verify ConfigManager if available
             if (window.ConfigManager) {
-                console.log('✅ ConfigManager is available');
+                console.log('[CONFIG] ConfigManager is available');
                 try {
                     const amounts = window.ConfigManager.generatePaymentAmounts();
-                    console.log('✅ Payment amounts generated:', amounts);
+                    console.log('[CONFIG] Payment amounts generated:', amounts);
                 } catch (e) {
-                    console.error('❌ Error generating payment amounts:', e);
+                    console.error('[CONFIG] Error generating payment amounts:', e);
                 }
             } else {
-                console.warn('⚠️ ConfigManager not available');
+                console.warn('[CONFIG] ConfigManager not available');
             }
         } else {
-            console.warn('⚠️ Configuration values are missing or invalid. Falling back to defaults.');
+            console.warn('[CONFIG] Configuration values are missing or invalid. Falling back to defaults.');
             console.log('Current Config:', config);
             // Fallback to defaults if config is missing or invalid
             window.R_SERVICE_CONFIG = {
