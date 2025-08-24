@@ -386,30 +386,21 @@ class DatabaseManager {
                 };
             }
             
-            // Calculate total advance amount
+            // Calculate total advance amount (pure advance, not counting work covered)
             const totalAdvanceAmount = advancePayments.reduce((sum, payment) => {
-                const workCovered = payment.workDates.length * 25;
-                const advanceAmount = payment.amount - workCovered;
-                return sum + (advanceAmount > 0 ? advanceAmount : 0);
+                return sum + payment.amount;
             }, 0);
             
             // Calculate work required to clear advance
             const workRequiredForAdvance = Math.ceil(totalAdvanceAmount / 25);
             
-            // Find all completed work since advance payments were made
-            const completedWork = workRecords.filter(record => {
-                return record.status === 'completed';
-            });
-            
-            // Calculate total work done towards advance (paid + unpaid)
-            const totalWorkDone = completedWork.length;
-            
-            // Find unpaid work that can still be used for advance
+            // Find unpaid completed work (this is what counts towards paying back advance)
             const unpaidWork = workRecords.filter(record => {
                 return record.status === 'completed' && !this.isRecordPaid(record, payments);
             });
             
-            const workCompletedForAdvance = totalWorkDone;
+            // Only unpaid work counts towards paying back the advance
+            const workCompletedForAdvance = Math.min(unpaidWork.length, workRequiredForAdvance);
             const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - unpaidWork.length);
             
             return {

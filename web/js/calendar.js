@@ -102,11 +102,14 @@ class CalendarManager {
         }
     }
 
-    // Render calendar grid
+    // Render calendar grid (optimized for performance)
     renderGrid() {
         const gridElement = document.getElementById('calendarGrid');
         if (!gridElement) return;
 
+        // Use document fragment for better performance
+        const fragment = document.createDocumentFragment();
+        
         // Clear existing content
         gridElement.innerHTML = '';
 
@@ -117,13 +120,17 @@ class CalendarManager {
             dayHeader.textContent = dayName;
             dayHeader.style.cssText = `
                 padding: 1rem;
-                background: var(--surface-alt);
-                font-weight: 600;
+                background: linear-gradient(135deg, var(--surface-alt), var(--surface));
+                font-weight: 700;
                 text-align: center;
-                color: var(--text-secondary);
-                border-bottom: 1px solid var(--border);
+                color: var(--primary);
+                border-bottom: 2px solid var(--primary);
+                border-radius: 8px 8px 0 0;
+                text-transform: uppercase;
+                font-size: 0.85rem;
+                letter-spacing: 1px;
             `;
-            gridElement.appendChild(dayHeader);
+            fragment.appendChild(dayHeader);
         });
 
         // Get first day of month and number of days
@@ -138,7 +145,7 @@ class CalendarManager {
         for (let i = 0; i < startDay; i++) {
             const emptyCell = document.createElement('div');
             emptyCell.className = 'calendar-cell empty';
-            gridElement.appendChild(emptyCell);
+            fragment.appendChild(emptyCell);
         }
 
         // Add cells for each day of the month
@@ -147,7 +154,7 @@ class CalendarManager {
             const dateString = this.formatDate(cellDate);
             
             const cell = this.createDayCell(day, cellDate, dateString);
-            gridElement.appendChild(cell);
+            fragment.appendChild(cell);
         }
 
         // Add empty cells to complete the grid (6 rows × 7 days = 42 cells)
@@ -158,8 +165,11 @@ class CalendarManager {
         for (let i = 0; i < remainingCells; i++) {
             const emptyCell = document.createElement('div');
             emptyCell.className = 'calendar-cell empty';
-            gridElement.appendChild(emptyCell);
+            fragment.appendChild(emptyCell);
         }
+        
+        // Append all cells at once for better performance
+        gridElement.appendChild(fragment);
     }
 
     // Create day cell
@@ -239,10 +249,12 @@ class CalendarManager {
         indicators.className = 'day-indicators';
         indicators.style.cssText = `
             display: flex;
+            flex-direction: row;
             gap: 0.25rem;
             margin-top: 0.25rem;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: center;
+            align-items: center;
         `;
 
         if (workRecord && workRecord.status === 'completed') {
@@ -694,7 +706,7 @@ class CalendarManager {
                         window.app.currentStats = await this.db.getEarningsStats();
                         window.app.updateDashboard();
                         await window.app.updatePendingUnpaidDates();
-                        window.app.updatePaidButtonVisibility();
+                        await window.app.updatePaidButtonVisibility();
                         
                         // Update charts if available
                         if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
@@ -755,11 +767,15 @@ const calendarStyle = document.createElement('style');
 calendarStyle.textContent = `
     .calendar-header-cell {
         padding: 1rem;
-        background: var(--surface-alt);
-        font-weight: 600;
+        background: linear-gradient(135deg, var(--surface-alt), var(--surface));
+        font-weight: 700;
         text-align: center;
-        color: var(--text-secondary);
-        border-bottom: 1px solid var(--border);
+        color: var(--primary);
+        border-bottom: 2px solid var(--primary);
+        border-radius: 8px 8px 0 0;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
     }
     
     .day-details {

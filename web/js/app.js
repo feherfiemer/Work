@@ -391,8 +391,20 @@ class RServiceTracker {
         }
     }
 
-    // Update dashboard with current stats
+    // Debounced update dashboard for better performance
     updateDashboard() {
+        // Cancel previous update if still pending
+        if (this.updateDashboardTimeout) {
+            clearTimeout(this.updateDashboardTimeout);
+        }
+        
+        this.updateDashboardTimeout = setTimeout(() => {
+            this._performDashboardUpdate();
+        }, 50);
+    }
+
+    // Actual dashboard update implementation
+    _performDashboardUpdate() {
         // Add shimmer loading effect before updating
         const dashboardCards = document.querySelectorAll('.card');
         dashboardCards.forEach(card => {
@@ -584,7 +596,7 @@ class RServiceTracker {
         }
         
         // Update paid button visibility
-        this.updatePaidButtonVisibility();
+        await this.updatePaidButtonVisibility();
     }
 
     // Check for pending payments and show paid button if needed
@@ -616,10 +628,22 @@ class RServiceTracker {
     }
 
     // Update paid button visibility
-    updatePaidButtonVisibility() {
+    async updatePaidButtonVisibility() {
         const paidBtn = document.getElementById('paidBtn');
         if (paidBtn) {
-            if (this.pendingUnpaidDates.length >= 4) {
+            // Check if there are unpaid work days that can be paid
+            await this.updatePendingUnpaidDates();
+            
+            // Check advance payment status
+            const advanceStatus = await this.db.getAdvancePaymentStatus();
+            
+            // Show paid button if:
+            // 1. There are 4+ unpaid work days for regular payment, OR
+            // 2. There are any unpaid work days and there's an outstanding advance to pay back
+            const shouldShowPaidBtn = this.pendingUnpaidDates.length >= 4 || 
+                                    (this.pendingUnpaidDates.length > 0 && advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0);
+            
+            if (shouldShowPaidBtn) {
                 paidBtn.style.display = 'inline-flex';
             } else {
                 paidBtn.style.display = 'none';
@@ -720,7 +744,7 @@ class RServiceTracker {
     }
 
     // Update pending unpaid dates
-    async updatePendingDates() {
+    async updatePendingUnpaidDates() {
         try {
             // Refresh data from database
             const workRecords = await this.db.getAllWorkRecords();
@@ -746,7 +770,7 @@ class RServiceTracker {
         
         if (modal && unpaidDaysEl && pendingAmountEl) {
             // Refresh pending dates before showing modal
-            await this.updatePendingDates();
+            await this.updatePendingUnpaidDates();
             
             const pendingAmount = this.pendingUnpaidDates.length * 25;
             unpaidDaysEl.textContent = this.pendingUnpaidDates.length;
@@ -771,6 +795,7 @@ class RServiceTracker {
             modal.classList.remove('show');
             // Clear selections
             paymentButtons.forEach(btn => btn.classList.remove('selected'));
+            this.selectedPaymentAmount = null;
         };
 
         // Remove existing listeners to prevent duplicates
@@ -782,15 +807,74 @@ class RServiceTracker {
             if (e.target === modal) closeModal();
         });
 
-        // Payment button handlers - remove duplicates first
+        // Enhanced payment button handlers
         paymentButtons.forEach(btn => {
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
-            newBtn.addEventListener('click', () => {
+            newBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Remove previous selections
+                document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
+                
+                // Select current button
+                newBtn.classList.add('selected');
+                
                 const amount = parseInt(newBtn.dataset.amount);
-                this.processPayment(amount, closeModal);
+                this.selectedPaymentAmount = amount;
+                
+                // Add visual feedback
+                newBtn.style.animation = 'bounceIn 0.6s ease-out';
+                setTimeout(() => newBtn.style.animation = '', 600);
+                
+                // Update payment summary
+                this.updatePaymentSummary(amount);
+                
+                // Auto-process payment after selection with confirmation
+                setTimeout(() => {
+                    if (this.selectedPaymentAmount === amount) {
+                        this.showPaymentConfirmation(amount, closeModal);
+                    }
+                }, 800);
             });
         });
+    }
+
+    // Update payment summary display
+    updatePaymentSummary(amount) {
+        const summaryEl = document.getElementById('paymentSummary');
+        const selectedAmountEl = document.getElementById('selectedAmountDisplay');
+        const paymentTypeEl = document.getElementById('paymentTypeDisplay');
+        const workDaysCoveredEl = document.getElementById('workDaysCoveredDisplay');
+        
+        if (summaryEl && selectedAmountEl && paymentTypeEl && workDaysCoveredEl) {
+            const pendingAmount = this.pendingUnpaidDates.length * 25;
+            const isAdvance = amount > pendingAmount;
+            const workDaysCovered = Math.min(Math.floor(amount / 25), this.pendingUnpaidDates.length);
+            
+            selectedAmountEl.textContent = `₹${amount}`;
+            paymentTypeEl.textContent = isAdvance ? 'Advance Payment' : 'Regular Payment';
+            paymentTypeEl.style.color = isAdvance ? 'var(--warning)' : 'var(--success)';
+            workDaysCoveredEl.textContent = `${workDaysCovered} days`;
+            
+            // Show summary with animation
+            summaryEl.style.display = 'block';
+            summaryEl.classList.add('animate-slide-up');
+        }
+    }
+
+    // Show payment confirmation
+    showPaymentConfirmation(amount, closeModalCallback) {
+        const message = `Process payment of ₹${amount}?`;
+        this.notifications.showConfirmation(
+            message,
+            () => this.processPayment(amount, closeModalCallback),
+            () => {
+                // Reset selection on cancel
+                document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
+                this.selectedPaymentAmount = null;
+            }
+        );
     }
 
     // Process the selected payment
@@ -859,7 +943,7 @@ class RServiceTracker {
             
             // Update pending dates (remove paid dates)
             this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
-            this.updatePaidButtonVisibility();
+            await this.updatePaidButtonVisibility();
             
             // Update charts and calendar with error handling
             try {
@@ -1298,7 +1382,7 @@ class RServiceTracker {
                     // Reset UI
                     this.currentStats = await this.db.getEarningsStats();
                     this.updateDashboard();
-                    this.updateTodayStatus();
+                    await this.updateTodayStatus();
                     this.hidePaidButton();
                     
                     // Update views
@@ -1473,9 +1557,34 @@ class RServiceTracker {
     }
 }
 
+// Performance monitoring
+const performanceMonitor = {
+    startTime: performance.now(),
+    markTime: (label) => {
+        if (performance.mark) {
+            performance.mark(label);
+            console.log(`Performance: ${label} at ${(performance.now() - performanceMonitor.startTime).toFixed(2)}ms`);
+        }
+    }
+};
+
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new RServiceTracker();
+    performanceMonitor.markTime('DOM-loaded');
+    
+    // Use requestIdleCallback for better performance
+    if (window.requestIdleCallback) {
+        requestIdleCallback(() => {
+            performanceMonitor.markTime('App-init-start');
+            window.app = new RServiceTracker();
+        });
+    } else {
+        // Fallback for older browsers
+        setTimeout(() => {
+            performanceMonitor.markTime('App-init-start');
+            window.app = new RServiceTracker();
+        }, 0);
+    }
 });
 
 // Handle beforeunload for data safety
