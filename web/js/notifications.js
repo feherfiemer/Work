@@ -23,14 +23,14 @@ class NotificationManager {
         container.className = 'toast-container';
         container.style.cssText = `
             position: fixed;
-            top: 5rem;
+            top: 1rem;
             right: 1rem;
             z-index: 10000;
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
             pointer-events: none;
-            max-height: calc(100vh - 6rem);
+            max-height: calc(100vh - 2rem);
             overflow-y: auto;
         `;
         document.body.appendChild(container);

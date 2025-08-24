@@ -774,6 +774,10 @@ class RServiceTracker {
                     this.notifications.showToast('Settings saved successfully!', 'success');
                 }
                 
+                // Immediately update original settings and disable save button
+                this.storeOriginalSettings();
+                this.disableSaveButton();
+                
                 // Show loading toast for regeneration and reset
                 const loadingToast = this.notifications ? this.notifications.showLoadingToast('Updating payment options and resetting saved amounts...') : null;
                 
@@ -810,9 +814,6 @@ class RServiceTracker {
                         
                         // Update payment period display if it exists
                         this.updatePaymentPeriodDisplay(newConfig.PAYMENT_DAY_DURATION);
-                        
-                        // Update original settings to reflect the saved values
-                        this.storeOriginalSettings();
                         
                         // Complete loading toast
                         if (loadingToast && this.notifications) {
