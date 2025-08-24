@@ -407,13 +407,24 @@ class RServiceTracker {
                 return;
             }
 
-            // Load current settings
+            // Load current settings and store original values
             this.loadSettings();
+            this.storeOriginalSettings();
 
             // Save settings
             const saveSettingsBtn = document.getElementById('saveSettings');
             if (saveSettingsBtn) {
-                saveSettingsBtn.addEventListener('click', () => this.saveSettings());
+                // Initially disable the save button
+                this.disableSaveButton();
+                
+                saveSettingsBtn.addEventListener('click', (e) => {
+                    if (saveSettingsBtn.disabled) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                    this.saveSettings();
+                });
             }
 
             // Reset settings
@@ -422,28 +433,107 @@ class RServiceTracker {
                 resetSettingsBtn.addEventListener('click', () => this.resetSettings());
             }
 
-            // Real-time validation for increment value
+            // Real-time validation and change detection for all inputs
             const incrementInput = document.getElementById('incrementValue');
-            if (incrementInput) {
-                incrementInput.addEventListener('input', () => this.validateSettings());
-            }
-
-            // Real-time validation for payment duration
             const durationInput = document.getElementById('paymentDuration');
-            if (durationInput) {
-                durationInput.addEventListener('input', () => this.validateSettings());
-            }
-
-            // Real-time validation for max payment
             const maxPaymentInput = document.getElementById('maxPaymentAmount');
-            if (maxPaymentInput) {
-                maxPaymentInput.addEventListener('input', () => this.validateSettings());
-            }
+
+            [incrementInput, durationInput, maxPaymentInput].forEach(input => {
+                if (input) {
+                    input.addEventListener('input', () => {
+                        this.validateSettings();
+                        this.checkForChanges();
+                    });
+                }
+            });
             
             console.log('Settings handlers setup completed');
         } catch (error) {
             console.error('Error setting up settings handlers:', error);
         }
+    }
+
+    // Store original settings values for change detection
+    storeOriginalSettings() {
+        const config = this.getCurrentConfig();
+        this.originalSettings = {
+            INCREMENT_VALUE: config.INCREMENT_VALUE || 25,
+            PAYMENT_DAY_DURATION: config.PAYMENT_DAY_DURATION || 4,
+            MAX_PAYMENT_AMOUNT: config.MAX_PAYMENT_AMOUNT || 1000
+        };
+        console.log('Original settings stored:', this.originalSettings);
+    }
+
+    // Check if settings have changed from original values
+    checkForChanges() {
+        if (!this.originalSettings) return;
+
+        const incrementInput = document.getElementById('incrementValue');
+        const durationInput = document.getElementById('paymentDuration');
+        const maxPaymentInput = document.getElementById('maxPaymentAmount');
+
+        const currentIncrement = parseInt(incrementInput?.value) || this.originalSettings.INCREMENT_VALUE;
+        const currentDuration = parseInt(durationInput?.value) || this.originalSettings.PAYMENT_DAY_DURATION;
+        const currentMaxPayment = parseInt(maxPaymentInput?.value) || this.originalSettings.MAX_PAYMENT_AMOUNT;
+
+        const hasChanges = (
+            currentIncrement !== this.originalSettings.INCREMENT_VALUE ||
+            currentDuration !== this.originalSettings.PAYMENT_DAY_DURATION ||
+            currentMaxPayment !== this.originalSettings.MAX_PAYMENT_AMOUNT
+        );
+
+        const isValid = this.validateSettings();
+
+        // Enable save button only if there are changes AND settings are valid
+        const saveBtn = document.getElementById('saveSettings');
+        if (saveBtn) {
+            if (hasChanges && isValid) {
+                this.enableSaveButton();
+            } else {
+                this.disableSaveButton();
+            }
+        }
+    }
+
+    // Enable save button
+    enableSaveButton() {
+        const saveBtn = document.getElementById('saveSettings');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = '1';
+            saveBtn.style.cursor = 'pointer';
+            saveBtn.style.pointerEvents = 'auto';
+            saveBtn.classList.remove('disabled');
+        }
+    }
+
+    // Disable save button
+    disableSaveButton() {
+        const saveBtn = document.getElementById('saveSettings');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.style.opacity = '0.5';
+            saveBtn.style.cursor = 'not-allowed';
+            saveBtn.style.pointerEvents = 'none';
+            saveBtn.classList.add('disabled');
+        }
+    }
+
+    // Get current configuration
+    getCurrentConfig() {
+        let config = {};
+        if (window.ConfigManager && typeof window.ConfigManager.getConfig === 'function') {
+            config = window.ConfigManager.getConfig();
+        } else if (window.R_SERVICE_CONFIG) {
+            config = window.R_SERVICE_CONFIG;
+        } else {
+            config = {
+                INCREMENT_VALUE: 25,
+                PAYMENT_DAY_DURATION: 4,
+                MAX_PAYMENT_AMOUNT: 1000
+            };
+        }
+        return config;
     }
 
     // Load settings into UI
@@ -556,7 +646,7 @@ class RServiceTracker {
         return isValid;
     }
 
-    // Show simple validation error
+    // Show simple validation error with vibration
     showValidationError(input, message) {
         input.classList.add('error');
         input.style.borderColor = '#ff4757';
@@ -567,6 +657,11 @@ class RServiceTracker {
         setTimeout(() => {
             input.style.animation = '';
         }, 500);
+        
+        // Add vibration for mobile devices
+        if ('vibrate' in navigator) {
+            navigator.vibrate([100, 50, 100]); // Short vibration pattern
+        }
         
         // Add tiny red error message
         const errorEl = document.createElement('div');
@@ -623,7 +718,7 @@ class RServiceTracker {
 
             if (saved) {
                 if (this.notifications) {
-                    this.notifications.showToast('✅ Settings saved successfully!', 'success');
+                    this.notifications.showToast('<i class="fas fa-check-circle"></i> Settings saved successfully!', 'success');
                 }
                 
                 // Show loading toast for regeneration
@@ -648,7 +743,7 @@ class RServiceTracker {
                     
                     // Show completion feedback
                     if (this.notifications) {
-                        this.notifications.showToast(`🎉 Configuration updated! Payment options: ${this.getGeneratedAmountPreview()}`, 'success', 6000);
+                        this.notifications.showToast(`<i class="fas fa-cogs"></i> Configuration updated! Payment options: ${this.getGeneratedAmountPreview()}`, 'success', 6000);
                     }
                     
                     this.closeMenu();
@@ -723,7 +818,7 @@ class RServiceTracker {
                                 this.notifications.updateLoadingToast(loadingToast, 'Settings reset to defaults!', 'success');
                             }
                             
-                            this.notifications.showToast('🔄 All settings reset to default values', 'success', 5000);
+                            this.notifications.showToast('<i class="fas fa-undo"></i> All settings reset to default values', 'success', 5000);
                         }, 1000);
                     }
                 } catch (error) {
@@ -2026,91 +2121,60 @@ class RServiceTracker {
         console.log('App update available');
     }
 
-    // Setup PWA install prompt and recommendations
+    // Setup PWA install prompt and service worker
     setupPWAInstall() {
+        // Register service worker for better notification support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('Service Worker registered successfully:', registration);
+                    
+                    // Update service worker if needed
+                    registration.addEventListener('updatefound', () => {
+                        console.log('Service Worker update found');
+                    });
+                    
+                    // Set registration for notifications
+                    this.serviceWorkerRegistration = registration;
+                })
+                .catch(error => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        } else {
+            console.log('Service Worker not supported');
+        }
+
+        // PWA install prompt
         let deferredPrompt;
         
-        // Listen for beforeinstallprompt event
         window.addEventListener('beforeinstallprompt', (e) => {
-            console.log('[PWA] Install prompt triggered');
             e.preventDefault();
             deferredPrompt = e;
             
-            // Show install recommendation after a delay
-            setTimeout(() => {
-                this.showPWARecommendation(deferredPrompt);
-            }, 10000); // Show after 10 seconds
-        });
-        
-        // Listen for app installation
-        window.addEventListener('appinstalled', (e) => {
-            console.log('[PWA] App was installed');
-            this.notifications.showToast('R-Service Tracker installed successfully!', 'success');
-            deferredPrompt = null;
-        });
-        
-        // Check if running as PWA
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-            console.log('[PWA] Running as installed app');
-            // Hide install prompts since already installed
-        }
-    }
-    
-    // Show PWA install recommendation
-    showPWARecommendation(deferredPrompt) {
-        if (!deferredPrompt) return;
-        
-        // Check if user has previously dismissed
-        const dismissed = localStorage.getItem('pwa-install-dismissed');
-        if (dismissed) return;
-        
-        // Create install prompt
-        const installMessage = `
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <i class="fas fa-mobile-alt" style="font-size: 1.5rem; color: var(--primary);"></i>
-                <div>
-                    <strong>Install R-Service Tracker</strong><br>
-                    <small>Get quick access and offline support!</small>
-                </div>
-                <button id="pwa-install-btn" style="margin-left: auto; padding: 0.5rem 1rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    Install
-                </button>
-                <button id="pwa-dismiss-btn" style="padding: 0.5rem; background: none; border: none; color: var(--text-secondary); cursor: pointer;">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-        
-        this.notifications.showToast(installMessage, 'info', 0); // Show indefinitely
-        
-        // Handle install button click
-        setTimeout(() => {
-            const installBtn = document.getElementById('pwa-install-btn');
-            const dismissBtn = document.getElementById('pwa-dismiss-btn');
-            
+            // Show install button or prompt
+            const installBtn = document.getElementById('installBtn');
             if (installBtn) {
-                installBtn.addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        console.log(`[PWA] User response: ${outcome}`);
+                installBtn.style.display = 'block';
+                installBtn.addEventListener('click', () => {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        }
                         deferredPrompt = null;
-                        
-                        // Remove the toast
-                        const toasts = document.querySelectorAll('.toast');
-                        toasts.forEach(toast => toast.remove());
-                    }
+                    });
                 });
             }
-            
-            if (dismissBtn) {
-                dismissBtn.addEventListener('click', () => {
-                    localStorage.setItem('pwa-install-dismissed', 'true');
-                    const toasts = document.querySelectorAll('.toast');
-                    toasts.forEach(toast => toast.remove());
-                });
+        });
+        
+        // Check if already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.style.display = 'none';
             }
-        }, 100);
+        });
     }
 
     // Verify configuration is working
