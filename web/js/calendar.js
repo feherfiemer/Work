@@ -469,11 +469,27 @@ class CalendarManager {
         // Force paid button handler
         const forcePaidBtn = modalContent.querySelector('.force-paid-btn');
         if (forcePaidBtn) {
-            forcePaidBtn.addEventListener('click', (e) => {
+            forcePaidBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
-                const targetDate = e.target.closest('.force-paid-btn').dataset.date;
-                this.handleForcePaid(targetDate);
-                closeModal();
+                e.stopPropagation();
+                
+                try {
+                    const targetDate = forcePaidBtn.dataset.date || dateString;
+                    console.log('Force paid button clicked for date:', targetDate);
+                    
+                    if (!targetDate) {
+                        console.error('No target date found');
+                        return;
+                    }
+                    
+                    closeModal();
+                    await this.handleForcePaid(targetDate);
+                } catch (error) {
+                    console.error('Error in force paid button handler:', error);
+                    if (window.app && window.app.notifications) {
+                        window.app.notifications.showToast('Error processing force payment', 'error');
+                    }
+                }
             });
         }
 
@@ -583,7 +599,15 @@ class CalendarManager {
     // Handle force paid action
     async handleForcePaid(dateString) {
         try {
-            console.log('Force paid clicked for date:', dateString);
+            console.log('Processing force paid for date:', dateString);
+            
+            if (!dateString) {
+                throw new Error('No date provided for force payment');
+            }
+
+            if (!this.db) {
+                throw new Error('Database not available');
+            }
             
             // Check if work record exists and is completed
             const workRecord = await this.db.getWorkRecord(dateString);
@@ -597,7 +621,7 @@ class CalendarManager {
             // Check if already paid
             const payments = await this.db.getAllPayments();
             const isAlreadyPaid = payments.some(payment => 
-                payment.workDates.includes(dateString)
+                payment.workDates && payment.workDates.includes(dateString)
             );
             
             if (isAlreadyPaid) {
@@ -614,31 +638,38 @@ class CalendarManager {
                               String(today.getMonth() + 1).padStart(2, '0') + '-' + 
                               String(today.getDate()).padStart(2, '0');
             
+            console.log('Adding payment:', { amount: paymentAmount, workDates: [dateString], paymentDate });
             await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
-            console.log('Force payment added for date:', dateString);
+            console.log('Force payment added successfully');
+
+            // Show success notification first
+            if (window.app && window.app.notifications) {
+                window.app.notifications.showToast(`✅ Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
+                window.app.notifications.playSound('paid');
+            }
 
             // Update calendar and notify main app
-            await this.loadData();
-            this.render();
+            setTimeout(async () => {
+                try {
+                    await this.loadData();
+                    this.render();
 
-            // Trigger update in main app if available
-            if (window.app && typeof window.app.updateDashboard === 'function') {
-                window.app.currentStats = await this.db.getEarningsStats();
-                window.app.updateDashboard();
-                await window.app.updatePendingUnpaidDates();
-                window.app.updatePaidButtonVisibility();
-                
-                // Update charts if available
-                if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
-                    await window.app.charts.updateCharts();
+                    // Trigger update in main app if available
+                    if (window.app && typeof window.app.updateDashboard === 'function') {
+                        window.app.currentStats = await this.db.getEarningsStats();
+                        window.app.updateDashboard();
+                        await window.app.updatePendingUnpaidDates();
+                        window.app.updatePaidButtonVisibility();
+                        
+                        // Update charts if available
+                        if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
+                            await window.app.charts.updateCharts();
+                        }
+                    }
+                } catch (updateError) {
+                    console.error('Error updating UI after force payment:', updateError);
                 }
-                
-                // Show success notification
-                if (window.app.notifications) {
-                    window.app.notifications.showToast(`✅ Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
-                    window.app.notifications.playSound('paid');
-                }
-            }
+            }, 100);
 
         } catch (error) {
             console.error('Error processing force payment:', error);

@@ -386,18 +386,51 @@ class RServiceTracker {
                 // Show advance payment progress
                 const workCompleted = advanceStatus.workCompletedForAdvance;
                 const workRequired = advanceStatus.workRequiredForAdvance;
-                const progressPercent = Math.min((workCompleted / workRequired) * 100, 100);
+                
+                // Ensure we have valid numbers
+                const safeWorkCompleted = workCompleted || 0;
+                const safeWorkRequired = workRequired || 1; // Avoid division by zero
+                
+                // Calculate progress percentage
+                const progressPercent = Math.min((safeWorkCompleted / safeWorkRequired) * 100, 100);
+                console.log('Advance progress:', { workCompleted: safeWorkCompleted, workRequired: safeWorkRequired, progressPercent });
                 
                 if (progressLabelEl) {
-                    progressLabelEl.textContent = 'Advance Payback Progress';
+                    progressLabelEl.textContent = 'Progress to Work Complete';
                 }
                 if (progressTextEl) {
-                    progressTextEl.textContent = `${workCompleted}/${workRequired} days (₹${advanceStatus.totalAdvanceAmount} advance)`;
+                    // Determine time unit based on work required
+                    let timeUnit = 'days';
+                    let displayValue = safeWorkRequired;
+                    
+                    if (safeWorkRequired >= 365) {
+                        timeUnit = 'years';
+                        displayValue = Math.ceil(safeWorkRequired / 365);
+                    } else if (safeWorkRequired >= 30) {
+                        timeUnit = 'months';
+                        displayValue = Math.ceil(safeWorkRequired / 30);
+                    }
+                    
+                    progressTextEl.textContent = `${safeWorkCompleted}/${safeWorkRequired} ${timeUnit}`;
                 }
                 
                 if (progressFillEl) {
-                    progressFillEl.style.width = `${progressPercent}%`;
-                    progressFillEl.style.backgroundColor = 'var(--warning)'; // Different color for advance
+                    // Make sure the progress is visible if work is completed
+                    const finalPercent = Math.max(progressPercent, safeWorkCompleted > 0 ? 5 : 0); // Minimum 5% if any work done
+                    progressFillEl.style.width = `${finalPercent}%`;
+                    progressFillEl.style.backgroundColor = 'var(--warning)'; // Orange color for advance
+                }
+            } else if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance === 0) {
+                // Advance fully paid back
+                if (progressLabelEl) {
+                    progressLabelEl.textContent = 'Advance Completed';
+                }
+                if (progressTextEl) {
+                    progressTextEl.textContent = 'All advance work completed';
+                }
+                if (progressFillEl) {
+                    progressFillEl.style.width = '100%';
+                    progressFillEl.style.backgroundColor = 'var(--success)'; // Green when complete
                 }
             } else {
                 // Show normal payday progress
