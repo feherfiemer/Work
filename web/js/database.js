@@ -412,42 +412,74 @@ class DatabaseManager {
             // Calculate advance payment progress properly
             const amounts = this.calculateAmounts(workRecords, payments);
             
-            // For advance payments, we need to show progress as: work_done / payment_received_in_days
-            // Example: 1 day worked, paid ₹50 (2 days) = 1/2 progress
+            // ADVANCE PAYMENT LOGIC:
+            // Show liability tracking: work completed vs work paid for
+            // Example: 1 day worked, paid ₹50 (2 days) = 1/2 progress (1 completed out of 2 paid for)
             
             let totalAdvanceAmount = 0;
             let totalWorkCoveredByAdvance = 0;
-            let totalWorkDoneForAdvance = 0;
+            let totalWorkCompletedForAdvance = 0;
             
             for (const payment of advancePayments) {
-                // Get work done up to this payment date (unpaid work at time of payment)
-                const workUpToPayment = workRecords.filter(record => {
-                    return record.status === 'completed' && 
-                           new Date(record.date) <= new Date(payment.date) &&
-                           !this.isRecordPaid(record, payments.filter(p => new Date(p.date) < new Date(payment.date)));
-                });
-                
-                // Calculate work value at time of payment
-                const workValueAtPayment = workUpToPayment.length * amounts.dailyWage;
-                const workDaysAtPayment = workUpToPayment.length;
+                console.log('Processing advance payment:', payment);
                 
                 // Total days this payment covers
                 const daysCoveredByPayment = Math.ceil(payment.amount / amounts.dailyWage);
+                console.log('Days covered by payment:', daysCoveredByPayment);
                 
-                // Only count the excess as advance
+                // Get ALL work that is covered by this advance payment (from payment.workDates)
+                const workDatesCoveredByPayment = payment.workDates || [];
+                console.log('Work dates covered by payment:', workDatesCoveredByPayment);
+                
+                // Count how many of those work dates were actually completed
+                const completedWorkForThisPayment = workDatesCoveredByPayment.filter(workDate => {
+                    const workRecord = workRecords.find(record => record.date === workDate);
+                    const isCompleted = workRecord && workRecord.status === 'completed';
+                    console.log(`Work date ${workDate}: record found=${!!workRecord}, status=${workRecord?.status}, completed=${isCompleted}`);
+                    return isCompleted;
+                }).length;
+                console.log('Completed work for this payment:', completedWorkForThisPayment);
+                
+                // Calculate if this is an advance (paid more than work done at time of payment)
+                // We need to check work that was done BEFORE the payment date
+                const workDoneBeforePayment = workRecords.filter(record => {
+                    return record.status === 'completed' && 
+                           new Date(record.date) <= new Date(payment.date) &&
+                           workDatesCoveredByPayment.includes(record.date);
+                }).length;
+                
+                const workValueAtPayment = workDoneBeforePayment * amounts.dailyWage;
                 const advanceForThisPayment = Math.max(0, payment.amount - workValueAtPayment);
+                console.log('Advance amount for this payment:', advanceForThisPayment);
                 
                 if (advanceForThisPayment > 0) {
+                    // This is an advance payment
                     totalAdvanceAmount += advanceForThisPayment;
-                    totalWorkCoveredByAdvance += daysCoveredByPayment;
-                    totalWorkDoneForAdvance += workDaysAtPayment;
+                    totalWorkCoveredByAdvance += daysCoveredByPayment; // Total days paid for
+                    totalWorkCompletedForAdvance += completedWorkForThisPayment; // Work actually completed (including work done after payment)
+                    
+                    console.log('Running totals:', {
+                        totalAdvanceAmount,
+                        totalWorkCoveredByAdvance,
+                        totalWorkCompletedForAdvance
+                    });
                 }
             }
             
-            // Progress calculation: work done out of total work covered by advance payments
-            const workRequiredForAdvance = totalWorkCoveredByAdvance;
-            const workCompletedForAdvance = totalWorkDoneForAdvance;
+            // For advance payments, show: work_completed / work_paid_for
+            // This shows the liability - how much of the paid work is actually completed
+            const workRequiredForAdvance = totalWorkCoveredByAdvance; // Days paid for
+            const workCompletedForAdvance = totalWorkCompletedForAdvance; // Days actually completed
             const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workCompletedForAdvance);
+            
+            console.log('Final advance payment status:', {
+                hasAdvancePayments: true,
+                totalAdvanceAmount,
+                workRequiredForAdvance,
+                workCompletedForAdvance,
+                workRemainingForAdvance,
+                expectedDisplay: `${workCompletedForAdvance}/${workRequiredForAdvance} days`
+            });
             
             return {
                 hasAdvancePayments: true,
