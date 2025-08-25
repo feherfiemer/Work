@@ -133,9 +133,9 @@ class NotificationManager {
         
         if ('Notification' in window && this.permission === 'granted') {
             const defaultOptions = {
-                icon: 'assets/favicon.ico',
-                badge: 'assets/favicon.ico',
-                image: 'assets/favicon.ico', // Add image for better mobile support
+                icon: location.origin + '/assets/favicon.ico',
+                badge: '' + location.origin + '/assets/favicon.ico'',
+                image: '' + location.origin + '/assets/favicon.ico'', // Add image for better mobile support
                 dir: 'ltr',
                 lang: 'en',
                 renotify: true,
@@ -261,7 +261,7 @@ class NotificationManager {
         const title = 'Welcome to R-Service Tracker!';
         const options = {
             body: 'Setting up your daily work tracker... We\'re configuring notifications, initializing your dashboard, and preparing your work tracking system. You\'ll be ready to track your daily work and earnings in just a moment!',
-            icon: '.assets/favicon.ico',
+            icon: '.' + location.origin + '/assets/favicon.ico'',
             tag: 'welcome-setup',
             requireInteraction: true,
             vibrate: [200, 100, 200, 100, 200],
@@ -320,7 +320,7 @@ class NotificationManager {
                                     this.showNotification('Daily Check-in', {
                                         body: 'Welcome back! Ready to track your work today? Don\'t forget to mark your tasks as completed.',
                                         tag: 'daily-checkin',
-                                        icon: '.assets/favicon.ico'
+                                        icon: '.' + location.origin + '/assets/favicon.ico''
                                     });
                                 }, 1500);
                             }
@@ -362,7 +362,7 @@ class NotificationManager {
                         this.showNotification('Daily Check-in', {
                             body: 'Welcome back! Ready to track your work today? Don\'t forget to mark your tasks as completed.',
                             tag: 'daily-checkin',
-                            icon: '.assets/favicon.ico'
+                            icon: '.' + location.origin + '/assets/favicon.ico''
                         });
                     }, 2000);
                 }
@@ -378,7 +378,7 @@ class NotificationManager {
         const title = 'Payday Alert!';
         const options = {
             body: 'Today is your payday — you\'ve earned ₹100! Mark your payment to update your records.',
-            icon: 'assets/favicon.ico',
+            icon: location.origin + '/assets/favicon.ico',
             tag: 'payday',
             requireInteraction: true,
             actions: [
@@ -402,7 +402,7 @@ class NotificationManager {
         const title = 'Work Marked Complete';
         const options = {
             body: `Great job! You've earned ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || window.R_SERVICE_CONFIG?.INCREMENT_VALUE || 25} today.`,
-            icon: 'assets/favicon.ico',
+            icon: location.origin + '/assets/favicon.ico',
             tag: 'work-completed'
         };
 
@@ -414,7 +414,7 @@ class NotificationManager {
         const title = 'Payment Recorded';
         const options = {
             body: `Payment of ₹${amount} has been recorded successfully.`,
-            icon: 'assets/favicon.ico',
+            icon: location.origin + '/assets/favicon.ico',
             tag: 'payment-recorded'
         };
 
@@ -426,7 +426,7 @@ class NotificationManager {
         const title = 'Streak Achievement!';
         const options = {
             body: `Amazing! You've worked ${streak} days in a row. Keep it up!`,
-            icon: 'assets/favicon.ico',
+            icon: location.origin + '/assets/favicon.ico',
             tag: 'streak-achievement'
         };
 
@@ -438,7 +438,7 @@ class NotificationManager {
         const title = 'Advance Payment Reminder';
         const options = {
             body: 'You have advance payments that need to be worked off. Complete your remaining work days!',
-            icon: 'assets/favicon.ico',
+            icon: location.origin + '/assets/favicon.ico',
             tag: 'advance-payment-reminder',
             requireInteraction: true,
             actions: [
@@ -1235,7 +1235,7 @@ class NotificationManager {
         const title = 'Daily Reminder';
         const options = {
             body: 'Don\'t forget to mark your work as done today!',
-            icon: 'assets/favicon.ico',
+            icon: location.origin + '/assets/favicon.ico',
             tag: 'daily-reminder'
         };
 
@@ -1254,7 +1254,7 @@ class NotificationManager {
             const title = 'Milestone Achieved!';
             const options = {
                 body: `Congratulations! You've earned ₹${stats.totalEarned} in total!`,
-                icon: 'assets/favicon.ico',
+                icon: location.origin + '/assets/favicon.ico',
                 tag: 'earnings-milestone'
             };
             this.showNotification(title, options);
