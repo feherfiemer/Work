@@ -261,12 +261,13 @@ class CalendarManager {
                 background: var(--success);
                 color: white;
                 border-radius: 50%;
-                width: 20px;
-                height: 20px;
+                width: 18px;
+                height: 18px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 0.75rem;
+                font-size: 0.7rem;
+                flex-shrink: 0;
             `;
             indicators.appendChild(workIndicator);
 
@@ -282,12 +283,13 @@ class CalendarManager {
                     background: var(--info);
                     color: white;
                     border-radius: 50%;
-                    width: 20px;
-                    height: 20px;
+                    width: 18px;
+                    height: 18px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 0.75rem;
+                    font-size: 0.7rem;
+                    flex-shrink: 0;
                 `;
                 indicators.appendChild(paidIndicator);
             }

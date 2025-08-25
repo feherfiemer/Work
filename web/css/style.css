@@ -2093,9 +2093,9 @@ body {
   
   .calendar-cell .work-indicator,
   .calendar-cell .paid-indicator {
-    width: 14px !important;
-    height: 14px !important;
-    font-size: 0.55rem !important;
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 0.6rem !important;
   }
   
   .modal-content {
@@ -2135,9 +2135,9 @@ body {
   
   .calendar-cell .work-indicator,
   .calendar-cell .paid-indicator {
-    width: 10px !important;
-    height: 10px !important;
-    font-size: 0.4rem !important;
+    width: 12px !important;
+    height: 12px !important;
+    font-size: 0.5rem !important;
   }
   
   .calendar-cell .payment-amount {
@@ -2494,11 +2494,12 @@ body {
 .day-indicators {
   display: flex;
   flex-direction: row;
-  gap: 0.25rem;
+  gap: 0.2rem;
   justify-content: center;
   align-items: center;
   flex-wrap: nowrap;
-  height: 20px;
+  height: auto;
+  min-height: 18px;
 }
 
 /* View header alignment */
@@ -2980,9 +2981,9 @@ select:focus {
 }
 
 .status-badge.paid {
-  background: var(--primary-color-alpha);
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary);
+  border: 1px solid var(--primary);
 }
 
 .payment-options h4 {
@@ -3620,7 +3621,7 @@ select:focus {
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background-color: var(--primary-color);
+  background-color: var(--primary);
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -3628,7 +3629,7 @@ select:focus {
 }
 
 .toggle-switch input:focus + .toggle-slider {
-  box-shadow: 0 0 0 3px var(--primary-color-alpha);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
 }
 
 /* Notification Settings Styles */
@@ -3659,8 +3660,8 @@ select:focus {
 
 .settings-input[type="time"]:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px var(--primary-color-alpha);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
 }
 
 /* Enhanced About Modal Styles */
@@ -3679,7 +3680,7 @@ select:focus {
 }
 
 .version-badge {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -3691,7 +3692,7 @@ select:focus {
 
 .app-icon {
   font-size: 2.5rem;
-  color: var(--primary-color);
+  color: var(--primary);
 }
 
 .app-description {
@@ -3723,7 +3724,7 @@ select:focus {
 
 .feature-category h5 {
   margin: 0 0 1rem 0;
-  color: var(--primary-color);
+  color: var(--primary);
   font-size: 1.1rem;
   font-weight: 600;
   display: flex;
@@ -3783,7 +3784,7 @@ select:focus {
 
 .tech-item i {
   font-size: 1.5rem;
-  color: var(--primary-color);
+  color: var(--primary);
 }
 
 .tech-item span {
@@ -3792,7 +3793,7 @@ select:focus {
 }
 
 .developer-info {
-  background: linear-gradient(135deg, var(--primary-color-alpha), var(--secondary-color-alpha));
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1), rgba(var(--primary-rgb), 0.05));
   border-radius: 12px;
   padding: 2rem;
   margin-top: 2rem;
@@ -3801,7 +3802,7 @@ select:focus {
 
 .developer-info h5 {
   margin: 0 0 1rem 0;
-  color: var(--primary-color);
+  color: var(--primary);
   font-size: 1.2rem;
   font-weight: 600;
 }

@@ -433,6 +433,30 @@ class NotificationManager {
         this.showNotification(title, options);
     }
 
+    // Show advance payment notification
+    showAdvancePaymentNotification() {
+        const title = 'Advance Payment Reminder';
+        const options = {
+            body: 'You have advance payments that need to be worked off. Complete your remaining work days!',
+            icon: 'assets/favicon.ico',
+            tag: 'advance-payment-reminder',
+            requireInteraction: true,
+            actions: [
+                {
+                    action: 'view-status',
+                    title: 'View Status'
+                },
+                {
+                    action: 'dismiss',
+                    title: 'Dismiss'
+                }
+            ]
+        };
+
+        this.showNotification(title, options);
+        this.showToast('Advance payment reminder: Complete your remaining work days!', 'warning', 6000);
+    }
+
     // Toast notification system
     showToast(message, type = 'info', duration = 5000) {
         if (!this.toastContainer) {
@@ -643,7 +667,7 @@ class NotificationManager {
         }
     }
 
-    // Play success sound (satisfying work completion sound)
+    // Play success sound (realistic coin/achievement sound)
     playSuccessSound() {
         if (!this.audioContext) return;
 
@@ -651,57 +675,79 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Create master gain node with perfect volume
+            // Create master gain node
             const masterGain = ctx.createGain();
             masterGain.connect(ctx.destination);
-            masterGain.gain.setValueAtTime(0.4, now);
+            masterGain.gain.setValueAtTime(0.5, now);
 
-            // Simple, satisfying "task complete" chime
-            const chime = ctx.createOscillator();
-            const chimeGain = ctx.createGain();
-            const chimeFilter = ctx.createBiquadFilter();
+            // Coin drop sound - metallic ping with realistic decay
+            const coinPing = ctx.createOscillator();
+            const coinGain = ctx.createGain();
+            const coinFilter = ctx.createBiquadFilter();
             
-            chime.connect(chimeFilter);
-            chimeFilter.connect(chimeGain);
-            chimeGain.connect(masterGain);
+            coinPing.connect(coinFilter);
+            coinFilter.connect(coinGain);
+            coinGain.connect(masterGain);
             
-            // Warm, pleasant confirmation tone
-            chime.type = 'sine';
-            chimeFilter.type = 'lowpass';
-            chimeFilter.frequency.setValueAtTime(3000, now);
-            chimeFilter.Q.setValueAtTime(1, now);
+            // High metallic frequency for coin-like sound
+            coinPing.type = 'triangle';
+            coinFilter.type = 'bandpass';
+            coinFilter.frequency.setValueAtTime(2400, now);
+            coinFilter.Q.setValueAtTime(8, now);
             
-            // Pleasant ascending melody
-            chime.frequency.setValueAtTime(523.25, now);        // C5 - confident start
-            chime.frequency.linearRampToValueAtTime(659.25, now + 0.1); // E5 - uplifting
-            chime.frequency.linearRampToValueAtTime(783.99, now + 0.2); // G5 - completion
+            // Quick metallic "ting" like a coin
+            coinPing.frequency.setValueAtTime(2400, now);
+            coinPing.frequency.exponentialRampToValueAtTime(1800, now + 0.1);
+            coinPing.frequency.exponentialRampToValueAtTime(2200, now + 0.2);
             
-            chimeGain.gain.setValueAtTime(0.8, now);
-            chimeGain.gain.linearRampToValueAtTime(0.6, now + 0.1);
-            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            coinGain.gain.setValueAtTime(0.8, now);
+            coinGain.gain.exponentialRampToValueAtTime(0.1, now + 0.15);
+            coinGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
             
-            chime.start(now);
-            chime.stop(now + 0.5);
+            coinPing.start(now);
+            coinPing.stop(now + 0.4);
 
-            // Subtle harmonic for richness
-            const harmony = ctx.createOscillator();
-            const harmonyGain = ctx.createGain();
+            // Secondary harmonic for coin resonance
+            const resonance = ctx.createOscillator();
+            const resonanceGain = ctx.createGain();
+            const resonanceFilter = ctx.createBiquadFilter();
             
-            harmony.connect(harmonyGain);
-            harmonyGain.connect(masterGain);
+            resonance.connect(resonanceFilter);
+            resonanceFilter.connect(resonanceGain);
+            resonanceGain.connect(masterGain);
             
-            harmony.type = 'triangle';
-            harmony.frequency.setValueAtTime(261.63, now);      // C4 - octave below
-            harmony.frequency.linearRampToValueAtTime(329.63, now + 0.1); // E4
-            harmony.frequency.linearRampToValueAtTime(392.00, now + 0.2); // G4
+            resonance.type = 'sine';
+            resonanceFilter.type = 'highpass';
+            resonanceFilter.frequency.setValueAtTime(1200, now);
             
-            harmonyGain.gain.setValueAtTime(0.3, now);
-            harmonyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            resonance.frequency.setValueAtTime(4800, now);
+            resonance.frequency.exponentialRampToValueAtTime(3600, now + 0.08);
             
-            harmony.start(now);
-            harmony.stop(now + 0.4);
+            resonanceGain.gain.setValueAtTime(0.4, now);
+            resonanceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+            
+            resonance.start(now);
+            resonance.stop(now + 0.25);
 
-            console.log('Satisfying work completion sound played');
+            // Achievement chime overlay
+            const achievement = ctx.createOscillator();
+            const achievementGain = ctx.createGain();
+            
+            achievement.connect(achievementGain);
+            achievementGain.connect(masterGain);
+            
+            achievement.type = 'sine';
+            achievement.frequency.setValueAtTime(659.25, now + 0.1); // E5
+            achievement.frequency.linearRampToValueAtTime(783.99, now + 0.25); // G5
+            
+            achievementGain.gain.setValueAtTime(0, now);
+            achievementGain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+            achievementGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            
+            achievement.start(now);
+            achievement.stop(now + 0.5);
+
+            console.log('Realistic coin/achievement sound played');
         } catch (error) {
             console.warn('Error playing success sound:', error);
         }
@@ -724,7 +770,7 @@ class NotificationManager {
         }
     }
 
-    // Premium payment success sound (clean and satisfying)
+    // Premium payment success sound (realistic transaction sound)
     createPremiumTransactionSound() {
         try {
             const ctx = this.audioContext;
@@ -733,9 +779,48 @@ class NotificationManager {
             // Create master gain node with balanced volume
             const masterGain = ctx.createGain();
             masterGain.connect(ctx.destination);
-            masterGain.gain.setValueAtTime(0.45, now);
+            masterGain.gain.setValueAtTime(0.5, now);
             
-            // Modern payment success sound (like successful app transactions)
+            // Step 1: Card swipe/tap simulation (subtle whoosh)
+            const swipeNoise = ctx.createOscillator();
+            const swipeGain = ctx.createGain();
+            const swipeFilter = ctx.createBiquadFilter();
+            
+            swipeNoise.connect(swipeFilter);
+            swipeFilter.connect(swipeGain);
+            swipeGain.connect(masterGain);
+            
+            swipeNoise.type = 'sawtooth';
+            swipeFilter.type = 'bandpass';
+            swipeFilter.frequency.setValueAtTime(800, now);
+            swipeFilter.Q.setValueAtTime(0.5, now);
+            
+            swipeNoise.frequency.setValueAtTime(200, now);
+            swipeNoise.frequency.linearRampToValueAtTime(100, now + 0.1);
+            
+            swipeGain.gain.setValueAtTime(0.15, now);
+            swipeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            
+            swipeNoise.start(now);
+            swipeNoise.stop(now + 0.1);
+            
+            // Step 2: Processing beep (short, professional)
+            const processingBeep = ctx.createOscillator();
+            const processingGain = ctx.createGain();
+            
+            processingBeep.connect(processingGain);
+            processingGain.connect(masterGain);
+            
+            processingBeep.type = 'square';
+            processingBeep.frequency.setValueAtTime(1000, now + 0.2);
+            
+            processingGain.gain.setValueAtTime(0.2, now + 0.2);
+            processingGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            
+            processingBeep.start(now + 0.2);
+            processingBeep.stop(now + 0.3);
+            
+            // Step 3: Success confirmation (like real POS systems)
             const successChime = ctx.createOscillator();
             const chimeGain = ctx.createGain();
             const chimeFilter = ctx.createBiquadFilter();
@@ -744,73 +829,61 @@ class NotificationManager {
             chimeFilter.connect(chimeGain);
             chimeGain.connect(masterGain);
             
-            // Clean, professional payment confirmation
             successChime.type = 'sine';
             chimeFilter.type = 'lowpass';
-            chimeFilter.frequency.setValueAtTime(4000, now);
-            chimeFilter.Q.setValueAtTime(1, now);
+            chimeFilter.frequency.setValueAtTime(3000, now + 0.4);
+            chimeFilter.Q.setValueAtTime(1, now + 0.4);
             
-            // Uplifting payment success melody
-            successChime.frequency.setValueAtTime(440, now);          // A4 - foundation
-            successChime.frequency.linearRampToValueAtTime(554.37, now + 0.15); // C#5 - confidence
-            successChime.frequency.linearRampToValueAtTime(659.25, now + 0.3);  // E5 - success
-            successChime.frequency.linearRampToValueAtTime(880, now + 0.45);     // A5 - celebration
+            // Two-tone success like ATM/POS systems
+            successChime.frequency.setValueAtTime(659.25, now + 0.4);  // E5
+            successChime.frequency.linearRampToValueAtTime(830.61, now + 0.6); // G#5
             
-            chimeGain.gain.setValueAtTime(0.7, now);
-            chimeGain.gain.linearRampToValueAtTime(0.8, now + 0.15);
-            chimeGain.gain.linearRampToValueAtTime(0.6, now + 0.3);
-            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+            chimeGain.gain.setValueAtTime(0.6, now + 0.4);
+            chimeGain.gain.linearRampToValueAtTime(0.5, now + 0.6);
+            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
             
-            successChime.start(now);
-            successChime.stop(now + 0.8);
+            successChime.start(now + 0.4);
+            successChime.stop(now + 0.9);
             
-            // Subtle harmonic enhancement
-            const harmony = ctx.createOscillator();
-            const harmonyGain = ctx.createGain();
-            const harmonyFilter = ctx.createBiquadFilter();
+            // Step 4: Receipt printer simulation (optional subtle texture)
+            const printerNoise = ctx.createOscillator();
+            const printerGain = ctx.createGain();
+            const printerFilter = ctx.createBiquadFilter();
             
-            harmony.connect(harmonyFilter);
-            harmonyFilter.connect(harmonyGain);
-            harmonyGain.connect(masterGain);
+            printerNoise.connect(printerFilter);
+            printerFilter.connect(printerGain);
+            printerGain.connect(masterGain);
             
-            harmony.type = 'triangle';
-            harmonyFilter.type = 'lowpass';
-            harmonyFilter.frequency.setValueAtTime(2000, now);
+            printerNoise.type = 'sawtooth';
+            printerFilter.type = 'highpass';
+            printerFilter.frequency.setValueAtTime(2000, now + 0.7);
             
-            harmony.frequency.setValueAtTime(220, now);           // A3 - bass foundation
-            harmony.frequency.linearRampToValueAtTime(277.18, now + 0.15); // C#4
-            harmony.frequency.linearRampToValueAtTime(329.63, now + 0.3);  // E4
-            harmony.frequency.linearRampToValueAtTime(440, now + 0.45);     // A4
+            printerNoise.frequency.setValueAtTime(4000, now + 0.7);
+            printerNoise.frequency.linearRampToValueAtTime(3500, now + 0.85);
             
-            harmonyGain.gain.setValueAtTime(0.25, now);
-            harmonyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+            printerGain.gain.setValueAtTime(0.08, now + 0.7);
+            printerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
             
-            harmony.start(now);
-            harmony.stop(now + 0.7);
+            printerNoise.start(now + 0.7);
+            printerNoise.stop(now + 0.85);
             
-            // Gentle confirmation "ding"
+            // Step 5: Final confirmation bell (satisfying end)
             const confirmationBell = ctx.createOscillator();
             const bellGain = ctx.createGain();
-            const bellFilter = ctx.createBiquadFilter();
             
-            confirmationBell.connect(bellFilter);
-            bellFilter.connect(bellGain);
+            confirmationBell.connect(bellGain);
             bellGain.connect(masterGain);
             
             confirmationBell.type = 'sine';
-            bellFilter.type = 'peaking';
-            bellFilter.frequency.setValueAtTime(1760, now + 0.6);
-            bellFilter.Q.setValueAtTime(3, now + 0.6);
-            bellFilter.gain.setValueAtTime(6, now + 0.6);
+            confirmationBell.frequency.setValueAtTime(1046.50, now + 0.9); // C6 - clear, high confirmation
             
-            confirmationBell.frequency.setValueAtTime(1760, now + 0.6); // A6 - clear confirmation
-            bellGain.gain.setValueAtTime(0.4, now + 0.6);
-            bellGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+            bellGain.gain.setValueAtTime(0.4, now + 0.9);
+            bellGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
             
-            confirmationBell.start(now + 0.6);
-            confirmationBell.stop(now + 1.2);
+            confirmationBell.start(now + 0.9);
+            confirmationBell.stop(now + 1.4);
 
-            console.log('Premium payment confirmation sound played');
+            console.log('Realistic transaction sound sequence played');
         } catch (error) {
             console.warn('Error playing payment sound:', error);
         }
