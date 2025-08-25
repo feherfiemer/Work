@@ -1,7 +1,7 @@
-# R-Service Tracker v2.1.3 
-## Professional Work & Payment Management System - Polished Edition
+# R-Service Tracker v2.1.4 
+## Professional Work & Payment Management System - Theme Enhancement Edition
 
-[![Version](https://img.shields.io/badge/version-2.1.3-blue.svg)](https://github.com/feherfiemer/Work)
+[![Version](https://img.shields.io/badge/version-2.1.4-blue.svg)](https://github.com/feherfiemer/Work)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PWA](https://img.shields.io/badge/PWA-enabled-purple.svg)](manifest.json)
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)](index.html)
@@ -147,9 +147,16 @@ const themes = [
     'blue-light', 'blue-dark',
     'orange-light', 'orange-dark', 
     'green-light', 'green-dark',
-    'red-light', 'red-dark'
+    'red-light', 'red-dark',
+    'monochrome-light', 'monochrome-dark'
 ];
 ```
+
+#### Enhanced Theme System
+- **Consistent Color Variables**: All themes now use CSS custom properties for better consistency
+- **Improved Monochrome Themes**: Black & White themes with proper contrast and readability
+- **Dynamic Toast Notifications**: Notifications automatically adapt to any theme
+- **Universal Icon Colors**: All icons and text elements respect theme colors
 
 ### Payment Settings
 ```javascript
@@ -299,7 +306,17 @@ testAllSystems()  // Verify all components work
 - 🎨 Improved UI stability and performance
 - 🧪 Added comprehensive system testing
 
-### v2.1.3 - Polished Edition (Latest)
+### v2.1.4 - Theme Enhancement Edition (Latest)
+- 🎨 **Fixed Monochrome Themes**: Completely overhauled black/white themes with proper contrast and visual hierarchy
+- 🌈 **Universal CSS Variables**: Converted all hardcoded colors to use theme-aware CSS custom properties
+- 🔔 **Theme-Adaptive Toasts**: Toast notifications now automatically inherit proper theme colors and backgrounds
+- 🎯 **Consistent Icon Colors**: All icons and text elements now properly respect selected theme colors
+- 🖤 **Enhanced Dark Modes**: Improved readability and contrast in all dark theme variants
+- ✨ **Button Consistency**: All buttons now use theme variables for perfect color harmony
+- 🧹 **Code Cleanup**: Removed duplicate CSS rules and consolidated toast styling
+- 📊 **Better Accessibility**: Improved color contrast ratios across all themes
+
+### v2.1.3 - Polished Edition
 - 🧹 **Completely Clean Toasts**: Removed all grey shadows and backgrounds from notifications
 - 🎨 **Smart Color System**: Fixed text colors in color themes to use proper theme colors (not forced black)
 - 🔊 **Authentic Money Audio**: Enhanced sounds with realistic coin drops, bank transactions, and cash register effects
@@ -359,7 +376,7 @@ MIT License - Feel free to use, modify, and distribute.
 
 ---
 
-**R-Service Tracker v2.0.0** - Professional Work & Payment Management System  
+**R-Service Tracker v2.1.4** - Professional Work & Payment Management System  
 Built with ❤️ for efficient work tracking and advance payment management.
 
 🌐 **Live Demo**: [Open Application](index.html)  

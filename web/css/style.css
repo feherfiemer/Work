@@ -206,44 +206,44 @@
 
 /* Monochrome Light Theme */
 :root[data-theme="monochrome-light"] {
-  --primary: #000000;
-  --primary-dark: #000000;
-  --primary-light: #333333;
-  --primary-rgb: 0, 0, 0;
-  --secondary: #333333;
-  --accent: #F5F5F5;
+  --primary: #2C2C2C;
+  --primary-dark: #1A1A1A;
+  --primary-light: #404040;
+  --primary-rgb: 44, 44, 44;
+  --secondary: #666666;
+  --accent: #F0F0F0;
   --background: #FFFFFF;
   --surface: #FFFFFF;
   --surface-alt: #F8F8F8;
-  --text-primary: #000000;
-  --text-secondary: #000000;
-  --text-muted: #000000;
+  --text-primary: #2C2C2C;
+  --text-secondary: #666666;
+  --text-muted: #999999;
   --border: #E0E0E0;
-  --success: #000000;
-  --warning: #000000;
-  --error: #000000;
-  --info: #000000;
+  --success: #2E7D32;
+  --warning: #F57C00;
+  --error: #C62828;
+  --info: #1565C0;
 }
 
 /* Monochrome Dark Theme */
 :root[data-theme="monochrome-dark"] {
-  --primary: #FFFFFF;
-  --primary-dark: #FFFFFF;
-  --primary-light: #CCCCCC;
-  --primary-rgb: 255, 255, 255;
+  --primary: #E0E0E0;
+  --primary-dark: #B0B0B0;
+  --primary-light: #F5F5F5;
+  --primary-rgb: 224, 224, 224;
   --secondary: #CCCCCC;
-  --accent: #1A1A1A;
-  --background: #000000;
-  --surface: #000000;
-  --surface-alt: #111111;
-  --text-primary: #FFFFFF;
-  --text-secondary: #FFFFFF;
-  --text-muted: #FFFFFF;
-  --border: #333333;
-  --success: #FFFFFF;
-  --warning: #FFFFFF;
-  --error: #FFFFFF;
-  --info: #FFFFFF;
+  --accent: #2A2A2A;
+  --background: #121212;
+  --surface: #1E1E1E;
+  --surface-alt: #2C2C2C;
+  --text-primary: #E0E0E0;
+  --text-secondary: #B0B0B0;
+  --text-muted: #888888;
+  --border: #404040;
+  --success: #66BB6A;
+  --warning: #FFA726;
+  --error: #EF5350;
+  --info: #42A5F5;
 }
 
 /* ===== RESET & BASE ===== */
@@ -629,8 +629,8 @@ body {
 .color-circle.green { background: #4CAF50; }
 .color-circle.red { background: #F44336; }
 .color-circle.monochrome { 
-  background: linear-gradient(45deg, #000000 50%, #FFFFFF 50%);
-  border: 1px solid #666666;
+  background: linear-gradient(45deg, #2C2C2C 50%, #E0E0E0 50%);
+  border: 1px solid var(--border);
 }
 
 .menu-option {
@@ -1123,8 +1123,8 @@ body {
 
 
 .btn-primary {
-  background: linear-gradient(135deg, #000000 0%, #333333 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--text-primary);
   border: none;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   font-weight: 600;
@@ -1153,8 +1153,8 @@ body {
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #000000 0%, #333333 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
+  color: var(--surface);
   border: none;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   font-weight: 600;
@@ -1175,7 +1175,7 @@ body {
 }
 
 .btn-danger:hover {
-  background: #e53935;
+  background: var(--error);
   transform: translateY(-2px);
   box-shadow: var(--shadow-medium);
 }
@@ -1540,7 +1540,7 @@ body {
 
 
 .footer-content p ❤️ {
-  color: #ff4757;
+  color: var(--error);
   font-size: 1rem;
   animation: heartbeat 2s infinite;
 }
@@ -1566,8 +1566,8 @@ body {
 }
 
 .toast {
-  background: #FFFFFF;
-  border: 1px solid #E0E0E0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius-small);
   padding: 0.5rem 0.75rem;
   min-width: 200px;
@@ -1579,11 +1579,7 @@ body {
   margin-bottom: 0;
 }
 
-/* Dark theme toast styles */
-[data-theme*="dark"] .toast {
-  background: #1E1E1E;
-  border: 1px solid #333333;
-}
+/* Dark theme toast styles - now handled by CSS variables */
 
 .toast::before {
   content: '';
@@ -1611,9 +1607,9 @@ body {
   flex-shrink: 0;
 }
 
-.toast.success .toast-icon { color: #000000; }
-.toast.error .toast-icon { color: #000000; }
-.toast.warning .toast-icon { color: #000000; }
+.toast.success .toast-icon { color: var(--success); }
+.toast.error .toast-icon { color: var(--error); }
+.toast.warning .toast-icon { color: var(--warning); }
 
 .toast-message {
   flex: 1;
@@ -2110,8 +2106,8 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #000000 0%, #333333 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--text-primary);
   border: none;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   font-weight: 600;
@@ -2132,8 +2128,8 @@ body {
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #000000 0%, #333333 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
+  color: var(--surface);
   border: none;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   font-weight: 600;
@@ -2149,7 +2145,7 @@ body {
 }
 
 .btn-success:active {
-  background: #45a049;
+  background: var(--success);
   transform: translateY(0);
 }
 
@@ -2794,8 +2790,8 @@ select:focus {
 
 .toast {
   pointer-events: auto;
-  background: #FFFFFF;
-  border: 1px solid #E0E0E0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius);
   padding: 0.5rem 0.75rem;
   min-width: 200px;
@@ -2805,11 +2801,7 @@ select:focus {
   overflow: hidden;
 }
 
-/* Dark theme toast styles (duplicate section) */
-[data-theme*="dark"] .toast {
-  background: #1E1E1E;
-  border: 1px solid #333333;
-}
+/* Dark theme toast styles - now handled by CSS variables */
 
 .toast.success {
   border-left: 4px solid var(--success);
