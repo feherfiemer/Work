@@ -1,13 +1,13 @@
-# R-Service Tracker v2.1.0 
-## Professional Work & Payment Management System - Final Release
+# R-Service Tracker v2.1.1 
+## Professional Work & Payment Management System - Enhanced Edition
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/feherfiemer/Work)
+[![Version](https://img.shields.io/badge/version-2.1.1-blue.svg)](https://github.com/feherfiemer/Work)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PWA](https://img.shields.io/badge/PWA-enabled-purple.svg)](manifest.json)
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)](index.html)
 [![Final](https://img.shields.io/badge/status-FINAL-gold.svg)](index.html)
 
-A comprehensive, professional-grade work tracking and payment management system designed for freelancers, contractors, and service providers. Features advanced advance payment tracking, automated notifications, detailed analytics, and premium PDF reporting.
+A comprehensive, professional-grade work tracking and payment management system designed for freelancers, contractors, and service providers. Features advanced advance payment tracking, automated notifications, detailed analytics, and premium PDF reporting with modern Exo typography and sleek black interface design.
 
 ## 🚀 **Key Features**
 
@@ -98,7 +98,7 @@ The advance payment system tracks **liability** - showing how much of the paid w
 - **Chart.js**: Interactive charts and data visualization
 - **jsPDF**: Professional PDF generation and export
 - **Font Awesome**: Comprehensive icon library
-- **Google Fonts**: Inter font family for modern typography
+- **Google Fonts**: Exo font family for modern, professional typography
 
 ### Development Tools
 - **Service Worker**: PWA functionality and offline support
@@ -299,7 +299,18 @@ testAllSystems()  // Verify all components work
 - 🎨 Improved UI stability and performance
 - 🧪 Added comprehensive system testing
 
-### v2.1.0 - Final Release (Latest)
+### v2.1.1 - Enhanced Edition (Latest)
+- 🎨 **Premium UI Overhaul**: Professional black text and icons throughout
+- 🔤 **Modern Typography**: Upgraded to Exo font family for enhanced readability
+- 🔕 **Clean Notifications**: Removed grey backgrounds from toast notifications
+- 📏 **Compact Toasts**: Reduced notification size for better UX
+- 🎯 **Premium Buttons**: Sleek black gradient buttons for "Done" and "Paid" actions
+- ©️ **Clean Footer**: Removed boxed outline from copyright text
+- 🔊 **Simplified Audio**: Premium, minimal completion and payment sounds
+- 📱 **Full Responsiveness**: Enhanced responsive design across all devices
+- 📚 **Updated Documentation**: Comprehensive README and documentation updates
+
+### v2.1.0 - Final Release
 - 🔧 Fixed save button state management for settings
 - 🔊 Enhanced audio system with Web Audio API
 - 🎵 Added realistic task completion and payment sounds
@@ -325,7 +336,7 @@ MIT License - Feel free to use, modify, and distribute.
 - **Chart.js** - Interactive data visualization
 - **jsPDF** - Professional PDF generation
 - **Font Awesome** - Comprehensive icon library
-- **Google Fonts** - Inter typography
+- **Google Fonts** - Exo typography
 - **IndexedDB** - Client-side data storage
 
 ---
