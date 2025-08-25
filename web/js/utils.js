@@ -250,7 +250,7 @@ class Utils {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         doc.text('Service: R-Service Work Tracking', 25, yPos + 13);
-        doc.text('System Version: 2.1.2', 25, yPos + 18);
+        doc.text('System Version: 2.1.4', 25, yPos + 18);
         doc.text(`Daily Rate: ${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} rupees per day`, 110, yPos + 13);
         doc.text('Currency: Indian Rupees', 110, yPos + 18);
         
@@ -399,10 +399,10 @@ class Utils {
         doc.setFontSize(9);
         doc.setTextColor(...colors.secondary);
         doc.text('DATE', 20, yPos + 5);
-        doc.text('DAY', 50, yPos + 5);
-        doc.text('STATUS', 75, yPos + 5);
-        doc.text('EARNINGS', 110, yPos + 5);
-        doc.text('PAYMENT STATUS', 145, yPos + 5);
+        doc.text('DAY', 48, yPos + 5);
+        doc.text('STATUS', 72, yPos + 5);
+        doc.text('EARNINGS', 105, yPos + 5);
+        doc.text('PAYMENT STATUS', 140, yPos + 5);
         doc.text('NOTES', 175, yPos + 5);
         yPos += 15;
         
@@ -441,28 +441,28 @@ class Utils {
             doc.setFontSize(8);
             doc.setTextColor(...colors.secondary);
             doc.text(this.formatDateShort(record.date), 20, yPos + 3);
-            doc.text(dayName, 50, yPos + 3);
+            doc.text(dayName, 48, yPos + 3);
             
             // Status with appropriate styling
             if (record.status === 'completed') {
                 doc.setTextColor(...colors.success);
-                doc.text('COMPLETED', 75, yPos + 3);
+                doc.text('COMPLETED', 72, yPos + 3);
             } else {
                 doc.setTextColor(...colors.danger);
-                doc.text('MISSED', 75, yPos + 3);
+                doc.text('MISSED', 72, yPos + 3);
             }
             
             // Earnings
             doc.setTextColor(...colors.secondary);
-            doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '0 rupees', 110, yPos + 3);
+            doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '0 rupees', 105, yPos + 3);
             
             // Payment status
             if (record.paid) {
                 doc.setTextColor(...colors.success);
-                doc.text('PAID', 145, yPos + 3);
+                doc.text('PAID', 140, yPos + 3);
             } else {
                 doc.setTextColor(...colors.warning);
-                doc.text('PENDING', 145, yPos + 3);
+                doc.text('PENDING', 140, yPos + 3);
             }
             
             // Notes
@@ -511,7 +511,7 @@ class Utils {
         doc.setFontSize(9);
         doc.setTextColor(...colors.secondary);
         doc.text('PAYMENT DATE', 20, yPos + 5);
-        doc.text('AMOUNT', 65, yPos + 5);
+        doc.text('AMOUNT', 62, yPos + 5);
         doc.text('WORK DAYS', 95, yPos + 5);
         doc.text('TYPE', 125, yPos + 5);
         doc.text('TRANSACTION ID', 155, yPos + 5);
@@ -554,7 +554,7 @@ class Utils {
             } else {
                 doc.setTextColor(...colors.success);
             }
-            doc.text(this.formatCurrencyForPDF(payment.amount), 65, yPos + 3);
+            doc.text(this.formatCurrencyForPDF(payment.amount), 62, yPos + 3);
             
             doc.setTextColor(...colors.secondary);
             doc.text(`${payment.workDates.length}`, 95, yPos + 3);
