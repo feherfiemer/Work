@@ -635,6 +635,8 @@ class RServiceTracker {
             saveBtn.style.cursor = 'pointer';
             saveBtn.style.pointerEvents = 'auto';
             saveBtn.classList.remove('disabled');
+            saveBtn.classList.add('changes-pending');
+            saveBtn.classList.add('changes-pending');
         }
     }
 
@@ -766,6 +768,8 @@ class RServiceTracker {
             saveBtn.style.cursor = 'pointer';
             saveBtn.style.pointerEvents = 'auto';
             saveBtn.classList.remove('disabled');
+            saveBtn.classList.add('changes-pending');
+            saveBtn.classList.add('changes-pending');
         }
     }
 

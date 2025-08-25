@@ -2093,9 +2093,9 @@ body {
   
   .calendar-cell .work-indicator,
   .calendar-cell .paid-indicator {
-    width: 16px !important;
-    height: 16px !important;
-    font-size: 0.6rem !important;
+    width: 10px !important;
+    height: 10px !important;
+    font-size: 0.4rem !important;
   }
   
   .modal-content {
@@ -2130,14 +2130,14 @@ body {
   }
   
   .calendar-cell .day-number {
-    font-size: 0.5rem !important;
+    font-size: 0.4rem !important;
   }
   
   .calendar-cell .work-indicator,
   .calendar-cell .paid-indicator {
-    width: 12px !important;
-    height: 12px !important;
-    font-size: 0.5rem !important;
+    width: 10px !important;
+    height: 10px !important;
+    font-size: 0.4rem !important;
   }
   
   .calendar-cell .payment-amount {
@@ -3915,3 +3915,145 @@ button.disabled:hover {
 #notificationToggleIcon.fa-bell-slash {
   color: var(--text-muted);
 }
+/* ===== ENHANCED RESPONSIVENESS IMPROVEMENTS ===== */
+
+/* Better viewport-based typography */
+@media (max-width: 480px) {
+  .view-header h2 {
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+  }
+  
+  .dashboard-grid .card h3 {
+    font-size: clamp(1rem, 3.5vw, 1.3rem);
+  }
+  
+  .dashboard-grid .card p {
+    font-size: clamp(0.8rem, 3vw, 1rem);
+  }
+}
+
+/* Better button responsiveness */
+@media (max-width: 360px) {
+  .btn, button {
+    font-size: clamp(0.75rem, 3.5vw, 0.9rem);
+    padding: clamp(0.5rem, 2.5vw, 0.75rem) clamp(0.75rem, 4vw, 1rem);
+  }
+  
+  .action-btn {
+    min-width: auto;
+    flex: 1;
+  }
+}
+
+/* Improved form input responsiveness */
+@media (max-width: 480px) {
+  input, select, textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Better chart responsiveness */
+@media (max-width: 768px) {
+  .chart-container {
+    height: 250px !important;
+    margin: 1rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-container {
+    height: 200px !important;
+  }
+}
+
+/* Toast notifications responsiveness */
+@media (max-width: 480px) {
+  .toast-container {
+    top: 60px; /* Below header */
+    right: 0.5rem;
+    left: 0.5rem;
+    max-width: none;
+  }
+  
+  .toast {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+
+/* ===== ENHANCED SAVE BUTTON EFFECTS ===== */
+
+/* Save buttons - Enhanced green effects when enabled */
+.menu-option.success:not(:disabled):not(.disabled) {
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.1), 
+    rgba(76, 175, 80, 0.05)
+  );
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  box-shadow: 
+    0 4px 15px rgba(76, 175, 80, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.menu-option.success:not(:disabled):not(.disabled):hover {
+  background: linear-gradient(135deg, 
+    var(--success), 
+    rgba(76, 175, 80, 0.9)
+  );
+  border: 2px solid var(--success);
+  box-shadow: 
+    0 6px 20px rgba(76, 175, 80, 0.4),
+    0 0 0 3px rgba(76, 175, 80, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px) scale(1.02);
+  color: white;
+}
+
+.menu-option.success:not(:disabled):not(.disabled):active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 
+    0 3px 10px rgba(76, 175, 80, 0.3),
+    0 0 0 2px rgba(76, 175, 80, 0.3);
+}
+
+/* Pulse animation for save buttons when changes are made */
+.menu-option.success.changes-pending {
+  animation: savePulse 2s infinite;
+  border: 2px solid var(--success);
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.15), 
+    rgba(76, 175, 80, 0.08)
+  );
+}
+
+@keyframes savePulse {
+  0% {
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 4px 15px rgba(76, 175, 80, 0.4),
+      0 0 0 2px rgba(76, 175, 80, 0.2);
+  }
+  100% {
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+  }
+}
+
+/* Disabled save button state - muted appearance */
+.menu-option.success:disabled,
+.menu-option.success.disabled {
+  background: var(--surface-alt) !important;
+  border: 2px solid var(--border) !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+  opacity: 0.6 !important;
+}
+
