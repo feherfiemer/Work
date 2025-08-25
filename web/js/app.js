@@ -34,7 +34,16 @@ class RServiceTracker {
             await this.db.init();
             
             // Initialize notification manager
-            this.notifications = new NotificationManager();
+            if (typeof NotificationManager !== 'undefined') {
+                    this.notifications = new NotificationManager();
+                } else {
+                    console.error('NotificationManager not available, retrying...');
+                    setTimeout(() => {
+                        if (typeof NotificationManager !== 'undefined') {
+                            this.notifications = new NotificationManager();
+                        }
+                    }, 100);
+                }
             this.notifications.setDatabase(this.db);
             
             // Initialize charts manager
@@ -156,7 +165,16 @@ class RServiceTracker {
                 
                 // Initialize basic notifications if not already done
                 if (!this.notifications) {
+                    if (typeof NotificationManager !== 'undefined') {
                     this.notifications = new NotificationManager();
+                } else {
+                    console.error('NotificationManager not available, retrying...');
+                    setTimeout(() => {
+                        if (typeof NotificationManager !== 'undefined') {
+                            this.notifications = new NotificationManager();
+                        }
+                    }, 100);
+                }
                     console.log('Fallback notifications initialized');
                 }
                 

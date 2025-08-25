@@ -1,4 +1,5 @@
 // Notification Manager for R-Service Tracker
+console.log('[DEBUG] notifications.js loading...');
 class NotificationManager {
     constructor() {
         this.permission = 'default';
@@ -134,8 +135,8 @@ class NotificationManager {
         if ('Notification' in window && this.permission === 'granted') {
             const defaultOptions = {
                 icon: location.origin + '/assets/favicon.ico',
-                badge: '' + location.origin + '/assets/favicon.ico'',
-                image: '' + location.origin + '/assets/favicon.ico'', // Add image for better mobile support
+                badge: location.origin + '/assets/favicon.ico',
+                image: location.origin + '/assets/favicon.ico', // Add image for better mobile support
                 dir: 'ltr',
                 lang: 'en',
                 renotify: true,
@@ -261,7 +262,7 @@ class NotificationManager {
         const title = 'Welcome to R-Service Tracker!';
         const options = {
             body: 'Setting up your daily work tracker... We\'re configuring notifications, initializing your dashboard, and preparing your work tracking system. You\'ll be ready to track your daily work and earnings in just a moment!',
-            icon: '.' + location.origin + '/assets/favicon.ico'',
+            icon: location.origin + '/assets/favicon.ico',
             tag: 'welcome-setup',
             requireInteraction: true,
             vibrate: [200, 100, 200, 100, 200],
@@ -320,7 +321,7 @@ class NotificationManager {
                                     this.showNotification('Daily Check-in', {
                                         body: 'Welcome back! Ready to track your work today? Don\'t forget to mark your tasks as completed.',
                                         tag: 'daily-checkin',
-                                        icon: '.' + location.origin + '/assets/favicon.ico''
+                                        icon: location.origin + '/assets/favicon.ico'
                                     });
                                 }, 1500);
                             }
@@ -362,7 +363,7 @@ class NotificationManager {
                         this.showNotification('Daily Check-in', {
                             body: 'Welcome back! Ready to track your work today? Don\'t forget to mark your tasks as completed.',
                             tag: 'daily-checkin',
-                            icon: '.' + location.origin + '/assets/favicon.ico''
+                            icon: location.origin + '/assets/favicon.ico'
                         });
                     }, 2000);
                 }
@@ -1615,6 +1616,7 @@ class NotificationManager {
 
 // Export the notification manager
 window.NotificationManager = NotificationManager;
+console.log('[DEBUG] NotificationManager exported to window:', window.NotificationManager);
 
 // Add CSS animations for toast notifications
 const style = document.createElement('style');
