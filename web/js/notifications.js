@@ -656,52 +656,69 @@ class NotificationManager {
             masterGain.connect(ctx.destination);
             masterGain.gain.setValueAtTime(0.5, now);
 
-            // Enhanced coin drop sequence with different coin types
-            const coinSequence = [
-                { freq: 1200, size: 'quarter', time: 0, duration: 0.18, volume: 0.5 },
-                { freq: 900, size: 'nickel', time: 0.06, duration: 0.15, volume: 0.45 },
-                { freq: 800, size: 'penny', time: 0.12, duration: 0.12, volume: 0.4 },
-                { freq: 650, size: 'dime', time: 0.18, duration: 0.1, volume: 0.35 }
-            ];
+            // Authentic coin drop sound with realistic physics
+            const createCoinDrop = (baseFreq, startTime, bounces) => {
+                bounces.forEach((bounce, bounceIndex) => {
+                    const coinOsc = ctx.createOscillator();
+                    const coinGain = ctx.createGain();
+                    const coinFilter = ctx.createBiquadFilter();
+                    
+                    coinOsc.connect(coinFilter);
+                    coinFilter.connect(coinGain);
+                    coinGain.connect(masterGain);
+                    
+                    // Realistic metallic coin sound
+                    coinOsc.type = 'sawtooth';
+                    coinFilter.type = 'peaking';
+                    coinFilter.frequency.setValueAtTime(baseFreq * 2.5, now + startTime + bounce.time);
+                    coinFilter.Q.setValueAtTime(8, now + startTime + bounce.time);
+                    coinFilter.gain.setValueAtTime(10, now + startTime + bounce.time);
+                    
+                    coinOsc.frequency.setValueAtTime(baseFreq, now + startTime + bounce.time);
+                    coinOsc.frequency.exponentialRampToValueAtTime(baseFreq * 0.6, now + startTime + bounce.time + bounce.duration);
+                    
+                    coinGain.gain.setValueAtTime(0, now + startTime + bounce.time);
+                    coinGain.gain.linearRampToValueAtTime(bounce.volume, now + startTime + bounce.time + 0.005);
+                    coinGain.gain.exponentialRampToValueAtTime(0.001, now + startTime + bounce.time + bounce.duration);
+                    
+                    coinOsc.start(now + startTime + bounce.time);
+                    coinOsc.stop(now + startTime + bounce.time + bounce.duration);
+                });
+            };
             
-            coinSequence.forEach((coin, index) => {
-                const coinOsc = ctx.createOscillator();
-                const coinGain = ctx.createGain();
-                const coinFilter = ctx.createBiquadFilter();
-                
-                coinOsc.connect(coinFilter);
-                coinFilter.connect(coinGain);
-                coinGain.connect(masterGain);
-                
-                // More realistic metallic coin resonance
-                coinOsc.type = 'triangle';
-                coinFilter.type = 'bandpass';
-                coinFilter.frequency.setValueAtTime(coin.freq * 1.8, now + coin.time);
-                coinFilter.Q.setValueAtTime(6, now + coin.time);
-                
-                coinOsc.frequency.setValueAtTime(coin.freq, now + coin.time);
-                coinOsc.frequency.exponentialRampToValueAtTime(coin.freq * 0.4, now + coin.time + coin.duration);
-                coinGain.gain.setValueAtTime(coin.volume, now + coin.time);
-                coinGain.gain.exponentialRampToValueAtTime(0.01, now + coin.time + coin.duration);
-                
-                coinOsc.start(now + coin.time);
-                coinOsc.stop(now + coin.time + coin.duration);
-            });
-
-            // Cash register "cha-ching" bell after coins
-            const chingOsc = ctx.createOscillator();
-            const chingGain = ctx.createGain();
+            // Different coin types with realistic bounce patterns
+            createCoinDrop(1100, 0, [
+                { time: 0, duration: 0.08, volume: 0.4 },    // Initial drop
+                { time: 0.05, duration: 0.05, volume: 0.25 }, // First bounce
+                { time: 0.08, duration: 0.03, volume: 0.15 }  // Final settle
+            ]);
             
-            chingOsc.connect(chingGain);
-            chingGain.connect(masterGain);
+            createCoinDrop(750, 0.12, [
+                { time: 0, duration: 0.1, volume: 0.35 },
+                { time: 0.06, duration: 0.04, volume: 0.2 }
+            ]);
             
-            chingOsc.type = 'sine';
-            chingOsc.frequency.setValueAtTime(1760, now + 0.3); // A6 note - classic cash register bell
-            chingGain.gain.setValueAtTime(0.6, now + 0.3);
-            chingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+            // Classic cash register "ka-ching" sound
+            const registerBell = ctx.createOscillator();
+            const bellGain = ctx.createGain();
+            const bellFilter = ctx.createBiquadFilter();
             
-            chingOsc.start(now + 0.3);
-            chingOsc.stop(now + 0.9);
+            registerBell.connect(bellFilter);
+            bellFilter.connect(bellGain);
+            bellGain.connect(masterGain);
+            
+            registerBell.type = 'sine';
+            bellFilter.type = 'peaking';
+            bellFilter.frequency.setValueAtTime(1760, now + 0.25);
+            bellFilter.Q.setValueAtTime(3, now + 0.25);
+            bellFilter.gain.setValueAtTime(5, now + 0.25);
+            
+            registerBell.frequency.setValueAtTime(1760, now + 0.25); // Classic A6 cash register bell
+            bellGain.gain.setValueAtTime(0.7, now + 0.25);
+            bellGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+            
+            registerBell.start(now + 0.25);
+            registerBell.stop(now + 1.2);
 
             console.log('Realistic coin collection sound played');
         } catch (error) {
@@ -737,28 +754,30 @@ class NotificationManager {
             masterGain.connect(ctx.destination);
             masterGain.gain.setValueAtTime(0.6, now);
             
-            // ATM/POS terminal beep sequence (transaction approved)
-            const beepSequence = [
-                { freq: 800, time: 0, duration: 0.1 },    // Card reader beep
-                { freq: 1000, time: 0.12, duration: 0.08 }, // Processing beep
-                { freq: 1200, time: 0.22, duration: 0.12 }  // Approval beep
-            ];
+            // Premium payment confirmation sound (like mobile payment apps)
+            const paymentChime = ctx.createOscillator();
+            const chimeGain = ctx.createGain();
+            const chimeFilter = ctx.createBiquadFilter();
             
-            beepSequence.forEach((beep, index) => {
-                const beepOsc = ctx.createOscillator();
-                const beepGain = ctx.createGain();
-                
-                beepOsc.connect(beepGain);
-                beepGain.connect(masterGain);
-                
-                beepOsc.type = 'square';
-                beepOsc.frequency.setValueAtTime(beep.freq, now + beep.time);
-                beepGain.gain.setValueAtTime(0.3, now + beep.time);
-                beepGain.gain.exponentialRampToValueAtTime(0.01, now + beep.time + beep.duration);
-                
-                beepOsc.start(now + beep.time);
-                beepOsc.stop(now + beep.time + beep.duration);
-            });
+            paymentChime.connect(chimeFilter);
+            chimeFilter.connect(chimeGain);
+            chimeGain.connect(masterGain);
+            
+            // Warm, pleasant payment success tone
+            paymentChime.type = 'sine';
+            chimeFilter.type = 'peaking';
+            chimeFilter.frequency.setValueAtTime(1000, now);
+            chimeFilter.Q.setValueAtTime(2, now);
+            chimeFilter.gain.setValueAtTime(8, now);
+            
+            paymentChime.frequency.setValueAtTime(880, now);      // A5 - warm tone
+            paymentChime.frequency.setValueAtTime(1320, now + 0.1); // E6 - bright confirmation
+            
+            chimeGain.gain.setValueAtTime(0.5, now);
+            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            
+            paymentChime.start(now);
+            paymentChime.stop(now + 0.4);
             
             // Classic cash register drawer opening
             const drawerOsc = ctx.createOscillator();
@@ -781,23 +800,34 @@ class NotificationManager {
             drawerOsc.start(now + 0.1);
             drawerOsc.stop(now + 0.3);
             
-            // Multiple cash register bells (realistic ka-ching sequence)
-            const bellFreqs = [1760, 2200, 1320]; // A6, C#7, E6 - authentic bell harmony
-            bellFreqs.forEach((freq, index) => {
+            // Authentic cash register "cha-ching" bell sequence
+            const createRegisterBell = (freq, startTime, volume) => {
                 const bellOsc = ctx.createOscillator();
                 const bellGain = ctx.createGain();
+                const bellFilter = ctx.createBiquadFilter();
                 
-                bellOsc.connect(bellGain);
+                bellOsc.connect(bellFilter);
+                bellFilter.connect(bellGain);
                 bellGain.connect(masterGain);
                 
-                bellOsc.type = 'sine';
-                bellOsc.frequency.setValueAtTime(freq, now + 0.2 + index * 0.08);
-                bellGain.gain.setValueAtTime(0.5 - index * 0.1, now + 0.2 + index * 0.08);
-                bellGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2 + index * 0.08 + 0.6);
+                bellOsc.type = 'triangle';
+                bellFilter.type = 'peaking';
+                bellFilter.frequency.setValueAtTime(freq * 1.5, now + startTime);
+                bellFilter.Q.setValueAtTime(4, now + startTime);
+                bellFilter.gain.setValueAtTime(12, now + startTime);
                 
-                bellOsc.start(now + 0.2 + index * 0.08);
-                bellOsc.stop(now + 0.2 + index * 0.08 + 0.6);
-            });
+                bellOsc.frequency.setValueAtTime(freq, now + startTime);
+                bellGain.gain.setValueAtTime(volume, now + startTime);
+                bellGain.gain.exponentialRampToValueAtTime(0.001, now + startTime + 1.0);
+                
+                bellOsc.start(now + startTime);
+                bellOsc.stop(now + startTime + 1.0);
+            };
+            
+            // Classic cash register harmony
+            createRegisterBell(1760, 0.5, 0.6);  // A6 - main bell
+            createRegisterBell(2217, 0.52, 0.4); // C#7 - harmony
+            createRegisterBell(1320, 0.54, 0.3); // E6 - bass bell
             
             // Paper money counting sound
             const paperOsc = ctx.createOscillator();

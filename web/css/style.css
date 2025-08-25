@@ -1015,14 +1015,39 @@ body {
   display: block;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary);
   margin-bottom: 0.25rem;
+}
+
+/* Situational colors for earnings */
+.current-earnings .amount {
+  color: var(--primary);
+}
+
+.total-earned .amount {
+  color: var(--success);
+}
+
+.days-worked .count {
+  color: var(--info);
 }
 
 .label {
   font-size: 0.875rem;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   font-weight: 500;
+}
+
+/* Situational colors for labels */
+.current-earnings .label {
+  color: var(--primary);
+}
+
+.total-earned .label {
+  color: var(--success);
+}
+
+.days-worked .label {
+  color: var(--info);
 }
 
 .progress-section {
@@ -1150,20 +1175,16 @@ body {
 }
 
 .btn-success {
-  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
-  color: var(--surface);
+  background: var(--success);
+  color: white;
   border: none;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  font-size: 0.85rem;
 }
 
 .btn-success:hover {
-  background: linear-gradient(135deg, #222222 0%, #444444 100%);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  background: var(--success);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+  filter: brightness(1.1);
 }
 
 .btn-danger {
@@ -1595,6 +1616,7 @@ body {
 .toast.success .toast-icon { color: var(--success); }
 .toast.error .toast-icon { color: var(--error); }
 .toast.warning .toast-icon { color: var(--warning); }
+.toast.info .toast-icon { color: var(--info); }
 
 .toast-message {
   flex: 1;
@@ -2108,20 +2130,16 @@ body {
 }
 
 .btn-success {
-  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
-  color: var(--surface);
+  background: var(--success);
+  color: white;
   border: none;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  font-size: 0.85rem;
 }
 
 .btn-success:hover {
-  background: linear-gradient(135deg, #222222 0%, #444444 100%);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  background: var(--success);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+  filter: brightness(1.1);
 }
 
 .btn-success:active {
@@ -2820,19 +2838,19 @@ select:focus {
 }
 
 .toast.success .toast-icon i {
-  color: var(--text-primary);
+  color: var(--success);
 }
 
 .toast.error .toast-icon i {
-  color: var(--text-primary);
+  color: var(--error);
 }
 
 .toast.warning .toast-icon i {
-  color: var(--text-primary);
+  color: var(--warning);
 }
 
 .toast.info .toast-icon i {
-  color: var(--text-primary);
+  color: var(--info);
 }
 
 .toast-message {
