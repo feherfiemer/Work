@@ -1,5 +1,5 @@
 {
-  "name": "R-Service Tracker v2.1.0 - Daily Work & Payment Manager",
+  "name": "R-Service Tracker v2.2.0 - Daily Work & Payment Manager",
   "short_name": "R-Service Tracker",
   "description": "Professional daily work tracking and payment management system with analytics, notifications, and enhanced audio feedback",
   "start_url": "/",
@@ -15,7 +15,7 @@
       "src": "assets/favicon.ico",
       "sizes": "32x32",
       "type": "image/x-icon",
-      "purpose": "favicon"
+      "purpose": "any"
     },
     {
       "src": "assets/favicon.svg",

@@ -1479,41 +1479,7 @@ class NotificationManager {
     }
     
     // Set database reference for reminder checks
-    setDatabase(db) {
-        this.db = db;
-    }
-}
 
-// Export the notification manager
-window.NotificationManager = NotificationManager;
-
-// Add CSS animations for toast notifications
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideOutRight {
-        from {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        to {
-            opacity: 0;
-            transform: translateX(100%);
-        }
-    }
-    
-    .toast.loading .toast-icon .spinner {
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top: 2px solid var(--primary);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    
-    .toast.show {
-        opacity: 1;
-        transform: translateX(0);
-    }
-`;
-document.head.appendChild(style);
     // ===== SYSTEMATIC AUDIO IMPROVEMENTS =====
     
     // Centralized audio settings for systematic approach
@@ -1522,7 +1488,7 @@ document.head.appendChild(style);
             // Base frequencies for systematic sound design
             baseFrequencies: {
                 success: 523.25,   // C5 - Success actions
-                payment: 659.25,   // E5 - Payment actions  
+                payment: 659.25,   // E5 - Payment actions
                 warning: 349.23,   // F4 - Warning/reminder
                 error: 293.66,     // D4 - Error states
                 info: 392.00,      // G4 - Information
@@ -1532,7 +1498,7 @@ document.head.appendChild(style);
             // Harmonic ratios for pleasing sound combinations
             harmonics: {
                 major: [1, 1.25, 1.5],      // Major triad
-                minor: [1, 1.2, 1.5],       // Minor triad  
+                minor: [1, 1.2, 1.5],       // Minor triad
                 seventh: [1, 1.25, 1.5, 1.75], // Major 7th
                 notification: [1, 1.33, 2]   // Perfect fifth + octave
             },
@@ -1628,98 +1594,6 @@ document.head.appendChild(style);
         });
     }
     
-    // Systematic payment sequence
-    playPaymentSequence(intensity) {
-        const settings = this.getAudioSettings();
-        const baseFreq = settings.baseFrequencies.payment;
-        const volume = settings.volumes[intensity];
-        
-        // Three ascending notes for "transaction complete"
-        const sequence = [1, 1.25, 1.5]; // Major triad
-        sequence.forEach((ratio, index) => {
-            setTimeout(() => {
-                this.playPureTone(baseFreq * ratio, 0.15, volume);
-            }, index * 100);
-        });
-    }
-    
-    // Systematic warning tone
-    playWarningTone(intensity) {
-        const settings = this.getAudioSettings();
-        const baseFreq = settings.baseFrequencies.warning;
-        const volume = settings.volumes[intensity];
-        
-        // Two-tone warning pattern
-        this.playPureTone(baseFreq, 0.2, volume);
-        setTimeout(() => {
-            this.playPureTone(baseFreq * 0.8, 0.2, volume);
-        }, 250);
-    }
-    
-    // Systematic error sequence  
-    playErrorSequence(intensity) {
-        const settings = this.getAudioSettings();
-        const baseFreq = settings.baseFrequencies.error;
-        const volume = settings.volumes[intensity];
-        
-        // Descending sequence for error indication
-        const sequence = [1, 0.9, 0.8];
-        sequence.forEach((ratio, index) => {
-            setTimeout(() => {
-                this.playPureTone(baseFreq * ratio, 0.1, volume);
-            }, index * 80);
-        });
-    }
-    
-    // Systematic info chime
-    playInfoChime(intensity) {
-        const settings = this.getAudioSettings();
-        const baseFreq = settings.baseFrequencies.info;
-        const volume = settings.volumes[intensity];
-        
-        // Single pleasant chime
-        this.playPureTone(baseFreq, 0.3, volume, 'triangle');
-    }
-    
-    // Systematic system beep
-    playSystemBeep(intensity) {
-        const settings = this.getAudioSettings();
-        const baseFreq = settings.baseFrequencies.system;
-        const volume = settings.volumes[intensity];
-        
-        // Classic system beep
-        this.playPureTone(baseFreq, 0.1, volume, 'square');
-    }
-    
-    // Pure tone generator with waveform options
-    playPureTone(frequency, duration, volume, waveType = 'sine') {
-        if (!this.audioContext) return;
-        
-        const ctx = this.audioContext;
-        const now = ctx.currentTime;
-        
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const filter = ctx.createBiquadFilter();
-        
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-        
-        osc.frequency.setValueAtTime(frequency, now);
-        osc.type = waveType;
-        
-        // Low-pass filter for smoother sound
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(frequency * 2, now);
-        
-        gain.gain.setValueAtTime(volume, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
-        
-        osc.start(now);
-        osc.stop(now + duration);
-    }
-    
     // Create audio context if needed
     createAudioContext() {
         try {
@@ -1734,412 +1608,62 @@ document.head.appendChild(style);
             console.warn('Could not create audio context:', error);
         }
     }
+    setDatabase(db) {
+        this.db = db;
+    }
+}
 
+// Export the notification manager
+window.NotificationManager = NotificationManager;
 
-    // ===== SCHEDULER DEBUGGING AND IMPROVEMENTS =====
-    
-    // Enhanced scheduler with better debugging
-    scheduleRemindersDEBUG() {
-        console.log('[SCHEDULER] Starting enhanced reminder system...');
-        
-        // Clear any existing intervals
-        if (this.reminderInterval) {
-            clearInterval(this.reminderInterval);
-            console.log('[SCHEDULER] Cleared existing interval');
-        }
-        
-        // Test immediate check
-        console.log('[SCHEDULER] Running immediate check...');
-        this.checkForRemindersDEBUG();
-        
-        // Set up interval with debugging
-        this.reminderInterval = setInterval(() => {
-            console.log('[SCHEDULER] Running scheduled check at', new Date().toLocaleString());
-            this.checkForRemindersDEBUG();
-        }, 60000); // Check every minute
-        
-        console.log('[SCHEDULER] Reminder system activated successfully');
-        
-        // Show confirmation toast
-        this.showToast('Reminder system activated - checking every minute', 'info', 3000);
+// Add CSS animations for toast notifications
+const style = document.createElement('style');
+style.textContent = `
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
     }
-    
-    // Enhanced reminder checking with debugging
-    async checkForRemindersDEBUG() {
-        try {
-            console.log('[SCHEDULER] Starting reminder check...');
-            
-            // Get configuration with fallback
-            const config = this.getConfigWithFallback();
-            console.log('[SCHEDULER] Config:', config);
-            
-            // Check if notifications are enabled
-            if (!config.NOTIFICATIONS_ENABLED) {
-                console.log('[SCHEDULER] Notifications disabled, skipping');
-                return;
-            }
-            
-            // Get current time in IST
-            const now = new Date();
-            const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-            
-            const hour = istTime.getHours();
-            const minute = istTime.getMinutes();
-            const timeKey = `${hour}:${minute.toString().padStart(2, '0')}`;
-            
-            console.log('[SCHEDULER] Current IST time:', timeKey);
-            console.log('[SCHEDULER] Payment reminder time:', config.PAYMENT_REMINDER_TIME);
-            console.log('[SCHEDULER] Work reminder time:', config.WORK_REMINDER_TIME);
-            
-            // Check for payment reminder
-            if (timeKey === config.PAYMENT_REMINDER_TIME) {
-                console.log('[SCHEDULER] Payment reminder time matched!');
-                this.showTestNotification('Payment Reminder', 'Time to check your payments!');
-            }
-            
-            // Check for work reminder  
-            if (timeKey === config.WORK_REMINDER_TIME) {
-                console.log('[SCHEDULER] Work reminder time matched!');
-                this.showTestNotification('Work Reminder', 'Don\'t forget to mark your work as done!');
-            }
-            
-        } catch (error) {
-            console.error('[SCHEDULER] Error in reminder check:', error);
-        }
+    to {
+        transform: translateX(0);
+        opacity: 1;
     }
-    
-    // Robust config getter with comprehensive fallback
-    getConfigWithFallback() {
-        try {
-            // Try multiple config sources
-            if (window.ConfigManager && typeof window.ConfigManager.getConfig === 'function') {
-                const config = window.ConfigManager.getConfig();
-                console.log('[SCHEDULER] Using ConfigManager config');
-                return this.validateConfig(config);
-            }
-            
-            if (window.R_SERVICE_CONFIG) {
-                console.log('[SCHEDULER] Using R_SERVICE_CONFIG');
-                return this.validateConfig(window.R_SERVICE_CONFIG);
-            }
-            
-            // Try localStorage
-            const storedConfig = localStorage.getItem('notificationSettings');
-            if (storedConfig) {
-                const parsed = JSON.parse(storedConfig);
-                console.log('[SCHEDULER] Using localStorage config');
-                return this.validateConfig(parsed);
-            }
-            
-        } catch (error) {
-            console.warn('[SCHEDULER] Error getting config:', error);
-        }
-        
-        // Ultimate fallback
-        console.log('[SCHEDULER] Using fallback config');
-        return {
-            NOTIFICATIONS_ENABLED: true,
-            PAYMENT_REMINDER_TIME: '10:00',
-            WORK_REMINDER_TIME: '18:00',
-            TIMEZONE: 'Asia/Kolkata'
-        };
-    }
-    
-    // Validate and sanitize config
-    validateConfig(config) {
-        const validated = {
-            NOTIFICATIONS_ENABLED: config.NOTIFICATIONS_ENABLED !== false,
-            PAYMENT_REMINDER_TIME: config.PAYMENT_REMINDER_TIME || '10:00',
-            WORK_REMINDER_TIME: config.WORK_REMINDER_TIME || '18:00',
-            TIMEZONE: config.TIMEZONE || 'Asia/Kolkata'
-        };
-        
-        // Validate time format (HH:MM)
-        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-        if (!timeRegex.test(validated.PAYMENT_REMINDER_TIME)) {
-            validated.PAYMENT_REMINDER_TIME = '10:00';
-        }
-        if (!timeRegex.test(validated.WORK_REMINDER_TIME)) {
-            validated.WORK_REMINDER_TIME = '18:00';
-        }
-        
-        return validated;
-    }
-    
-    // Test notification for debugging
-    showTestNotification(title, body) {
-        console.log('[SCHEDULER] Showing test notification:', title, body);
-        
-        this.showNotification(title, {
-            body: body,
-            icon: 'assets/favicon.ico',
-            tag: 'reminder-test',
-            requireInteraction: false
-        });
-        
-        this.showToast(`Reminder: ${body}`, 'info', 5000);
-        this.playSystematicSound('info', 'medium');
-    }
+}
 
-
-    // ===== NOTIFICATION ACTIONS SUPPORT =====
-    
-    // Enhanced notification with action buttons
-    showNotificationWithActions(title, options = {}) {
-        const defaultOptions = {
-            body: '',
-            icon: 'assets/favicon.ico',
-            badge: 'assets/favicon.ico',
-            tag: 'default',
-            requireInteraction: true,
-            actions: [
-                {
-                    action: 'mark-done',
-                    title: '✅ Mark as Done',
-                    icon: 'assets/favicon.ico'
-                },
-                {
-                    action: 'remind-later',
-                    title: '⏰ Remind Later',
-                    icon: 'assets/favicon.ico'
-                }
-            ],
-            data: {
-                url: window.location.href,
-                timestamp: Date.now()
-            }
-        };
-
-        const finalOptions = { ...defaultOptions, ...options };
-        
-        try {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                console.log('[ACTIONS] Creating notification with actions:', title);
-                
-                const notification = new Notification(title, finalOptions);
-                
-                // Handle notification click
-                notification.onclick = (event) => {
-                    console.log('[ACTIONS] Notification clicked');
-                    window.focus();
-                    notification.close();
-                    
-                    // If there's a custom click handler, call it
-                    if (finalOptions.onClick) {
-                        finalOptions.onClick(event);
-                    }
-                };
-                
-                // Note: Browser notifications don't support action buttons
-                // We need service worker for that functionality
-                this.showToast(`${title}: ${finalOptions.body}`, options.toastType || 'info', 8000);
-                
-            } else {
-                // Fallback to toast with action buttons
-                this.showToastWithActions(title, finalOptions);
-            }
-        } catch (error) {
-            console.error('[ACTIONS] Error showing notification with actions:', error);
-            this.showToastWithActions(title, finalOptions);
-        }
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
     }
-    
-    // Toast with action buttons as fallback
-    showToastWithActions(title, options) {
-        const toast = document.createElement('div');
-        toast.className = 'toast toast-with-actions';
-        toast.style.cssText = `
-            background: linear-gradient(135deg, var(--surface), var(--surface-alt));
-            border: 1px solid var(--border);
-            border-radius: var(--border-radius);
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            box-shadow: var(--shadow-medium);
-            backdrop-filter: var(--blur-light);
-            max-width: 400px;
-            animation: slideInRight 0.3s ease-out;
-            pointer-events: auto;
-        `;
-
-        toast.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                    <i class="fas fa-bell" style="color: var(--primary); font-size: 1.1rem; margin-top: 0.1rem;"></i>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
-                            ${title}
-                        </div>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.4;">
-                            ${options.body}
-                        </div>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.parentElement.remove()" 
-                            style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 0; line-height: 1;">
-                        ×
-                    </button>
-                </div>
-                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                    <button class="toast-action-btn" data-action="mark-done" 
-                            style="background: var(--success); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--border-radius-small); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all var(--transition-fast);">
-                        ✅ Mark as Done
-                    </button>
-                    <button class="toast-action-btn" data-action="remind-later"
-                            style="background: var(--surface-alt); color: var(--text-primary); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: var(--border-radius-small); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all var(--transition-fast);">
-                        ⏰ Later
-                    </button>
-                </div>
-            </div>
-        `;
-
-        // Add action button handlers
-        const actionButtons = toast.querySelectorAll('.toast-action-btn');
-        actionButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const action = e.target.dataset.action;
-                this.handleNotificationAction(action, options.data || {});
-                toast.remove();
-            });
-            
-            // Add hover effects
-            button.addEventListener('mouseenter', () => {
-                if (button.dataset.action === 'mark-done') {
-                    button.style.background = 'var(--success-dark)';
-                    button.style.transform = 'translateY(-1px)';
-                } else {
-                    button.style.background = 'var(--primary)';
-                    button.style.color = 'white';
-                    button.style.transform = 'translateY(-1px)';
-                }
-            });
-            
-            button.addEventListener('mouseleave', () => {
-                if (button.dataset.action === 'mark-done') {
-                    button.style.background = 'var(--success)';
-                    button.style.transform = 'translateY(0)';
-                } else {
-                    button.style.background = 'var(--surface-alt)';
-                    button.style.color = 'var(--text-primary)';
-                    button.style.transform = 'translateY(0)';
-                }
-            });
-        });
-
-        this.toastContainer.appendChild(toast);
-
-        // Auto remove after delay
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.style.animation = 'slideOutRight 0.3s ease-in-out';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
-            }
-        }, 15000); // Longer duration for actionable notifications
+    to {
+        transform: translateX(100%);
+        opacity: 0;
     }
-    
-    // Handle notification actions
-    async handleNotificationAction(action, data = {}) {
-        console.log('[ACTIONS] Handling notification action:', action, data);
-        
-        try {
-            switch (action) {
-                case 'mark-done':
-                    await this.handleMarkAsDone(data);
-                    break;
-                case 'remind-later':
-                    await this.handleRemindLater(data);
-                    break;
-                default:
-                    console.warn('[ACTIONS] Unknown action:', action);
-            }
-        } catch (error) {
-            console.error('[ACTIONS] Error handling notification action:', error);
-            this.showToast('Error processing action: ' + error.message, 'error');
-        }
-    }
-    
-    // Handle mark as done action
-    async handleMarkAsDone(data) {
-        console.log('[ACTIONS] Marking work as done from notification');
-        
-        try {
-            // Get today's date in the app's format
-            const today = new Date().toISOString().split('T')[0];
-            
-            // Check if app manager is available
-            if (window.app && window.app.db) {
-                // Add work record for today
-                const workRecord = {
-                    date: today,
-                    status: 'completed',
-                    timestamp: new Date().toISOString(),
-                    notes: 'Marked done via notification'
-                };
-                
-                await window.app.db.addWorkRecord(workRecord);
-                
-                // Refresh the UI if visible
-                if (window.app.currentView === 'dashboard') {
-                    await window.app.loadDashboard();
-                }
-                
-                // Show success feedback
-                this.showToast('✅ Work marked as done for today!', 'success');
-                this.playSystematicSound('success', 'medium');
-                
-                console.log('[ACTIONS] Work marked as done successfully');
-                
-            } else {
-                // Fallback: Store in localStorage for when app loads
-                const pendingActions = JSON.parse(localStorage.getItem('pendingNotificationActions') || '[]');
-                pendingActions.push({
-                    action: 'mark-done',
-                    date: today,
-                    timestamp: Date.now()
-                });
-                localStorage.setItem('pendingNotificationActions', JSON.stringify(pendingActions));
-                
-                this.showToast('✅ Action queued - will be processed when app is opened', 'info');
-                console.log('[ACTIONS] Action queued for later processing');
-            }
-            
-        } catch (error) {
-            console.error('[ACTIONS] Error marking work as done:', error);
-            this.showToast('❌ Error marking work as done: ' + error.message, 'error');
-        }
-    }
-    
-    // Handle remind later action
-    async handleRemindLater(data) {
-        console.log('[ACTIONS] Setting up reminder for later');
-        
-        // Remind again in 1 hour
-        const remindTime = Date.now() + (60 * 60 * 1000);
-        
-        setTimeout(() => {
-            this.showNotificationWithActions('Work Reminder', {
-                body: 'Gentle reminder: Don\'t forget to mark your work as done!',
-                tag: 'work-reminder-later',
-                data: data
-            });
-        }, 60 * 60 * 1000); // 1 hour
-        
-        this.showToast('⏰ Will remind you again in 1 hour', 'info');
-        console.log('[ACTIONS] Reminder scheduled for 1 hour from now');
-    }
-    
-    // Enhanced work reminder with actions
-    showWorkReminderWithActions() {
-        this.showNotificationWithActions('Work Reminder', {
-            body: 'Don\'t forget to mark your work as completed today! Tap "Mark as Done" to complete it now.',
-            tag: 'work-reminder-actionable',
-            toastType: 'info',
-            data: {
-                type: 'work-reminder',
-                date: new Date().toISOString().split('T')[0]
-            }
-        });
-    }
+}
 
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.toast {
+    animation: slideInRight 0.3s ease-out;
+}
+
+.modal-content {
+    animation: bounceIn 0.6s ease-out;
+}
+`;
+document.head.appendChild(style);
