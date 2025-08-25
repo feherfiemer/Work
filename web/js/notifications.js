@@ -643,7 +643,7 @@ class NotificationManager {
         }
     }
 
-    // Play success sound (premium minimal completion sound)
+    // Play success sound (money earning completion sound)
     playSuccessSound() {
         if (!this.audioContext) return;
 
@@ -651,28 +651,50 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Create master gain node with premium volume
+            // Create master gain node with balanced volume
             const masterGain = ctx.createGain();
             masterGain.connect(ctx.destination);
             masterGain.gain.setValueAtTime(0.4, now);
 
-            // Premium single-tone completion sound (like high-end apps)
-            const completionOsc = ctx.createOscillator();
-            const completionGain = ctx.createGain();
+            // Coin drop sound simulation (like earning money)
+            const coinOsc = ctx.createOscillator();
+            const coinGain = ctx.createGain();
+            const coinFilter = ctx.createBiquadFilter();
             
-            completionOsc.connect(completionGain);
-            completionGain.connect(masterGain);
+            coinOsc.connect(coinFilter);
+            coinFilter.connect(coinGain);
+            coinGain.connect(masterGain);
             
-            // Clean sine wave for premium feel
-            completionOsc.type = 'sine';
-            completionOsc.frequency.setValueAtTime(1000, now); // C6 - professional frequency
-            completionGain.gain.setValueAtTime(0.8, now);
-            completionGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            // Metallic coin sound
+            coinOsc.type = 'square';
+            coinFilter.type = 'bandpass';
+            coinFilter.frequency.setValueAtTime(1200, now);
+            coinFilter.Q.setValueAtTime(3, now);
             
-            completionOsc.start(now);
-            completionOsc.stop(now + 0.3);
+            coinOsc.frequency.setValueAtTime(800, now);
+            coinOsc.frequency.exponentialRampToValueAtTime(400, now + 0.2);
+            coinGain.gain.setValueAtTime(0.6, now);
+            coinGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            
+            coinOsc.start(now);
+            coinOsc.stop(now + 0.4);
 
-            console.log('Premium completion sound played');
+            // Follow up with a gentle cha-ching
+            const chingOsc = ctx.createOscillator();
+            const chingGain = ctx.createGain();
+            
+            chingOsc.connect(chingGain);
+            chingGain.connect(masterGain);
+            
+            chingOsc.type = 'triangle';
+            chingOsc.frequency.setValueAtTime(1200, now + 0.2);
+            chingGain.gain.setValueAtTime(0.3, now + 0.2);
+            chingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+            
+            chingOsc.start(now + 0.2);
+            chingOsc.stop(now + 0.6);
+
+            console.log('Money earning completion sound played');
         } catch (error) {
             console.warn('Error playing success sound:', error);
         }
@@ -695,7 +717,7 @@ class NotificationManager {
         }
     }
 
-    // Premium payment sound like high-end mobile payment apps
+    // Cash register and money transaction sound
     createPremiumTransactionSound() {
         try {
             const ctx = this.audioContext;
@@ -706,41 +728,70 @@ class NotificationManager {
             masterGain.connect(ctx.destination);
             masterGain.gain.setValueAtTime(0.5, now);
             
-            // Premium two-tone success sound (like Apple Pay/Stripe)
-            const firstTone = ctx.createOscillator();
-            const firstGain = ctx.createGain();
-            firstTone.connect(firstGain);
-            firstGain.connect(masterGain);
+            // Cash register opening sound
+            const registerOsc = ctx.createOscillator();
+            const registerGain = ctx.createGain();
+            const registerFilter = ctx.createBiquadFilter();
             
-            firstTone.type = 'sine';
-            firstTone.frequency.setValueAtTime(800, now); // Professional first tone
-            firstGain.gain.setValueAtTime(0.7, now);
-            firstGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            registerOsc.connect(registerFilter);
+            registerFilter.connect(registerGain);
+            registerGain.connect(masterGain);
             
-            firstTone.start(now);
-            firstTone.stop(now + 0.3);
+            registerOsc.type = 'sawtooth';
+            registerFilter.type = 'lowpass';
+            registerFilter.frequency.setValueAtTime(2000, now);
             
-            // Second higher tone for confirmation
-            const secondTone = ctx.createOscillator();
-            const secondGain = ctx.createGain();
-            secondTone.connect(secondGain);
-            secondGain.connect(masterGain);
+            registerOsc.frequency.setValueAtTime(120, now);
+            registerOsc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+            registerGain.gain.setValueAtTime(0.4, now);
+            registerGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
             
-            secondTone.type = 'sine';
-            secondTone.frequency.setValueAtTime(1200, now + 0.15); // Higher confirmation tone
-            secondGain.gain.setValueAtTime(0.6, now + 0.15);
-            secondGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+            registerOsc.start(now);
+            registerOsc.stop(now + 0.2);
             
-            secondTone.start(now + 0.15);
-            secondTone.stop(now + 0.6);
+            // Classic "Ka-ching" bell sound
+            const bellOsc = ctx.createOscillator();
+            const bellGain = ctx.createGain();
             
-            console.log('Premium payment success sound played');
+            bellOsc.connect(bellGain);
+            bellGain.connect(masterGain);
+            
+            bellOsc.type = 'sine';
+            bellOsc.frequency.setValueAtTime(1760, now + 0.15); // High A note (cash register bell)
+            bellGain.gain.setValueAtTime(0.6, now + 0.15);
+            bellGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+            
+            bellOsc.start(now + 0.15);
+            bellOsc.stop(now + 0.8);
+            
+            // Money counting/shuffling sound simulation
+            const moneyOsc = ctx.createOscillator();
+            const moneyGain = ctx.createGain();
+            const moneyFilter = ctx.createBiquadFilter();
+            
+            moneyOsc.connect(moneyFilter);
+            moneyFilter.connect(moneyGain);
+            moneyGain.connect(masterGain);
+            
+            moneyOsc.type = 'triangle';
+            moneyFilter.type = 'highpass';
+            moneyFilter.frequency.setValueAtTime(800, now + 0.4);
+            
+            moneyOsc.frequency.setValueAtTime(600, now + 0.4);
+            moneyOsc.frequency.exponentialRampToValueAtTime(300, now + 0.7);
+            moneyGain.gain.setValueAtTime(0.3, now + 0.4);
+            moneyGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+            
+            moneyOsc.start(now + 0.4);
+            moneyOsc.stop(now + 0.8);
+            
+            console.log('Cash register payment sound played');
         } catch (error) {
             console.warn('Error playing payment sound:', error);
         }
     }
 
-    // Simple transaction sound for older browsers
+    // Simple cash register sound for older browsers
     playSimpleTransactionSound() {
         try {
             if (!this.audioContext) {
@@ -750,21 +801,27 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Simple professional beep
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
+            // Simple cash register ding sequence
+            const frequencies = [440, 880]; // A4 and A5 - classic register tones
+            const timings = [0, 0.3];
             
-            osc.connect(gain);
-            gain.connect(ctx.destination);
+            frequencies.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'triangle'; // Softer bell-like sound
+                osc.frequency.setValueAtTime(freq, now + timings[index]);
+                gain.gain.setValueAtTime(0.3, now + timings[index]);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + timings[index] + 0.4);
+                
+                osc.start(now + timings[index]);
+                osc.stop(now + timings[index] + 0.4);
+            });
             
-            osc.frequency.setValueAtTime(1000, now);
-            gain.gain.setValueAtTime(0.4, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-            
-            osc.start(now);
-            osc.stop(now + 0.5);
-            
-            console.log('Simple transaction sound played');
+            console.log('Simple cash register sound played');
         } catch (error) {
             console.warn('Audio not available:', error);
         }

@@ -48,8 +48,8 @@
   --surface: #FFFFFF;
   --surface-alt: #F5F5F5;
   --text-primary: #212121;
-  --text-secondary: #757575;
-  --text-muted: #BDBDBD;
+  --text-secondary: #000000;
+  --text-muted: #000000;
   --border: #E0E0E0;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -69,8 +69,8 @@
   --surface: #1E1E1E;
   --surface-alt: #2C2C2C;
   --text-primary: #FFFFFF;
-  --text-secondary: #B3B3B3;
-  --text-muted: #666666;
+  --text-secondary: #FFFFFF;
+  --text-muted: #FFFFFF;
   --border: #333333;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -90,8 +90,8 @@
   --surface: #FFFFFF;
   --surface-alt: #F5F5F5;
   --text-primary: #212121;
-  --text-secondary: #757575;
-  --text-muted: #BDBDBD;
+  --text-secondary: #000000;
+  --text-muted: #000000;
   --border: #E0E0E0;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -111,8 +111,8 @@
   --surface: #1E1E1E;
   --surface-alt: #2C2C2C;
   --text-primary: #FFFFFF;
-  --text-secondary: #B3B3B3;
-  --text-muted: #666666;
+  --text-secondary: #FFFFFF;
+  --text-muted: #FFFFFF;
   --border: #333333;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -132,8 +132,8 @@
   --surface: #FFFFFF;
   --surface-alt: #F5F5F5;
   --text-primary: #212121;
-  --text-secondary: #757575;
-  --text-muted: #BDBDBD;
+  --text-secondary: #000000;
+  --text-muted: #000000;
   --border: #E0E0E0;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -153,8 +153,8 @@
   --surface: #1E1E1E;
   --surface-alt: #2C2C2C;
   --text-primary: #FFFFFF;
-  --text-secondary: #B3B3B3;
-  --text-muted: #666666;
+  --text-secondary: #FFFFFF;
+  --text-muted: #FFFFFF;
   --border: #333333;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -174,8 +174,8 @@
   --surface: #FFFFFF;
   --surface-alt: #F5F5F5;
   --text-primary: #212121;
-  --text-secondary: #757575;
-  --text-muted: #BDBDBD;
+  --text-secondary: #000000;
+  --text-muted: #000000;
   --border: #E0E0E0;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -195,13 +195,55 @@
   --surface: #1E1E1E;
   --surface-alt: #2C2C2C;
   --text-primary: #FFFFFF;
-  --text-secondary: #B3B3B3;
-  --text-muted: #666666;
+  --text-secondary: #FFFFFF;
+  --text-muted: #FFFFFF;
   --border: #333333;
   --success: #4CAF50;
   --warning: #FF9800;
   --error: #F44336;
   --info: #2196F3;
+}
+
+/* Monochrome Light Theme */
+:root[data-theme="monochrome-light"] {
+  --primary: #000000;
+  --primary-dark: #000000;
+  --primary-light: #333333;
+  --primary-rgb: 0, 0, 0;
+  --secondary: #333333;
+  --accent: #F5F5F5;
+  --background: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-alt: #F8F8F8;
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --text-muted: #000000;
+  --border: #E0E0E0;
+  --success: #000000;
+  --warning: #000000;
+  --error: #000000;
+  --info: #000000;
+}
+
+/* Monochrome Dark Theme */
+:root[data-theme="monochrome-dark"] {
+  --primary: #FFFFFF;
+  --primary-dark: #FFFFFF;
+  --primary-light: #CCCCCC;
+  --primary-rgb: 255, 255, 255;
+  --secondary: #CCCCCC;
+  --accent: #1A1A1A;
+  --background: #000000;
+  --surface: #000000;
+  --surface-alt: #111111;
+  --text-primary: #FFFFFF;
+  --text-secondary: #FFFFFF;
+  --text-muted: #FFFFFF;
+  --border: #333333;
+  --success: #FFFFFF;
+  --warning: #FFFFFF;
+  --error: #FFFFFF;
+  --info: #FFFFFF;
 }
 
 /* ===== RESET & BASE ===== */
@@ -263,7 +305,7 @@ html {
 body {
   font-family: var(--font-family);
   background: var(--background);
-  color: #000000;
+  color: var(--text-primary);
   line-height: 1.6;
   overflow-x: hidden;
   transition: background var(--transition-medium), color var(--transition-medium);
@@ -361,7 +403,7 @@ body {
   gap: 0.75rem;
   font-size: clamp(1.2rem, 4vw, 1.8rem);
   font-weight: 800;
-  color: #000000;
+  color: var(--text-primary);
   height: 40px; /* Fixed height to prevent movement */
   line-height: 1;
   transition: font-size var(--transition-medium);
@@ -389,7 +431,7 @@ body {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #000000;
+  color: var(--text-primary);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: var(--border-radius-small);
@@ -457,14 +499,14 @@ body {
 .menu-header h3 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .close-menu {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #000000;
+  color: var(--text-primary);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: var(--border-radius-small);
@@ -473,7 +515,7 @@ body {
 
 .close-menu:hover {
   background: var(--surface-alt);
-  color: #000000;
+  color: var(--text-primary);
   transform: translateY(-2px);
   box-shadow: var(--shadow-light);
 }
@@ -485,7 +527,7 @@ body {
 .menu-section h4 {
   font-size: 1rem;
   font-weight: 600;
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
@@ -509,7 +551,7 @@ body {
   transition: all var(--transition-fast);
   font-family: var(--font-family);
   font-size: 0.9rem;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .theme-btn:hover {
@@ -537,7 +579,7 @@ body {
 
 .theme-subsection h5 {
   font-size: 0.9rem;
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: 0.75rem;
   font-weight: 600;
 }
@@ -560,7 +602,7 @@ body {
   transition: all var(--transition-fast);
   font-family: var(--font-family);
   font-size: 0.9rem;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .color-btn:hover, .mode-btn:hover {
@@ -586,6 +628,10 @@ body {
 .color-circle.orange { background: #FF6B35; }
 .color-circle.green { background: #4CAF50; }
 .color-circle.red { background: #F44336; }
+.color-circle.monochrome { 
+  background: linear-gradient(45deg, #000000 50%, #FFFFFF 50%);
+  border: 1px solid #666666;
+}
 
 .menu-option {
   display: flex;
@@ -600,7 +646,7 @@ body {
   transition: all var(--transition-fast);
   font-family: var(--font-family);
   font-size: 0.9rem;
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -640,7 +686,7 @@ body {
   gap: 0.5rem;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -652,7 +698,7 @@ body {
   font-family: var(--font-family);
   font-size: 0.9rem;
   background: var(--surface);
-  color: #000000;
+  color: var(--text-primary);
   transition: all var(--transition-fast);
 }
 
@@ -669,7 +715,7 @@ body {
 .settings-group small {
   display: block;
   font-size: 0.75rem;
-  color: #000000;
+  color: var(--text-primary);
   margin-top: 0.25rem;
   line-height: 1.3;
 }
@@ -892,14 +938,14 @@ body {
 .card-header h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #000000;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
 .card-header i {
-  color: #000000;
+  color: var(--text-primary);
   font-size: 0.9rem;
 }
 
@@ -911,7 +957,7 @@ body {
 .date-display {
   font-size: 1.1rem;
   font-weight: 500;
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
@@ -967,13 +1013,13 @@ body {
   display: block;
   font-size: 2rem;
   font-weight: 700;
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
 .label {
   font-size: 0.875rem;
-  color: #000000;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -1025,7 +1071,7 @@ body {
   cursor: pointer;
   transition: all var(--transition-fast);
   text-decoration: none;
-  color: #000000;
+  color: var(--text-primary);
   font-family: var(--font-family);
   font-size: 0.875rem;
   font-weight: 500;
@@ -1095,7 +1141,7 @@ body {
 
 .btn-secondary {
   background: var(--surface-alt);
-  color: #000000;
+  color: var(--text-primary);
   border: 1px solid var(--border);
 }
 
@@ -1177,7 +1223,7 @@ body {
 .view-header h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #000000;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1196,7 +1242,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
   background: var(--surface);
-  color: #000000;
+  color: var(--text-primary);
   font-family: var(--font-family);
   font-size: 0.9rem;
   cursor: pointer;
@@ -1225,7 +1271,7 @@ body {
 .sheet-table th {
   background: var(--surface-alt);
   font-weight: 600;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .sheet-table tbody tr:hover {
@@ -1396,14 +1442,14 @@ body {
 .modal-header h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .close-modal {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #000000;
+  color: var(--text-primary);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: var(--border-radius-small);
@@ -1412,7 +1458,7 @@ body {
 
 .close-modal:hover {
   background: var(--surface-alt);
-  color: #000000;
+  color: var(--text-primary);
   transform: translateY(-2px);
   box-shadow: var(--shadow-light);
 }
@@ -1467,7 +1513,7 @@ body {
 
 .footer-content p {
   margin: 0;
-  color: #000000;
+  color: var(--text-primary);
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: capitalize;
@@ -1485,7 +1531,7 @@ body {
 }
 
 [data-theme*="dark"] .footer-content p {
-  color: #000000;
+  color: var(--text-primary);
   background: transparent;
   border: none;
   text-shadow: none;
@@ -1520,8 +1566,8 @@ body {
 }
 
 .toast {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #FFFFFF;
+  border: 1px solid #E0E0E0;
   border-radius: var(--border-radius-small);
   padding: 0.5rem 0.75rem;
   box-shadow: var(--shadow-medium);
@@ -1532,6 +1578,12 @@ body {
   overflow: hidden;
   pointer-events: auto;
   margin-bottom: 0;
+}
+
+/* Dark theme toast styles */
+[data-theme*="dark"] .toast {
+  background: #1E1E1E;
+  border: 1px solid #333333;
 }
 
 .toast::before {
@@ -1556,7 +1608,7 @@ body {
 
 .toast-icon {
   font-size: 1rem;
-  color: #000000;
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
@@ -1567,7 +1619,7 @@ body {
 .toast-message {
   flex: 1;
   font-weight: 500;
-  color: #000000;
+  color: var(--text-primary);
   font-size: 0.85rem;
   line-height: 1.3;
 }
@@ -2104,7 +2156,7 @@ body {
 
 .btn-secondary {
   background: var(--surface);
-  color: #000000;
+  color: var(--text-primary);
   border: 1px solid var(--border);
 }
 
@@ -2520,17 +2572,17 @@ select:focus {
 
 .app-icon {
   font-size: 2rem;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .app-title h4 {
   margin: 0;
-  color: #000000;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .app-description {
-  color: #000000;
+  color: var(--text-primary);
   line-height: 1.6;
   margin-bottom: 2rem;
   text-align: left;
@@ -2546,7 +2598,7 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #000000;
+  color: var(--text-primary);
   font-weight: 600;
   margin-bottom: 1rem;
   font-size: 1.1rem;
@@ -2565,13 +2617,13 @@ select:focus {
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0;
-  color: #000000;
+  color: var(--text-primary);
   line-height: 1.5;
 }
 
 .features-items li i,
 .tech-items li i {
-  color: #000000;
+  color: var(--text-primary);
   width: 16px;
   text-align: center;
   flex-shrink: 0;
@@ -2579,7 +2631,7 @@ select:focus {
 
 .features-items li:hover,
 .tech-items li:hover {
-  color: #000000;
+  color: var(--text-primary);
   background: var(--surface-alt);
   padding: 0.5rem;
   border-radius: 6px;
@@ -2743,8 +2795,8 @@ select:focus {
 
 .toast {
   pointer-events: auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #FFFFFF;
+  border: 1px solid #E0E0E0;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-medium);
   padding: 0.5rem 0.75rem;
@@ -2753,6 +2805,12 @@ select:focus {
   animation: slideInRight 0.4s ease-out;
   position: relative;
   overflow: hidden;
+}
+
+/* Dark theme toast styles (duplicate section) */
+[data-theme*="dark"] .toast {
+  background: #1E1E1E;
+  border: 1px solid #333333;
 }
 
 .toast.success {
@@ -2791,24 +2849,24 @@ select:focus {
 }
 
 .toast.success .toast-icon i {
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .toast.error .toast-icon i {
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .toast.warning .toast-icon i {
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .toast.info .toast-icon i {
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .toast-message {
   flex: 1;
-  color: #000000;
+  color: var(--text-primary);
   font-size: 0.85rem;
   line-height: 1.4;
   word-wrap: break-word;
@@ -2858,18 +2916,18 @@ select:focus {
 
 .payment-info p {
   margin: 0.75rem 0;
-  color: #000000;
+  color: var(--text-primary);
   font-size: 1rem;
 }
 
 .payment-info span {
   font-weight: 700;
-  color: #000000;
+  color: var(--text-primary);
   font-size: 1.1rem;
 }
 
 .payment-options h4 {
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: 1rem;
   text-align: center;
 }
@@ -2885,7 +2943,7 @@ select:focus {
   padding: 1rem 1.25rem;
   border: 2px solid var(--border);
   background: linear-gradient(135deg, var(--surface), var(--surface-alt));
-  color: #000000;
+  color: var(--text-primary);
   border-radius: var(--border-radius-small);
   font-weight: 600;
   font-size: 1rem;
@@ -2927,7 +2985,7 @@ select:focus {
 
 .custom-amount label {
   display: block;
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
@@ -2937,7 +2995,7 @@ select:focus {
   border: 2px solid var(--border);
   border-radius: 6px;
   background: var(--surface);
-  color: #000000;
+  color: var(--text-primary);
   font-size: 1rem;
   width: 150px;
   margin-right: 0.5rem;
@@ -2961,7 +3019,7 @@ select:focus {
 
 .payment-section h5 {
   margin-bottom: 0.75rem;
-  color: #000000;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -2986,12 +3044,12 @@ select:focus {
 }
 
 .summary-item span:first-child {
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .summary-item span:last-child {
   font-weight: 600;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 #selectedAmountDisplay {
@@ -3017,7 +3075,7 @@ select:focus {
 }
 
 .balance-sheet-section h3 {
-    color: #000000;
+    color: var(--text-primary);
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
@@ -3026,7 +3084,7 @@ select:focus {
 }
 
 .payment-details {
-    color: #000000;
+    color: var(--text-primary);
     line-height: 1.4;
 }
 

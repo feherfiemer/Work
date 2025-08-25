@@ -1,7 +1,7 @@
-# R-Service Tracker v2.1.1 
-## Professional Work & Payment Management System - Enhanced Edition
+# R-Service Tracker v2.1.2 
+## Professional Work & Payment Management System - Refined Edition
 
-[![Version](https://img.shields.io/badge/version-2.1.1-blue.svg)](https://github.com/feherfiemer/Work)
+[![Version](https://img.shields.io/badge/version-2.1.2-blue.svg)](https://github.com/feherfiemer/Work)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PWA](https://img.shields.io/badge/PWA-enabled-purple.svg)](manifest.json)
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)](index.html)
@@ -299,7 +299,16 @@ testAllSystems()  // Verify all components work
 - 🎨 Improved UI stability and performance
 - 🧪 Added comprehensive system testing
 
-### v2.1.1 - Enhanced Edition (Latest)
+### v2.1.2 - Refined Edition (Latest)
+- 🔄 **Reverted Smart Colors**: Text and icons now use appropriate theme colors (not forced black)
+- 🎯 **Enhanced Contrast**: Grey text elements converted to black for light themes, white for dark themes
+- 🧹 **Clean Toast Backgrounds**: Completely removed grey backgrounds from notifications (pure white/dark)
+- 🔊 **Money-Related Audio**: Improved sounds with coin drops, cash register, and cha-ching effects
+- 🎨 **New Monochrome Theme**: Added Black & White color option with pure black/white contrast
+- 🌙 **Perfect Dark Mode**: Ensured white text visibility in all dark theme variants
+- 📱 **Cross-Theme Compatibility**: Toast notifications adapt properly to light and dark themes
+
+### v2.1.1 - Enhanced Edition
 - 🎨 **Premium UI Overhaul**: Professional black text and icons throughout
 - 🔤 **Modern Typography**: Upgraded to Exo font family for enhanced readability
 - 🔕 **Clean Notifications**: Removed grey backgrounds from toast notifications
