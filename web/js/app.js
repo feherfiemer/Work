@@ -479,8 +479,12 @@ class RServiceTracker {
             if (enableNotificationsToggle) {
                 enableNotificationsToggle.addEventListener('change', () => {
                     this.toggleNotificationSettings(enableNotificationsToggle.checked);
+                    this.updateNotificationToggleIcon(enableNotificationsToggle.checked);
                     this.checkForNotificationChanges();
                 });
+                
+                // Set initial icon state
+                this.updateNotificationToggleIcon(enableNotificationsToggle.checked);
             }
 
             // Payment reminder time
@@ -546,6 +550,18 @@ class RServiceTracker {
         }
     }
 
+    // Update notification toggle icon based on state
+    updateNotificationToggleIcon(enabled) {
+        const icon = document.getElementById('notificationToggleIcon');
+        if (icon) {
+            if (enabled) {
+                icon.className = 'fas fa-bell';
+            } else {
+                icon.className = 'fas fa-bell-slash';
+            }
+        }
+    }
+
     // Load notification settings
     loadNotificationSettings() {
         try {
@@ -557,6 +573,7 @@ class RServiceTracker {
 
             if (enableNotifications) {
                 enableNotifications.checked = config.NOTIFICATIONS_ENABLED !== false;
+                this.updateNotificationToggleIcon(enableNotifications.checked);
             }
             
             if (paymentReminderTime) {
@@ -573,6 +590,9 @@ class RServiceTracker {
                 PAYMENT_REMINDER_TIME: config.PAYMENT_REMINDER_TIME || '10:00',
                 WORK_REMINDER_TIME: config.WORK_REMINDER_TIME || '18:00'
             };
+
+            // Initialize notification save button state
+            this.disableNotificationSaveButton();
 
             console.log('Notification settings loaded:', this.originalNotificationSettings);
         } catch (error) {
@@ -599,15 +619,34 @@ class RServiceTracker {
         );
 
         // Enable/disable save button based on changes
+        if (hasChanges) {
+            this.enableNotificationSaveButton();
+        } else {
+            this.disableNotificationSaveButton();
+        }
+    }
+
+    // Enable notification save button
+    enableNotificationSaveButton() {
         const saveBtn = document.getElementById('saveNotificationSettings');
         if (saveBtn) {
-            if (hasChanges) {
-                saveBtn.disabled = false;
-                saveBtn.style.opacity = '1';
-            } else {
-                saveBtn.disabled = true;
-                saveBtn.style.opacity = '0.5';
-            }
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = '1';
+            saveBtn.style.cursor = 'pointer';
+            saveBtn.style.pointerEvents = 'auto';
+            saveBtn.classList.remove('disabled');
+        }
+    }
+
+    // Disable notification save button
+    disableNotificationSaveButton() {
+        const saveBtn = document.getElementById('saveNotificationSettings');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.style.opacity = '0.5';
+            saveBtn.style.cursor = 'not-allowed';
+            saveBtn.style.pointerEvents = 'none';
+            saveBtn.classList.add('disabled');
         }
     }
 
@@ -650,7 +689,7 @@ class RServiceTracker {
                 
                 // Update original settings and disable save button
                 this.originalNotificationSettings = { ...newNotificationConfig };
-                this.checkForNotificationChanges();
+                this.disableNotificationSaveButton();
                 
                 console.log('Notification settings saved:', newNotificationConfig);
             } else {

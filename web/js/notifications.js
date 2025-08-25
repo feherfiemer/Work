@@ -667,7 +667,7 @@ class NotificationManager {
         }
     }
 
-    // Play success sound (realistic coin/achievement sound)
+    // Play success sound (premium achievement sound with coin collection)
     playSuccessSound() {
         if (!this.audioContext) return;
 
@@ -675,82 +675,191 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Create master gain node
+            // Create master gain node with dynamic compression
             const masterGain = ctx.createGain();
-            masterGain.connect(ctx.destination);
-            masterGain.gain.setValueAtTime(0.5, now);
+            const compressor = ctx.createDynamicsCompressor();
+            masterGain.connect(compressor);
+            compressor.connect(ctx.destination);
+            masterGain.gain.setValueAtTime(0.6, now);
 
-            // Coin drop sound - metallic ping with realistic decay
-            const coinPing = ctx.createOscillator();
-            const coinGain = ctx.createGain();
-            const coinFilter = ctx.createBiquadFilter();
+            // Stage 1: Premium coin drop with multiple metallic layers
+            this.createPremiumCoinSound(ctx, masterGain, now);
             
-            coinPing.connect(coinFilter);
-            coinFilter.connect(coinGain);
-            coinGain.connect(masterGain);
+            // Stage 2: Magical sparkle effect (like collecting coins in premium games)
+            this.createSparkleEffect(ctx, masterGain, now + 0.15);
             
-            // High metallic frequency for coin-like sound
-            coinPing.type = 'triangle';
-            coinFilter.type = 'bandpass';
-            coinFilter.frequency.setValueAtTime(2400, now);
-            coinFilter.Q.setValueAtTime(8, now);
+            // Stage 3: Satisfying completion chord progression
+            this.createCompletionChord(ctx, masterGain, now + 0.3);
             
-            // Quick metallic "ting" like a coin
-            coinPing.frequency.setValueAtTime(2400, now);
-            coinPing.frequency.exponentialRampToValueAtTime(1800, now + 0.1);
-            coinPing.frequency.exponentialRampToValueAtTime(2200, now + 0.2);
-            
-            coinGain.gain.setValueAtTime(0.8, now);
-            coinGain.gain.exponentialRampToValueAtTime(0.1, now + 0.15);
-            coinGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-            
-            coinPing.start(now);
-            coinPing.stop(now + 0.4);
+            // Stage 4: Subtle reverb tail for premium feel
+            this.createReverbTail(ctx, masterGain, now + 0.5);
 
-            // Secondary harmonic for coin resonance
-            const resonance = ctx.createOscillator();
-            const resonanceGain = ctx.createGain();
-            const resonanceFilter = ctx.createBiquadFilter();
-            
-            resonance.connect(resonanceFilter);
-            resonanceFilter.connect(resonanceGain);
-            resonanceGain.connect(masterGain);
-            
-            resonance.type = 'sine';
-            resonanceFilter.type = 'highpass';
-            resonanceFilter.frequency.setValueAtTime(1200, now);
-            
-            resonance.frequency.setValueAtTime(4800, now);
-            resonance.frequency.exponentialRampToValueAtTime(3600, now + 0.08);
-            
-            resonanceGain.gain.setValueAtTime(0.4, now);
-            resonanceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-            
-            resonance.start(now);
-            resonance.stop(now + 0.25);
-
-            // Achievement chime overlay
-            const achievement = ctx.createOscillator();
-            const achievementGain = ctx.createGain();
-            
-            achievement.connect(achievementGain);
-            achievementGain.connect(masterGain);
-            
-            achievement.type = 'sine';
-            achievement.frequency.setValueAtTime(659.25, now + 0.1); // E5
-            achievement.frequency.linearRampToValueAtTime(783.99, now + 0.25); // G5
-            
-            achievementGain.gain.setValueAtTime(0, now);
-            achievementGain.gain.linearRampToValueAtTime(0.3, now + 0.1);
-            achievementGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-            
-            achievement.start(now);
-            achievement.stop(now + 0.5);
-
-            console.log('Realistic coin/achievement sound played');
+            console.log('Premium achievement sound sequence played');
         } catch (error) {
-            console.warn('Error playing success sound:', error);
+            console.warn('Error playing premium success sound:', error);
         }
+    }
+
+    // Create premium coin sound with multiple metallic layers
+    createPremiumCoinSound(ctx, masterGain, startTime) {
+        // Primary coin ping - crisp and bright
+        const coinPing = ctx.createOscillator();
+        const coinGain = ctx.createGain();
+        const coinFilter = ctx.createBiquadFilter();
+        
+        coinPing.connect(coinFilter);
+        coinFilter.connect(coinGain);
+        coinGain.connect(masterGain);
+        
+        coinPing.type = 'triangle';
+        coinFilter.type = 'bandpass';
+        coinFilter.frequency.setValueAtTime(2800, startTime);
+        coinFilter.Q.setValueAtTime(12, startTime);
+        
+        coinPing.frequency.setValueAtTime(2800, startTime);
+        coinPing.frequency.exponentialRampToValueAtTime(2200, startTime + 0.08);
+        coinPing.frequency.exponentialRampToValueAtTime(2600, startTime + 0.15);
+        
+        coinGain.gain.setValueAtTime(0.9, startTime);
+        coinGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+        
+        coinPing.start(startTime);
+        coinPing.stop(startTime + 0.3);
+
+        // Secondary metallic resonance - deeper and richer
+        const resonance = ctx.createOscillator();
+        const resGain = ctx.createGain();
+        const resFilter = ctx.createBiquadFilter();
+        
+        resonance.connect(resFilter);
+        resFilter.connect(resGain);
+        resGain.connect(masterGain);
+        
+        resonance.type = 'sawtooth';
+        resFilter.type = 'bandpass';
+        resFilter.frequency.setValueAtTime(1400, startTime);
+        resFilter.Q.setValueAtTime(6, startTime);
+        
+        resonance.frequency.setValueAtTime(1400, startTime);
+        resonance.frequency.exponentialRampToValueAtTime(1100, startTime + 0.12);
+        
+        resGain.gain.setValueAtTime(0.5, startTime);
+        resGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+        
+        resonance.start(startTime);
+        resonance.stop(startTime + 0.25);
+
+        // Tertiary harmonic - crystal-like overtones
+        const crystal = ctx.createOscillator();
+        const crystalGain = ctx.createGain();
+        const crystalFilter = ctx.createBiquadFilter();
+        
+        crystal.connect(crystalFilter);
+        crystalFilter.connect(crystalGain);
+        crystalGain.connect(masterGain);
+        
+        crystal.type = 'sine';
+        crystalFilter.type = 'highpass';
+        crystalFilter.frequency.setValueAtTime(3000, startTime);
+        
+        crystal.frequency.setValueAtTime(5600, startTime);
+        crystal.frequency.exponentialRampToValueAtTime(4200, startTime + 0.06);
+        
+        crystalGain.gain.setValueAtTime(0.3, startTime);
+        crystalGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+        
+        crystal.start(startTime);
+        crystal.stop(startTime + 0.2);
+    }
+
+    // Create magical sparkle effect
+    createSparkleEffect(ctx, masterGain, startTime) {
+        const sparkles = [
+            { freq: 3520, delay: 0, duration: 0.1 },
+            { freq: 4400, delay: 0.03, duration: 0.08 },
+            { freq: 2794, delay: 0.06, duration: 0.12 },
+            { freq: 3520, delay: 0.09, duration: 0.1 }
+        ];
+
+        sparkles.forEach((sparkle, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+            
+            osc.type = 'sine';
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(sparkle.freq, startTime + sparkle.delay);
+            filter.Q.setValueAtTime(20, startTime + sparkle.delay);
+            
+            osc.frequency.setValueAtTime(sparkle.freq, startTime + sparkle.delay);
+            
+            gain.gain.setValueAtTime(0.4 - index * 0.08, startTime + sparkle.delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + sparkle.delay + sparkle.duration);
+            
+            osc.start(startTime + sparkle.delay);
+            osc.stop(startTime + sparkle.delay + sparkle.duration);
+        });
+    }
+
+    // Create satisfying completion chord
+    createCompletionChord(ctx, masterGain, startTime) {
+        const chord = [
+            { freq: 523.25, gain: 0.4 }, // C5
+            { freq: 659.25, gain: 0.3 }, // E5
+            { freq: 783.99, gain: 0.25 } // G5
+        ];
+
+        chord.forEach((note, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+            
+            osc.type = 'sine';
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2000, startTime);
+            filter.Q.setValueAtTime(1, startTime);
+            
+            osc.frequency.setValueAtTime(note.freq, startTime);
+            
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(note.gain, startTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
+            
+            osc.start(startTime);
+            osc.stop(startTime + 0.6);
+        });
+    }
+
+    // Create subtle reverb tail
+    createReverbTail(ctx, masterGain, startTime) {
+        const tail = ctx.createOscillator();
+        const tailGain = ctx.createGain();
+        const tailFilter = ctx.createBiquadFilter();
+        
+        tail.connect(tailFilter);
+        tailFilter.connect(tailGain);
+        tailGain.connect(masterGain);
+        
+        tail.type = 'sine';
+        tailFilter.type = 'lowpass';
+        tailFilter.frequency.setValueAtTime(800, startTime);
+        tailFilter.Q.setValueAtTime(0.5, startTime);
+        
+        tail.frequency.setValueAtTime(220, startTime); // A3
+        
+        tailGain.gain.setValueAtTime(0.15, startTime);
+        tailGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+        
+        tail.start(startTime);
+        tail.stop(startTime + 0.8);
     }
 
     // Play payment sound (premium transaction sound)
@@ -770,123 +879,296 @@ class NotificationManager {
         }
     }
 
-    // Premium payment success sound (realistic transaction sound)
+    // Premium payment success sound (ultra-realistic transaction with luxury feel)
     createPremiumTransactionSound() {
         try {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
         
-            // Create master gain node with balanced volume
+            // Create master gain node with professional dynamics processing
             const masterGain = ctx.createGain();
-            masterGain.connect(ctx.destination);
-            masterGain.gain.setValueAtTime(0.5, now);
+            const compressor = ctx.createDynamicsCompressor();
+            compressor.threshold.setValueAtTime(-24, now);
+            compressor.knee.setValueAtTime(30, now);
+            compressor.ratio.setValueAtTime(12, now);
+            compressor.attack.setValueAtTime(0.003, now);
+            compressor.release.setValueAtTime(0.25, now);
             
-            // Step 1: Card swipe/tap simulation (subtle whoosh)
-            const swipeNoise = ctx.createOscillator();
-            const swipeGain = ctx.createGain();
-            const swipeFilter = ctx.createBiquadFilter();
+            masterGain.connect(compressor);
+            compressor.connect(ctx.destination);
+            masterGain.gain.setValueAtTime(0.7, now);
             
-            swipeNoise.connect(swipeFilter);
-            swipeFilter.connect(swipeGain);
-            swipeGain.connect(masterGain);
+            // Stage 1: Premium card tap with NFC authenticity
+            this.createCardTapSound(ctx, masterGain, now);
             
-            swipeNoise.type = 'sawtooth';
-            swipeFilter.type = 'bandpass';
-            swipeFilter.frequency.setValueAtTime(800, now);
-            swipeFilter.Q.setValueAtTime(0.5, now);
+            // Stage 2: Advanced processing with multiple tones
+            this.createProcessingSequence(ctx, masterGain, now + 0.15);
             
-            swipeNoise.frequency.setValueAtTime(200, now);
-            swipeNoise.frequency.linearRampToValueAtTime(100, now + 0.1);
+            // Stage 3: Luxury success melody with harmonics
+            this.createLuxurySuccessSound(ctx, masterGain, now + 0.45);
             
-            swipeGain.gain.setValueAtTime(0.15, now);
-            swipeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            // Stage 4: Digital confirmation with modern touch
+            this.createDigitalConfirmation(ctx, masterGain, now + 0.8);
             
-            swipeNoise.start(now);
-            swipeNoise.stop(now + 0.1);
-            
-            // Step 2: Processing beep (short, professional)
-            const processingBeep = ctx.createOscillator();
-            const processingGain = ctx.createGain();
-            
-            processingBeep.connect(processingGain);
-            processingGain.connect(masterGain);
-            
-            processingBeep.type = 'square';
-            processingBeep.frequency.setValueAtTime(1000, now + 0.2);
-            
-            processingGain.gain.setValueAtTime(0.2, now + 0.2);
-            processingGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-            
-            processingBeep.start(now + 0.2);
-            processingBeep.stop(now + 0.3);
-            
-            // Step 3: Success confirmation (like real POS systems)
-            const successChime = ctx.createOscillator();
-            const chimeGain = ctx.createGain();
-            const chimeFilter = ctx.createBiquadFilter();
-            
-            successChime.connect(chimeFilter);
-            chimeFilter.connect(chimeGain);
-            chimeGain.connect(masterGain);
-            
-            successChime.type = 'sine';
-            chimeFilter.type = 'lowpass';
-            chimeFilter.frequency.setValueAtTime(3000, now + 0.4);
-            chimeFilter.Q.setValueAtTime(1, now + 0.4);
-            
-            // Two-tone success like ATM/POS systems
-            successChime.frequency.setValueAtTime(659.25, now + 0.4);  // E5
-            successChime.frequency.linearRampToValueAtTime(830.61, now + 0.6); // G#5
-            
-            chimeGain.gain.setValueAtTime(0.6, now + 0.4);
-            chimeGain.gain.linearRampToValueAtTime(0.5, now + 0.6);
-            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
-            
-            successChime.start(now + 0.4);
-            successChime.stop(now + 0.9);
-            
-            // Step 4: Receipt printer simulation (optional subtle texture)
-            const printerNoise = ctx.createOscillator();
-            const printerGain = ctx.createGain();
-            const printerFilter = ctx.createBiquadFilter();
-            
-            printerNoise.connect(printerFilter);
-            printerFilter.connect(printerGain);
-            printerGain.connect(masterGain);
-            
-            printerNoise.type = 'sawtooth';
-            printerFilter.type = 'highpass';
-            printerFilter.frequency.setValueAtTime(2000, now + 0.7);
-            
-            printerNoise.frequency.setValueAtTime(4000, now + 0.7);
-            printerNoise.frequency.linearRampToValueAtTime(3500, now + 0.85);
-            
-            printerGain.gain.setValueAtTime(0.08, now + 0.7);
-            printerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
-            
-            printerNoise.start(now + 0.7);
-            printerNoise.stop(now + 0.85);
-            
-            // Step 5: Final confirmation bell (satisfying end)
-            const confirmationBell = ctx.createOscillator();
-            const bellGain = ctx.createGain();
-            
-            confirmationBell.connect(bellGain);
-            bellGain.connect(masterGain);
-            
-            confirmationBell.type = 'sine';
-            confirmationBell.frequency.setValueAtTime(1046.50, now + 0.9); // C6 - clear, high confirmation
-            
-            bellGain.gain.setValueAtTime(0.4, now + 0.9);
-            bellGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
-            
-            confirmationBell.start(now + 0.9);
-            confirmationBell.stop(now + 1.4);
+            // Stage 5: Premium finishing touch with reverb
+            this.createPremiumFinish(ctx, masterGain, now + 1.1);
 
-            console.log('Realistic transaction sound sequence played');
+            console.log('Ultra-premium transaction sound sequence played');
         } catch (error) {
-            console.warn('Error playing payment sound:', error);
+            console.warn('Error playing premium payment sound:', error);
         }
+    }
+
+    // Create authentic card tap sound
+    createCardTapSound(ctx, masterGain, startTime) {
+        // NFC activation sound - subtle electronic chirp
+        const nfcChirp = ctx.createOscillator();
+        const chirpGain = ctx.createGain();
+        const chirpFilter = ctx.createBiquadFilter();
+        
+        nfcChirp.connect(chirpFilter);
+        chirpFilter.connect(chirpGain);
+        chirpGain.connect(masterGain);
+        
+        nfcChirp.type = 'sine';
+        chirpFilter.type = 'bandpass';
+        chirpFilter.frequency.setValueAtTime(2400, startTime);
+        chirpFilter.Q.setValueAtTime(8, startTime);
+        
+        nfcChirp.frequency.setValueAtTime(2400, startTime);
+        nfcChirp.frequency.exponentialRampToValueAtTime(2800, startTime + 0.03);
+        nfcChirp.frequency.exponentialRampToValueAtTime(2200, startTime + 0.08);
+        
+        chirpGain.gain.setValueAtTime(0.3, startTime);
+        chirpGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.12);
+        
+        nfcChirp.start(startTime);
+        nfcChirp.stop(startTime + 0.12);
+
+        // Card contact sound - subtle physical texture
+        const contactSound = ctx.createOscillator();
+        const contactGain = ctx.createGain();
+        const contactFilter = ctx.createBiquadFilter();
+        
+        contactSound.connect(contactFilter);
+        contactFilter.connect(contactGain);
+        contactGain.connect(masterGain);
+        
+        contactSound.type = 'triangle';
+        contactFilter.type = 'highpass';
+        contactFilter.frequency.setValueAtTime(1500, startTime + 0.02);
+        
+        contactSound.frequency.setValueAtTime(800, startTime + 0.02);
+        contactSound.frequency.linearRampToValueAtTime(600, startTime + 0.08);
+        
+        contactGain.gain.setValueAtTime(0.15, startTime + 0.02);
+        contactGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.1);
+        
+        contactSound.start(startTime + 0.02);
+        contactSound.stop(startTime + 0.1);
+    }
+
+    // Create sophisticated processing sequence
+    createProcessingSequence(ctx, masterGain, startTime) {
+        // Primary processing tone - modern and clean
+        const processingTone = ctx.createOscillator();
+        const processGain = ctx.createGain();
+        const processFilter = ctx.createBiquadFilter();
+        
+        processingTone.connect(processFilter);
+        processFilter.connect(processGain);
+        processGain.connect(masterGain);
+        
+        processingTone.type = 'square';
+        processFilter.type = 'lowpass';
+        processFilter.frequency.setValueAtTime(1800, startTime);
+        processFilter.Q.setValueAtTime(2, startTime);
+        
+        processingTone.frequency.setValueAtTime(1200, startTime);
+        
+        processGain.gain.setValueAtTime(0.25, startTime);
+        processGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+        
+        processingTone.start(startTime);
+        processingTone.stop(startTime + 0.15);
+
+        // Secondary processing chirp - authentication feedback
+        const authChirp = ctx.createOscillator();
+        const authGain = ctx.createGain();
+        const authFilter = ctx.createBiquadFilter();
+        
+        authChirp.connect(authFilter);
+        authFilter.connect(authGain);
+        authGain.connect(masterGain);
+        
+        authChirp.type = 'sine';
+        authFilter.type = 'bandpass';
+        authFilter.frequency.setValueAtTime(1600, startTime + 0.08);
+        authFilter.Q.setValueAtTime(12, startTime + 0.08);
+        
+        authChirp.frequency.setValueAtTime(1600, startTime + 0.08);
+        authChirp.frequency.linearRampToValueAtTime(1800, startTime + 0.12);
+        
+        authGain.gain.setValueAtTime(0.2, startTime + 0.08);
+        authGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.18);
+        
+        authChirp.start(startTime + 0.08);
+        authChirp.stop(startTime + 0.18);
+    }
+
+    // Create luxury success sound with rich harmonics
+    createLuxurySuccessSound(ctx, masterGain, startTime) {
+        // Main success melody - sophisticated and uplifting
+        const melody = [
+            { freq: 523.25, time: 0, duration: 0.15 },    // C5
+            { freq: 659.25, time: 0.08, duration: 0.2 },  // E5  
+            { freq: 783.99, time: 0.16, duration: 0.25 }, // G5
+            { freq: 1046.50, time: 0.24, duration: 0.3 }  // C6
+        ];
+
+        melody.forEach((note, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+            
+            osc.type = 'sine';
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2500, startTime + note.time);
+            filter.Q.setValueAtTime(1.5, startTime + note.time);
+            
+            osc.frequency.setValueAtTime(note.freq, startTime + note.time);
+            
+            gain.gain.setValueAtTime(0, startTime + note.time);
+            gain.gain.linearRampToValueAtTime(0.4 - index * 0.05, startTime + note.time + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + note.time + note.duration);
+            
+            osc.start(startTime + note.time);
+            osc.stop(startTime + note.time + note.duration);
+        });
+
+        // Rich harmonic accompaniment
+        const harmony = ctx.createOscillator();
+        const harmonyGain = ctx.createGain();
+        const harmonyFilter = ctx.createBiquadFilter();
+        
+        harmony.connect(harmonyFilter);
+        harmonyFilter.connect(harmonyGain);
+        harmonyGain.connect(masterGain);
+        
+        harmony.type = 'triangle';
+        harmonyFilter.type = 'lowpass';
+        harmonyFilter.frequency.setValueAtTime(1200, startTime);
+        
+        harmony.frequency.setValueAtTime(261.63, startTime); // C4
+        harmony.frequency.linearRampToValueAtTime(329.63, startTime + 0.15); // E4
+        harmony.frequency.linearRampToValueAtTime(392.00, startTime + 0.3); // G4
+        
+        harmonyGain.gain.setValueAtTime(0.2, startTime);
+        harmonyGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+        
+        harmony.start(startTime);
+        harmony.stop(startTime + 0.4);
+    }
+
+    // Create digital confirmation with modern touch
+    createDigitalConfirmation(ctx, masterGain, startTime) {
+        // Digital success ping - clean and modern
+        const digitalPing = ctx.createOscillator();
+        const pingGain = ctx.createGain();
+        const pingFilter = ctx.createBiquadFilter();
+        
+        digitalPing.connect(pingFilter);
+        pingFilter.connect(pingGain);
+        pingGain.connect(masterGain);
+        
+        digitalPing.type = 'sine';
+        pingFilter.type = 'peaking';
+        pingFilter.frequency.setValueAtTime(2200, startTime);
+        pingFilter.Q.setValueAtTime(6, startTime);
+        pingFilter.gain.setValueAtTime(8, startTime);
+        
+        digitalPing.frequency.setValueAtTime(2200, startTime);
+        digitalPing.frequency.exponentialRampToValueAtTime(1800, startTime + 0.1);
+        
+        pingGain.gain.setValueAtTime(0.5, startTime);
+        pingGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+        
+        digitalPing.start(startTime);
+        digitalPing.stop(startTime + 0.25);
+
+        // Subtle digital texture overlay
+        const texture = ctx.createOscillator();
+        const textureGain = ctx.createGain();
+        const textureFilter = ctx.createBiquadFilter();
+        
+        texture.connect(textureFilter);
+        textureFilter.connect(textureGain);
+        textureGain.connect(masterGain);
+        
+        texture.type = 'sawtooth';
+        textureFilter.type = 'highpass';
+        textureFilter.frequency.setValueAtTime(4000, startTime + 0.05);
+        
+        texture.frequency.setValueAtTime(4400, startTime + 0.05);
+        texture.frequency.linearRampToValueAtTime(3800, startTime + 0.15);
+        
+        textureGain.gain.setValueAtTime(0.08, startTime + 0.05);
+        textureGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+        
+        texture.start(startTime + 0.05);
+        texture.stop(startTime + 0.2);
+    }
+
+    // Create premium finishing touch
+    createPremiumFinish(ctx, masterGain, startTime) {
+        // Final luxury bell - crystal clear and satisfying
+        const luxuryBell = ctx.createOscillator();
+        const bellGain = ctx.createGain();
+        const bellFilter = ctx.createBiquadFilter();
+        
+        luxuryBell.connect(bellFilter);
+        bellFilter.connect(bellGain);
+        bellGain.connect(masterGain);
+        
+        luxuryBell.type = 'sine';
+        bellFilter.type = 'peaking';
+        bellFilter.frequency.setValueAtTime(1570, startTime); // G6
+        bellFilter.Q.setValueAtTime(4, startTime);
+        bellFilter.gain.setValueAtTime(6, startTime);
+        
+        luxuryBell.frequency.setValueAtTime(1568, startTime); // G6
+        
+        bellGain.gain.setValueAtTime(0.45, startTime);
+        bellGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+        
+        luxuryBell.start(startTime);
+        luxuryBell.stop(startTime + 0.8);
+
+        // Sophisticated reverb tail
+        const reverbTail = ctx.createOscillator();
+        const tailGain = ctx.createGain();
+        const tailFilter = ctx.createBiquadFilter();
+        
+        reverbTail.connect(tailFilter);
+        tailFilter.connect(tailGain);
+        tailGain.connect(masterGain);
+        
+        reverbTail.type = 'sine';
+        tailFilter.type = 'lowpass';
+        tailFilter.frequency.setValueAtTime(600, startTime + 0.1);
+        tailFilter.Q.setValueAtTime(0.7, startTime + 0.1);
+        
+        reverbTail.frequency.setValueAtTime(392, startTime + 0.1); // G4
+        
+        tailGain.gain.setValueAtTime(0.12, startTime + 0.1);
+        tailGain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.0);
+        
+        reverbTail.start(startTime + 0.1);
+        reverbTail.stop(startTime + 1.0);
     }
 
     // Enhanced cash register sound for older browsers
