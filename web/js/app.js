@@ -458,10 +458,221 @@ class RServiceTracker {
                     });
                 }
             });
+
+            // Setup notification settings handlers
+            this.setupNotificationHandlers();
             
             console.log('Settings handlers setup completed');
         } catch (error) {
             console.error('Error setting up settings handlers:', error);
+        }
+    }
+
+    // Setup notification settings handlers
+    setupNotificationHandlers() {
+        try {
+            // Load notification settings
+            this.loadNotificationSettings();
+
+            // Enable/Disable notifications toggle
+            const enableNotificationsToggle = document.getElementById('enableNotifications');
+            if (enableNotificationsToggle) {
+                enableNotificationsToggle.addEventListener('change', () => {
+                    this.toggleNotificationSettings(enableNotificationsToggle.checked);
+                    this.checkForNotificationChanges();
+                });
+            }
+
+            // Payment reminder time
+            const paymentReminderTime = document.getElementById('paymentReminderTime');
+            if (paymentReminderTime) {
+                paymentReminderTime.addEventListener('change', () => {
+                    this.checkForNotificationChanges();
+                });
+            }
+
+            // Work reminder time
+            const workReminderTime = document.getElementById('workReminderTime');
+            if (workReminderTime) {
+                workReminderTime.addEventListener('change', () => {
+                    this.checkForNotificationChanges();
+                });
+            }
+
+            // Save notification settings
+            const saveNotificationBtn = document.getElementById('saveNotificationSettings');
+            if (saveNotificationBtn) {
+                saveNotificationBtn.addEventListener('click', () => {
+                    this.saveNotificationSettings();
+                });
+            }
+
+            // Test notifications
+            const testNotificationsBtn = document.getElementById('testNotifications');
+            if (testNotificationsBtn) {
+                testNotificationsBtn.addEventListener('click', () => {
+                    this.testNotifications();
+                });
+            }
+
+            // Initial toggle state
+            this.toggleNotificationSettings(enableNotificationsToggle?.checked ?? true);
+
+            console.log('Notification handlers setup completed');
+        } catch (error) {
+            console.error('Error setting up notification handlers:', error);
+        }
+    }
+
+    // Toggle notification settings visibility
+    toggleNotificationSettings(enabled) {
+        const notificationSettings = document.getElementById('notificationSettings');
+        const workReminderSettings = document.getElementById('workReminderSettings');
+        
+        if (notificationSettings) {
+            if (enabled) {
+                notificationSettings.classList.remove('disabled');
+            } else {
+                notificationSettings.classList.add('disabled');
+            }
+        }
+        
+        if (workReminderSettings) {
+            if (enabled) {
+                workReminderSettings.classList.remove('disabled');
+            } else {
+                workReminderSettings.classList.add('disabled');
+            }
+        }
+    }
+
+    // Load notification settings
+    loadNotificationSettings() {
+        try {
+            const config = this.getCurrentConfig();
+            
+            const enableNotifications = document.getElementById('enableNotifications');
+            const paymentReminderTime = document.getElementById('paymentReminderTime');
+            const workReminderTime = document.getElementById('workReminderTime');
+
+            if (enableNotifications) {
+                enableNotifications.checked = config.NOTIFICATIONS_ENABLED !== false;
+            }
+            
+            if (paymentReminderTime) {
+                paymentReminderTime.value = config.PAYMENT_REMINDER_TIME || '10:00';
+            }
+            
+            if (workReminderTime) {
+                workReminderTime.value = config.WORK_REMINDER_TIME || '18:00';
+            }
+
+            // Store original notification settings
+            this.originalNotificationSettings = {
+                NOTIFICATIONS_ENABLED: config.NOTIFICATIONS_ENABLED !== false,
+                PAYMENT_REMINDER_TIME: config.PAYMENT_REMINDER_TIME || '10:00',
+                WORK_REMINDER_TIME: config.WORK_REMINDER_TIME || '18:00'
+            };
+
+            console.log('Notification settings loaded:', this.originalNotificationSettings);
+        } catch (error) {
+            console.error('Error loading notification settings:', error);
+        }
+    }
+
+    // Check for notification settings changes
+    checkForNotificationChanges() {
+        if (!this.originalNotificationSettings) return;
+
+        const enableNotifications = document.getElementById('enableNotifications');
+        const paymentReminderTime = document.getElementById('paymentReminderTime');
+        const workReminderTime = document.getElementById('workReminderTime');
+
+        const currentEnabled = enableNotifications?.checked ?? true;
+        const currentPaymentTime = paymentReminderTime?.value || '10:00';
+        const currentWorkTime = workReminderTime?.value || '18:00';
+
+        const hasChanges = (
+            currentEnabled !== this.originalNotificationSettings.NOTIFICATIONS_ENABLED ||
+            currentPaymentTime !== this.originalNotificationSettings.PAYMENT_REMINDER_TIME ||
+            currentWorkTime !== this.originalNotificationSettings.WORK_REMINDER_TIME
+        );
+
+        // Enable/disable save button based on changes
+        const saveBtn = document.getElementById('saveNotificationSettings');
+        if (saveBtn) {
+            if (hasChanges) {
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = '1';
+            } else {
+                saveBtn.disabled = true;
+                saveBtn.style.opacity = '0.5';
+            }
+        }
+    }
+
+    // Save notification settings
+    saveNotificationSettings() {
+        try {
+            const enableNotifications = document.getElementById('enableNotifications');
+            const paymentReminderTime = document.getElementById('paymentReminderTime');
+            const workReminderTime = document.getElementById('workReminderTime');
+
+            const newNotificationConfig = {
+                NOTIFICATIONS_ENABLED: enableNotifications?.checked ?? true,
+                PAYMENT_REMINDER_TIME: paymentReminderTime?.value || '10:00',
+                WORK_REMINDER_TIME: workReminderTime?.value || '18:00'
+            };
+
+            let saved = false;
+            if (window.ConfigManager && typeof window.ConfigManager.saveUserConfig === 'function') {
+                saved = window.ConfigManager.saveUserConfig(newNotificationConfig);
+            } else {
+                // Fallback: save directly to global config and localStorage
+                try {
+                    const currentConfig = JSON.parse(localStorage.getItem('r-service-user-config') || '{}');
+                    const updatedConfig = { ...currentConfig, ...newNotificationConfig };
+                    localStorage.setItem('r-service-user-config', JSON.stringify(updatedConfig));
+                    window.R_SERVICE_CONFIG = { ...window.R_SERVICE_CONFIG, ...newNotificationConfig };
+                    saved = true;
+                } catch (e) {
+                    console.error('Fallback notification save failed:', e);
+                }
+            }
+
+            if (saved) {
+                if (this.notifications) {
+                    this.notifications.showToast('Notification settings saved successfully!', 'success');
+                    
+                    // Reschedule reminders with new settings
+                    this.notifications.scheduleReminders();
+                }
+                
+                // Update original settings and disable save button
+                this.originalNotificationSettings = { ...newNotificationConfig };
+                this.checkForNotificationChanges();
+                
+                console.log('Notification settings saved:', newNotificationConfig);
+            } else {
+                if (this.notifications) {
+                    this.notifications.showToast('Error saving notification settings', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error saving notification settings:', error);
+            if (this.notifications) {
+                this.notifications.showToast('Error saving notification settings: ' + error.message, 'error');
+            }
+        }
+    }
+
+    // Test notifications
+    testNotifications() {
+        if (this.notifications) {
+            this.notifications.testAllNotifications();
+            this.notifications.showToast('Test notifications sent! Check if you received them.', 'info', 5000);
+        } else {
+            console.error('Notifications not available');
         }
     }
 
@@ -1602,13 +1813,23 @@ class RServiceTracker {
         
         if (summaryEl && selectedAmountEl && paymentTypeEl && workDaysCoveredEl) {
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-            const pendingAmount = this.pendingUnpaidDates.length * dailyWage;
-            const isAdvance = amount > pendingAmount;
+            const totalWorkCompletedValue = this.pendingUnpaidDates.length * dailyWage;
+            
+            // Advance payment only if amount exceeds TOTAL work completed (not just payment threshold)
+            const isAdvance = amount > totalWorkCompletedValue;
             const workDaysCovered = Math.min(Math.floor(amount / dailyWage), this.pendingUnpaidDates.length);
             
             selectedAmountEl.textContent = `₹${amount}`;
-            paymentTypeEl.textContent = isAdvance ? 'Advance Payment' : 'Regular Payment';
-            paymentTypeEl.style.color = isAdvance ? 'var(--warning)' : 'var(--success)';
+            
+            // Improved payment type logic
+            if (isAdvance) {
+                paymentTypeEl.textContent = 'Advance Payment';
+                paymentTypeEl.style.color = 'var(--warning)';
+            } else {
+                paymentTypeEl.textContent = 'Regular Payment';
+                paymentTypeEl.style.color = 'var(--success)';
+            }
+            
             workDaysCoveredEl.textContent = `${workDaysCovered} days`;
             
             // Show summary
@@ -1646,12 +1867,14 @@ class RServiceTracker {
             
             // Use unified amount calculation system
             const DAILY_WAGE = 25; // Should match database constant
-            const pendingAmount = this.pendingUnpaidDates.length * DAILY_WAGE;
-            const isAdvancePayment = amount > pendingAmount;
+            const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
+            
+            // Fixed logic: Advance payment only if amount exceeds TOTAL work completed
+            const isAdvancePayment = amount > totalWorkCompletedValue;
             
             // Determine which work dates to mark as paid
             let workDatesToPay = [];
-            if (pendingAmount > 0) {
+            if (totalWorkCompletedValue > 0) {
                 // Calculate how many days this payment covers
                 const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
                 workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
@@ -1679,8 +1902,8 @@ class RServiceTracker {
             // Play sound
             this.notifications.playSound('paid');
             
-            // Show success notification
-            const paymentType = isAdvancePayment ? 'advance payment' : 'payment';
+            // Show success notification with improved messaging
+            const paymentType = isAdvancePayment ? 'advance payment' : 'regular payment';
             this.notifications.showPaymentNotification(amount);
             this.notifications.showToast(`${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)} of ₹${amount} recorded successfully!`, 'success');
             

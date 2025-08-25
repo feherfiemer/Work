@@ -643,7 +643,7 @@ class NotificationManager {
         }
     }
 
-    // Play success sound (realistic coin collection)
+    // Play success sound (satisfying work completion sound)
     playSuccessSound() {
         if (!this.audioContext) return;
 
@@ -651,76 +651,57 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Create master gain node with balanced volume
+            // Create master gain node with perfect volume
             const masterGain = ctx.createGain();
             masterGain.connect(ctx.destination);
-            masterGain.gain.setValueAtTime(0.5, now);
+            masterGain.gain.setValueAtTime(0.4, now);
 
-            // Authentic coin drop sound with realistic physics
-            const createCoinDrop = (baseFreq, startTime, bounces) => {
-                bounces.forEach((bounce, bounceIndex) => {
-                    const coinOsc = ctx.createOscillator();
-                    const coinGain = ctx.createGain();
-                    const coinFilter = ctx.createBiquadFilter();
-                    
-                    coinOsc.connect(coinFilter);
-                    coinFilter.connect(coinGain);
-                    coinGain.connect(masterGain);
-                    
-                    // Realistic metallic coin sound
-                    coinOsc.type = 'sawtooth';
-                    coinFilter.type = 'peaking';
-                    coinFilter.frequency.setValueAtTime(baseFreq * 2.5, now + startTime + bounce.time);
-                    coinFilter.Q.setValueAtTime(8, now + startTime + bounce.time);
-                    coinFilter.gain.setValueAtTime(10, now + startTime + bounce.time);
-                    
-                    coinOsc.frequency.setValueAtTime(baseFreq, now + startTime + bounce.time);
-                    coinOsc.frequency.exponentialRampToValueAtTime(baseFreq * 0.6, now + startTime + bounce.time + bounce.duration);
-                    
-                    coinGain.gain.setValueAtTime(0, now + startTime + bounce.time);
-                    coinGain.gain.linearRampToValueAtTime(bounce.volume, now + startTime + bounce.time + 0.005);
-                    coinGain.gain.exponentialRampToValueAtTime(0.001, now + startTime + bounce.time + bounce.duration);
-                    
-                    coinOsc.start(now + startTime + bounce.time);
-                    coinOsc.stop(now + startTime + bounce.time + bounce.duration);
-                });
-            };
+            // Simple, satisfying "task complete" chime
+            const chime = ctx.createOscillator();
+            const chimeGain = ctx.createGain();
+            const chimeFilter = ctx.createBiquadFilter();
             
-            // Different coin types with realistic bounce patterns
-            createCoinDrop(1100, 0, [
-                { time: 0, duration: 0.08, volume: 0.4 },    // Initial drop
-                { time: 0.05, duration: 0.05, volume: 0.25 }, // First bounce
-                { time: 0.08, duration: 0.03, volume: 0.15 }  // Final settle
-            ]);
+            chime.connect(chimeFilter);
+            chimeFilter.connect(chimeGain);
+            chimeGain.connect(masterGain);
             
-            createCoinDrop(750, 0.12, [
-                { time: 0, duration: 0.1, volume: 0.35 },
-                { time: 0.06, duration: 0.04, volume: 0.2 }
-            ]);
+            // Warm, pleasant confirmation tone
+            chime.type = 'sine';
+            chimeFilter.type = 'lowpass';
+            chimeFilter.frequency.setValueAtTime(3000, now);
+            chimeFilter.Q.setValueAtTime(1, now);
             
-            // Classic cash register "ka-ching" sound
-            const registerBell = ctx.createOscillator();
-            const bellGain = ctx.createGain();
-            const bellFilter = ctx.createBiquadFilter();
+            // Pleasant ascending melody
+            chime.frequency.setValueAtTime(523.25, now);        // C5 - confident start
+            chime.frequency.linearRampToValueAtTime(659.25, now + 0.1); // E5 - uplifting
+            chime.frequency.linearRampToValueAtTime(783.99, now + 0.2); // G5 - completion
             
-            registerBell.connect(bellFilter);
-            bellFilter.connect(bellGain);
-            bellGain.connect(masterGain);
+            chimeGain.gain.setValueAtTime(0.8, now);
+            chimeGain.gain.linearRampToValueAtTime(0.6, now + 0.1);
+            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
             
-            registerBell.type = 'sine';
-            bellFilter.type = 'peaking';
-            bellFilter.frequency.setValueAtTime(1760, now + 0.25);
-            bellFilter.Q.setValueAtTime(3, now + 0.25);
-            bellFilter.gain.setValueAtTime(5, now + 0.25);
-            
-            registerBell.frequency.setValueAtTime(1760, now + 0.25); // Classic A6 cash register bell
-            bellGain.gain.setValueAtTime(0.7, now + 0.25);
-            bellGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-            
-            registerBell.start(now + 0.25);
-            registerBell.stop(now + 1.2);
+            chime.start(now);
+            chime.stop(now + 0.5);
 
-            console.log('Realistic coin collection sound played');
+            // Subtle harmonic for richness
+            const harmony = ctx.createOscillator();
+            const harmonyGain = ctx.createGain();
+            
+            harmony.connect(harmonyGain);
+            harmonyGain.connect(masterGain);
+            
+            harmony.type = 'triangle';
+            harmony.frequency.setValueAtTime(261.63, now);      // C4 - octave below
+            harmony.frequency.linearRampToValueAtTime(329.63, now + 0.1); // E4
+            harmony.frequency.linearRampToValueAtTime(392.00, now + 0.2); // G4
+            
+            harmonyGain.gain.setValueAtTime(0.3, now);
+            harmonyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            
+            harmony.start(now);
+            harmony.stop(now + 0.4);
+
+            console.log('Satisfying work completion sound played');
         } catch (error) {
             console.warn('Error playing success sound:', error);
         }
@@ -743,117 +724,93 @@ class NotificationManager {
         }
     }
 
-    // Realistic bank transaction and cash register sound
+    // Premium payment success sound (clean and satisfying)
     createPremiumTransactionSound() {
         try {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
         
-            // Create master gain node
+            // Create master gain node with balanced volume
             const masterGain = ctx.createGain();
             masterGain.connect(ctx.destination);
-            masterGain.gain.setValueAtTime(0.6, now);
+            masterGain.gain.setValueAtTime(0.45, now);
             
-            // Premium payment confirmation sound (like mobile payment apps)
-            const paymentChime = ctx.createOscillator();
+            // Modern payment success sound (like successful app transactions)
+            const successChime = ctx.createOscillator();
             const chimeGain = ctx.createGain();
             const chimeFilter = ctx.createBiquadFilter();
             
-            paymentChime.connect(chimeFilter);
+            successChime.connect(chimeFilter);
             chimeFilter.connect(chimeGain);
             chimeGain.connect(masterGain);
             
-            // Warm, pleasant payment success tone
-            paymentChime.type = 'sine';
-            chimeFilter.type = 'peaking';
-            chimeFilter.frequency.setValueAtTime(1000, now);
-            chimeFilter.Q.setValueAtTime(2, now);
-            chimeFilter.gain.setValueAtTime(8, now);
+            // Clean, professional payment confirmation
+            successChime.type = 'sine';
+            chimeFilter.type = 'lowpass';
+            chimeFilter.frequency.setValueAtTime(4000, now);
+            chimeFilter.Q.setValueAtTime(1, now);
             
-            paymentChime.frequency.setValueAtTime(880, now);      // A5 - warm tone
-            paymentChime.frequency.setValueAtTime(1320, now + 0.1); // E6 - bright confirmation
+            // Uplifting payment success melody
+            successChime.frequency.setValueAtTime(440, now);          // A4 - foundation
+            successChime.frequency.linearRampToValueAtTime(554.37, now + 0.15); // C#5 - confidence
+            successChime.frequency.linearRampToValueAtTime(659.25, now + 0.3);  // E5 - success
+            successChime.frequency.linearRampToValueAtTime(880, now + 0.45);     // A5 - celebration
             
-            chimeGain.gain.setValueAtTime(0.5, now);
-            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            chimeGain.gain.setValueAtTime(0.7, now);
+            chimeGain.gain.linearRampToValueAtTime(0.8, now + 0.15);
+            chimeGain.gain.linearRampToValueAtTime(0.6, now + 0.3);
+            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
             
-            paymentChime.start(now);
-            paymentChime.stop(now + 0.4);
+            successChime.start(now);
+            successChime.stop(now + 0.8);
             
-            // Classic cash register drawer opening
-            const drawerOsc = ctx.createOscillator();
-            const drawerGain = ctx.createGain();
-            const drawerFilter = ctx.createBiquadFilter();
+            // Subtle harmonic enhancement
+            const harmony = ctx.createOscillator();
+            const harmonyGain = ctx.createGain();
+            const harmonyFilter = ctx.createBiquadFilter();
             
-            drawerOsc.connect(drawerFilter);
-            drawerFilter.connect(drawerGain);
-            drawerGain.connect(masterGain);
+            harmony.connect(harmonyFilter);
+            harmonyFilter.connect(harmonyGain);
+            harmonyGain.connect(masterGain);
             
-            drawerOsc.type = 'square';
-            drawerFilter.type = 'lowpass';
-            drawerFilter.frequency.setValueAtTime(1500, now + 0.1);
+            harmony.type = 'triangle';
+            harmonyFilter.type = 'lowpass';
+            harmonyFilter.frequency.setValueAtTime(2000, now);
             
-            drawerOsc.frequency.setValueAtTime(300, now + 0.1);
-            drawerOsc.frequency.exponentialRampToValueAtTime(150, now + 0.25);
-            drawerGain.gain.setValueAtTime(0.4, now + 0.1);
-            drawerGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            harmony.frequency.setValueAtTime(220, now);           // A3 - bass foundation
+            harmony.frequency.linearRampToValueAtTime(277.18, now + 0.15); // C#4
+            harmony.frequency.linearRampToValueAtTime(329.63, now + 0.3);  // E4
+            harmony.frequency.linearRampToValueAtTime(440, now + 0.45);     // A4
             
-            drawerOsc.start(now + 0.1);
-            drawerOsc.stop(now + 0.3);
+            harmonyGain.gain.setValueAtTime(0.25, now);
+            harmonyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
             
-            // Authentic cash register "cha-ching" bell sequence
-            const createRegisterBell = (freq, startTime, volume) => {
-                const bellOsc = ctx.createOscillator();
-                const bellGain = ctx.createGain();
-                const bellFilter = ctx.createBiquadFilter();
-                
-                bellOsc.connect(bellFilter);
-                bellFilter.connect(bellGain);
-                bellGain.connect(masterGain);
-                
-                bellOsc.type = 'triangle';
-                bellFilter.type = 'peaking';
-                bellFilter.frequency.setValueAtTime(freq * 1.5, now + startTime);
-                bellFilter.Q.setValueAtTime(4, now + startTime);
-                bellFilter.gain.setValueAtTime(12, now + startTime);
-                
-                bellOsc.frequency.setValueAtTime(freq, now + startTime);
-                bellGain.gain.setValueAtTime(volume, now + startTime);
-                bellGain.gain.exponentialRampToValueAtTime(0.001, now + startTime + 1.0);
-                
-                bellOsc.start(now + startTime);
-                bellOsc.stop(now + startTime + 1.0);
-            };
+            harmony.start(now);
+            harmony.stop(now + 0.7);
             
-            // Classic cash register harmony
-            createRegisterBell(1760, 0.5, 0.6);  // A6 - main bell
-            createRegisterBell(2217, 0.52, 0.4); // C#7 - harmony
-            createRegisterBell(1320, 0.54, 0.3); // E6 - bass bell
+            // Gentle confirmation "ding"
+            const confirmationBell = ctx.createOscillator();
+            const bellGain = ctx.createGain();
+            const bellFilter = ctx.createBiquadFilter();
             
-            // Paper money counting sound
-            const paperOsc = ctx.createOscillator();
-            const paperGain = ctx.createGain();
-            const paperFilter = ctx.createBiquadFilter();
+            confirmationBell.connect(bellFilter);
+            bellFilter.connect(bellGain);
+            bellGain.connect(masterGain);
             
-            paperOsc.connect(paperFilter);
-            paperFilter.connect(paperGain);
-            paperGain.connect(masterGain);
+            confirmationBell.type = 'sine';
+            bellFilter.type = 'peaking';
+            bellFilter.frequency.setValueAtTime(1760, now + 0.6);
+            bellFilter.Q.setValueAtTime(3, now + 0.6);
+            bellFilter.gain.setValueAtTime(6, now + 0.6);
             
-            paperOsc.type = 'triangle';
-            paperFilter.type = 'highpass';
-            paperFilter.frequency.setValueAtTime(2000, now + 0.5);
+            confirmationBell.frequency.setValueAtTime(1760, now + 0.6); // A6 - clear confirmation
+            bellGain.gain.setValueAtTime(0.4, now + 0.6);
+            bellGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
             
-            // Rapid frequency modulation to simulate paper rustling
-            paperOsc.frequency.setValueAtTime(1000, now + 0.5);
-            paperOsc.frequency.linearRampToValueAtTime(1200, now + 0.6);
-            paperOsc.frequency.linearRampToValueAtTime(900, now + 0.7);
-            paperOsc.frequency.linearRampToValueAtTime(1100, now + 0.8);
-            paperGain.gain.setValueAtTime(0.2, now + 0.5);
-            paperGain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
-            
-            paperOsc.start(now + 0.5);
-            paperOsc.stop(now + 0.9);
-            
-            console.log('Realistic bank transaction sound played');
+            confirmationBell.start(now + 0.6);
+            confirmationBell.stop(now + 1.2);
+
+            console.log('Premium payment confirmation sound played');
         } catch (error) {
             console.warn('Error playing payment sound:', error);
         }
@@ -995,28 +952,44 @@ class NotificationManager {
         console.log('[REMINDERS] Daily reminder system activated');
     }
 
-    // Enhanced reminder checking with better time management
+    // Enhanced reminder checking with better time management and user configuration
     async checkForReminders() {
+        // Get user configuration for notifications
+        const config = this.getUserConfig();
+        
+        // Skip if notifications are disabled
+        if (config.NOTIFICATIONS_ENABLED === false) {
+            return;
+        }
+        
+        // Use IST timezone for all time calculations
         const now = new Date();
-        const hour = now.getHours();
-        const minute = now.getMinutes();
-        const today = now.toISOString().split('T')[0];
+        const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        const hour = istTime.getHours();
+        const minute = istTime.getMinutes();
+        const today = istTime.toISOString().split('T')[0];
         const timeKey = `${hour}:${minute.toString().padStart(2, '0')}`;
         
+        // Get configured reminder times
+        const paymentReminderTime = config.PAYMENT_REMINDER_TIME || '10:00';
+        const workReminderTime = config.WORK_REMINDER_TIME || '18:00';
+        
         // Prevent duplicate notifications on the same day for the same time
-        const lastNotificationKey = `lastNotification_${today}_${hour}`;
-        const lastNotified = localStorage.getItem(lastNotificationKey);
+        const lastPaymentNotificationKey = `lastPaymentNotification_${today}`;
+        const lastWorkNotificationKey = `lastWorkNotification_${today}`;
+        const lastPaymentNotified = localStorage.getItem(lastPaymentNotificationKey);
+        const lastWorkNotified = localStorage.getItem(lastWorkNotificationKey);
         
         try {
-            // 7:00 AM Payment Reminder (repeats daily until paid)
-            if (timeKey === '7:00' && !lastNotified) {
-                localStorage.setItem(lastNotificationKey, 'true');
+            // Payment Reminder (based on user configured time)
+            if (timeKey === paymentReminderTime && !lastPaymentNotified) {
+                localStorage.setItem(lastPaymentNotificationKey, 'true');
                 await this.checkPaymentReminder();
             }
             
-            // 6:00 PM Work Reminder (only if work not done today)
-            if (timeKey === '18:00' && !lastNotified) {
-                localStorage.setItem(lastNotificationKey, 'true');
+            // Work Reminder (based on user configured time, only if work not done today)
+            if (timeKey === workReminderTime && !lastWorkNotified) {
+                localStorage.setItem(lastWorkNotificationKey, 'true');
                 await this.checkWorkReminder(today);
             }
             
@@ -1028,6 +1001,33 @@ class NotificationManager {
             console.error('Error checking reminders:', error);
         }
     }
+
+    // Get user configuration with fallback to defaults
+    getUserConfig() {
+        try {
+            if (window.ConfigManager && typeof window.ConfigManager.getConfig === 'function') {
+                return window.ConfigManager.getConfig();
+            } else if (window.R_SERVICE_CONFIG) {
+                return window.R_SERVICE_CONFIG;
+            } else {
+                // Fallback configuration
+                return {
+                    NOTIFICATIONS_ENABLED: true,
+                    PAYMENT_REMINDER_TIME: '10:00',
+                    WORK_REMINDER_TIME: '18:00',
+                    TIMEZONE: 'Asia/Kolkata'
+                };
+            }
+        } catch (error) {
+            console.error('Error getting user config:', error);
+            return {
+                NOTIFICATIONS_ENABLED: true,
+                PAYMENT_REMINDER_TIME: '10:00',
+                WORK_REMINDER_TIME: '18:00',
+                TIMEZONE: 'Asia/Kolkata'
+            };
+        }
+    }
     
     // Clean up old notification flags
     cleanupOldNotificationFlags() {
@@ -1037,7 +1037,11 @@ class NotificationManager {
         const yesterdayStr = yesterday.toISOString().split('T')[0];
         
         keys.forEach(key => {
-            if (key.startsWith('lastNotification_') && key.includes(yesterdayStr)) {
+            // Clean up both old and new notification flag formats
+            if ((key.startsWith('lastNotification_') || 
+                 key.startsWith('lastPaymentNotification_') || 
+                 key.startsWith('lastWorkNotification_')) && 
+                key.includes(yesterdayStr)) {
                 localStorage.removeItem(key);
             }
         });

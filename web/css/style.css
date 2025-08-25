@@ -55,6 +55,10 @@
   --warning: #FF9800;
   --error: #F44336;
   --info: #2196F3;
+  --success-alpha: rgba(76, 175, 80, 0.1);
+  --warning-alpha: rgba(255, 152, 0, 0.1);
+  --error-alpha: rgba(244, 67, 54, 0.1);
+  --info-alpha: rgba(33, 150, 243, 0.1);
 }
 
 /* Orange Dark Theme */
@@ -76,6 +80,10 @@
   --warning: #FF9800;
   --error: #F44336;
   --info: #2196F3;
+  --success-alpha: rgba(76, 175, 80, 0.1);
+  --warning-alpha: rgba(255, 152, 0, 0.1);
+  --error-alpha: rgba(244, 67, 54, 0.1);
+  --info-alpha: rgba(33, 150, 243, 0.1);
 }
 
 /* Blue Light Theme */
@@ -97,6 +105,10 @@
   --warning: #FF9800;
   --error: #F44336;
   --info: #2196F3;
+  --success-alpha: rgba(76, 175, 80, 0.1);
+  --warning-alpha: rgba(255, 152, 0, 0.1);
+  --error-alpha: rgba(244, 67, 54, 0.1);
+  --info-alpha: rgba(33, 150, 243, 0.1);
 }
 
 /* Blue Dark Theme */
@@ -118,6 +130,10 @@
   --warning: #FF9800;
   --error: #F44336;
   --info: #2196F3;
+  --success-alpha: rgba(76, 175, 80, 0.1);
+  --warning-alpha: rgba(255, 152, 0, 0.1);
+  --error-alpha: rgba(244, 67, 54, 0.1);
+  --info-alpha: rgba(33, 150, 243, 0.1);
 }
 
 /* Green Light Theme */
@@ -139,6 +155,10 @@
   --warning: #FF9800;
   --error: #F44336;
   --info: #2196F3;
+  --success-alpha: rgba(76, 175, 80, 0.1);
+  --warning-alpha: rgba(255, 152, 0, 0.1);
+  --error-alpha: rgba(244, 67, 54, 0.1);
+  --info-alpha: rgba(33, 150, 243, 0.1);
 }
 
 /* Green Dark Theme */
@@ -160,6 +180,10 @@
   --warning: #FF9800;
   --error: #F44336;
   --info: #2196F3;
+  --success-alpha: rgba(76, 175, 80, 0.1);
+  --warning-alpha: rgba(255, 152, 0, 0.1);
+  --error-alpha: rgba(244, 67, 54, 0.1);
+  --info-alpha: rgba(33, 150, 243, 0.1);
 }
 
 /* Red Light Theme */
@@ -181,6 +205,10 @@
   --warning: #FF9800;
   --error: #F44336;
   --info: #2196F3;
+  --success-alpha: rgba(76, 175, 80, 0.1);
+  --warning-alpha: rgba(255, 152, 0, 0.1);
+  --error-alpha: rgba(244, 67, 54, 0.1);
+  --info-alpha: rgba(33, 150, 243, 0.1);
 }
 
 /* Red Dark Theme */
@@ -202,6 +230,10 @@
   --warning: #FF9800;
   --error: #F44336;
   --info: #2196F3;
+  --success-alpha: rgba(76, 175, 80, 0.1);
+  --warning-alpha: rgba(255, 152, 0, 0.1);
+  --error-alpha: rgba(244, 67, 54, 0.1);
+  --info-alpha: rgba(33, 150, 243, 0.1);
 }
 
 /* Monochrome Light Theme */
@@ -223,6 +255,10 @@
   --warning: #F57C00;
   --error: #C62828;
   --info: #1565C0;
+  --success-alpha: rgba(46, 125, 50, 0.1);
+  --warning-alpha: rgba(245, 124, 0, 0.1);
+  --error-alpha: rgba(198, 40, 40, 0.1);
+  --info-alpha: rgba(21, 101, 192, 0.1);
 }
 
 /* Monochrome Dark Theme */
@@ -244,6 +280,10 @@
   --warning: #FFA726;
   --error: #EF5350;
   --info: #42A5F5;
+  --success-alpha: rgba(102, 187, 106, 0.1);
+  --warning-alpha: rgba(255, 167, 38, 0.1);
+  --error-alpha: rgba(239, 83, 80, 0.1);
+  --info-alpha: rgba(66, 165, 245, 0.1);
 }
 
 /* ===== RESET & BASE ===== */
@@ -974,18 +1014,18 @@ body {
 }
 
 .status-badge.pending {
-  background: rgba(255, 152, 0, 0.1);
+  background: var(--warning-alpha);
   color: var(--warning);
 }
 
 .status-badge.completed {
-  background: rgba(76, 175, 80, 0.1);
+  background: var(--success-alpha);
   color: var(--success);
   animation: none;
 }
 
 .status-badge.paid {
-  background: rgba(33, 150, 243, 0.1);
+  background: var(--info-alpha);
   color: var(--info);
   animation: none;
 }
@@ -2325,12 +2365,12 @@ body {
 
 /* Optimized calendar cell effects */
 .calendar-cell.worked {
-  background: rgba(76, 175, 80, 0.1);
+  background: var(--success-alpha);
   border-left: 4px solid var(--success);
 }
 
 .calendar-cell.paid {
-  background: rgba(33, 150, 243, 0.1);
+  background: var(--info-alpha);
   border-left: 4px solid var(--info);
 }
 
@@ -2915,6 +2955,36 @@ select:focus {
   font-size: 1.1rem;
 }
 
+/* Specific styling for pending/unpaid amounts - theme aware */
+#unpaidDaysCount,
+#pendingAmount {
+  color: var(--warning);
+  background: var(--warning-alpha);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Work status and progress indicators */
+.status-badge.pending {
+  background: var(--warning-alpha);
+  color: var(--warning);
+  border: 1px solid var(--warning);
+}
+
+.status-badge.completed {
+  background: var(--success-alpha);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.status-badge.paid {
+  background: var(--primary-color-alpha);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
 .payment-options h4 {
   color: var(--text-primary);
   margin-bottom: 1rem;
@@ -3085,12 +3155,12 @@ select:focus {
 }
 
 .payment-type.regular {
-    background: rgba(76, 175, 80, 0.1);
+    background: var(--success-alpha);
     color: var(--success);
 }
 
 .payment-type.advance {
-    background: rgba(255, 152, 0, 0.1);
+    background: var(--warning-alpha);
     color: var(--warning);
 }
 
@@ -3500,6 +3570,290 @@ select:focus {
   
   .logo i {
     font-size: 2.5rem;
+  }
+}
+
+/* Toggle Switch Styles */
+.toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  margin: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--text-muted);
+  border-radius: 34px;
+  transition: 0.3s ease;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: var(--background);
+  border-radius: 50%;
+  transition: 0.3s ease;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--primary-color);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+.toggle-switch input:focus + .toggle-slider {
+  box-shadow: 0 0 0 3px var(--primary-color-alpha);
+}
+
+/* Notification Settings Styles */
+#notificationSettings,
+#workReminderSettings {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#notificationSettings.disabled,
+#workReminderSettings.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  transform: translateY(-5px);
+}
+
+.settings-input[type="time"] {
+  font-family: var(--font-family);
+  font-size: 1rem;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--card-background);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 200px;
+}
+
+.settings-input[type="time"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-color-alpha);
+}
+
+/* Enhanced About Modal Styles */
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.app-title h4 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.version-badge {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.app-icon {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+}
+
+.app-description {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.feature-category {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.feature-category:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--shadow-color);
+}
+
+.feature-category h5 {
+  margin: 0 0 1rem 0;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.feature-category h5 i {
+  font-size: 1.2rem;
+}
+
+.features-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.features-items li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.features-items li i {
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+  width: 16px;
+  text-align: center;
+}
+
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.tech-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.tech-item:hover {
+  background: var(--hover-color);
+  transform: translateY(-1px);
+}
+
+.tech-item i {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.tech-item span {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.developer-info {
+  background: linear-gradient(135deg, var(--primary-color-alpha), var(--secondary-color-alpha));
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.developer-info h5 {
+  margin: 0 0 1rem 0;
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.developer-info p {
+  margin: 0.5rem 0;
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.contact-info {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.contact-info p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.contact-info i {
+  color: var(--secondary-color);
+}
+
+/* Responsive adjustments for about modal */
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .tech-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .app-title {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .feature-category {
+    padding: 1rem;
+  }
+  
+  .developer-info {
+    padding: 1.5rem;
   }
 }
 

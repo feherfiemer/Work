@@ -10,7 +10,12 @@
         // New configurable settings
         INCREMENT_VALUE: 25, // Default increment for payment amounts
         PAYMENT_DAY_DURATION: 4, // Default payment day duration
-        MAX_PAYMENT_AMOUNT: 1000 // Default maximum payment amount
+        MAX_PAYMENT_AMOUNT: 1000, // Default maximum payment amount
+        // Notification settings
+        NOTIFICATIONS_ENABLED: true, // Default notification state
+        PAYMENT_REMINDER_TIME: '10:00', // Default payment reminder time (IST)
+        WORK_REMINDER_TIME: '18:00', // Default work reminder time (IST)
+        TIMEZONE: 'Asia/Kolkata' // IST timezone
     };
 
     // Configuration management functions

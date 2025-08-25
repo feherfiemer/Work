@@ -1,13 +1,13 @@
-# R-Service Tracker v2.1.4 
-## Professional Work & Payment Management System - Theme Enhancement Edition
+# R-Service Tracker v2.1.5 
+## Professional Work & Payment Management System - Enhanced Edition
 
-[![Version](https://img.shields.io/badge/version-2.1.4-blue.svg)](https://github.com/feherfiemer/Work)
+[![Version](https://img.shields.io/badge/version-2.1.5-blue.svg)](https://github.com/feherfiemer/Work)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PWA](https://img.shields.io/badge/PWA-enabled-purple.svg)](manifest.json)
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)](index.html)
 [![Final](https://img.shields.io/badge/status-FINAL-gold.svg)](index.html)
 
-A comprehensive, professional-grade work tracking and payment management system designed for freelancers, contractors, and service providers. Features advanced advance payment tracking, automated notifications, detailed analytics, and premium PDF reporting with modern Exo typography and sleek black interface design.
+A comprehensive, professional-grade work tracking and payment management system designed for freelancers, contractors, and service providers. Features advanced advance payment tracking, customizable smart notifications with IST timezone support, improved sound effects, enhanced theme consistency, and premium PDF reporting with modern Exo typography.
 
 ## 🚀 **Key Features**
 
@@ -19,10 +19,11 @@ A comprehensive, professional-grade work tracking and payment management system 
 
 ### 💰 **Advanced Payment System**
 - **Regular Payment Cycles**: Configurable payment thresholds (default: 4 days)
-- **Advance Payment Tracking**: Revolutionary liability tracking system
-  - Shows work completed vs work paid for (e.g., "1/2 days" for advance scenarios)
-  - Real-time progress indicators for advance payment obligations
-  - Automatic calculation of advance amounts and requirements
+- **Intelligent Payment Classification**: 
+  - **Regular Payments**: For work already completed (regardless of timing)
+  - **Advance Payments**: Only when payment exceeds total work completed
+  - **Accurate Progress Tracking**: Real-time liability calculations
+- **Revolutionary Advance Tracking**: Shows work completed vs work paid for (e.g., "1/2 days")
 - **Multiple Payment Types**: Regular payments, advance payments, force payments
 - **Payment History**: Comprehensive transaction logging with detailed records
 
@@ -43,17 +44,21 @@ A comprehensive, professional-grade work tracking and payment management system 
   - Performance Insights and Recommendations
 - **Symbol-free**: Clean text output for maximum compatibility
 
-### 🔔 **Smart Notifications**
+### 🔔 **Smart Notifications & Reminders**
+- **Customizable Reminder Times**: Set your preferred payment and work reminder times
+- **IST Timezone Support**: All notifications work with Indian Standard Time
+- **Enable/Disable Controls**: Full control over notification preferences
 - **Multi-channel Delivery**: Browser notifications + in-app toasts
 - **Optimized Positioning**: Toast notifications appear below header for better UX
-- **Daily Reminders**: Morning payment alerts, evening work reminders
+- **Intelligent Scheduling**: Respects user preferences and timezone settings
 - **Milestone Notifications**: Payday alerts, streak achievements
 - **Advance Payment Alerts**: Smart notifications for advance obligations
 - **Fallback System**: Guaranteed notification delivery with multiple methods
 
 ### 🎵 **Enhanced Audio System**
 - **Web Audio API**: High-quality programmatic sound generation (no static files needed)
-- **Realistic Sounds**: Task completion clicks, cash register payment sounds
+- **Improved Sound Design**: Satisfying work completion chimes and payment confirmation sounds
+- **Professional Audio**: Clean, pleasant tones without overwhelming complexity
 - **Fallback Support**: Robust error handling for all browser types
 - **Mobile Optimized**: Proper audio context handling for mobile devices
 
@@ -165,7 +170,12 @@ const CONFIG = {
     DAILY_WAGE: 25,           // Payment per day
     PAYMENT_THRESHOLD: 4,      // Days before payment available
     CURRENCY_SYMBOL: '₹',      // Display currency
-    CURRENCY_NAME: 'rupees'    // Text currency for PDF
+    CURRENCY_NAME: 'rupees',   // Text currency for PDF
+    // NEW: Notification settings
+    NOTIFICATIONS_ENABLED: true,        // Enable/disable notifications
+    PAYMENT_REMINDER_TIME: '10:00',     // Payment reminder time (IST)
+    WORK_REMINDER_TIME: '18:00',        // Work reminder time (IST)
+    TIMEZONE: 'Asia/Kolkata'            // IST timezone
 };
 ```
 
@@ -306,7 +316,18 @@ testAllSystems()  // Verify all components work
 - 🎨 Improved UI stability and performance
 - 🧪 Added comprehensive system testing
 
-### v2.1.4 - Theme Enhancement Edition (Latest)
+### v2.1.5 - Enhanced Edition (Latest)
+- 🔔 **Smart Notification Settings**: Customizable reminder times for payment and work completion with IST timezone support
+- ⏰ **Timezone Awareness**: All system operations now use Indian Standard Time (IST)
+- 🔧 **Enhanced Settings Menu**: New notification preferences with enable/disable toggle
+- 📱 **Improved About Dialog**: Comprehensive feature showcase with modern grid layout
+- 🎵 **Better Audio Experience**: Redesigned work completion and payment sounds for pleasant user experience
+- 🎨 **Theme Color Consistency**: Fixed color alignment across all themes with proper CSS variables
+- 💰 **Fixed Advance Payment Logic**: Accurate classification - advance only when payment exceeds work completed
+- 🎯 **UI/UX Improvements**: Enhanced visual hierarchy and theme-aware pending amount indicators
+- 🧹 **Code Quality**: Refactored notification system with better error handling and configuration management
+
+### v2.1.4 - Theme Enhancement Edition
 - 🎨 **Fixed Monochrome Themes**: Completely overhauled black/white themes with proper contrast and visual hierarchy
 - 🌈 **Universal CSS Variables**: Converted all hardcoded colors to use theme-aware CSS custom properties
 - 🔔 **Theme-Adaptive Toasts**: Toast notifications now automatically inherit proper theme colors and backgrounds
