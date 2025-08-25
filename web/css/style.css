@@ -48,8 +48,8 @@
   --surface: #FFFFFF;
   --surface-alt: #F5F5F5;
   --text-primary: #212121;
-  --text-secondary: #000000;
-  --text-muted: #000000;
+  --text-secondary: #757575;
+  --text-muted: #BDBDBD;
   --border: #E0E0E0;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -69,8 +69,8 @@
   --surface: #1E1E1E;
   --surface-alt: #2C2C2C;
   --text-primary: #FFFFFF;
-  --text-secondary: #FFFFFF;
-  --text-muted: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  --text-muted: #666666;
   --border: #333333;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -90,8 +90,8 @@
   --surface: #FFFFFF;
   --surface-alt: #F5F5F5;
   --text-primary: #212121;
-  --text-secondary: #000000;
-  --text-muted: #000000;
+  --text-secondary: #757575;
+  --text-muted: #BDBDBD;
   --border: #E0E0E0;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -111,8 +111,8 @@
   --surface: #1E1E1E;
   --surface-alt: #2C2C2C;
   --text-primary: #FFFFFF;
-  --text-secondary: #FFFFFF;
-  --text-muted: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  --text-muted: #666666;
   --border: #333333;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -132,8 +132,8 @@
   --surface: #FFFFFF;
   --surface-alt: #F5F5F5;
   --text-primary: #212121;
-  --text-secondary: #000000;
-  --text-muted: #000000;
+  --text-secondary: #757575;
+  --text-muted: #BDBDBD;
   --border: #E0E0E0;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -153,8 +153,8 @@
   --surface: #1E1E1E;
   --surface-alt: #2C2C2C;
   --text-primary: #FFFFFF;
-  --text-secondary: #FFFFFF;
-  --text-muted: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  --text-muted: #666666;
   --border: #333333;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -174,8 +174,8 @@
   --surface: #FFFFFF;
   --surface-alt: #F5F5F5;
   --text-primary: #212121;
-  --text-secondary: #000000;
-  --text-muted: #000000;
+  --text-secondary: #757575;
+  --text-muted: #BDBDBD;
   --border: #E0E0E0;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -195,8 +195,8 @@
   --surface: #1E1E1E;
   --surface-alt: #2C2C2C;
   --text-primary: #FFFFFF;
-  --text-secondary: #FFFFFF;
-  --text-muted: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  --text-muted: #666666;
   --border: #333333;
   --success: #4CAF50;
   --warning: #FF9800;
@@ -1570,7 +1570,6 @@ body {
   border: 1px solid #E0E0E0;
   border-radius: var(--border-radius-small);
   padding: 0.5rem 0.75rem;
-  box-shadow: var(--shadow-medium);
   min-width: 200px;
   max-width: 280px;
   animation: slideInRight var(--transition-medium);
@@ -2798,7 +2797,6 @@ select:focus {
   background: #FFFFFF;
   border: 1px solid #E0E0E0;
   border-radius: var(--border-radius);
-  box-shadow: var(--shadow-medium);
   padding: 0.5rem 0.75rem;
   min-width: 200px;
   max-width: 280px;

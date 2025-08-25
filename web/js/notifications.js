@@ -643,7 +643,7 @@ class NotificationManager {
         }
     }
 
-    // Play success sound (money earning completion sound)
+    // Play success sound (realistic coin collection)
     playSuccessSound() {
         if (!this.audioContext) return;
 
@@ -654,47 +654,50 @@ class NotificationManager {
             // Create master gain node with balanced volume
             const masterGain = ctx.createGain();
             masterGain.connect(ctx.destination);
-            masterGain.gain.setValueAtTime(0.4, now);
+            masterGain.gain.setValueAtTime(0.5, now);
 
-            // Coin drop sound simulation (like earning money)
-            const coinOsc = ctx.createOscillator();
-            const coinGain = ctx.createGain();
-            const coinFilter = ctx.createBiquadFilter();
-            
-            coinOsc.connect(coinFilter);
-            coinFilter.connect(coinGain);
-            coinGain.connect(masterGain);
-            
-            // Metallic coin sound
-            coinOsc.type = 'square';
-            coinFilter.type = 'bandpass';
-            coinFilter.frequency.setValueAtTime(1200, now);
-            coinFilter.Q.setValueAtTime(3, now);
-            
-            coinOsc.frequency.setValueAtTime(800, now);
-            coinOsc.frequency.exponentialRampToValueAtTime(400, now + 0.2);
-            coinGain.gain.setValueAtTime(0.6, now);
-            coinGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-            
-            coinOsc.start(now);
-            coinOsc.stop(now + 0.4);
+            // Multiple coin drop sounds for realism
+            const coinFreqs = [800, 650, 750]; // Different coin sizes
+            coinFreqs.forEach((freq, index) => {
+                const coinOsc = ctx.createOscillator();
+                const coinGain = ctx.createGain();
+                const coinFilter = ctx.createBiquadFilter();
+                
+                coinOsc.connect(coinFilter);
+                coinFilter.connect(coinGain);
+                coinGain.connect(masterGain);
+                
+                // Metallic coin sound with realistic bounce
+                coinOsc.type = 'triangle';
+                coinFilter.type = 'bandpass';
+                coinFilter.frequency.setValueAtTime(1500 + index * 200, now + index * 0.05);
+                coinFilter.Q.setValueAtTime(4, now + index * 0.05);
+                
+                coinOsc.frequency.setValueAtTime(freq, now + index * 0.05);
+                coinOsc.frequency.exponentialRampToValueAtTime(freq * 0.5, now + index * 0.05 + 0.15);
+                coinGain.gain.setValueAtTime(0.4 - index * 0.1, now + index * 0.05);
+                coinGain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.05 + 0.3);
+                
+                coinOsc.start(now + index * 0.05);
+                coinOsc.stop(now + index * 0.05 + 0.3);
+            });
 
-            // Follow up with a gentle cha-ching
-            const chingOsc = ctx.createOscillator();
-            const chingGain = ctx.createGain();
+            // Success chime (like mobile payment success)
+            const successOsc = ctx.createOscillator();
+            const successGain = ctx.createGain();
             
-            chingOsc.connect(chingGain);
-            chingGain.connect(masterGain);
+            successOsc.connect(successGain);
+            successGain.connect(masterGain);
             
-            chingOsc.type = 'triangle';
-            chingOsc.frequency.setValueAtTime(1200, now + 0.2);
-            chingGain.gain.setValueAtTime(0.3, now + 0.2);
-            chingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+            successOsc.type = 'sine';
+            successOsc.frequency.setValueAtTime(1320, now + 0.25); // E6 note - pleasant and uplifting
+            successGain.gain.setValueAtTime(0.4, now + 0.25);
+            successGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
             
-            chingOsc.start(now + 0.2);
-            chingOsc.stop(now + 0.6);
+            successOsc.start(now + 0.25);
+            successOsc.stop(now + 0.8);
 
-            console.log('Money earning completion sound played');
+            console.log('Realistic coin collection sound played');
         } catch (error) {
             console.warn('Error playing success sound:', error);
         }
@@ -717,7 +720,7 @@ class NotificationManager {
         }
     }
 
-    // Cash register and money transaction sound
+    // Realistic bank transaction and cash register sound
     createPremiumTransactionSound() {
         try {
             const ctx = this.audioContext;
@@ -726,72 +729,100 @@ class NotificationManager {
             // Create master gain node
             const masterGain = ctx.createGain();
             masterGain.connect(ctx.destination);
-            masterGain.gain.setValueAtTime(0.5, now);
+            masterGain.gain.setValueAtTime(0.6, now);
             
-            // Cash register opening sound
-            const registerOsc = ctx.createOscillator();
-            const registerGain = ctx.createGain();
-            const registerFilter = ctx.createBiquadFilter();
+            // ATM/Card reader processing sound
+            const processingOsc = ctx.createOscillator();
+            const processingGain = ctx.createGain();
+            const processingFilter = ctx.createBiquadFilter();
             
-            registerOsc.connect(registerFilter);
-            registerFilter.connect(registerGain);
-            registerGain.connect(masterGain);
+            processingOsc.connect(processingFilter);
+            processingFilter.connect(processingGain);
+            processingGain.connect(masterGain);
             
-            registerOsc.type = 'sawtooth';
-            registerFilter.type = 'lowpass';
-            registerFilter.frequency.setValueAtTime(2000, now);
+            processingOsc.type = 'sawtooth';
+            processingFilter.type = 'bandpass';
+            processingFilter.frequency.setValueAtTime(800, now);
+            processingFilter.Q.setValueAtTime(2, now);
             
-            registerOsc.frequency.setValueAtTime(120, now);
-            registerOsc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
-            registerGain.gain.setValueAtTime(0.4, now);
-            registerGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            processingOsc.frequency.setValueAtTime(200, now);
+            processingOsc.frequency.linearRampToValueAtTime(180, now + 0.1);
+            processingGain.gain.setValueAtTime(0.3, now);
+            processingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
             
-            registerOsc.start(now);
-            registerOsc.stop(now + 0.2);
+            processingOsc.start(now);
+            processingOsc.stop(now + 0.15);
             
-            // Classic "Ka-ching" bell sound
-            const bellOsc = ctx.createOscillator();
-            const bellGain = ctx.createGain();
+            // Classic cash register drawer opening
+            const drawerOsc = ctx.createOscillator();
+            const drawerGain = ctx.createGain();
+            const drawerFilter = ctx.createBiquadFilter();
             
-            bellOsc.connect(bellGain);
-            bellGain.connect(masterGain);
+            drawerOsc.connect(drawerFilter);
+            drawerFilter.connect(drawerGain);
+            drawerGain.connect(masterGain);
             
-            bellOsc.type = 'sine';
-            bellOsc.frequency.setValueAtTime(1760, now + 0.15); // High A note (cash register bell)
-            bellGain.gain.setValueAtTime(0.6, now + 0.15);
-            bellGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+            drawerOsc.type = 'square';
+            drawerFilter.type = 'lowpass';
+            drawerFilter.frequency.setValueAtTime(1500, now + 0.1);
             
-            bellOsc.start(now + 0.15);
-            bellOsc.stop(now + 0.8);
+            drawerOsc.frequency.setValueAtTime(300, now + 0.1);
+            drawerOsc.frequency.exponentialRampToValueAtTime(150, now + 0.25);
+            drawerGain.gain.setValueAtTime(0.4, now + 0.1);
+            drawerGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
             
-            // Money counting/shuffling sound simulation
-            const moneyOsc = ctx.createOscillator();
-            const moneyGain = ctx.createGain();
-            const moneyFilter = ctx.createBiquadFilter();
+            drawerOsc.start(now + 0.1);
+            drawerOsc.stop(now + 0.3);
             
-            moneyOsc.connect(moneyFilter);
-            moneyFilter.connect(moneyGain);
-            moneyGain.connect(masterGain);
+            // Multiple cash register bells (realistic ka-ching sequence)
+            const bellFreqs = [1760, 2200, 1320]; // A6, C#7, E6 - authentic bell harmony
+            bellFreqs.forEach((freq, index) => {
+                const bellOsc = ctx.createOscillator();
+                const bellGain = ctx.createGain();
+                
+                bellOsc.connect(bellGain);
+                bellGain.connect(masterGain);
+                
+                bellOsc.type = 'sine';
+                bellOsc.frequency.setValueAtTime(freq, now + 0.2 + index * 0.08);
+                bellGain.gain.setValueAtTime(0.5 - index * 0.1, now + 0.2 + index * 0.08);
+                bellGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2 + index * 0.08 + 0.6);
+                
+                bellOsc.start(now + 0.2 + index * 0.08);
+                bellOsc.stop(now + 0.2 + index * 0.08 + 0.6);
+            });
             
-            moneyOsc.type = 'triangle';
-            moneyFilter.type = 'highpass';
-            moneyFilter.frequency.setValueAtTime(800, now + 0.4);
+            // Paper money counting sound
+            const paperOsc = ctx.createOscillator();
+            const paperGain = ctx.createGain();
+            const paperFilter = ctx.createBiquadFilter();
             
-            moneyOsc.frequency.setValueAtTime(600, now + 0.4);
-            moneyOsc.frequency.exponentialRampToValueAtTime(300, now + 0.7);
-            moneyGain.gain.setValueAtTime(0.3, now + 0.4);
-            moneyGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+            paperOsc.connect(paperFilter);
+            paperFilter.connect(paperGain);
+            paperGain.connect(masterGain);
             
-            moneyOsc.start(now + 0.4);
-            moneyOsc.stop(now + 0.8);
+            paperOsc.type = 'triangle';
+            paperFilter.type = 'highpass';
+            paperFilter.frequency.setValueAtTime(2000, now + 0.5);
             
-            console.log('Cash register payment sound played');
+            // Rapid frequency modulation to simulate paper rustling
+            paperOsc.frequency.setValueAtTime(1000, now + 0.5);
+            paperOsc.frequency.linearRampToValueAtTime(1200, now + 0.6);
+            paperOsc.frequency.linearRampToValueAtTime(900, now + 0.7);
+            paperOsc.frequency.linearRampToValueAtTime(1100, now + 0.8);
+            paperGain.gain.setValueAtTime(0.2, now + 0.5);
+            paperGain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+            
+            paperOsc.start(now + 0.5);
+            paperOsc.stop(now + 0.9);
+            
+            console.log('Realistic bank transaction sound played');
         } catch (error) {
             console.warn('Error playing payment sound:', error);
         }
     }
 
-    // Simple cash register sound for older browsers
+    // Enhanced cash register sound for older browsers
     playSimpleTransactionSound() {
         try {
             if (!this.audioContext) {
@@ -801,27 +832,30 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Simple cash register ding sequence
-            const frequencies = [440, 880]; // A4 and A5 - classic register tones
-            const timings = [0, 0.3];
+            // Realistic cash register bell sequence with authentic frequencies
+            const cashRegisterSequence = [
+                { freq: 1760, time: 0, duration: 0.5 },     // A6 - main bell
+                { freq: 2200, time: 0.1, duration: 0.4 },   // C#7 - harmony bell
+                { freq: 1320, time: 0.2, duration: 0.6 }    // E6 - bass bell
+            ];
             
-            frequencies.forEach((freq, index) => {
+            cashRegisterSequence.forEach((note, index) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 
-                osc.type = 'triangle'; // Softer bell-like sound
-                osc.frequency.setValueAtTime(freq, now + timings[index]);
-                gain.gain.setValueAtTime(0.3, now + timings[index]);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + timings[index] + 0.4);
+                osc.type = 'sine'; // Pure bell tone
+                osc.frequency.setValueAtTime(note.freq, now + note.time);
+                gain.gain.setValueAtTime(0.4 - index * 0.1, now + note.time);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + note.time + note.duration);
                 
-                osc.start(now + timings[index]);
-                osc.stop(now + timings[index] + 0.4);
+                osc.start(now + note.time);
+                osc.stop(now + note.time + note.duration);
             });
             
-            console.log('Simple cash register sound played');
+            console.log('Enhanced cash register sound played');
         } catch (error) {
             console.warn('Audio not available:', error);
         }

@@ -1,7 +1,7 @@
-# R-Service Tracker v2.1.2 
-## Professional Work & Payment Management System - Refined Edition
+# R-Service Tracker v2.1.3 
+## Professional Work & Payment Management System - Polished Edition
 
-[![Version](https://img.shields.io/badge/version-2.1.2-blue.svg)](https://github.com/feherfiemer/Work)
+[![Version](https://img.shields.io/badge/version-2.1.3-blue.svg)](https://github.com/feherfiemer/Work)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PWA](https://img.shields.io/badge/PWA-enabled-purple.svg)](manifest.json)
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)](index.html)
@@ -299,7 +299,16 @@ testAllSystems()  // Verify all components work
 - 🎨 Improved UI stability and performance
 - 🧪 Added comprehensive system testing
 
-### v2.1.2 - Refined Edition (Latest)
+### v2.1.3 - Polished Edition (Latest)
+- 🧹 **Completely Clean Toasts**: Removed all grey shadows and backgrounds from notifications
+- 🎨 **Smart Color System**: Fixed text colors in color themes to use proper theme colors (not forced black)
+- 🔊 **Authentic Money Audio**: Enhanced sounds with realistic coin drops, bank transactions, and cash register effects
+- 💰 **Multi-Coin Collection**: Work completion now plays multiple coin drop sounds for authenticity
+- 🏦 **Bank Transaction Audio**: Payment sounds include ATM processing, drawer opening, and paper money counting
+- 🔔 **Enhanced Bell Sequence**: Authentic cash register bell harmony with A6, C#7, and E6 frequencies
+- ✨ **Crystal Clear Notifications**: Pure white/dark backgrounds without any shadows or overlays
+
+### v2.1.2 - Refined Edition
 - 🔄 **Reverted Smart Colors**: Text and icons now use appropriate theme colors (not forced black)
 - 🎯 **Enhanced Contrast**: Grey text elements converted to black for light themes, white for dark themes
 - 🧹 **Clean Toast Backgrounds**: Completely removed grey backgrounds from notifications (pure white/dark)
