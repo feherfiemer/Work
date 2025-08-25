@@ -1,4 +1,3 @@
-// Utility Functions for R-Service Tracker
 class Utils {
     constructor() {
         this.dateOptions = {
@@ -8,7 +7,6 @@ class Utils {
         };
     }
 
-    // Date formatting utilities
     formatDate(date, options = this.dateOptions) {
         return new Date(date).toLocaleDateString('en-US', options);
     }
@@ -34,20 +32,15 @@ class Utils {
         return `₹${amount.toLocaleString('en-IN')}`;
     }
 
-    // Format currency for PDF (use numeric format instead of words)
     formatCurrencyForPDF(amount) {
         if (amount === 0) return '0 rupees';
         
-        // Format the number with proper thousands separators
         const formattedAmount = amount.toLocaleString('en-IN');
         
-        // Use lowercase 'rupees' for all amounts
         return formattedAmount + ' rupees';
     }
 
-    // Get today's date in YYYY-MM-DD format
     getTodayString() {
-        // Use local date to avoid timezone issues
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -55,7 +48,6 @@ class Utils {
         return `${year}-${month}-${day}`;
     }
 
-    // Get date range for current week
     getCurrentWeek() {
         const today = new Date();
         const startOfWeek = new Date(today);
@@ -70,7 +62,6 @@ class Utils {
         };
     }
 
-    // Get date range for current month
     getCurrentMonth() {
         const today = new Date();
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -82,7 +73,6 @@ class Utils {
         };
     }
 
-    // Helper method to format date consistently
     formatLocalDate(date) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -90,24 +80,20 @@ class Utils {
         return `${year}-${month}-${day}`;
     }
 
-    // Check if date is today
     isToday(dateString) {
         return dateString === this.getTodayString();
     }
 
-    // Check if date is in current week
     isThisWeek(dateString) {
         const week = this.getCurrentWeek();
         return dateString >= week.start && dateString <= week.end;
     }
 
-    // Check if date is in current month
     isThisMonth(dateString) {
         const month = this.getCurrentMonth();
         return dateString >= month.start && dateString <= month.end;
     }
 
-    // Get days between two dates
     getDaysBetween(startDate, endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
@@ -115,7 +101,6 @@ class Utils {
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 
-    // Generate date range
     getDateRange(startDate, endDate) {
         const dates = [];
         const start = new Date(startDate);
@@ -129,18 +114,14 @@ class Utils {
         return dates;
     }
 
-    // Enhanced PDF Export functionality
     async exportToPDF(data, filename = 'R-Service-Tracker-Report.pdf') {
         try {
             console.log('PDF Export: Starting with data:', data);
             
-            // Check if jsPDF is available (handle different loading patterns)
             let jsPDF;
             if (typeof window.jsPDF !== 'undefined') {
-                // UMD build
                 jsPDF = window.jsPDF.jsPDF || window.jsPDF;
             } else if (typeof window.jspdf !== 'undefined') {
-                // Alternative loading pattern
                 jsPDF = window.jspdf.jsPDF;
             } else {
                 console.error('jsPDF library not found. Checked window.jsPDF and window.jspdf');
@@ -151,47 +132,37 @@ class Utils {
             const doc = new jsPDF();
             console.log('PDF Export: jsPDF document created');
             
-            // Get current theme colors from the web app
             const colors = this.getPDFColorsFromTheme();
             console.log('PDF Export: Using theme colors:', colors);
             
-            // Header design
             this.addHeader(doc, colors);
             
             let yPos = 70;
             
-            // Company/Service information section
             yPos = this.addCompanyInfo(doc, colors, yPos);
             
-            // Executive Summary with KPIs
             if (data.summary) {
                 yPos = this.addExecutiveSummary(doc, colors, data.summary, yPos);
             }
             
-            // Financial Analytics Section
             if (data.summary) {
                 yPos = this.addFinancialAnalytics(doc, colors, data.summary, yPos);
             }
             
-            // Detailed Work Records
             if (data.workRecords && data.workRecords.length > 0) {
                 yPos = this.addDetailedWorkRecords(doc, colors, data.workRecords, yPos);
             }
             
-            // Payment History with Analysis
             if (data.payments && data.payments.length > 0) {
                 yPos = this.addPaymentHistory(doc, colors, data.payments, yPos);
             }
             
-            // Performance Metrics
             if (data.summary) {
                 yPos = this.addPerformanceMetrics(doc, colors, data.summary, yPos);
             }
             
-            // Footer with page numbers and metadata
             this.addFooter(doc, colors, data);
             
-            // Save the PDF
             console.log('PDF Export: Saving PDF with filename:', filename);
             doc.save(filename);
             console.log('PDF Export: PDF saved successfully');
@@ -202,13 +173,10 @@ class Utils {
         }
     }
 
-    // Header with branding
     addHeader(doc, colors) {
-        // Premium gradient background effect (simulated with rectangles)
         doc.setFillColor(...colors.primary);
         doc.rect(0, 0, 210, 45, 'F');
         
-        // Company name and tagline
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(28);
         doc.setTextColor(255, 255, 255);
@@ -218,17 +186,14 @@ class Utils {
         doc.setFontSize(12);
         doc.text('Work & Payment Management System', 25, 33);
         
-        // Report title
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(16);
         doc.text('COMPREHENSIVE WORK REPORT', 25, 42);
         
-        // Decorative line
         doc.setDrawColor(255, 255, 255);
         doc.setLineWidth(1);
         doc.line(15, 47, 195, 47);
         
-        // Report metadata in header
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(255, 255, 255);
@@ -237,7 +202,6 @@ class Utils {
         doc.text(`Report ID: RST-${now.getTime().toString().slice(-8)}`, 145, 60);
     }
 
-    // Company information section
     addCompanyInfo(doc, colors, yPos) {
         doc.setFillColor(...colors.light);
         doc.rect(15, yPos - 5, 180, 25, 'F');
@@ -257,14 +221,12 @@ class Utils {
         return yPos + 35;
     }
 
-    // Executive summary with key metrics
     addExecutiveSummary(doc, colors, summary, yPos) {
         if (yPos > 250) {
             doc.addPage();
             yPos = 20;
         }
         
-        // Section header
         doc.setFillColor(...colors.primary);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
@@ -274,7 +236,6 @@ class Utils {
         doc.text('EXECUTIVE SUMMARY', 20, yPos + 5);
         yPos += 20;
         
-        // Key metrics in cards
         const metrics = [
             { label: 'Total Days Worked', value: `${summary.totalWorked} days` },
             { label: 'Total Earnings', value: this.formatCurrencyForPDF(summary.totalEarned) },
@@ -286,7 +247,6 @@ class Utils {
             const x = 20 + (index % 2) * 90;
             const y = yPos + Math.floor(index / 2) * 25;
             
-            // Metric card background
             doc.setFillColor(252, 252, 252);
             doc.rect(x - 2, y - 3, 85, 20, 'F');
             
@@ -304,14 +264,12 @@ class Utils {
         return yPos + 60;
     }
 
-    // Financial analytics section
     addFinancialAnalytics(doc, colors, summary, yPos) {
         if (yPos > 220) {
             doc.addPage();
             yPos = 20;
         }
         
-        // Section header
         doc.setFillColor(...colors.light);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
@@ -321,12 +279,10 @@ class Utils {
         doc.text('FINANCIAL ANALYTICS', 20, yPos + 5);
         yPos += 25;
         
-        // Calculate additional metrics
         const avgEarningsPerDay = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
         const paymentEfficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
         const workStreak = summary.currentStreak || 0;
         
-        // Analytics grid
         const analytics = [
             { label: 'Average Daily Earnings', value: this.formatCurrencyForPDF(avgEarningsPerDay) },
             { label: 'Payment Efficiency', value: `${paymentEfficiency.toFixed(1)}%` },
@@ -348,7 +304,6 @@ class Utils {
             doc.text(item.value, x + 65, y);
         });
         
-        // Financial status indicator
         yPos += 35;
         let statusText = '';
         let statusColor = colors.success;
@@ -374,14 +329,12 @@ class Utils {
         return yPos + 20;
     }
 
-    // Detailed work records with enhanced formatting
     addDetailedWorkRecords(doc, colors, workRecords, yPos) {
         if (yPos > 200) {
             doc.addPage();
             yPos = 20;
         }
         
-        // Section header
         doc.setFillColor(...colors.secondary);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
@@ -391,7 +344,6 @@ class Utils {
         doc.text('DETAILED WORK RECORDS', 20, yPos + 5);
         yPos += 25;
         
-        // Enhanced table headers
         doc.setFillColor(...colors.light);
         doc.rect(15, yPos - 3, 180, 12, 'F');
         
@@ -406,14 +358,12 @@ class Utils {
         doc.text('NOTES', 175, yPos + 5);
         yPos += 15;
         
-        // Work records with enhanced styling
         doc.setFont('helvetica', 'normal');
         workRecords.forEach((record, index) => {
             if (yPos > 270) {
                 doc.addPage();
                 yPos = 20;
                 
-                // Repeat headers on new page
                 doc.setFillColor(...colors.light);
                 doc.rect(15, yPos - 3, 180, 12, 'F');
                 doc.setFont('helvetica', 'bold');
@@ -429,7 +379,6 @@ class Utils {
                 doc.setFont('helvetica', 'normal');
             }
             
-            // Alternating row colors with better contrast
             if (index % 2 === 0) {
                 doc.setFillColor(250, 250, 250);
                 doc.rect(15, yPos - 2, 180, 10, 'F');
@@ -443,7 +392,6 @@ class Utils {
             doc.text(this.formatDateShort(record.date), 20, yPos + 3);
             doc.text(dayName, 48, yPos + 3);
             
-            // Status with appropriate styling
             if (record.status === 'completed') {
                 doc.setTextColor(...colors.success);
                 doc.text('COMPLETED', 72, yPos + 3);
@@ -452,11 +400,9 @@ class Utils {
                 doc.text('MISSED', 72, yPos + 3);
             }
             
-            // Earnings
             doc.setTextColor(...colors.secondary);
             doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '0 rupees', 105, yPos + 3);
             
-            // Payment status
             if (record.paid) {
                 doc.setTextColor(...colors.success);
                 doc.text('PAID', 140, yPos + 3);
@@ -465,7 +411,6 @@ class Utils {
                 doc.text('PENDING', 140, yPos + 3);
             }
             
-            // Notes
             doc.setTextColor(...colors.muted);
             doc.text(record.status === 'completed' ? 'OK' : 'FAILED', 175, yPos + 3);
             
@@ -475,14 +420,12 @@ class Utils {
         return yPos + 15;
     }
 
-    // Payment history with analysis
     addPaymentHistory(doc, colors, payments, yPos) {
         if (yPos > 200) {
             doc.addPage();
             yPos = 20;
         }
         
-        // Section header
         doc.setFillColor(...colors.success);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
@@ -492,7 +435,6 @@ class Utils {
         doc.text('PAYMENT TRANSACTION HISTORY', 20, yPos + 5);
         yPos += 25;
         
-        // Payment summary
         const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
         const advancePayments = payments.filter(p => p.isAdvance);
         const regularPayments = payments.filter(p => !p.isAdvance);
@@ -503,7 +445,6 @@ class Utils {
         doc.text(`Total Transactions: ${payments.length} | Regular: ${regularPayments.length} | Advance: ${advancePayments.length}`, 20, yPos);
         yPos += 15;
         
-        // Enhanced payment table
         doc.setFillColor(...colors.light);
         doc.rect(15, yPos - 3, 180, 12, 'F');
         
@@ -517,14 +458,12 @@ class Utils {
         doc.text('TRANSACTION ID', 155, yPos + 5);
         yPos += 15;
         
-        // Payment records
         doc.setFont('helvetica', 'normal');
         payments.forEach((payment, index) => {
             if (yPos > 270) {
                 doc.addPage();
                 yPos = 20;
                 
-                // Repeat headers
                 doc.setFillColor(...colors.light);
                 doc.rect(15, yPos - 3, 180, 12, 'F');
                 doc.setFont('helvetica', 'bold');
@@ -548,7 +487,6 @@ class Utils {
             doc.setTextColor(...colors.secondary);
             doc.text(this.formatDateShort(payment.paymentDate), 20, yPos + 3);
             
-            // Amount with color coding
             if (payment.isAdvance) {
                 doc.setTextColor(...colors.warning);
             } else {
@@ -559,7 +497,6 @@ class Utils {
             doc.setTextColor(...colors.secondary);
             doc.text(`${payment.workDates.length}`, 95, yPos + 3);
             
-            // Type with styling
             if (payment.isAdvance) {
                 doc.setTextColor(...colors.warning);
                 doc.text('ADVANCE', 125, yPos + 3);
@@ -568,7 +505,6 @@ class Utils {
                 doc.text('REGULAR', 125, yPos + 3);
             }
             
-            // Transaction ID
             doc.setTextColor(...colors.muted);
             doc.text(`TXN-${(payment.id || index).toString().padStart(3, '0')}`, 155, yPos + 3);
             
@@ -578,14 +514,12 @@ class Utils {
         return yPos + 15;
     }
 
-    // Performance metrics and insights
     addPerformanceMetrics(doc, colors, summary, yPos) {
         if (yPos > 200) {
             doc.addPage();
             yPos = 20;
         }
         
-        // Section header
         doc.setFillColor(...colors.warning);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
@@ -595,12 +529,10 @@ class Utils {
         doc.text('PERFORMANCE INSIGHTS AND RECOMMENDATIONS', 20, yPos + 5);
         yPos += 25;
         
-        // Performance indicators
         const workDays = summary.totalWorked || 0;
         const earnings = summary.totalEarned || 0;
         const streak = summary.currentStreak || 0;
         
-        // Insights based on data
         const insights = [];
         
         if (workDays >= 30) {
@@ -625,7 +557,6 @@ class Utils {
             insights.push('Payment attention needed - Outstanding balance exists');
         }
         
-        // Display insights
         insights.forEach((insight, index) => {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
@@ -635,7 +566,6 @@ class Utils {
         
         yPos += insights.length * 8 + 15;
         
-        // Recommendations
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
         doc.setTextColor(...colors.primary);
@@ -659,7 +589,6 @@ class Utils {
         return yPos + 30;
     }
 
-    // Footer with enhanced metadata
     addFooter(doc, colors, data) {
         const pageCount = doc.internal.getNumberOfPages();
         const now = new Date();
@@ -667,24 +596,19 @@ class Utils {
         for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
             
-            // Footer background
             doc.setFillColor(...colors.light);
             doc.rect(0, 285, 210, 12, 'F');
             
-            // Page numbers
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(8);
             doc.setTextColor(...colors.secondary);
             doc.text(`Page ${i} of ${pageCount}`, 20, 292);
             
-            // System info
             doc.setFont('helvetica', 'normal');
             doc.text('R-Service Tracker v2.1.2', 80, 292);
             
-            // Generation timestamp
             doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 155, 292);
             
-            // Confidentiality notice on last page
             if (i === pageCount) {
                 doc.setFontSize(7);
                 doc.setTextColor(...colors.muted);
@@ -693,12 +617,9 @@ class Utils {
         }
     }
 
-    // Get PDF colors based on current web theme
     getPDFColorsFromTheme() {
-        // Get current theme from document
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'blue-light';
         
-        // Define color schemes for each theme
         const themeColors = {
             'blue-light': {
                 primary: [74, 144, 226],      // Blue
@@ -774,11 +695,9 @@ class Utils {
             }
         };
         
-        // Return colors for current theme, fallback to blue-light if theme not found
         return themeColors[currentTheme] || themeColors['blue-light'];
     }
 
-    // Helper function to get report period
     getReportPeriod(data) {
         if (!data.workRecords || data.workRecords.length === 0) {
             return 'No records available';
@@ -791,7 +710,6 @@ class Utils {
         return `${this.formatDateShort(startDate.toISOString().split('T')[0])} to ${this.formatDateShort(endDate.toISOString().split('T')[0])}`;
     }
 
-    // Data validation utilities
     validateDate(dateString) {
         const date = new Date(dateString);
         return date instanceof Date && !isNaN(date);
@@ -801,7 +719,6 @@ class Utils {
         return typeof wage === 'number' && wage > 0;
     }
 
-    // Local storage utilities
     saveToLocalStorage(key, data) {
         try {
             localStorage.setItem(key, JSON.stringify(data));
@@ -832,16 +749,13 @@ class Utils {
         }
     }
 
-    // Theme utilities
     setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         this.saveToLocalStorage('r-service-theme', theme);
         
-        // Update browser theme-color meta tag based on current theme
         this.updateBrowserThemeColor(theme);
     }
     
-    // Update browser theme-color meta tag dynamically
     updateBrowserThemeColor(theme) {
         const themeColorMap = {
             'blue-light': '#2196F3',
@@ -856,17 +770,14 @@ class Utils {
         
         const color = themeColorMap[theme] || '#2196F3';
         
-        // Update existing theme-color meta tags
         const existingMetas = document.querySelectorAll('meta[name="theme-color"]');
         existingMetas.forEach(meta => meta.remove());
         
-        // Create new theme-color meta tag
         const meta = document.createElement('meta');
         meta.name = 'theme-color';
         meta.content = color;
         document.head.appendChild(meta);
         
-        // Also update msapplication-navbutton-color for Edge
         let navButtonMeta = document.querySelector('meta[name="msapplication-navbutton-color"]');
         if (navButtonMeta) {
             navButtonMeta.content = color;
@@ -877,7 +788,6 @@ class Utils {
             document.head.appendChild(navButtonMeta);
         }
         
-        // Update apple-mobile-web-app-status-bar-style based on theme
         let statusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
         const statusBarStyle = theme.includes('dark') ? 'black-translucent' : 'default';
         if (statusBarMeta) {
@@ -891,7 +801,6 @@ class Utils {
         return this.loadFromLocalStorage('r-service-theme') || 'orange-light';
     }
 
-    // Animation utilities
     animateValue(element, start, end, duration = 1000) {
         if (!element) return;
         
@@ -930,7 +839,6 @@ class Utils {
         requestAnimationFrame(step);
     }
 
-    // Animate number without currency symbol (for elements that already have ₹ in HTML)
     animateNumber(element, start, end, duration = 1000) {
         if (!element) return;
         
@@ -950,7 +858,6 @@ class Utils {
         requestAnimationFrame(step);
     }
 
-    // Debounce utility
     debounce(func, delay) {
         let timeoutId;
         return function (...args) {
@@ -959,7 +866,6 @@ class Utils {
         };
     }
 
-    // Throttle utility
     throttle(func, limit) {
         let lastFunc;
         let lastRan;
@@ -979,7 +885,6 @@ class Utils {
         };
     }
 
-    // URL utilities
     generateShareableLink(data) {
         const params = new URLSearchParams({
             totalEarned: data.totalEarned || 0,
@@ -990,7 +895,6 @@ class Utils {
         return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     }
 
-    // File utilities
     downloadJSON(data, filename = 'r-service-backup.json') {
         const dataStr = JSON.stringify(data, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -1018,7 +922,6 @@ class Utils {
         });
     }
 
-    // Performance utilities
     measurePerformance(label, fn) {
         const start = performance.now();
         const result = fn();
@@ -1027,11 +930,9 @@ class Utils {
         return result;
     }
 
-    // Error handling utilities
     handleError(error, context = 'Unknown') {
         console.error(`Error in ${context}:`, error);
         
-        // Log to analytics if available
         if (window.gtag) {
             window.gtag('event', 'exception', {
                 description: `${context}: ${error.message}`,
@@ -1047,12 +948,10 @@ class Utils {
         };
     }
 
-    // Network utilities
     isOnline() {
         return navigator.onLine;
     }
 
-    // Device utilities
     isMobile() {
         return window.innerWidth <= 768;
     }
@@ -1065,7 +964,6 @@ class Utils {
         return window.innerWidth > 1024;
     }
 
-    // Color utilities
     hexToRgb(hex) {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? {
@@ -1079,14 +977,12 @@ class Utils {
         return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
 
-    // Copy to clipboard
     async copyToClipboard(text) {
         try {
             await navigator.clipboard.writeText(text);
             return true;
         } catch (error) {
             console.error('Failed to copy to clipboard:', error);
-            // Fallback for older browsers
             const textArea = document.createElement('textarea');
             textArea.value = text;
             document.body.appendChild(textArea);
@@ -1102,17 +998,14 @@ class Utils {
         }
     }
 
-    // Generate unique ID
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
-    // Random utilities
     randomBetween(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    // Array utilities
     groupBy(array, key) {
         return array.reduce((groups, item) => {
             const group = item[key];
@@ -1135,7 +1028,6 @@ class Utils {
         });
     }
 
-    // Statistics utilities
     calculateAverage(numbers) {
         if (numbers.length === 0) return 0;
         const sum = numbers.reduce((a, b) => a + b, 0);
@@ -1153,5 +1045,4 @@ class Utils {
     }
 }
 
-// Export the utils class
 window.Utils = Utils;

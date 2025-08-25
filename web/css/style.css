@@ -366,9 +366,34 @@ body {
   z-index: var(--z-loading);
 }
 
+/* Fix loading screen for monochrome dark theme */
+[data-theme="monochrome-dark"] .loading-screen {
+  background: linear-gradient(135deg, #1E1E1E 0%, #121212 100%);
+}
+
+[data-theme="monochrome-dark"] .loading-content {
+  color: #E0E0E0;
+}
+
+[data-theme="monochrome-dark"] .spinner {
+  border: 3px solid rgba(224, 224, 224, 0.3);
+  border-top: 3px solid #E0E0E0;
+}
+
 .loading-content {
   text-align: center;
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   animation: slideInUp var(--transition-slow);
 }
 
@@ -606,6 +631,17 @@ body {
   border-color: var(--primary);
   background: var(--primary);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
 }
 
 .theme-color {
@@ -657,6 +693,17 @@ body {
   border-color: var(--primary);
   background: var(--primary);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
 }
 
 .color-circle {
@@ -706,6 +753,17 @@ body {
 .menu-option.danger:hover {
   background: var(--error);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
 }
 
 .menu-option.success {
@@ -715,6 +773,17 @@ body {
 .menu-option.success:hover {
   background: var(--success);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
 }
 
 /* Settings Styles */
@@ -1149,11 +1218,20 @@ body {
   overflow: hidden;
 }
 
-
-
 .action-btn:hover {
   background: var(--primary);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   transform: translateY(-2px);
   box-shadow: var(--shadow-light);
 }
@@ -1187,11 +1265,20 @@ body {
   line-height: 1.2;
 }
 
-
-
 .btn-primary {
   background: var(--primary);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   border: none;
 }
 
@@ -1217,6 +1304,17 @@ body {
 .btn-success {
   background: var(--success);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   border: none;
 }
 
@@ -1230,6 +1328,17 @@ body {
 .btn-danger {
   background: var(--error);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
 }
 
 .btn-danger:hover {
@@ -1436,6 +1545,17 @@ body {
 .calendar-cell.today {
   background: var(--primary);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   border: 1px solid var(--primary-dark);
 }
 
@@ -1594,8 +1714,6 @@ body {
   border: none;
   text-shadow: none;
 }
-
-
 
 .footer-content p ❤️ {
   color: var(--error);
@@ -2155,6 +2273,17 @@ body {
 .btn-primary {
   background: var(--primary);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   border: none;
 }
 
@@ -2172,6 +2301,17 @@ body {
 .btn-success {
   background: var(--success);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   border: none;
 }
 
@@ -3023,6 +3163,17 @@ select:focus {
   border-color: var(--primary);
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   transform: translateY(-3px) scale(1.02);
   box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.3);
 }
@@ -3031,11 +3182,20 @@ select:focus {
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   border-color: var(--primary-dark);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.3);
   transform: scale(1.02);
 }
-
-
 
 .custom-amount {
   border-top: 1px solid var(--border);
@@ -3682,6 +3842,17 @@ select:focus {
 .version-badge {
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -3985,8 +4156,6 @@ button.disabled:hover {
     margin-bottom: 0.5rem;
   }
 }
-
-
 /* ===== ENHANCED SAVE BUTTON EFFECTS ===== */
 
 /* Save buttons - Enhanced green effects when enabled */
@@ -4014,6 +4183,17 @@ button.disabled:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transform: translateY(-3px) scale(1.02);
   color: white;
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
 }
 
 .menu-option.success:not(:disabled):not(.disabled):active {
@@ -4056,8 +4236,6 @@ button.disabled:hover {
   box-shadow: none !important;
   opacity: 0.6 !important;
 }
-
-
 /* ===== DISABLED DONE BUTTON STYLING ===== */
 
 /* When work is already done, show disabled themed style instead of hiding */
@@ -4085,5 +4263,38 @@ button.disabled:hover {
   color: white !important;
   border: 2px solid var(--success) !important;
   box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3) !important;
+}
+
+/* ===== MONOCHROME DARK THEME FIXES ===== */
+[data-theme="monochrome-dark"] .btn-primary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
+
+[data-theme="monochrome-dark"] .btn-success {
+  background: var(--success);
+  color: var(--background);
+}
+
+[data-theme="monochrome-dark"] .btn-danger {
+  background: var(--error);
+  color: var(--background);
+}
+
+[data-theme="monochrome-dark"] .action-btn {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .action-btn:hover {
+  background: var(--accent);
+  color: var(--text-primary);
 }
 

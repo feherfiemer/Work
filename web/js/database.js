@@ -1,4 +1,3 @@
-// IndexedDB Database Management for R-Service Tracker
 class DatabaseManager {
     constructor() {
         this.dbName = 'RServiceTracker';
@@ -11,7 +10,6 @@ class DatabaseManager {
         };
     }
 
-    // Initialize the database
     async init() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.dbName, this.dbVersion);
@@ -30,7 +28,6 @@ class DatabaseManager {
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
                 
-                // Create work records store
                 if (!db.objectStoreNames.contains(this.stores.workRecords)) {
                     const workStore = db.createObjectStore(this.stores.workRecords, { 
                         keyPath: 'date' 
@@ -40,7 +37,6 @@ class DatabaseManager {
                     workStore.createIndex('status', 'status', { unique: false });
                 }
 
-                // Create payments store
                 if (!db.objectStoreNames.contains(this.stores.payments)) {
                     const paymentStore = db.createObjectStore(this.stores.payments, { 
                         keyPath: 'id', 
@@ -50,7 +46,6 @@ class DatabaseManager {
                     paymentStore.createIndex('amount', 'amount', { unique: false });
                 }
 
-                // Create settings store
                 if (!db.objectStoreNames.contains(this.stores.settings)) {
                     const settingsStore = db.createObjectStore(this.stores.settings, { 
                         keyPath: 'key' 
@@ -62,7 +57,6 @@ class DatabaseManager {
         });
     }
 
-    // Generic method to perform transactions
     async performTransaction(storeName, mode, operation) {
         if (!this.db) {
             throw new Error('Database not initialized');
@@ -85,10 +79,8 @@ class DatabaseManager {
             };
 
             try {
-                // Execute the operation - this may return a request object
                 const request = operation(store);
                 
-                // If operation returns a request, handle its error
                 if (request && typeof request.onerror === 'function') {
                     request.onerror = () => {
                         reject(request.error);
@@ -100,7 +92,6 @@ class DatabaseManager {
         });
     }
 
-    // Work Records Methods
     async addWorkRecord(date, wage = null, status = 'completed') {
         const DAILY_WAGE = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
         const record = {
@@ -196,7 +187,6 @@ class DatabaseManager {
         });
     }
 
-    // Payment Methods
     async addPayment(amount, workDates, paymentDate = new Date().toISOString().split('T')[0], isAdvance = false) {
         const payment = {
             amount: amount,
@@ -250,7 +240,6 @@ class DatabaseManager {
         });
     }
 
-    // Settings Methods
     async setSetting(key, value) {
         const setting = { key, value, timestamp: new Date().toISOString() };
         return this.performTransaction(this.stores.settings, 'readwrite', (store) => {
@@ -294,24 +283,19 @@ class DatabaseManager {
         });
     }
 
-    // Unified Amount Calculation System
     calculateAmounts(workRecords, payments) {
         const DAILY_WAGE = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
         
-        // Basic calculations
         const totalWorked = workRecords.filter(record => record.status === 'completed').length;
         const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
         
-        // Calculate pending work value (work done but not paid for)
         const unpaidWork = workRecords.filter(record => 
             record.status === 'completed' && !this.isRecordPaid(record, payments)
         );
         const pendingWorkValue = unpaidWork.length * DAILY_WAGE;
         
-        // Total Earned = Total Payments (actual money received)
         const totalEarned = totalPaid;
         
-        // Current Balance = Pending Work Value (money owed to user)
         const currentBalance = pendingWorkValue;
         
         return {
@@ -325,17 +309,14 @@ class DatabaseManager {
         };
     }
 
-    // Analytics Methods
     async getEarningsStats() {
         try {
             const workRecords = await this.getAllWorkRecords();
             const payments = await this.getAllPayments();
             
-            // Use unified calculation system
             const amounts = this.calculateAmounts(workRecords, payments);
             const { totalWorked, totalPaid, totalEarned, currentBalance } = amounts;
             
-            // Calculate streak
             const sortedRecords = workRecords
                 .filter(record => record.status === 'completed')
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -357,12 +338,10 @@ class DatabaseManager {
                 }
             }
             
-            // Progress to next payday
             const unpaidWork = workRecords.filter(record => 
                 record.status === 'completed' && !this.isRecordPaid(record, payments)
             ).length;
             
-            // Calculate progress: if we have enough unpaid days, show threshold/threshold, otherwise show actual count
             const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
             const progressToPayday = unpaidWork >= paymentThreshold ? paymentThreshold : unpaidWork;
             
@@ -391,13 +370,11 @@ class DatabaseManager {
         }
     }
 
-    // Get advance payment status
     async getAdvancePaymentStatus() {
         try {
             const workRecords = await this.getAllWorkRecords();
             const payments = await this.getAllPayments();
             
-            // Find advance payments (payments where amount > work covered)
             const advancePayments = payments.filter(payment => payment.isAdvance);
             
             if (advancePayments.length === 0) {
@@ -410,32 +387,23 @@ class DatabaseManager {
                 };
             }
             
-            // Calculate advance payment progress properly
             const amounts = this.calculateAmounts(workRecords, payments);
             
-            // ADVANCE PAYMENT LOGIC:
-            // Show liability tracking: work completed vs work paid for
-            // Example: 1 day worked, paid ₹50 (2 days) = 1/2 progress (1 completed out of 2 paid for)
             
             let totalAdvanceAmount = 0;
             let totalWorkCoveredByAdvance = 0;
             let totalWorkCompletedForAdvance = 0;
             
             for (const payment of advancePayments) {
-                // Total days this payment covers
                 const daysCoveredByPayment = Math.ceil(payment.amount / amounts.dailyWage);
                 
-                // Get ALL work that is covered by this advance payment (from payment.workDates)
                 const workDatesCoveredByPayment = payment.workDates || [];
                 
-                // Count how many of those work dates were actually completed
                 const completedWorkForThisPayment = workDatesCoveredByPayment.filter(workDate => {
                     const workRecord = workRecords.find(record => record.date === workDate);
                     return workRecord && workRecord.status === 'completed';
                 }).length;
                 
-                // Calculate if this is an advance (paid more than work done at time of payment)
-                // We need to check work that was done BEFORE the payment date
                 const workDoneBeforePayment = workRecords.filter(record => {
                     return record.status === 'completed' && 
                            new Date(record.date) <= new Date(payment.date) &&
@@ -446,20 +414,16 @@ class DatabaseManager {
                 const advanceForThisPayment = Math.max(0, payment.amount - workValueAtPayment);
                 
                 if (advanceForThisPayment > 0) {
-                    // This is an advance payment
                     totalAdvanceAmount += advanceForThisPayment;
                     totalWorkCoveredByAdvance += daysCoveredByPayment; // Total days paid for
                     totalWorkCompletedForAdvance += completedWorkForThisPayment; // Work actually completed (including work done after payment)
                 }
             }
             
-            // For advance payments, show: work_completed / work_paid_for
-            // This shows the liability - how much of the paid work is actually completed
             const workRequiredForAdvance = totalWorkCoveredByAdvance; // Days paid for
             const workCompletedForAdvance = totalWorkCompletedForAdvance; // Days actually completed
             const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workCompletedForAdvance);
             
-            // Final advance payment calculation complete
             
             return {
                 hasAdvancePayments: true,
@@ -480,14 +444,12 @@ class DatabaseManager {
         }
     }
 
-    // Helper method to check if a record is paid
     isRecordPaid(record, payments) {
         return payments.some(payment => 
             payment.workDates.includes(record.date)
         );
     }
 
-    // Get monthly earnings data for charts
     async getMonthlyEarnings() {
         try {
             const workRecords = await this.getAllWorkRecords();
@@ -510,7 +472,6 @@ class DatabaseManager {
         }
     }
 
-    // Clear all data
     async clearAllData() {
         try {
             console.log('Starting to clear all data...');
@@ -538,7 +499,6 @@ class DatabaseManager {
         }
     }
 
-    // Export data for backup
     async exportData() {
         try {
             const workRecords = await this.getAllWorkRecords();
@@ -558,13 +518,10 @@ class DatabaseManager {
         }
     }
 
-    // Import data from backup
     async importData(data) {
         try {
-            // Clear existing data
             await this.clearAllData();
             
-            // Import work records
             if (data.workRecords) {
                 for (const record of data.workRecords) {
                     await this.performTransaction(this.stores.workRecords, 'readwrite', (store) => {
@@ -573,7 +530,6 @@ class DatabaseManager {
                 }
             }
             
-            // Import payments
             if (data.payments) {
                 for (const payment of data.payments) {
                     await this.performTransaction(this.stores.payments, 'readwrite', (store) => {
@@ -582,7 +538,6 @@ class DatabaseManager {
                 }
             }
             
-            // Import settings
             if (data.settings) {
                 for (const [key, value] of Object.entries(data.settings)) {
                     await this.setSetting(key, value);
@@ -598,5 +553,4 @@ class DatabaseManager {
     }
 }
 
-// Export the database manager
 window.DatabaseManager = DatabaseManager;

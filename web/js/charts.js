@@ -1,4 +1,3 @@
-// Charts Manager for R-Service Tracker
 class ChartsManager {
     constructor(databaseManager) {
         this.db = databaseManager;
@@ -13,7 +12,6 @@ class ChartsManager {
         };
     }
 
-    // Get theme colors from CSS variables
     getThemeColors() {
         const root = document.documentElement;
         const computedStyle = getComputedStyle(root);
@@ -31,7 +29,6 @@ class ChartsManager {
         };
     }
 
-    // Create earnings chart
     async createEarningsChart() {
         try {
             const canvas = document.getElementById('earningsChart');
@@ -40,11 +37,9 @@ class ChartsManager {
             const ctx = canvas.getContext('2d');
             const colors = this.getThemeColors();
             
-            // Get monthly earnings data
             const monthlyData = await this.db.getMonthlyEarnings();
             const sortedMonths = Object.keys(monthlyData).sort();
             
-            // Prepare data for last 12 months
             const last12Months = this.getLast12Months();
             const labels = [];
             const data = [];
@@ -54,7 +49,6 @@ class ChartsManager {
                 data.push(monthlyData[month] || 0);
             });
 
-            // Destroy existing chart
             if (this.charts.earnings) {
                 this.charts.earnings.destroy();
             }
@@ -143,7 +137,6 @@ class ChartsManager {
         }
     }
 
-    // Create work days chart
     async createWorkDaysChart() {
         try {
             const canvas = document.getElementById('workDaysChart');
@@ -152,11 +145,9 @@ class ChartsManager {
             const ctx = canvas.getContext('2d');
             const colors = this.getThemeColors();
             
-            // Get work records
             const workRecords = await this.db.getAllWorkRecords();
             const payments = await this.db.getAllPayments();
             
-            // Group by month
             const monthlyStats = {};
             
             workRecords.forEach(record => {
@@ -175,7 +166,6 @@ class ChartsManager {
                 }
             });
             
-            // Add payment data
             payments.forEach(payment => {
                 const key = `${payment.year}-${payment.month.toString().padStart(2, '0')}`;
                 if (monthlyStats[key]) {
@@ -183,7 +173,6 @@ class ChartsManager {
                 }
             });
             
-            // Prepare data for last 12 months
             const last12Months = this.getLast12Months();
             const labels = [];
             const workedData = [];
@@ -198,7 +187,6 @@ class ChartsManager {
                 paidData.push(stats.paid);
             });
 
-            // Destroy existing chart
             if (this.charts.workDays) {
                 this.charts.workDays.destroy();
             }
@@ -339,7 +327,6 @@ class ChartsManager {
         }
     }
 
-    // Create pie chart for earnings breakdown
     async createEarningsBreakdownChart() {
         try {
             const stats = await this.db.getEarningsStats();
@@ -394,13 +381,11 @@ class ChartsManager {
         }
     }
 
-    // Create weekly work pattern chart
     async createWeeklyPatternChart() {
         try {
             const workRecords = await this.db.getAllWorkRecords();
             const colors = this.getThemeColors();
             
-            // Group by day of week
             const weeklyPattern = {
                 'Monday': 0,
                 'Tuesday': 0,
@@ -474,7 +459,6 @@ class ChartsManager {
         }
     }
 
-    // Initialize all charts
     async initializeCharts() {
         try {
             await this.createEarningsChart();
@@ -484,7 +468,6 @@ class ChartsManager {
         }
     }
 
-    // Update all charts with new data
     async updateCharts() {
         try {
             await this.createEarningsChart();
@@ -494,7 +477,6 @@ class ChartsManager {
         }
     }
 
-    // Destroy all charts
     destroyCharts() {
         Object.values(this.charts).forEach(chart => {
             if (chart && typeof chart.destroy === 'function') {
@@ -504,7 +486,6 @@ class ChartsManager {
         this.charts = {};
     }
 
-    // Helper method to get last 12 months
     getLast12Months() {
         const months = [];
         const now = new Date();
@@ -519,19 +500,15 @@ class ChartsManager {
         return months;
     }
 
-    // Helper method to format month labels
     formatMonthLabel(monthKey) {
         const [year, month] = monthKey.split('-');
         const date = new Date(parseInt(year), parseInt(month) - 1, 1);
         return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
     }
 
-    // Helper method to convert hex to rgba
     hexToRgba(hex, alpha) {
-        // Remove the hash if present
         hex = hex.replace('#', '');
         
-        // Parse the hex values
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
@@ -539,7 +516,6 @@ class ChartsManager {
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
-    // Export chart as image
     exportChart(chartKey, filename) {
         const chart = this.charts[chartKey];
         if (chart) {
@@ -550,13 +526,11 @@ class ChartsManager {
         }
     }
 
-    // Get chart statistics for summary
     async getChartStats() {
         try {
             const stats = await this.db.getEarningsStats();
             const workRecords = await this.db.getAllWorkRecords();
             
-            // Calculate additional stats
             const thisMonth = new Date();
             const thisMonthKey = `${thisMonth.getFullYear()}-${(thisMonth.getMonth() + 1).toString().padStart(2, '0')}`;
             
@@ -596,5 +570,4 @@ class ChartsManager {
     }
 }
 
-// Export the charts manager
 window.ChartsManager = ChartsManager;

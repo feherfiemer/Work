@@ -1,4 +1,3 @@
-// Central configuration constants for R-Service Tracker
 (function() {
     'use strict';
     
@@ -7,26 +6,18 @@
         PAYMENT_THRESHOLD: 4, // Days before payment can be collected
         CURRENCY_SYMBOL: '₹',
         CURRENCY_NAME: 'rupees',
-        // New configurable settings
         INCREMENT_VALUE: 25, // Default increment for payment amounts
         PAYMENT_DAY_DURATION: 4, // Default payment day duration
         MAX_PAYMENT_AMOUNT: 1000, // Default maximum payment amount
-        // Notification settings
-        NOTIFICATIONS_ENABLED: true, // Default notification state
-        PAYMENT_REMINDER_TIME: '10:00', // Default payment reminder time (IST)
-        WORK_REMINDER_TIME: '18:00', // Default work reminder time (IST)
         TIMEZONE: 'Asia/Kolkata' // IST timezone
     };
 
-    // Configuration management functions
     const ConfigManager = {
-        // Get current configuration with user overrides
         getConfig() {
             const userConfig = this.getUserConfig();
             return { ...CONFIG, ...userConfig };
         },
 
-        // Get user configuration from localStorage
         getUserConfig() {
             try {
                 const stored = localStorage.getItem('r-service-user-config');
@@ -37,14 +28,12 @@
             }
         },
 
-        // Save user configuration to localStorage
         saveUserConfig(config) {
             try {
                 const currentUserConfig = this.getUserConfig();
                 const newUserConfig = { ...currentUserConfig, ...config };
                 localStorage.setItem('r-service-user-config', JSON.stringify(newUserConfig));
                 
-                // Update global config
                 if (typeof window !== 'undefined') {
                     window.R_SERVICE_CONFIG = this.getConfig();
                 }
@@ -57,7 +46,6 @@
             }
         },
 
-        // Reset to default configuration
         resetToDefaults() {
             try {
                 localStorage.removeItem('r-service-user-config');
@@ -72,7 +60,6 @@
             }
         },
 
-        // Generate payment amounts based on increment value
         generatePaymentAmounts() {
             const config = this.getConfig();
             const increment = config.INCREMENT_VALUE || 25;
@@ -83,7 +70,6 @@
                 amounts.push(amount);
             }
             
-            // Ensure we have at least a few default amounts based on daily wage
             if (amounts.length === 0) {
                 const dailyWage = config.DAILY_WAGE || 25;
                 return [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 1000];
@@ -92,10 +78,8 @@
             return amounts;
         },
 
-        // Initialize configuration system
         init() {
             try {
-                // Set up global config
                 window.R_SERVICE_CONFIG = this.getConfig();
                 window.ConfigManager = this;
                 
@@ -103,7 +87,6 @@
                 return true;
             } catch (error) {
                 console.error('Error initializing ConfigManager:', error);
-                // Fallback configuration
                 window.R_SERVICE_CONFIG = { ...CONFIG };
                 window.ConfigManager = this;
                 return false;
@@ -111,9 +94,7 @@
         }
     };
 
-    // Initialize immediately when script loads
     if (typeof window !== 'undefined') {
-        // Wait for DOM to be ready if needed
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 ConfigManager.init();

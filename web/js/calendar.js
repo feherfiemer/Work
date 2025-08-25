@@ -1,4 +1,3 @@
-// Calendar Manager for R-Service Tracker
 class CalendarManager {
     constructor(databaseManager) {
         this.db = databaseManager;
@@ -12,7 +11,6 @@ class CalendarManager {
         this.dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     }
 
-    // Initialize calendar
     async init() {
         try {
             await this.loadData();
@@ -23,7 +21,6 @@ class CalendarManager {
         }
     }
 
-    // Load data from database
     async loadData() {
         try {
             this.workRecords = await this.db.getAllWorkRecords();
@@ -33,7 +30,6 @@ class CalendarManager {
         }
     }
 
-    // Setup event listeners
     setupEventListeners() {
         const prevBtn = document.getElementById('prevMonth');
         const nextBtn = document.getElementById('nextMonth');
@@ -50,7 +46,6 @@ class CalendarManager {
             });
         }
 
-        // Add keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (document.getElementById('calendarView').style.display !== 'none') {
                 if (e.key === 'ArrowLeft') {
@@ -62,37 +57,31 @@ class CalendarManager {
         });
     }
 
-    // Navigate to previous month
     previousMonth() {
         this.currentDate.setMonth(this.currentDate.getMonth() - 1);
         this.render();
     }
 
-    // Navigate to next month
     nextMonth() {
         this.currentDate.setMonth(this.currentDate.getMonth() + 1);
         this.render();
     }
 
-    // Go to today
     goToToday() {
         this.currentDate = new Date();
         this.render();
     }
 
-    // Go to specific month/year
     goToMonth(year, month) {
         this.currentDate = new Date(year, month - 1, 1);
         this.render();
     }
 
-    // Render calendar
     render() {
         this.updateTitle();
         this.renderGrid();
     }
 
-    // Update calendar title
     updateTitle() {
         const titleElement = document.getElementById('calendarTitle');
         if (titleElement) {
@@ -102,18 +91,14 @@ class CalendarManager {
         }
     }
 
-    // Render calendar grid (optimized for performance)
     renderGrid() {
         const gridElement = document.getElementById('calendarGrid');
         if (!gridElement) return;
 
-        // Use document fragment for better performance
         const fragment = document.createDocumentFragment();
         
-        // Clear existing content
         gridElement.innerHTML = '';
 
-        // Add day headers
         this.dayNames.forEach(dayName => {
             const dayHeader = document.createElement('div');
             dayHeader.className = 'calendar-header-cell';
@@ -131,7 +116,6 @@ class CalendarManager {
             fragment.appendChild(dayHeader);
         });
 
-        // Get first day of month and number of days
         const year = this.currentDate.getFullYear();
         const month = this.currentDate.getMonth();
         const firstDay = new Date(year, month, 1);
@@ -139,14 +123,12 @@ class CalendarManager {
         const daysInMonth = lastDay.getDate();
         const startDay = firstDay.getDay();
 
-        // Add empty cells for days before month starts
         for (let i = 0; i < startDay; i++) {
             const emptyCell = document.createElement('div');
             emptyCell.className = 'calendar-cell empty';
             fragment.appendChild(emptyCell);
         }
 
-        // Add cells for each day of the month
         for (let day = 1; day <= daysInMonth; day++) {
             const cellDate = new Date(year, month, day);
             const dateString = this.formatDate(cellDate);
@@ -155,7 +137,6 @@ class CalendarManager {
             fragment.appendChild(cell);
         }
 
-        // Add empty cells to complete the grid (6 rows × 7 days = 42 cells)
         const totalCells = 42;
         const currentCells = startDay + daysInMonth;
         const remainingCells = totalCells - currentCells;
@@ -166,27 +147,21 @@ class CalendarManager {
             fragment.appendChild(emptyCell);
         }
         
-        // Append all cells at once for better performance
         gridElement.appendChild(fragment);
     }
 
-    // Create day cell
     createDayCell(day, cellDate, dateString) {
         const cell = document.createElement('div');
         cell.className = 'calendar-cell';
         
-        // Check if this is today
         const today = new Date();
         const isToday = this.isSameDate(cellDate, today);
         
-        // Get work record for this date
         const workRecord = this.workRecords.find(record => record.date === dateString);
         const isWorked = workRecord && workRecord.status === 'completed';
         
-        // Check if this date is part of a payment
         const isPaid = this.isDatePaid(dateString);
         
-        // Set cell classes
         if (isToday) {
             cell.classList.add('today');
         }
@@ -197,16 +172,13 @@ class CalendarManager {
             }
         }
 
-        // Create cell content
         const cellContent = this.createCellContent(day, workRecord, isPaid, isToday);
         cell.appendChild(cellContent);
 
-        // Add click handler
         cell.addEventListener('click', () => {
             this.showDayDetails(cellDate, workRecord, isPaid);
         });
 
-        // Add hover effect (using CSS instead of JS for better performance)
         cell.addEventListener('mouseenter', () => {
             cell.classList.add('calendar-cell-hover');
         });
@@ -218,7 +190,6 @@ class CalendarManager {
         return cell;
     }
 
-    // Create cell content
     createCellContent(day, workRecord, isPaid, isToday) {
         const content = document.createElement('div');
         content.className = 'calendar-cell-content';
@@ -230,7 +201,6 @@ class CalendarManager {
             padding: 0.5rem;
         `;
 
-        // Day number
         const dayNumber = document.createElement('div');
         dayNumber.className = 'day-number';
         dayNumber.textContent = day;
@@ -240,7 +210,6 @@ class CalendarManager {
             color: ${isToday ? 'white' : 'var(--text-primary)'};
         `;
 
-        // Status indicators
         const indicators = document.createElement('div');
         indicators.className = 'day-indicators';
         indicators.style.cssText = `
@@ -273,7 +242,6 @@ class CalendarManager {
 
             if (isPaid) {
                 const payment = this.getPaymentForDate(workRecord.date);
-                // Calculate the actual payment amount for this specific date
                 const paymentAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
                 
                 const paidIndicator = document.createElement('span');
@@ -301,7 +269,6 @@ class CalendarManager {
         return content;
     }
 
-    // Show day details in modal or tooltip
     showDayDetails(date, workRecord, isPaid) {
         const dateString = this.formatDate(date);
         const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
@@ -317,7 +284,6 @@ class CalendarManager {
                 <p class="date">${formattedDate}</p>
         `;
 
-        // Check if this is a past date (not future)
         const today = new Date();
         const isPastDate = date < today || this.isSameDate(date, today);
 
@@ -362,7 +328,6 @@ class CalendarManager {
                     </div>
                 `;
                 
-                // Only show force paid button for past completed work dates
                 if (isPastDate) {
                     content += `
                         <button class="force-paid-btn" data-date="${dateString}" style="
@@ -401,13 +366,10 @@ class CalendarManager {
 
         content += `</div>`;
 
-        // Show in toast or create a simple modal
         this.showDayModal(content, dateString);
     }
 
-    // Show day modal
     showDayModal(content, dateString) {
-        // Create modal
         const modal = document.createElement('div');
         modal.className = 'day-modal';
         modal.style.cssText = `
@@ -461,7 +423,6 @@ class CalendarManager {
             }
         };
 
-        // Close handlers
         const closeBtn = modalContent.querySelector('.close-day-modal');
         closeBtn.addEventListener('click', closeModal);
 
@@ -471,7 +432,6 @@ class CalendarManager {
             }
         });
 
-        // Force paid button handler
         const forcePaidBtn = modalContent.querySelector('.force-paid-btn');
         if (forcePaidBtn) {
             forcePaidBtn.addEventListener('click', async (e) => {
@@ -490,16 +450,13 @@ class CalendarManager {
                         return;
                     }
                     
-                    // Disable button to prevent double clicks
                     forcePaidBtn.disabled = true;
                     forcePaidBtn.style.background = 'linear-gradient(135deg, #ccc, #999)';
                     forcePaidBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                     forcePaidBtn.style.transform = 'scale(0.95)';
                     
-                    // Close modal first, then process payment
                     closeModal();
                     
-                    // Add small delay to ensure modal is fully closed
                     setTimeout(async () => {
                         try {
                             await this.handleForcePaid(targetDate);
@@ -516,7 +473,6 @@ class CalendarManager {
                     if (window.app && window.app.notifications) {
                         window.app.notifications.showToast('Error processing force payment', 'error');
                     }
-                    // Re-enable button on error
                     if (forcePaidBtn) {
                         forcePaidBtn.disabled = false;
                         forcePaidBtn.innerHTML = '<i class="fas fa-hand-holding-usd"></i> Force Mark as Paid';
@@ -525,9 +481,7 @@ class CalendarManager {
             });
         }
 
-        // No mark done functionality needed
 
-        // ESC key to close
         const handleEsc = (e) => {
             if (e.key === 'Escape') {
                 closeModal();
@@ -537,9 +491,7 @@ class CalendarManager {
         document.addEventListener('keydown', handleEsc);
     }
 
-    // Helper methods
     formatDate(date) {
-        // Use local date to avoid timezone issues
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
@@ -562,7 +514,6 @@ class CalendarManager {
         );
     }
 
-    // Get calendar statistics
     getCalendarStats() {
         const currentMonth = this.currentDate.getMonth() + 1;
         const currentYear = this.currentDate.getFullYear();
@@ -596,13 +547,11 @@ class CalendarManager {
         };
     }
 
-    // Update calendar with new data
     async updateCalendar() {
         await this.loadData();
         this.render();
     }
 
-    // Export calendar view
     exportCalendarView() {
         const stats = this.getCalendarStats();
         const monthName = this.monthNames[this.currentDate.getMonth()];
@@ -628,7 +577,6 @@ class CalendarManager {
         return exportData;
     }
 
-    // Handle force paid action
     async handleForcePaid(dateString) {
         try {
             console.log('Processing force paid for date:', dateString);
@@ -641,7 +589,6 @@ class CalendarManager {
                 throw new Error('Database not available');
             }
             
-            // Check if work record exists and is completed
             const workRecord = await this.db.getWorkRecord(dateString);
             if (!workRecord || workRecord.status !== 'completed') {
                 if (window.app && window.app.notifications) {
@@ -650,7 +597,6 @@ class CalendarManager {
                 return;
             }
 
-            // Check if already paid
             const payments = await this.db.getAllPayments();
             const isAlreadyPaid = payments.some(payment => 
                 payment.workDates && payment.workDates.includes(dateString)
@@ -663,7 +609,6 @@ class CalendarManager {
                 return;
             }
 
-            // Create a force payment for this specific date
             const paymentAmount = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             const today = new Date();
             const paymentDate = today.getFullYear() + '-' + 
@@ -674,7 +619,6 @@ class CalendarManager {
             await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
             console.log('Force payment added successfully');
 
-            // Show success notification first
             if (window.app && window.app.notifications) {
                 window.app.notifications.showToast(`Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
                 try {
@@ -684,12 +628,9 @@ class CalendarManager {
                 }
             }
 
-            // Update calendar and notify main app with better error handling
             try {
-                // Force reload data from database
                 await this.loadData();
                 
-                // Clear and re-render the calendar
                 const gridElement = document.getElementById('calendarGrid');
                 if (gridElement) {
                     gridElement.innerHTML = '';
@@ -698,7 +639,6 @@ class CalendarManager {
                 
                 console.log('Calendar refreshed after force payment');
 
-                // Trigger update in main app if available
                 if (window.app && typeof window.app.updateDashboard === 'function') {
                     try {
                         window.app.currentStats = await this.db.getEarningsStats();
@@ -706,18 +646,15 @@ class CalendarManager {
                         await window.app.updatePendingUnpaidDates();
                         await window.app.updatePaidButtonVisibility();
                         
-                        // Update charts if available
                         if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
                             await window.app.charts.updateCharts();
                         }
                     } catch (appUpdateError) {
                         console.error('Error updating app components:', appUpdateError);
-                        // Don't throw - the payment was successful
                     }
                 }
             } catch (renderError) {
                 console.error('Error updating calendar after force payment:', renderError);
-                // Don't throw - the payment was successful, just refresh manually
                 setTimeout(async () => {
                     try {
                         await this.loadData();
@@ -744,23 +681,18 @@ class CalendarManager {
 
 
 
-    // Highlight specific dates
     highlightDates(dates, className = 'highlighted') {
         dates.forEach(dateString => {
             const date = new Date(dateString);
             if (date.getMonth() === this.currentDate.getMonth() && 
                 date.getFullYear() === this.currentDate.getFullYear()) {
-                // Find and highlight the cell
-                // This would require additional tracking of cell elements
             }
         });
     }
 }
 
-// Export the calendar manager
 window.CalendarManager = CalendarManager;
 
-// Add required CSS for calendar modal
 const calendarStyle = document.createElement('style');
 calendarStyle.textContent = `
     .calendar-header-cell {

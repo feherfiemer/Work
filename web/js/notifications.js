@@ -1,4 +1,3 @@
-// Notification Manager for R-Service Tracker
 console.log('[DEBUG] notifications.js loading...');
 class NotificationManager {
     constructor() {
@@ -7,7 +6,6 @@ class NotificationManager {
         this.init();
     }
 
-    // Initialize notification manager
     init() {
         this.toastContainer = document.getElementById('toastContainer');
         if (!this.toastContainer) {
@@ -17,7 +15,6 @@ class NotificationManager {
         this.checkPermission();
     }
     
-    // Create toast container if it doesn't exist
     createToastContainer() {
         const container = document.createElement('div');
         container.id = 'toastContainer';
@@ -38,45 +35,18 @@ class NotificationManager {
         this.toastContainer = container;
     }
 
-    // Check current notification permission
     checkPermission() {
-        if ('Notification' in window) {
-            this.permission = Notification.permission;
-        }
+        this.permission = 'disabled';
     }
 
-    // Request notification and audio permissions
     async requestPermission() {
         let results = {
-            notifications: this.permission,
+            notifications: 'disabled', // Push notifications disabled
             audio: 'granted'
         };
         
-        // Request notification permission
-        if ('Notification' in window && Notification.permission === 'default') {
-            try {
-                this.permission = await Notification.requestPermission();
-                results.notifications = this.permission;
-                
-                if (this.permission === 'granted') {
-                    this.showToast('Notifications enabled! You\'ll be notified about paydays.', 'success');
-                } else {
-                    this.showToast('Notifications denied. Enable them in browser settings for payday alerts.', 'warning');
-                }
-            } catch (error) {
-                console.error('Error requesting notification permission:', error);
-                this.showToast('Error enabling notifications.', 'error');
-                results.notifications = 'denied';
-            }
-        } else if ('Notification' in window && Notification.permission === 'denied') {
-            this.showToast('Notifications are blocked. Enable them in browser settings.', 'warning');
-            results.notifications = 'denied';
-        }
-        
-        // Request microphone/speaker permission for audio feedback
         try {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                // Request minimal audio permission to enable Web Audio API
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: { 
                         echoCancellation: false,
@@ -87,7 +57,6 @@ class NotificationManager {
                     } 
                 });
                 
-                // Immediately stop the stream as we only need permission
                 stream.getTracks().forEach(track => track.stop());
                 results.audio = 'granted';
                 
@@ -101,15 +70,12 @@ class NotificationManager {
         } catch (audioError) {
             console.log('Audio permission denied or not available:', audioError.message);
             results.audio = 'denied';
-            // Don't show error toast for audio as it's not critical
         }
         
-        // Ensure AudioContext can be created for sound effects
         try {
             if (!this.audioContext && (window.AudioContext || window.webkitAudioContext)) {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 
-                // Resume AudioContext if suspended (required by some browsers)
                 if (this.audioContext.state === 'suspended') {
                     await this.audioContext.resume();
                 }
@@ -122,142 +88,20 @@ class NotificationManager {
         return results;
     }
 
-    // Show browser notification with enhanced delivery for mobile
     showNotification(title, options = {}) {
-        // Update permission status first
-        this.checkPermission();
+        console.log('Showing toast notification:', title);
         
-        console.log('Attempting to show notification:', title, 'Permission:', this.permission);
-        
-        // Always show toast notification as backup
         this.showToast(title + (options.body ? ': ' + options.body : ''), options.toastType || 'info', options.toastDuration || 5000);
         
-        if ('Notification' in window && this.permission === 'granted') {
-            const defaultOptions = {
-                icon: location.origin + '/assets/favicon.ico',
-                badge: location.origin + '/assets/favicon.ico',
-                image: location.origin + '/assets/favicon.ico', // Add image for better mobile support
-                dir: 'ltr',
-                lang: 'en',
-                renotify: true,
-                requireInteraction: true, // Keep notification visible on mobile
-                silent: false,
-                tag: options.tag || 'r-service-tracker-' + Date.now(),
-                timestamp: Date.now(),
-                vibrate: [200, 100, 200, 100, 200, 100, 200], // Stronger vibration for mobile
-                data: { // Add data for service worker handling
-                    url: window.location.origin,
-                    timestamp: Date.now(),
-                    type: options.type || 'general'
-                },
-                actions: options.actions || []
-            };
-
-            const finalOptions = { ...defaultOptions, ...options };
-
-            try {
-                // Always prefer service worker for better mobile support
-                if ('serviceWorker' in navigator) {
-                    return navigator.serviceWorker.ready.then(registration => {
-                        console.log('Using service worker for notification:', title);
-                        console.log('Notification options:', finalOptions);
-                        
-                        // For mobile compatibility, ensure service worker shows notification
-                        return registration.showNotification(title, finalOptions).then(() => {
-                            console.log('Service worker notification displayed successfully');
-                            
-                            // Add additional vibration for mobile
-                            if ('vibrate' in navigator) {
-                                navigator.vibrate([200, 100, 200]);
-                            }
-                            
-                            return true;
-                        });
-                    }).catch(error => {
-                        console.error('Service worker notification failed:', error);
-                        console.log('Notification shown via toast only due to service worker error');
-                        return null;
-                    });
-                } else {
-                    console.log('Service worker not available, notification shown via toast only');
-                    return null;
-                }
-            } catch (error) {
-                console.error('Error creating notification:', error);
-                this.showToast('Browser notification failed: ' + title, 'warning');
-            }
-        } else if ('Notification' in window && this.permission === 'denied') {
-            console.log('Notifications denied by user');
-            this.showToast('Enable notifications in browser settings for better alerts', 'warning', 3000);
-        } else {
-            console.log('Browser notifications not supported');
-            this.showToast('Your browser doesn\'t support notifications', 'info', 3000);
+        if ('vibrate' in navigator && options.vibrate !== false) {
+            navigator.vibrate([200, 100, 200]);
         }
         
         return null;
     }
 
-    // Create regular notification (fallback method) - only when no service worker
-    createRegularNotification(title, finalOptions) {
-        // Check if service worker is available - if so, don't use regular notification
-        if ('serviceWorker' in navigator) {
-            console.log('Service worker available, skipping regular notification to avoid constructor error');
-            return null;
-        }
 
-        try {
-            const notification = new Notification(title, finalOptions);
-            console.log('Browser notification created successfully:', title);
-            
-            // Auto close after duration or 8 seconds
-            const autoCloseTime = finalOptions.duration || 8000;
-            setTimeout(() => {
-                try {
-                    notification.close();
-                    console.log('Notification auto-closed after', autoCloseTime, 'ms');
-                } catch (e) {
-                    // Notification might already be closed
-                }
-            }, autoCloseTime);
 
-            // Handle notification click
-            notification.onclick = (event) => {
-                event.preventDefault();
-                window.focus();
-                notification.close();
-                console.log('Notification clicked and closed');
-                
-                // Handle specific actions
-                if (finalOptions.onClick) {
-                    try {
-                        finalOptions.onClick();
-                    } catch (e) {
-                        console.error('Error in notification click handler:', e);
-                    }
-                }
-            };
-
-            // Handle notification error
-            notification.onerror = (error) => {
-                console.error('Notification error:', error);
-                // Additional toast notification for errors
-                this.showToast('Notification delivery failed', 'error', 3000);
-            };
-
-            // Handle notification close
-            notification.onclose = () => {
-                console.log('Notification closed:', title);
-            };
-
-            return notification;
-        } catch (error) {
-            console.error('Error creating regular notification:', error);
-            this.showToast('Browser notification failed: ' + title, 'warning');
-            return null;
-        }
-    }
-
-    // Show enhanced welcome notification for first-time users
     showWelcomeNotification() {
         const title = 'Welcome to R-Service Tracker!';
         const options = {
@@ -284,22 +128,18 @@ class NotificationManager {
         console.log('Welcome notification shown for first-time user');
     }
 
-    // Request notification permission on every visit if not granted
     async checkAndRequestPermission() {
         if ('Notification' in window) {
             const permission = Notification.permission;
             console.log('Current notification permission:', permission);
             
             if (permission === 'default') {
-                // Show a friendly prompt before requesting permission
                 this.showToast('Enable notifications to get daily work reminders and payment alerts!', 'info', 6000);
                 
-                // Wait a bit then show the browser permission request
                 setTimeout(async () => {
                     try {
                         console.log('Requesting notification permission from browser...');
                         
-                        // Request permission using the browser's native dialog
                         const result = await Notification.requestPermission();
                         console.log('Permission request result:', result);
                         
@@ -308,7 +148,6 @@ class NotificationManager {
                         if (result === 'granted') {
                             this.showToast('Notifications enabled successfully!', 'success', 4000);
                             
-                            // Show welcome notification for new users after permission is granted
                             const hasShownWelcome = localStorage.getItem('welcomeNotificationShown');
                             if (!hasShownWelcome) {
                                 setTimeout(() => {
@@ -316,7 +155,6 @@ class NotificationManager {
                                     localStorage.setItem('welcomeNotificationShown', 'true');
                                 }, 2000); // Wait 2 seconds after permission granted
                             } else {
-                                // Show a quick check-in notification for returning users
                                 setTimeout(() => {
                                     this.showNotification('Daily Check-in', {
                                         body: 'Welcome back! Ready to track your work today? Don\'t forget to mark your tasks as completed.',
@@ -337,14 +175,12 @@ class NotificationManager {
                 }, 3000); // Wait 3 seconds before showing permission request
                 
             } else if (permission === 'denied') {
-                // Create a more helpful message for denied permissions
                 const helpMessage = 'Notifications are blocked. To enable:\n' +
                                   '1. Click the 🔒 icon in your address bar\n' +
                                   '2. Set Notifications to "Allow"\n' +
                                   '3. Refresh the page';
                 this.showToast(helpMessage.replace(/\n/g, ' '), 'warning', 10000);
                 
-                // Also show a clickable notification to help users
                 setTimeout(() => {
                     this.showToast('Click here for help enabling notifications', 'info', 8000);
                 }, 2000);
@@ -353,7 +189,6 @@ class NotificationManager {
                 console.log('Notifications already granted');
                 this.permission = permission;
                 
-                // Check if this is a new session and show appropriate notification
                 const lastSessionDate = localStorage.getItem('lastSessionDate');
                 const today = new Date().toISOString().split('T')[0];
                 
@@ -374,7 +209,6 @@ class NotificationManager {
         }
     }
 
-    // Show payday notification
     showPaydayNotification() {
         const title = 'Payday Alert!';
         const options = {
@@ -398,7 +232,6 @@ class NotificationManager {
         this.showToast('Payday! You\'ve earned ₹100', 'success');
     }
 
-    // Show work completion notification
     showWorkCompletedNotification() {
         const title = 'Work Marked Complete';
         const options = {
@@ -410,7 +243,6 @@ class NotificationManager {
         this.showNotification(title, options);
     }
 
-    // Show payment notification
     showPaymentNotification(amount) {
         const title = 'Payment Recorded';
         const options = {
@@ -422,7 +254,6 @@ class NotificationManager {
         this.showNotification(title, options);
     }
 
-    // Show streak notification
     showStreakNotification(streak) {
         const title = 'Streak Achievement!';
         const options = {
@@ -434,7 +265,6 @@ class NotificationManager {
         this.showNotification(title, options);
     }
 
-    // Show advance payment notification
     showAdvancePaymentNotification() {
         const title = 'Advance Payment Reminder';
         const options = {
@@ -458,7 +288,6 @@ class NotificationManager {
         this.showToast('Advance payment reminder: Complete your remaining work days!', 'warning', 6000);
     }
 
-    // Toast notification system
     showToast(message, type = 'info', duration = 5000) {
         if (!this.toastContainer) {
             console.warn('Toast container not found');
@@ -468,17 +297,14 @@ class NotificationManager {
         const toast = this.createToastElement(message, type);
         this.toastContainer.appendChild(toast);
 
-        // Trigger animation
         setTimeout(() => {
             toast.classList.add('show');
         }, 100);
 
-        // Auto remove
         setTimeout(() => {
             this.removeToast(toast);
         }, duration);
 
-        // Click to dismiss
         toast.addEventListener('click', () => {
             this.removeToast(toast);
         });
@@ -486,7 +312,6 @@ class NotificationManager {
         return toast;
     }
 
-    // Create toast element
     createToastElement(message, type) {
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
@@ -510,7 +335,6 @@ class NotificationManager {
         return toast;
     }
 
-    // Remove toast
     removeToast(toast) {
         if (toast && toast.parentNode) {
             toast.style.animation = 'slideOutRight 0.3s ease-in-out';
@@ -522,7 +346,6 @@ class NotificationManager {
         }
     }
 
-    // Clear all toasts
     clearAllToasts() {
         if (this.toastContainer) {
             const toasts = this.toastContainer.querySelectorAll('.toast');
@@ -530,7 +353,6 @@ class NotificationManager {
         }
     }
 
-    // Show loading toast
     showLoadingToast(message) {
         const toast = this.createLoadingToast(message);
         this.toastContainer.appendChild(toast);
@@ -542,7 +364,6 @@ class NotificationManager {
         return toast;
     }
 
-    // Create loading toast
     createLoadingToast(message) {
         const toast = document.createElement('div');
         toast.className = 'toast loading';
@@ -559,7 +380,6 @@ class NotificationManager {
         return toast;
     }
 
-    // Update loading toast to success/error
     updateLoadingToast(toast, message, type = 'success') {
         if (toast && toast.parentNode) {
             toast.className = `toast ${type}`;
@@ -578,14 +398,12 @@ class NotificationManager {
                 </div>
             `;
 
-            // Auto remove after delay
             setTimeout(() => {
                 this.removeToast(toast);
             }, 3000);
         }
     }
 
-    // Show confirmation dialog
     showConfirmation(message, onConfirm, onCancel) {
         const modal = document.getElementById('confirmModal');
         const messageEl = document.getElementById('confirmMessage');
@@ -596,7 +414,6 @@ class NotificationManager {
             messageEl.textContent = message;
             modal.classList.add('show');
 
-            // Handle confirmation
             const handleYes = () => {
                 modal.classList.remove('show');
                 if (onConfirm) onConfirm();
@@ -625,7 +442,6 @@ class NotificationManager {
             noBtn.addEventListener('click', handleNo);
             document.addEventListener('keydown', handleEscape);
 
-            // Click outside to cancel
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     handleNo();
@@ -634,14 +450,11 @@ class NotificationManager {
         }
     }
 
-    // Play sound notification
     playSound(soundType) {
         try {
-            // Create AudioContext if not already created
             if (!this.audioContext) {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 
-                // Resume audio context if suspended (required on mobile)
                 if (this.audioContext.state === 'suspended') {
                     this.audioContext.resume().then(() => {
                         console.log('AudioContext resumed successfully');
@@ -659,16 +472,14 @@ class NotificationManager {
         }
     }
     
-    // Helper method to play specific sound type
     playSoundType(soundType) {
         if (soundType === 'done') {
-            this.playSystematicSound('success', 'medium');
+            this.playSuccessSound(); setTimeout(() => this.playSystematicSound('success', 'high'), 300);
         } else if (soundType === 'paid') {
             this.playSystematicSound('payment', 'medium');
         }
     }
 
-    // Play success sound (premium achievement sound with coin collection)
     playSuccessSound() {
         if (!this.audioContext) return;
 
@@ -676,23 +487,18 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Create master gain node with dynamic compression
             const masterGain = ctx.createGain();
             const compressor = ctx.createDynamicsCompressor();
             masterGain.connect(compressor);
             compressor.connect(ctx.destination);
             masterGain.gain.setValueAtTime(0.6, now);
 
-            // Stage 1: Premium coin drop with multiple metallic layers
             this.createPremiumCoinSound(ctx, masterGain, now);
             
-            // Stage 2: Magical sparkle effect (like collecting coins in premium games)
             this.createSparkleEffect(ctx, masterGain, now + 0.15);
             
-            // Stage 3: Satisfying completion chord progression
             this.createCompletionChord(ctx, masterGain, now + 0.3);
             
-            // Stage 4: Subtle reverb tail for premium feel
             this.createReverbTail(ctx, masterGain, now + 0.5);
 
             console.log('Premium achievement sound sequence played');
@@ -701,9 +507,7 @@ class NotificationManager {
         }
     }
 
-    // Create premium coin sound with multiple metallic layers
     createPremiumCoinSound(ctx, masterGain, startTime) {
-        // Primary coin ping - crisp and bright
         const coinPing = ctx.createOscillator();
         const coinGain = ctx.createGain();
         const coinFilter = ctx.createBiquadFilter();
@@ -727,7 +531,6 @@ class NotificationManager {
         coinPing.start(startTime);
         coinPing.stop(startTime + 0.3);
 
-        // Secondary metallic resonance - deeper and richer
         const resonance = ctx.createOscillator();
         const resGain = ctx.createGain();
         const resFilter = ctx.createBiquadFilter();
@@ -750,7 +553,6 @@ class NotificationManager {
         resonance.start(startTime);
         resonance.stop(startTime + 0.25);
 
-        // Tertiary harmonic - crystal-like overtones
         const crystal = ctx.createOscillator();
         const crystalGain = ctx.createGain();
         const crystalFilter = ctx.createBiquadFilter();
@@ -773,7 +575,6 @@ class NotificationManager {
         crystal.stop(startTime + 0.2);
     }
 
-    // Create magical sparkle effect
     createSparkleEffect(ctx, masterGain, startTime) {
         const sparkles = [
             { freq: 3520, delay: 0, duration: 0.1 },
@@ -806,7 +607,6 @@ class NotificationManager {
         });
     }
 
-    // Create satisfying completion chord
     createCompletionChord(ctx, masterGain, startTime) {
         const chord = [
             { freq: 523.25, gain: 0.4 }, // C5
@@ -839,7 +639,6 @@ class NotificationManager {
         });
     }
 
-    // Create subtle reverb tail
     createReverbTail(ctx, masterGain, startTime) {
         const tail = ctx.createOscillator();
         const tailGain = ctx.createGain();
@@ -863,30 +662,24 @@ class NotificationManager {
         tail.stop(startTime + 0.8);
     }
 
-    // Play payment sound (premium transaction sound)
     playPaymentSound() {
         try {
-            // Try to use Web Audio API for better sound quality
             if (!this.audioContext) {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
 
-            // Create a premium transaction success sound
             this.createPremiumTransactionSound();
         } catch (error) {
             console.warn('Web Audio API not available, trying fallback sound');
-            // Fallback to playing a simple professional sound
             this.playSimpleTransactionSound();
         }
     }
 
-    // Premium payment success sound (ultra-realistic transaction with luxury feel)
     createPremiumTransactionSound() {
         try {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
         
-            // Create master gain node with professional dynamics processing
             const masterGain = ctx.createGain();
             const compressor = ctx.createDynamicsCompressor();
             compressor.threshold.setValueAtTime(-24, now);
@@ -899,19 +692,14 @@ class NotificationManager {
             compressor.connect(ctx.destination);
             masterGain.gain.setValueAtTime(0.7, now);
             
-            // Stage 1: Premium card tap with NFC authenticity
             this.createCardTapSound(ctx, masterGain, now);
             
-            // Stage 2: Advanced processing with multiple tones
             this.createProcessingSequence(ctx, masterGain, now + 0.15);
             
-            // Stage 3: Luxury success melody with harmonics
             this.createLuxurySuccessSound(ctx, masterGain, now + 0.45);
             
-            // Stage 4: Digital confirmation with modern touch
             this.createDigitalConfirmation(ctx, masterGain, now + 0.8);
             
-            // Stage 5: Premium finishing touch with reverb
             this.createPremiumFinish(ctx, masterGain, now + 1.1);
 
             console.log('Ultra-premium transaction sound sequence played');
@@ -920,9 +708,7 @@ class NotificationManager {
         }
     }
 
-    // Create authentic card tap sound
     createCardTapSound(ctx, masterGain, startTime) {
-        // NFC activation sound - subtle electronic chirp
         const nfcChirp = ctx.createOscillator();
         const chirpGain = ctx.createGain();
         const chirpFilter = ctx.createBiquadFilter();
@@ -946,7 +732,6 @@ class NotificationManager {
         nfcChirp.start(startTime);
         nfcChirp.stop(startTime + 0.12);
 
-        // Card contact sound - subtle physical texture
         const contactSound = ctx.createOscillator();
         const contactGain = ctx.createGain();
         const contactFilter = ctx.createBiquadFilter();
@@ -969,9 +754,7 @@ class NotificationManager {
         contactSound.stop(startTime + 0.1);
     }
 
-    // Create sophisticated processing sequence
     createProcessingSequence(ctx, masterGain, startTime) {
-        // Primary processing tone - modern and clean
         const processingTone = ctx.createOscillator();
         const processGain = ctx.createGain();
         const processFilter = ctx.createBiquadFilter();
@@ -993,7 +776,6 @@ class NotificationManager {
         processingTone.start(startTime);
         processingTone.stop(startTime + 0.15);
 
-        // Secondary processing chirp - authentication feedback
         const authChirp = ctx.createOscillator();
         const authGain = ctx.createGain();
         const authFilter = ctx.createBiquadFilter();
@@ -1017,9 +799,7 @@ class NotificationManager {
         authChirp.stop(startTime + 0.18);
     }
 
-    // Create luxury success sound with rich harmonics
     createLuxurySuccessSound(ctx, masterGain, startTime) {
-        // Main success melody - sophisticated and uplifting
         const melody = [
             { freq: 523.25, time: 0, duration: 0.15 },    // C5
             { freq: 659.25, time: 0.08, duration: 0.2 },  // E5  
@@ -1051,7 +831,6 @@ class NotificationManager {
             osc.stop(startTime + note.time + note.duration);
         });
 
-        // Rich harmonic accompaniment
         const harmony = ctx.createOscillator();
         const harmonyGain = ctx.createGain();
         const harmonyFilter = ctx.createBiquadFilter();
@@ -1075,9 +854,7 @@ class NotificationManager {
         harmony.stop(startTime + 0.4);
     }
 
-    // Create digital confirmation with modern touch
     createDigitalConfirmation(ctx, masterGain, startTime) {
-        // Digital success ping - clean and modern
         const digitalPing = ctx.createOscillator();
         const pingGain = ctx.createGain();
         const pingFilter = ctx.createBiquadFilter();
@@ -1101,7 +878,6 @@ class NotificationManager {
         digitalPing.start(startTime);
         digitalPing.stop(startTime + 0.25);
 
-        // Subtle digital texture overlay
         const texture = ctx.createOscillator();
         const textureGain = ctx.createGain();
         const textureFilter = ctx.createBiquadFilter();
@@ -1124,9 +900,7 @@ class NotificationManager {
         texture.stop(startTime + 0.2);
     }
 
-    // Create premium finishing touch
     createPremiumFinish(ctx, masterGain, startTime) {
-        // Final luxury bell - crystal clear and satisfying
         const luxuryBell = ctx.createOscillator();
         const bellGain = ctx.createGain();
         const bellFilter = ctx.createBiquadFilter();
@@ -1149,7 +923,6 @@ class NotificationManager {
         luxuryBell.start(startTime);
         luxuryBell.stop(startTime + 0.8);
 
-        // Sophisticated reverb tail
         const reverbTail = ctx.createOscillator();
         const tailGain = ctx.createGain();
         const tailFilter = ctx.createBiquadFilter();
@@ -1172,7 +945,6 @@ class NotificationManager {
         reverbTail.stop(startTime + 1.0);
     }
 
-    // Enhanced cash register sound for older browsers
     playSimpleTransactionSound() {
         try {
             if (!this.audioContext) {
@@ -1182,7 +954,6 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Realistic cash register bell sequence with authentic frequencies
             const cashRegisterSequence = [
                 { freq: 1760, time: 0, duration: 0.5 },     // A6 - main bell
                 { freq: 2200, time: 0.1, duration: 0.4 },   // C#7 - harmony bell
@@ -1211,7 +982,6 @@ class NotificationManager {
         }
     }
 
-    // Play close sound (soft dismiss sound)
     playCloseSound() {
         if (!this.audioContext) return;
 
@@ -1231,7 +1001,6 @@ class NotificationManager {
         oscillator.stop(this.audioContext.currentTime + 0.2);
     }
 
-    // Show daily reminder notification
     showDailyReminder() {
         const title = 'Daily Reminder';
         const options = {
@@ -1243,14 +1012,11 @@ class NotificationManager {
         this.showNotification(title, options);
     }
 
-    // Check and show milestone notifications
     checkMilestones(stats) {
-        // Streak milestones
         if (stats.currentStreak > 0 && stats.currentStreak % 7 === 0) {
             this.showStreakNotification(stats.currentStreak);
         }
 
-        // Earnings milestones
         if (stats.totalEarned > 0 && stats.totalEarned % 500 === 0) {
             const title = 'Milestone Achieved!';
             const options = {
@@ -1262,17 +1028,14 @@ class NotificationManager {
         }
     }
 
-    // Test all notification types
     testAllNotifications() {
         console.log('Testing all notification types...');
         
-        // Test toast notifications
         this.showToast('Test Info Toast', 'info', 3000);
         setTimeout(() => this.showToast('Test Success Toast', 'success', 3000), 1000);
         setTimeout(() => this.showToast('Test Warning Toast', 'warning', 3000), 2000);
         setTimeout(() => this.showToast('Test Error Toast', 'error', 3000), 3000);
         
-        // Test browser notifications
         setTimeout(() => {
             this.showNotification('Test Browser Notification', {
                 body: 'This is a test browser notification',
@@ -1281,7 +1044,6 @@ class NotificationManager {
             });
         }, 4000);
         
-        // Test specific notifications
         setTimeout(() => this.showPaydayNotification(), 5000);
         setTimeout(() => this.showWorkCompletedNotification(), 6000);
         setTimeout(() => this.showStreakNotification(5), 7000);
@@ -1290,203 +1052,11 @@ class NotificationManager {
         this.showToast('All notification tests scheduled! Check your browser and app.', 'success', 5000);
     }
 
-    // Schedule daily reminders (enhanced implementation)
-    scheduleReminders() {
-        // Clear any existing intervals to prevent duplicates
-        if (this.reminderInterval) {
-            clearInterval(this.reminderInterval);
-        }
-        
-        // Check immediately on app load
-        this.checkForReminders();
-        
-        // Set up interval to check every minute for precise timing
-        this.reminderInterval = setInterval(() => {
-            this.checkForReminders();
-        }, 60000); // Check every minute
-        
-        console.log('[REMINDERS] Daily reminder system activated');
-    }
+    
 
-    // Enhanced reminder checking with better time management and user configuration
-    async checkForReminders() {
-        // Get user configuration for notifications
-        const config = this.getUserConfig();
-        
-        // Skip if notifications are disabled
-        if (config.NOTIFICATIONS_ENABLED === false) {
-            return;
-        }
-        
-        // Use IST timezone for all time calculations
-        const now = new Date();
-        const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-        const hour = istTime.getHours();
-        const minute = istTime.getMinutes();
-        const today = istTime.toISOString().split('T')[0];
-        const timeKey = `${hour}:${minute.toString().padStart(2, '0')}`;
-        
-        // Get configured reminder times
-        const paymentReminderTime = config.PAYMENT_REMINDER_TIME || '10:00';
-        const workReminderTime = config.WORK_REMINDER_TIME || '18:00';
-        
-        // Prevent duplicate notifications on the same day for the same time
-        const lastPaymentNotificationKey = `lastPaymentNotification_${today}`;
-        const lastWorkNotificationKey = `lastWorkNotification_${today}`;
-        const lastPaymentNotified = localStorage.getItem(lastPaymentNotificationKey);
-        const lastWorkNotified = localStorage.getItem(lastWorkNotificationKey);
-        
-        try {
-            // Payment Reminder (based on user configured time)
-            if (timeKey === paymentReminderTime && !lastPaymentNotified) {
-                localStorage.setItem(lastPaymentNotificationKey, 'true');
-                await this.checkPaymentReminder();
-            }
-            
-            // Work Reminder (based on user configured time, only if work not done today)
-            if (timeKey === workReminderTime && !lastWorkNotified) {
-                localStorage.setItem(lastWorkNotificationKey, 'true');
-                await this.checkWorkReminder(today);
-            }
-            
-            // Clean up old notification flags (older than 24 hours)
-            if (timeKey === '0:00') {
-                this.cleanupOldNotificationFlags();
-            }
-        } catch (error) {
-            console.error('Error checking reminders:', error);
-        }
-    }
-
-    // Get user configuration with fallback to defaults
-    getUserConfig() {
-        try {
-            if (window.ConfigManager && typeof window.ConfigManager.getConfig === 'function') {
-                return window.ConfigManager.getConfig();
-            } else if (window.R_SERVICE_CONFIG) {
-                return window.R_SERVICE_CONFIG;
-            } else {
-                // Fallback configuration
-                return {
-                    NOTIFICATIONS_ENABLED: true,
-                    PAYMENT_REMINDER_TIME: '10:00',
-                    WORK_REMINDER_TIME: '18:00',
-                    TIMEZONE: 'Asia/Kolkata'
-                };
-            }
-        } catch (error) {
-            console.error('Error getting user config:', error);
-            return {
-                NOTIFICATIONS_ENABLED: true,
-                PAYMENT_REMINDER_TIME: '10:00',
-                WORK_REMINDER_TIME: '18:00',
-                TIMEZONE: 'Asia/Kolkata'
-            };
-        }
-    }
     
-    // Clean up old notification flags
-    cleanupOldNotificationFlags() {
-        const keys = Object.keys(localStorage);
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-        
-        keys.forEach(key => {
-            // Clean up both old and new notification flag formats
-            if ((key.startsWith('lastNotification_') || 
-                 key.startsWith('lastPaymentNotification_') || 
-                 key.startsWith('lastWorkNotification_')) && 
-                key.includes(yesterdayStr)) {
-                localStorage.removeItem(key);
-            }
-        });
-    }
-    
-    // Enhanced payment reminder with better messaging
-    async checkPaymentReminder() {
-        try {
-            if (this.db) {
-                const stats = await this.db.getEarningsStats();
-                const unpaidWork = stats.unpaidWork || 0;
-                
-                const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
-                if (unpaidWork >= paymentThreshold) {
-                    const paydayAmount = Math.floor(unpaidWork / paymentThreshold) * 100;
-                    const extraDays = unpaidWork % paymentThreshold;
-                    
-                    this.showNotification('Daily Payment Reminder - R-Service Tracker', {
-                        body: `Good morning! You have ${unpaidWork} unpaid work days (₹${unpaidWork * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)}). ${paydayAmount > 0 ? `You can collect ₹${paydayAmount} right now!` : ''} ${extraDays > 0 ? `Plus ${extraDays} extra days pending.` : ''}`,
-                        tag: 'payment-reminder-7am',
-                        requireInteraction: true,
-                        icon: '/assets/icon-192.png',
-                        vibrate: [200, 100, 200, 100, 200, 100, 200],
-                        actions: [
-                            { action: 'open-app', title: 'Collect Payment' },
-                            { action: 'snooze', title: 'Remind Later' }
-                        ],
-                        onClick: () => {
-                            window.focus();
-                        }
-                    });
-                    
-                    // Enhanced in-app notification
-                    this.showToast(`Morning reminder: ${unpaidWork} work days (₹${unpaidWork * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)}) are ready for payment collection!`, 'warning', 8000);
-                    
-                    // Play attention sound
-                    this.playSystematicSound('payment', 'medium');
-                }
-            }
-        } catch (error) {
-            console.error('Error checking payment reminder:', error);
-        }
-    }
-    
-    // Enhanced work reminder with better messaging
-    async checkWorkReminder(today) {
-        try {
-            if (this.db) {
-                const workRecord = await this.db.getWorkRecord(today);
-                
-                if (!workRecord || workRecord.status !== 'completed') {
-                    const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-                    const currentStreak = (await this.db.getEarningsStats()).currentStreak || 0;
-                    
-                    this.showNotification('Daily Work Reminder - R-Service Tracker', {
-                        body: `Good evening! Don't forget to mark your work as completed for ${dayName}! (₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} pending) ${currentStreak > 0 ? `Your ${currentStreak}-day streak is waiting!` : 'Start your work streak today!'}`,
-                        tag: 'work-reminder-6pm',
-                        requireInteraction: false,
-                        icon: '/assets/icon-192.png',
-                        vibrate: [200, 100, 200],
-                        actions: [
-                            { action: 'open-app', title: 'Mark Complete' },
-                            { action: 'dismiss', title: 'Later' }
-                        ],
-                        onClick: () => {
-                            window.focus();
-                        }
-                    });
-                    
-                    // Enhanced in-app notification
-                    this.showToast(`Evening reminder: Mark today's work as completed to earn ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} ${currentStreak > 0 ? `and maintain your ${currentStreak}-day streak!` : 'and start building your streak!'}`, 'info', 8000);
-                    
-                    // Play gentle reminder sound
-                    this.playSystematicSound('success', 'medium');
-                }
-            }
-        } catch (error) {
-            console.error('Error checking work reminder:', error);
-        }
-    }
-    
-    // Set database reference for reminder checks
-
-    // ===== SYSTEMATIC AUDIO IMPROVEMENTS =====
-    
-    // Centralized audio settings for systematic approach
     getAudioSettings() {
         return {
-            // Base frequencies for systematic sound design
             baseFrequencies: {
                 success: 523.25,   // C5 - Success actions
                 payment: 659.25,   // E5 - Payment actions
@@ -1496,7 +1066,6 @@ class NotificationManager {
                 system: 440.00     // A4 - System events
             },
             
-            // Harmonic ratios for pleasing sound combinations
             harmonics: {
                 major: [1, 1.25, 1.5],      // Major triad
                 minor: [1, 1.2, 1.5],       // Minor triad
@@ -1504,7 +1073,6 @@ class NotificationManager {
                 notification: [1, 1.33, 2]   // Perfect fifth + octave
             },
             
-            // Standard durations for consistency
             durations: {
                 quick: 0.1,
                 short: 0.2,
@@ -1513,7 +1081,6 @@ class NotificationManager {
                 extended: 1.2
             },
             
-            // Volume levels for different contexts
             volumes: {
                 subtle: 0.1,
                 low: 0.2,
@@ -1524,7 +1091,6 @@ class NotificationManager {
         };
     }
     
-    // Enhanced systematic sound generator
     playSystematicSound(type, intensity = 'medium') {
         if (!this.audioContext) {
             this.createAudioContext();
@@ -1563,7 +1129,6 @@ class NotificationManager {
         }
     }
     
-    // Play harmonic chord for systematic musical approach
     playHarmonicChord(baseFreq, harmonicRatios, duration, volume) {
         const ctx = this.audioContext;
         const now = ctx.currentTime;
@@ -1582,7 +1147,6 @@ class NotificationManager {
             osc.frequency.setValueAtTime(baseFreq * ratio, now);
             osc.type = 'sine';
             
-            // Slight detuning for warmth
             if (index > 0) {
                 osc.frequency.setValueAtTime(baseFreq * ratio * (1 + Math.random() * 0.002 - 0.001), now);
             }
@@ -1595,7 +1159,6 @@ class NotificationManager {
         });
     }
     
-    // Create audio context if needed
     createAudioContext() {
         try {
             if (!this.audioContext && (window.AudioContext || window.webkitAudioContext)) {
@@ -1614,11 +1177,9 @@ class NotificationManager {
     }
 }
 
-// Export the notification manager
 window.NotificationManager = NotificationManager;
 console.log('[DEBUG] NotificationManager exported to window:', window.NotificationManager);
 
-// Add CSS animations for toast notifications
 const style = document.createElement('style');
 style.textContent = `
 @keyframes slideInRight {

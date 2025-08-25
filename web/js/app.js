@@ -1,4 +1,3 @@
-// Main Application for R-Service Tracker
 class RServiceTracker {
     constructor() {
         this.db = null;
@@ -18,22 +17,17 @@ class RServiceTracker {
         this.init();
     }
 
-    // Initialize the application
     async init() {
         try {
             console.log('Initializing R-Service Tracker...');
             
-            // Show loading screen
             this.showLoadingScreen();
             
-            // Initialize utilities
             this.utils = new Utils();
             
-            // Initialize database
             this.db = new DatabaseManager();
             await this.db.init();
             
-            // Initialize notification manager
             if (typeof NotificationManager !== 'undefined') {
                     this.notifications = new NotificationManager();
                 } else {
@@ -46,46 +40,30 @@ class RServiceTracker {
                 }
             this.notifications.setDatabase(this.db);
             
-            // Initialize charts manager
             this.charts = new ChartsManager(this.db);
             
-            // Initialize calendar manager
             this.calendar = new CalendarManager(this.db);
             
-            // Load saved theme
             this.loadTheme();
             
-            // Setup event listeners
             this.setupEventListeners();
             
-            // Load initial data
             await this.loadInitialData();
             
-            // Request notification permission on every visit
-            await this.requestNotificationPermission();
             
-            // Setup PWA install prompt
             this.setupPWAInstall();
             
-            // Schedule daily reminders
-            this.notifications.scheduleReminders();
             
-            // Hide loading screen and show main app
             this.hideLoadingScreen();
             
-            // Initialize views
             await this.initializeViews();
             
-            // Update current year in footer
             this.updateCurrentYear();
             
             this.isInitialized = true;
-            console.log('R-Service Tracker initialized successfully');
             
-            // Verify configuration is working
             this.verifyConfiguration();
             
-            // Make system testing available globally
             window.testNotifications = () => {
                 if (this.notifications) {
                     this.notifications.testAllNotifications();
@@ -98,41 +76,34 @@ class RServiceTracker {
                 console.log('[SYSTEM] Testing all R-Service Tracker systems...');
                 
                 try {
-                    // Test database
                                     console.log('[DATABASE] Testing database...');
                 const stats = await this.db.getEarningsStats();
                 console.log('[DATABASE] Database working - Current stats:', stats);
                 
-                // Test notifications
                 console.log('[NOTIFICATIONS] Testing notifications...');
                 this.notifications.testAllNotifications();
                 
-                // Test charts
                 console.log('[CHARTS] Testing charts...');
                 if (this.charts) {
                     await this.charts.updateCharts();
                     console.log('[CHARTS] Charts system working');
                 }
                 
-                // Test calendar
                 console.log('[CALENDAR] Testing calendar...');
                 if (this.calendar) {
                     this.calendar.render();
                     console.log('[CALENDAR] Calendar system working');
                 }
                 
-                // Test utilities
                 console.log('[UTILITIES] Testing utilities...');
                 const testDate = this.utils.formatDate(new Date());
                 console.log('[UTILITIES] Utilities working - Test date:', testDate);
                 
-                // Test PWA
                 console.log('[PWA] Testing PWA features...');
                 if ('serviceWorker' in navigator) {
                     console.log('[PWA] Service Worker supported');
                 }
                 
-                console.log('[SYSTEM] All systems test completed successfully!');
                     this.notifications.showToast('All systems tested successfully!', 'success', 5000);
                     
                 } catch (error) {
@@ -141,7 +112,6 @@ class RServiceTracker {
                 }
             };
             
-            // Check for advance payment notification after initialization
             setTimeout(() => {
                 this.checkAdvancePaymentNotification();
             }, 2000);
@@ -149,9 +119,7 @@ class RServiceTracker {
         } catch (error) {
             console.error('Error initializing application:', error);
             
-            // Try to initialize with basic functionality
             try {
-                // Ensure minimal config is available
                 if (!window.R_SERVICE_CONFIG) {
                     window.R_SERVICE_CONFIG = {
                         DAILY_WAGE: 25,
@@ -163,7 +131,6 @@ class RServiceTracker {
                     console.log('Fallback configuration set');
                 }
                 
-                // Initialize basic notifications if not already done
                 if (!this.notifications) {
                     if (typeof NotificationManager !== 'undefined') {
                     this.notifications = new NotificationManager();
@@ -175,10 +142,8 @@ class RServiceTracker {
                         }
                     }, 100);
                 }
-                    console.log('Fallback notifications initialized');
                 }
                 
-                // Hide loading screen and show basic UI
                 this.hideLoadingScreen();
                 this.showError('Application initialized with limited functionality. Some features may not work properly.');
                 
@@ -190,7 +155,6 @@ class RServiceTracker {
         }
     }
 
-    // Show loading screen
     showLoadingScreen() {
         const loadingScreen = document.getElementById('loadingScreen');
         const mainContainer = document.getElementById('mainContainer');
@@ -208,7 +172,6 @@ class RServiceTracker {
         }
     }
 
-    // Hide loading screen
     hideLoadingScreen() {
         const loadingScreen = document.getElementById('loadingScreen');
         const mainContainer = document.getElementById('mainContainer');
@@ -222,7 +185,6 @@ class RServiceTracker {
                         mainContainer.style.display = 'block';
                         mainContainer.classList.add('animate-fade-scale');
                         
-                        // Add staggered animations to dashboard cards
                         const cards = document.querySelectorAll('.card');
                         cards.forEach((card, index) => {
                             setTimeout(() => {
@@ -236,7 +198,6 @@ class RServiceTracker {
                             }, index * 150);
                         });
                         
-                        // Add floating animation to logo
                         setTimeout(() => {
                             const logo = document.querySelector('.logo i');
                             if (logo) {
@@ -252,21 +213,16 @@ class RServiceTracker {
         }, 2000); // Show loading for 2 seconds
     }
 
-    // Load theme
     loadTheme() {
-        // Load saved color and mode, or use defaults
         this.currentColor = localStorage.getItem('selected-color') || 'blue';
         this.currentMode = localStorage.getItem('selected-mode') || 'light';
         
-        // Update UI to reflect current selections
         this.updateColorSelection(this.currentColor);
         this.updateModeSelection(this.currentMode);
         
-        // Apply the theme
         this.applyTheme();
     }
 
-    // Update color selection
     updateColorSelection(color) {
         this.currentColor = color;
         const colorButtons = document.querySelectorAll('.color-btn');
@@ -276,11 +232,9 @@ class RServiceTracker {
                 btn.classList.add('active');
             }
         });
-        // Save to localStorage
         localStorage.setItem('selected-color', color);
     }
 
-    // Update mode selection
     updateModeSelection(mode) {
         this.currentMode = mode;
         const modeButtons = document.querySelectorAll('.mode-btn');
@@ -290,11 +244,9 @@ class RServiceTracker {
                 btn.classList.add('active');
             }
         });
-        // Save to localStorage
         localStorage.setItem('selected-mode', mode);
     }
 
-    // Apply current theme
     applyTheme() {
         const theme = `${this.currentColor}-${this.currentMode}`;
         this.utils.setTheme(theme);
@@ -303,21 +255,17 @@ class RServiceTracker {
         }
     }
 
-    // Setup event listeners
     setupEventListeners() {
-        // Done button
         const doneBtn = document.getElementById('doneBtn');
         if (doneBtn) {
             doneBtn.addEventListener('click', () => this.handleDoneClick());
         }
 
-        // Paid button
         const paidBtn = document.getElementById('paidBtn');
         if (paidBtn) {
             paidBtn.addEventListener('click', () => this.handlePaidClick());
         }
 
-        // Menu toggle
         const menuToggle = document.getElementById('menuToggle');
         const sideMenu = document.getElementById('sideMenu');
         const closeMenu = document.getElementById('closeMenu');
@@ -334,7 +282,6 @@ class RServiceTracker {
             });
         }
 
-        // Color buttons
         const colorButtons = document.querySelectorAll('.color-btn');
         colorButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -344,7 +291,6 @@ class RServiceTracker {
             });
         });
 
-        // Mode buttons
         const modeButtons = document.querySelectorAll('.mode-btn');
         modeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -354,19 +300,14 @@ class RServiceTracker {
             });
         });
 
-        // Menu options
         this.setupMenuOptions();
         
-        // Quick actions
         this.setupQuickActions();
         
-        // View navigation
         this.setupViewNavigation();
         
-        // Modal handlers
         this.setupModalHandlers();
 
-        // Click outside menu to close
         document.addEventListener('click', (e) => {
             if (sideMenu && !sideMenu.contains(e.target) && !menuToggle.contains(e.target)) {
                 sideMenu.classList.remove('open');
@@ -374,7 +315,6 @@ class RServiceTracker {
         });
     }
 
-    // Close menu helper method
     closeMenu() {
         const sideMenu = document.getElementById('sideMenu');
         if (sideMenu) {
@@ -382,15 +322,12 @@ class RServiceTracker {
         }
     }
 
-    // Setup menu options
     setupMenuOptions() {
-        // Clear data
         const clearDataBtn = document.getElementById('clearData');
         if (clearDataBtn) {
             clearDataBtn.addEventListener('click', () => this.handleClearData());
         }
 
-        // Export PDF
         const exportPDFBtn = document.getElementById('exportPDF');
         if (exportPDFBtn) {
             exportPDFBtn.addEventListener('click', () => {
@@ -399,13 +336,11 @@ class RServiceTracker {
             });
         }
 
-        // About
         const aboutBtn = document.getElementById('aboutApp');
         if (aboutBtn) {
             aboutBtn.addEventListener('click', () => this.showAboutModal());
         }
 
-        // View history
         const viewHistoryBtn = document.getElementById('viewHistory');
         if (viewHistoryBtn) {
             viewHistoryBtn.addEventListener('click', () => {
@@ -414,7 +349,6 @@ class RServiceTracker {
             });
         }
 
-        // View analytics
         const viewAnalyticsBtn = document.getElementById('viewAnalytics');
         if (viewAnalyticsBtn) {
             viewAnalyticsBtn.addEventListener('click', () => {
@@ -423,28 +357,22 @@ class RServiceTracker {
             });
         }
 
-        // Settings handlers
         this.setupSettingsHandlers();
     }
 
-    // Setup settings event handlers
     setupSettingsHandlers() {
         try {
-            // Check if settings elements exist
             const settingsSection = document.querySelector('.menu-section .settings-group');
             if (!settingsSection) {
                 console.warn('Settings section not found, skipping settings handlers');
                 return;
             }
 
-            // Load current settings and store original values
             this.loadSettings();
             this.storeOriginalSettings();
 
-            // Save settings
             const saveSettingsBtn = document.getElementById('saveSettings');
             if (saveSettingsBtn) {
-                // Initially disable the save button
                 this.disableSaveButton();
                 
                 saveSettingsBtn.addEventListener('click', (e) => {
@@ -457,13 +385,11 @@ class RServiceTracker {
                 });
             }
 
-            // Reset settings
             const resetSettingsBtn = document.getElementById('resetSettings');
             if (resetSettingsBtn) {
                 resetSettingsBtn.addEventListener('click', () => this.resetSettings());
             }
 
-            // Real-time validation and change detection for all inputs
             const incrementInput = document.getElementById('incrementValue');
             const durationInput = document.getElementById('paymentDuration');
             const maxPaymentInput = document.getElementById('maxPaymentAmount');
@@ -477,7 +403,6 @@ class RServiceTracker {
                 }
             });
 
-            // Setup notification settings handlers
             this.setupNotificationHandlers();
             
             console.log('Settings handlers setup completed');
@@ -486,13 +411,10 @@ class RServiceTracker {
         }
     }
 
-    // Setup notification settings handlers
     setupNotificationHandlers() {
         try {
-            // Load notification settings
             this.loadNotificationSettings();
 
-            // Enable/Disable notifications toggle
             const enableNotificationsToggle = document.getElementById('enableNotifications');
             if (enableNotificationsToggle) {
                 enableNotificationsToggle.addEventListener('change', () => {
@@ -501,11 +423,9 @@ class RServiceTracker {
                     this.checkForNotificationChanges();
                 });
                 
-                // Set initial icon state
                 this.updateNotificationToggleIcon(enableNotificationsToggle.checked);
             }
 
-            // Payment reminder time
             const paymentReminderTime = document.getElementById('paymentReminderTime');
             if (paymentReminderTime) {
                 paymentReminderTime.addEventListener('change', () => {
@@ -513,7 +433,6 @@ class RServiceTracker {
                 });
             }
 
-            // Work reminder time
             const workReminderTime = document.getElementById('workReminderTime');
             if (workReminderTime) {
                 workReminderTime.addEventListener('change', () => {
@@ -521,7 +440,6 @@ class RServiceTracker {
                 });
             }
 
-            // Save notification settings
             const saveNotificationBtn = document.getElementById('saveNotificationSettings');
             if (saveNotificationBtn) {
                 saveNotificationBtn.addEventListener('click', () => {
@@ -529,7 +447,6 @@ class RServiceTracker {
                 });
             }
 
-            // Test notifications
             const testNotificationsBtn = document.getElementById('testNotifications');
             if (testNotificationsBtn) {
                 testNotificationsBtn.addEventListener('click', () => {
@@ -537,7 +454,6 @@ class RServiceTracker {
                 });
             }
 
-            // Initial toggle state
             this.toggleNotificationSettings(enableNotificationsToggle?.checked ?? true);
 
             console.log('Notification handlers setup completed');
@@ -546,7 +462,6 @@ class RServiceTracker {
         }
     }
 
-    // Toggle notification settings visibility
     toggleNotificationSettings(enabled) {
         const notificationSettings = document.getElementById('notificationSettings');
         const workReminderSettings = document.getElementById('workReminderSettings');
@@ -568,7 +483,6 @@ class RServiceTracker {
         }
     }
 
-    // Update notification toggle icon based on state
     updateNotificationToggleIcon(enabled) {
         const icon = document.getElementById('notificationToggleIcon');
         if (icon) {
@@ -580,7 +494,6 @@ class RServiceTracker {
         }
     }
 
-    // Load notification settings
     loadNotificationSettings() {
         try {
             const config = this.getCurrentConfig();
@@ -602,14 +515,12 @@ class RServiceTracker {
                 workReminderTime.value = config.WORK_REMINDER_TIME || '18:00';
             }
 
-            // Store original notification settings
             this.originalNotificationSettings = {
                 NOTIFICATIONS_ENABLED: config.NOTIFICATIONS_ENABLED !== false,
                 PAYMENT_REMINDER_TIME: config.PAYMENT_REMINDER_TIME || '10:00',
                 WORK_REMINDER_TIME: config.WORK_REMINDER_TIME || '18:00'
             };
 
-            // Initialize notification save button state
             this.disableNotificationSaveButton();
 
             console.log('Notification settings loaded:', this.originalNotificationSettings);
@@ -618,7 +529,6 @@ class RServiceTracker {
         }
     }
 
-    // Check for notification settings changes
     checkForNotificationChanges() {
         if (!this.originalNotificationSettings) return;
 
@@ -636,7 +546,6 @@ class RServiceTracker {
             currentWorkTime !== this.originalNotificationSettings.WORK_REMINDER_TIME
         );
 
-        // Enable/disable save button based on changes
         if (hasChanges) {
             this.enableNotificationSaveButton();
         } else {
@@ -644,7 +553,6 @@ class RServiceTracker {
         }
     }
 
-    // Enable notification save button
     enableNotificationSaveButton() {
         const saveBtn = document.getElementById('saveNotificationSettings');
         if (saveBtn) {
@@ -658,7 +566,6 @@ class RServiceTracker {
         }
     }
 
-    // Disable notification save button
     disableNotificationSaveButton() {
         const saveBtn = document.getElementById('saveNotificationSettings');
         if (saveBtn) {
@@ -670,7 +577,6 @@ class RServiceTracker {
         }
     }
 
-    // Save notification settings
     saveNotificationSettings() {
         try {
             const enableNotifications = document.getElementById('enableNotifications');
@@ -687,7 +593,6 @@ class RServiceTracker {
             if (window.ConfigManager && typeof window.ConfigManager.saveUserConfig === 'function') {
                 saved = window.ConfigManager.saveUserConfig(newNotificationConfig);
             } else {
-                // Fallback: save directly to global config and localStorage
                 try {
                     const currentConfig = JSON.parse(localStorage.getItem('r-service-user-config') || '{}');
                     const updatedConfig = { ...currentConfig, ...newNotificationConfig };
@@ -703,11 +608,9 @@ class RServiceTracker {
                 if (this.notifications) {
                     this.notifications.showToast('Notification settings saved successfully!', 'success');
                     
-                    // Reschedule reminders with new settings
                     this.notifications.scheduleReminders();
                 }
                 
-                // Update original settings and disable save button
                 this.originalNotificationSettings = { ...newNotificationConfig };
                 this.disableNotificationSaveButton();
                 
@@ -725,7 +628,6 @@ class RServiceTracker {
         }
     }
 
-    // Test notifications
     testNotifications() {
         if (this.notifications) {
             this.notifications.testAllNotifications();
@@ -735,7 +637,6 @@ class RServiceTracker {
         }
     }
 
-    // Store original settings values for change detection
     storeOriginalSettings() {
         const config = this.getCurrentConfig();
         this.originalSettings = {
@@ -746,7 +647,6 @@ class RServiceTracker {
         console.log('Original settings stored:', this.originalSettings);
     }
 
-    // Check if settings have changed from original values
     checkForChanges() {
         if (!this.originalSettings) return;
 
@@ -766,7 +666,6 @@ class RServiceTracker {
 
         const isValid = this.validateSettings();
 
-        // Enable save button only if there are changes AND settings are valid
         const saveBtn = document.getElementById('saveSettings');
         if (saveBtn) {
             if (hasChanges && isValid) {
@@ -777,7 +676,6 @@ class RServiceTracker {
         }
     }
 
-    // Enable save button
     enableSaveButton() {
         const saveBtn = document.getElementById('saveSettings');
         if (saveBtn) {
@@ -791,7 +689,6 @@ class RServiceTracker {
         }
     }
 
-    // Disable save button
     disableSaveButton() {
         const saveBtn = document.getElementById('saveSettings');
         if (saveBtn) {
@@ -803,7 +700,6 @@ class RServiceTracker {
         }
     }
 
-    // Get current configuration
     getCurrentConfig() {
         let config = {};
         if (window.ConfigManager && typeof window.ConfigManager.getConfig === 'function') {
@@ -820,17 +716,14 @@ class RServiceTracker {
         return config;
     }
 
-    // Load settings into UI
     loadSettings() {
         try {
-            // Ensure config is available with fallbacks
             let config = {};
             if (window.ConfigManager && typeof window.ConfigManager.getConfig === 'function') {
                 config = window.ConfigManager.getConfig();
             } else if (window.R_SERVICE_CONFIG) {
                 config = window.R_SERVICE_CONFIG;
             } else {
-                // Ultimate fallback
                 config = {
                     INCREMENT_VALUE: 25,
                     PAYMENT_DAY_DURATION: 4,
@@ -847,10 +740,8 @@ class RServiceTracker {
             if (durationInput) durationInput.value = config.PAYMENT_DAY_DURATION || 4;
             if (maxPaymentInput) maxPaymentInput.value = config.MAX_PAYMENT_AMOUNT || 1000;
             
-            console.log('Settings loaded successfully:', config);
         } catch (error) {
             console.error('Error loading settings:', error);
-            // Set default values on error
             const incrementInput = document.getElementById('incrementValue');
             const durationInput = document.getElementById('paymentDuration');
             const maxPaymentInput = document.getElementById('maxPaymentAmount');
@@ -861,7 +752,6 @@ class RServiceTracker {
         }
     }
 
-    // Simplified validation system with minimal feedback
     validateSettings() {
         const incrementInput = document.getElementById('incrementValue');
         const durationInput = document.getElementById('paymentDuration');
@@ -870,7 +760,6 @@ class RServiceTracker {
 
         let isValid = true;
 
-        // Reset all styles first
         [incrementInput, durationInput, maxPaymentInput].forEach(input => {
             if (input) {
                 input.classList.remove('error');
@@ -879,10 +768,8 @@ class RServiceTracker {
             }
         });
 
-        // Clear existing error messages
         document.querySelectorAll('.validation-error').forEach(el => el.remove());
 
-        // Validate increment value
         if (incrementInput) {
             const increment = parseInt(incrementInput.value);
             
@@ -895,7 +782,6 @@ class RServiceTracker {
             }
         }
 
-        // Validate payment duration
         if (durationInput) {
             const duration = parseInt(durationInput.value);
             
@@ -908,7 +794,6 @@ class RServiceTracker {
             }
         }
 
-        // Validate max payment
         if (maxPaymentInput) {
             const maxPayment = parseInt(maxPaymentInput.value);
             
@@ -921,7 +806,6 @@ class RServiceTracker {
             }
         }
 
-        // Simple save button state
         if (saveBtn) {
             saveBtn.disabled = !isValid;
             saveBtn.style.opacity = isValid ? '1' : '0.5';
@@ -930,22 +814,18 @@ class RServiceTracker {
         return isValid;
     }
 
-    // Show contextual validation error with reduced vibration
     showValidationError(input, message) {
         input.classList.add('error');
         
-        // Add shake animation
         input.style.animation = 'shake 0.5s ease-in-out';
         setTimeout(() => {
             input.style.animation = '';
         }, 500);
         
-        // Reduced vibration for mobile devices
         if ('vibrate' in navigator) {
             navigator.vibrate([50]); // Single gentle vibration
         }
         
-        // Create contextual error message based on field
         let contextualMessage = message;
         const fieldId = input.id;
         const currentValue = input.value;
@@ -988,14 +868,12 @@ class RServiceTracker {
             }
         }
         
-        // Add enhanced error message
         const errorEl = document.createElement('div');
         errorEl.className = 'validation-error';
         errorEl.textContent = contextualMessage;
         input.parentElement.appendChild(errorEl);
     }
 
-    // Enhanced save settings with better feedback and system updates
     saveSettings() {
         try {
             if (!this.validateSettings()) {
@@ -1023,7 +901,6 @@ class RServiceTracker {
                 MAX_PAYMENT_AMOUNT: parseInt(maxPaymentInput.value) || 1000
             };
 
-            // Also update the legacy DAILY_WAGE and PAYMENT_THRESHOLD for compatibility
             newConfig.DAILY_WAGE = newConfig.INCREMENT_VALUE;
             newConfig.PAYMENT_THRESHOLD = newConfig.PAYMENT_DAY_DURATION;
 
@@ -1031,7 +908,6 @@ class RServiceTracker {
             if (window.ConfigManager && typeof window.ConfigManager.saveUserConfig === 'function') {
                 saved = window.ConfigManager.saveUserConfig(newConfig);
             } else {
-                // Fallback: save directly to global config and localStorage
                 try {
                     localStorage.setItem('r-service-user-config', JSON.stringify(newConfig));
                     window.R_SERVICE_CONFIG = { ...window.R_SERVICE_CONFIG, ...newConfig };
@@ -1046,21 +922,16 @@ class RServiceTracker {
                     this.notifications.showToast('Settings saved successfully!', 'success');
                 }
                 
-                // Immediately update original settings and disable save button
                 this.storeOriginalSettings();
                 this.disableSaveButton();
                 
-                // Show loading toast for regeneration and reset
                 const loadingToast = this.notifications ? this.notifications.showLoadingToast('Updating payment options and resetting saved amounts...') : null;
                 
-                // Reset all saved amount details when settings are saved
                 setTimeout(async () => {
                     try {
-                        // Clear all saved payments and work records to reset the system
                         if (this.db) {
                             console.log('Resetting all saved amount details...');
                             
-                            // Clear work records and payments (but keep settings)
                             await this.db.performTransaction(this.db.stores.workRecords, 'readwrite', (store) => {
                                 return store.clear();
                             });
@@ -1076,23 +947,18 @@ class RServiceTracker {
                             }
                         }
                         
-                        // Regenerate payment buttons with new settings
                         this.generatePaymentButtons();
                         
-                        // Update dashboard with new configuration and reset data
                         if (typeof this.updateDashboard === 'function') {
                             this.updateDashboard();
                         }
                         
-                        // Update payment period display if it exists
                         this.updatePaymentPeriodDisplay(newConfig.PAYMENT_DAY_DURATION);
                         
-                        // Complete loading toast
                         if (loadingToast && this.notifications) {
                             this.notifications.updateLoadingToast(loadingToast, 'System reset and updated!', 'success');
                         }
                         
-                        // Show completion feedback
                         if (this.notifications) {
                             this.notifications.showToast(`Configuration updated! Payment options: ${this.getGeneratedAmountPreview()}`, 'success', 6000);
                         }
@@ -1120,7 +986,6 @@ class RServiceTracker {
         }
     }
 
-    // Update current year in footer
     updateCurrentYear() {
         const currentYearElement = document.getElementById('currentYear');
         if (currentYearElement) {
@@ -1128,24 +993,19 @@ class RServiceTracker {
         }
     }
 
-    // Update payment period display throughout the app
     updatePaymentPeriodDisplay(days) {
-        // Update dashboard progress display
         const progressToPaydayEl = document.querySelector('.progress-to-payday, .payday-progress');
         if (progressToPaydayEl) {
             const currentProgress = parseInt(progressToPaydayEl.textContent.split('/')[0]) || 0;
             progressToPaydayEl.textContent = `${currentProgress}/${days}`;
         }
 
-        // Update any text mentioning "4 days"
         document.querySelectorAll('[data-payment-period]').forEach(el => {
             el.textContent = el.textContent.replace(/\d+ days?/, `${days} day${days > 1 ? 's' : ''}`);
         });
 
-        console.log(`Payment period display updated to ${days} days`);
     }
 
-    // Get preview of generated amounts for user feedback
     getGeneratedAmountPreview() {
         const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
         const amounts = window.ConfigManager ? window.ConfigManager.generatePaymentAmounts() : [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4];
@@ -1153,7 +1013,6 @@ class RServiceTracker {
         return amounts.length > 5 ? `${preview}...` : preview;
     }
 
-    // Enhanced reset settings with better UX
     resetSettings() {
         this.notifications.showConfirmation(
             'Are you sure you want to reset all settings to default values?\n\nThis will:\n• Set daily wage to ₹25\n• Set payment period to 4 days\n• Set maximum amount to ₹1000\n• Regenerate payment options',
@@ -1163,7 +1022,6 @@ class RServiceTracker {
                         window.ConfigManager.resetToDefaults();
                         this.loadSettings();
                         
-                        // Show loading for regeneration
                         const loadingToast = this.notifications.showLoadingToast('Resetting to defaults...');
                         
                         setTimeout(() => {
@@ -1171,10 +1029,8 @@ class RServiceTracker {
                             this.updateDashboard();
                             this.updatePaymentPeriodDisplay(4);
                             
-                            // Clear validation messages
                             document.querySelectorAll('.validation-error, .validation-warning, .validation-success, .validation-summary').forEach(el => el.remove());
                             
-                            // Reset input styles
                             document.querySelectorAll('.settings-input').forEach(input => {
                                 input.classList.remove('error', 'warning', 'success');
                                 input.style.borderColor = '';
@@ -1196,36 +1052,29 @@ class RServiceTracker {
         );
     }
 
-    // Setup quick actions
     setupQuickActions() {
-        // Balance sheet
         const balanceSheetBtn = document.getElementById('viewBalanceSheet');
         if (balanceSheetBtn) {
             balanceSheetBtn.addEventListener('click', () => this.showBalanceSheet());
         }
 
-        // Calendar
         const calendarBtn = document.getElementById('viewCalendar');
         if (calendarBtn) {
             calendarBtn.addEventListener('click', () => this.showCalendar());
         }
 
-        // Charts
         const chartsBtn = document.getElementById('viewCharts');
         if (chartsBtn) {
             chartsBtn.addEventListener('click', () => this.showAnalytics());
         }
 
-        // Daily streak (just shows info)
         const streakBtn = document.getElementById('dailyStreak');
         if (streakBtn) {
             streakBtn.addEventListener('click', () => this.showStreakInfo());
         }
     }
 
-    // Setup view navigation
     setupViewNavigation() {
-        // Close buttons for views
         const closeButtons = {
             'closeBalanceSheet': 'balanceSheetView',
             'closeAnalytics': 'analyticsView',
@@ -1244,9 +1093,7 @@ class RServiceTracker {
         });
     }
 
-    // Setup modal handlers
     setupModalHandlers() {
-        // About modal
         const aboutModal = document.getElementById('aboutModal');
         const closeModalBtns = document.querySelectorAll('.close-modal');
         
@@ -1256,7 +1103,6 @@ class RServiceTracker {
             });
         });
 
-        // Click outside modal to close
         if (aboutModal) {
             aboutModal.addEventListener('click', (e) => {
                 if (e.target === aboutModal) {
@@ -1266,10 +1112,8 @@ class RServiceTracker {
         }
     }
 
-    // Close current view and show dashboard
     closeCurrentView(view) {
         try {
-            // Hide all views first
             const allViews = ['balanceSheetView', 'analyticsView', 'calendarView'];
             allViews.forEach(viewId => {
                 const viewElement = document.getElementById(viewId);
@@ -1280,24 +1124,20 @@ class RServiceTracker {
                 }
             });
 
-            // Show dashboard with proper reset
             const dashboard = document.getElementById('dashboard');
             if (dashboard) {
                 dashboard.style.display = 'block';
                 dashboard.style.opacity = '1';
                 dashboard.style.transform = 'translateY(0)';
                 
-                // Remove any existing animation classes
                 dashboard.classList.remove('animate-fade-scale', 'animate-slide-up', 'animate-bounce-in');
                 
-                // Add fresh animation
                 setTimeout(() => {
                     dashboard.classList.add('animate-fade-scale');
                 }, 50);
             }
         } catch (error) {
             console.error('Error closing view:', error);
-            // Fallback - just show dashboard
             const dashboard = document.getElementById('dashboard');
             if (dashboard) {
                 dashboard.style.display = 'block';
@@ -1307,19 +1147,14 @@ class RServiceTracker {
         }
     }
 
-    // Load initial data and update UI
     async loadInitialData() {
         try {
-            // Get current stats
             this.currentStats = await this.db.getEarningsStats();
             
-            // Update dashboard
             this.updateDashboard();
             
-            // Check for pending payments
             await this.checkPendingPayments();
             
-            // Update today's status
             this.updateTodayStatus();
             
         } catch (error) {
@@ -1327,9 +1162,7 @@ class RServiceTracker {
         }
     }
 
-    // Debounced update dashboard for better performance
     updateDashboard() {
-        // Cancel previous update if still pending
         if (this.updateDashboardTimeout) {
             clearTimeout(this.updateDashboardTimeout);
         }
@@ -1339,21 +1172,17 @@ class RServiceTracker {
         }, 50);
     }
 
-    // Actual dashboard update implementation
     _performDashboardUpdate() {
-        // Add shimmer loading effect before updating
         const dashboardCards = document.querySelectorAll('.card');
         dashboardCards.forEach(card => {
             card.style.animation = 'fadeInUp 0.5s ease-out';
         });
 
-        // Update current date
         const currentDateEl = document.getElementById('currentDate');
         if (currentDateEl) {
             currentDateEl.textContent = this.utils.formatDate(new Date());
         }
 
-        // Update earnings info
         const currentEarningsEl = document.getElementById('currentEarnings');
         const daysWorkedEl = document.getElementById('daysWorked');
         const totalEarnedEl = document.getElementById('totalEarned');
@@ -1389,7 +1218,6 @@ class RServiceTracker {
             progressFillEl.style.width = `${progressPercent}%`;
         }
         
-        // Update progress bar - handle advance payments
         this.updateProgressBar(progressTextEl, progressFillEl);
         
         if (streakCountEl) {
@@ -1398,7 +1226,6 @@ class RServiceTracker {
         }
     }
 
-    // Update progress bar based on advance payment status
     async updateProgressBar(progressTextEl, progressFillEl) {
         try {
             const progressLabelEl = document.getElementById('progressLabel');
@@ -1407,15 +1234,12 @@ class RServiceTracker {
             console.log('Progress bar update - advance status:', advanceStatus);
             
             if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0) {
-                // Show advance payment progress
                 const workCompleted = advanceStatus.workCompletedForAdvance;
                 const workRequired = advanceStatus.workRequiredForAdvance;
                 
-                // Ensure we have valid numbers
                 const safeWorkCompleted = workCompleted || 0;
                 const safeWorkRequired = workRequired || 1; // Avoid division by zero
                 
-                // Calculate progress percentage
                 const progressPercent = Math.min((safeWorkCompleted / safeWorkRequired) * 100, 100);
                 console.log('Advance progress:', { workCompleted: safeWorkCompleted, workRequired: safeWorkRequired, progressPercent });
                 
@@ -1423,29 +1247,23 @@ class RServiceTracker {
                     progressLabelEl.textContent = `Advance Payment Progress (₹${advanceStatus.totalAdvanceAmount} paid)`;
                 }
                 if (progressTextEl) {
-                    // Always show in days for advance payment progress to match user expectations
-                    // Example: user worked 2 days, advance payment of ₹200 (8 days), show "2/8 days"
                     progressTextEl.textContent = `${safeWorkCompleted}/${safeWorkRequired} days`;
                 }
                 
                 if (progressFillEl) {
-                    // Ensure progress bar shows completion properly
                     let finalPercent;
                     if (safeWorkCompleted === 0) {
                         finalPercent = 0; // Empty if no work done
                     } else if (safeWorkCompleted >= safeWorkRequired) {
                         finalPercent = 100; // Full if work is complete or more
                     } else {
-                        // Show proportional progress, ensure it shows when work is done
                         finalPercent = Math.max(progressPercent, 10); // Minimum 10% visibility when work is started
                     }
                     
                     progressFillEl.style.width = `${finalPercent}%`;
-                    // Change color to green if work is completed, orange otherwise
                     progressFillEl.style.backgroundColor = safeWorkCompleted >= safeWorkRequired ? 'var(--success)' : 'var(--warning)';
                 }
             } else if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance === 0) {
-                // Advance fully paid back
                 if (progressLabelEl) {
                     progressLabelEl.textContent = 'Advance Completed';
                 }
@@ -1457,7 +1275,6 @@ class RServiceTracker {
                     progressFillEl.style.backgroundColor = 'var(--success)'; // Green when complete
                 }
             } else {
-                // Show normal payday progress
                 if (progressLabelEl) {
                     progressLabelEl.textContent = 'Progress to Payday';
                 }
@@ -1477,7 +1294,6 @@ class RServiceTracker {
             }
         } catch (error) {
             console.error('Error updating progress bar:', error);
-            // Fallback to normal progress
             if (progressTextEl) {
                 const progress = this.currentStats?.progressToPayday || 0;
                 const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
@@ -1494,7 +1310,6 @@ class RServiceTracker {
         }
     }
 
-    // Update today's status
     async updateTodayStatus() {
         const today = this.utils.getTodayString();
         const todayRecord = await this.db.getWorkRecord(today);
@@ -1503,7 +1318,6 @@ class RServiceTracker {
         const doneBtnEl = document.getElementById('doneBtn');
         
         if (todayRecord && todayRecord.status === 'completed') {
-            // Work is done today
             if (workStatusEl) {
                 workStatusEl.className = 'status-badge completed';
                 workStatusEl.innerHTML = '<i class="fas fa-check"></i> Work Completed';
@@ -1515,7 +1329,6 @@ class RServiceTracker {
                 doneBtnEl.innerHTML = '<i class="fas fa-check"></i> Already Done';
             }
         } else {
-            // Work not done yet
             if (workStatusEl) {
                 workStatusEl.className = 'status-badge pending';
                 workStatusEl.innerHTML = '<i class="fas fa-clock"></i> Not Started';
@@ -1528,16 +1341,13 @@ class RServiceTracker {
             }
         }
         
-        // Update paid button visibility
         await this.updatePaidButtonVisibility();
     }
 
-    // Check for pending payments and show paid button if needed
     async checkPendingPayments() {
         const workRecords = await this.db.getAllWorkRecords();
         const payments = await this.db.getAllPayments();
         
-        // Find unpaid completed work
         const unpaidRecords = workRecords.filter(record => 
             record.status === 'completed' && !this.isRecordPaid(record, payments)
         );
@@ -1545,11 +1355,9 @@ class RServiceTracker {
         const previousUnpaidCount = this.pendingUnpaidDates.length;
         this.pendingUnpaidDates = unpaidRecords.map(record => record.date);
         
-        // Check if we have any unpaid days
         if (this.pendingUnpaidDates.length > 0) {
             this.showPaidButton();
             
-            // Show payday notification and sound only when we reach multiples of 4 days
             if (this.pendingUnpaidDates.length % 4 === 0 && previousUnpaidCount % 4 !== 0) {
                 console.log('Payday reached! Showing notification and playing sound');
                 this.notifications.showPaydayNotification();
@@ -1560,19 +1368,13 @@ class RServiceTracker {
         }
     }
 
-    // Update paid button visibility
     async updatePaidButtonVisibility() {
         const paidBtn = document.getElementById('paidBtn');
         if (paidBtn) {
-            // Check if there are unpaid work days that can be paid
             await this.updatePendingUnpaidDates();
             
-            // Check advance payment status
             const advanceStatus = await this.db.getAdvancePaymentStatus();
             
-            // Show paid button if:
-            // 1. There are enough unpaid work days for regular payment (based on settings), OR
-            // 2. There are any unpaid work days and there's an outstanding advance to pay back
             const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
             const shouldShowPaidBtn = this.pendingUnpaidDates.length >= paymentThreshold || 
                                     (this.pendingUnpaidDates.length > 0 && advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0);
@@ -1585,19 +1387,16 @@ class RServiceTracker {
         }
     }
 
-    // Show paid button
     showPaidButton() {
         const paidBtn = document.getElementById('paidBtn');
         if (paidBtn) {
             paidBtn.style.display = 'inline-flex';
             paidBtn.style.animation = 'payoutButtonAppear 0.8s ease-in-out';
             
-            // Add pulsing effect to indicate importance
             paidBtn.classList.add('payday-ready');
         }
     }
 
-    // Hide paid button
     hidePaidButton() {
         const paidBtn = document.getElementById('paidBtn');
         if (paidBtn) {
@@ -1606,52 +1405,42 @@ class RServiceTracker {
         }
     }
 
-    // Handle done button click
     async handleDoneClick() {
         try {
             const today = this.utils.getTodayString();
+            const doneBtn = document.getElementById('doneBtn');
+            if (doneBtn) {
+                doneBtn.disabled = true;
+                doneBtn.innerHTML = '<i class="fas fa-check"></i> Already Done';
+                doneBtn.classList.add('already-done');
+            }
             console.log('Marking work as done for date:', today);
             
-            // Check if already done today
             const existingRecord = await this.db.getWorkRecord(today);
             if (existingRecord && existingRecord.status === 'completed') {
                 this.notifications.showToast('Work already marked as done for today!', 'warning');
                 return;
             }
             
-            // Add work record
             const result = await this.db.addWorkRecord(today, window.R_SERVICE_CONFIG?.DAILY_WAGE || 25, 'completed');
-            console.log('Work record added successfully:', result);
             
-            // Add visual feedback to done button
-            const doneBtn = document.getElementById('doneBtn');
-            if (doneBtn) {
-                doneBtn.style.animation = 'bounceIn 0.6s ease-out';
-                setTimeout(() => doneBtn.style.animation = '', 600);
-            }
             
-            // Play sound
             this.notifications.playSound('done');
             
-            // Show success notification
             this.notifications.showWorkCompletedNotification();
             this.notifications.showToast(`Great job! You earned ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} today`, 'success');
             
-            // Update stats and UI
             this.currentStats = await this.db.getEarningsStats();
             this.updateDashboard();
             this.updateTodayStatus();
             
-            // Check for milestones
             this.notifications.checkMilestones(this.currentStats);
             
-            // Update charts and calendar
             await this.charts.updateCharts();
             if (this.calendar) {
                 await this.calendar.updateCalendar();
             }
             
-            // Check if payment is due
             await this.checkPendingPayments();
             
         } catch (error) {
@@ -1660,7 +1449,6 @@ class RServiceTracker {
         }
     }
 
-    // Handle paid button click
     async handlePaidClick() {
         try {
             if (this.pendingUnpaidDates.length === 0) {
@@ -1668,7 +1456,6 @@ class RServiceTracker {
                 return;
             }
             
-            // Show payment selection modal
             this.showPaymentModal();
             
         } catch (error) {
@@ -1677,14 +1464,11 @@ class RServiceTracker {
         }
     }
 
-    // Update pending unpaid dates
     async updatePendingUnpaidDates() {
         try {
-            // Refresh data from database
             const workRecords = await this.db.getAllWorkRecords();
             const payments = await this.db.getAllPayments();
             
-            // Get unpaid work records
             const unpaidRecords = workRecords.filter(record => 
                 record.status === 'completed' && !this.isRecordPaid(record, payments)
             );
@@ -1696,14 +1480,12 @@ class RServiceTracker {
         }
     }
 
-    // Show payment selection modal
     async showPaymentModal() {
         const modal = document.getElementById('paymentModal');
         const unpaidDaysEl = document.getElementById('unpaidDaysCount');
         const pendingAmountEl = document.getElementById('pendingAmount');
         
         if (modal && unpaidDaysEl && pendingAmountEl) {
-            // Refresh pending dates before showing modal
             await this.updatePendingUnpaidDates();
             
             const pendingAmount = this.pendingUnpaidDates.length * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
@@ -1717,7 +1499,6 @@ class RServiceTracker {
         }
     }
 
-    // Generate payment buttons dynamically based on increment value
     generatePaymentButtons() {
         const container = document.getElementById('paymentButtons');
         if (!container) {
@@ -1726,27 +1507,22 @@ class RServiceTracker {
         }
 
         try {
-            // Clear existing buttons
             container.innerHTML = '';
 
-            // Get payment amounts from config with fallbacks
             let amounts = [];
             if (window.ConfigManager && typeof window.ConfigManager.generatePaymentAmounts === 'function') {
                 amounts = window.ConfigManager.generatePaymentAmounts();
             } else {
-                // Fallback amounts based on daily wage
                 const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
                 amounts = [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 1000];
                 console.warn('Using fallback payment amounts based on daily wage:', dailyWage);
             }
             
-            // Ensure we have valid amounts
             if (!Array.isArray(amounts) || amounts.length === 0) {
                 const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
                 amounts = [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 1000];
             }
             
-            // Create buttons for each amount
             amounts.forEach(amount => {
                 const button = document.createElement('button');
                 button.className = 'payment-btn';
@@ -1758,7 +1534,6 @@ class RServiceTracker {
             console.log(`Generated ${amounts.length} payment buttons with amounts:`, amounts);
         } catch (error) {
             console.error('Error generating payment buttons:', error);
-            // Create fallback buttons based on daily wage
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             const fallbackAmounts = [dailyWage, dailyWage*2, dailyWage*4, dailyWage*8, dailyWage*20, 1000];
             fallbackAmounts.forEach(amount => {
@@ -1771,27 +1546,21 @@ class RServiceTracker {
         }
     }
 
-    // Setup payment modal event handlers
     setupPaymentModalHandlers() {
         const modal = document.getElementById('paymentModal');
         const closeBtn = document.getElementById('closePaymentModal');
         
-        // Generate payment buttons first
         this.generatePaymentButtons();
 
-        // Close modal handlers
         const closeModal = () => {
             this.notifications.playCloseSound();
             modal.classList.remove('show');
-            // Clear selections
             document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
             this.selectedPaymentAmount = null;
-            // Hide payment summary
             const summaryEl = document.getElementById('paymentSummary');
             if (summaryEl) summaryEl.style.display = 'none';
         };
 
-        // Remove existing listeners to prevent duplicates
         if (closeBtn) {
             const newCloseBtn = closeBtn.cloneNode(true);
             closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
@@ -1802,10 +1571,8 @@ class RServiceTracker {
             if (e.target === modal) closeModal();
         });
 
-        // Enhanced payment button handlers using event delegation
         const container = document.getElementById('paymentButtons');
         if (container) {
-            // Remove existing listeners to prevent duplicates
             const newContainer = container.cloneNode(true);
             container.parentNode.replaceChild(newContainer, container);
             
@@ -1813,33 +1580,26 @@ class RServiceTracker {
                 if (e.target.classList.contains('payment-btn')) {
                     e.preventDefault();
                     
-                    // Remove previous selections
                     document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
                     
-                    // Select current button
                     e.target.classList.add('selected');
                     
                     const amount = parseInt(e.target.dataset.amount);
                     this.selectedPaymentAmount = amount;
                     
-                    // Add visual feedback
                     e.target.style.animation = 'bounceIn 0.6s ease-out';
                     setTimeout(() => e.target.style.animation = '', 600);
                     
-                    // Update payment summary
                     this.updatePaymentSummary(amount);
                     
-                    // Don't auto-process, wait for confirmation button
                 }
             });
         }
 
-        // Setup confirmation buttons
         const confirmBtn = document.getElementById('confirmPaymentBtn');
         const cancelBtn = document.getElementById('cancelPaymentBtn');
         
         if (confirmBtn) {
-            // Remove existing listeners to prevent duplicates
             const newConfirmBtn = confirmBtn.cloneNode(true);
             confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
             
@@ -1853,12 +1613,10 @@ class RServiceTracker {
         }
         
         if (cancelBtn) {
-            // Remove existing listeners to prevent duplicates
             const newCancelBtn = cancelBtn.cloneNode(true);
             cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
             
             newCancelBtn.addEventListener('click', () => {
-                // Clear selection and hide summary
                 document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
                 this.selectedPaymentAmount = null;
                 const summaryEl = document.getElementById('paymentSummary');
@@ -1867,7 +1625,6 @@ class RServiceTracker {
         }
     }
 
-    // Update payment summary display
     updatePaymentSummary(amount) {
         const summaryEl = document.getElementById('paymentSummary');
         const selectedAmountEl = document.getElementById('selectedAmountDisplay');
@@ -1878,13 +1635,11 @@ class RServiceTracker {
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             const totalWorkCompletedValue = this.pendingUnpaidDates.length * dailyWage;
             
-            // Advance payment only if amount exceeds TOTAL work completed (not just payment threshold)
             const isAdvance = amount > totalWorkCompletedValue;
             const workDaysCovered = Math.min(Math.floor(amount / dailyWage), this.pendingUnpaidDates.length);
             
             selectedAmountEl.textContent = `₹${amount}`;
             
-            // Improved payment type logic
             if (isAdvance) {
                 paymentTypeEl.textContent = 'Advance Payment';
                 paymentTypeEl.style.color = 'var(--warning)';
@@ -1895,31 +1650,26 @@ class RServiceTracker {
             
             workDaysCoveredEl.textContent = `${workDaysCovered} days`;
             
-            // Show summary
             summaryEl.style.display = 'block';
         }
     }
 
-    // Show payment confirmation
     showPaymentConfirmation(amount, closeModalCallback) {
         const message = `Process payment of ₹${amount}?`;
         this.notifications.showConfirmation(
             message,
             () => this.processPayment(amount, closeModalCallback),
             () => {
-                // Reset selection on cancel
                 document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
                 this.selectedPaymentAmount = null;
             }
         );
     }
 
-    // Process the selected payment
     async processPayment(amount, closeModalCallback) {
         try {
             console.log('Processing payment:', { amount, pendingDates: this.pendingUnpaidDates });
             
-            // Validate input
             if (!amount || amount <= 0) {
                 throw new Error('Invalid payment amount');
             }
@@ -1928,33 +1678,25 @@ class RServiceTracker {
                 throw new Error('Database not available');
             }
             
-            // Use unified amount calculation system
             const DAILY_WAGE = 25; // Should match database constant
             const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
             
-            // Fixed logic: Advance payment only if amount exceeds TOTAL work completed
             const isAdvancePayment = amount > totalWorkCompletedValue;
             
-            // Determine which work dates to mark as paid
             let workDatesToPay = [];
             if (totalWorkCompletedValue > 0) {
-                // Calculate how many days this payment covers
                 const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
                 workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
                 console.log('Work dates to pay:', workDatesToPay);
             }
             
-            // Add payment record with better date handling
             const paymentDate = this.utils.getTodayString();
             console.log('Adding payment to database:', { amount, workDatesToPay, paymentDate, isAdvancePayment });
             
             await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
-            console.log('Payment added successfully to database');
             
-            // Close modal
             closeModalCallback();
             
-            // Add visual feedback to paid button
             const paidBtn = document.getElementById('paidBtn');
             if (paidBtn) {
                 paidBtn.style.animation = 'bounceIn 0.6s ease-out';
@@ -1962,53 +1704,42 @@ class RServiceTracker {
                 setTimeout(() => paidBtn.style.animation = '', 600);
             }
             
-            // Play sound
             this.notifications.playSound('paid');
             
-            // Show success notification with improved messaging
             const paymentType = isAdvancePayment ? 'advance payment' : 'regular payment';
             this.notifications.showPaymentNotification(amount);
             this.notifications.showToast(`${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)} of ₹${amount} recorded successfully!`, 'success');
             
-            // Show completion notification if all pending work is paid
             if (workDatesToPay.length === this.pendingUnpaidDates.length && this.pendingUnpaidDates.length > 0) {
                 setTimeout(() => {
                     this.notifications.showToast(`All ${workDatesToPay.length} pending work days have been paid!`, 'info');
                 }, 1000);
             }
             
-            // Update stats and UI
             console.log('Updating stats and UI...');
             this.currentStats = await this.db.getEarningsStats();
             this.updateDashboard();
             
-            // Update pending dates (remove paid dates)
             this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
             await this.updatePaidButtonVisibility();
             
-            // Update charts and calendar with error handling
             try {
                 await this.charts.updateCharts();
-                console.log('Charts updated successfully');
             } catch (chartError) {
                 console.error('Error updating charts:', chartError);
-                // Don't fail the entire operation for chart errors
             }
             
             try {
                 if (this.calendar) {
                     await this.calendar.updateCalendar();
-                    console.log('Calendar updated successfully');
                 }
             } catch (calendarError) {
                 console.error('Error updating calendar:', calendarError);
-                // Don't fail the entire operation for calendar errors
             }
             
         } catch (error) {
             console.error('Error recording payment:', error);
             
-            // Provide more specific error messages
             let errorMessage = 'Error recording payment. Please try again.';
             if (error.message.includes('Database not available')) {
                 errorMessage = 'Database connection error. Please refresh the page and try again.';
@@ -2018,7 +1749,6 @@ class RServiceTracker {
             
             this.notifications.showToast(errorMessage, 'error');
             
-            // Close modal on error to prevent user confusion
             try {
                 closeModalCallback();
             } catch (closeError) {
@@ -2027,14 +1757,12 @@ class RServiceTracker {
         }
     }
 
-    // Helper method to check if record is paid
     isRecordPaid(record, payments) {
         return payments.some(payment => 
             payment.workDates.includes(record.date)
         );
     }
 
-    // Check and show advance payment notification
     async checkAdvancePaymentNotification() {
         try {
             const advanceStatus = await this.db.getAdvancePaymentStatus();
@@ -2054,28 +1782,13 @@ class RServiceTracker {
         }
     }
 
-    // Request notification permission
-    async requestNotificationPermission() {
-        try {
-            // Use the new enhanced permission checker
-            await this.notifications.checkAndRequestPermission();
-            return this.notifications.permission;
-        } catch (error) {
-            console.error('Error requesting notification permission:', error);
-            return 'denied';
-        }
-    }
 
-    // Initialize views
     async initializeViews() {
         try {
-            // Initialize charts
             await this.charts.initializeCharts();
             
-            // Initialize calendar
             await this.calendar.init();
             
-            // Setup balance sheet filters
             this.setupBalanceSheetFilters();
             
         } catch (error) {
@@ -2083,7 +1796,6 @@ class RServiceTracker {
         }
     }
 
-    // Show balance sheet
     async showBalanceSheet() {
         try {
             document.getElementById('dashboard').style.display = 'none';
@@ -2095,7 +1807,6 @@ class RServiceTracker {
         }
     }
 
-    // Render balance sheet
     async renderBalanceSheet() {
         try {
             console.log('Rendering balance sheet...');
@@ -2105,21 +1816,17 @@ class RServiceTracker {
             console.log('Work records found:', workRecords.length);
             console.log('Payments found:', payments.length);
             
-            // Sort records by date (newest first)
             const sortedRecords = workRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            // Create table
             const tableHtml = this.createBalanceSheetTable(sortedRecords, payments);
             
             const tableContainer = document.getElementById('balanceSheetTable');
             if (tableContainer) {
                 tableContainer.innerHTML = tableHtml;
-                console.log('Balance sheet table updated');
             } else {
                 console.error('Table container not found');
             }
             
-            // Update filters
             this.updateBalanceSheetFilters(sortedRecords);
             
         } catch (error) {
@@ -2128,9 +1835,7 @@ class RServiceTracker {
         }
     }
 
-    // Create balance sheet table
     createBalanceSheetTable(records, payments) {
-        // Create work records table
         let html = `
             <div class="balance-sheet-section">
                 <h3><i class="fas fa-calendar-check"></i> Work Records</h3>
@@ -2187,9 +1892,7 @@ class RServiceTracker {
             </div>
         `;
         
-        // Add payments section
         if (payments.length > 0) {
-            // Sort payments by date (newest first)
             const sortedPayments = payments.sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
             
             html += `
@@ -2240,7 +1943,6 @@ class RServiceTracker {
         return html;
     }
 
-    // Get payment information for a specific work record
     getPaymentInfoForRecord(record, payments) {
         const payment = payments.find(payment => 
             payment.workDates.includes(record.date)
@@ -2251,13 +1953,11 @@ class RServiceTracker {
         } : null;
     }
 
-    // Update balance sheet filters
     updateBalanceSheetFilters(records) {
         const monthFilter = document.getElementById('monthFilter');
         const yearFilter = document.getElementById('yearFilter');
         
         if (monthFilter && yearFilter) {
-            // Get unique months and years
             const months = new Set();
             const years = new Set();
             
@@ -2266,14 +1966,12 @@ class RServiceTracker {
                 years.add(record.year);
             });
             
-            // Populate month filter
             monthFilter.innerHTML = '<option value="all">All Months</option>';
             Array.from(months).sort((a, b) => a - b).forEach(month => {
                 const monthName = new Date(2000, month - 1, 1).toLocaleDateString('en-US', { month: 'long' });
                 monthFilter.innerHTML += `<option value="${month}">${monthName}</option>`;
             });
             
-            // Populate year filter
             yearFilter.innerHTML = '<option value="all">All Years</option>';
             Array.from(years).sort((a, b) => b - a).forEach(year => {
                 yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
@@ -2281,7 +1979,6 @@ class RServiceTracker {
         }
     }
 
-    // Setup balance sheet filters
     setupBalanceSheetFilters() {
         const monthFilter = document.getElementById('monthFilter');
         const yearFilter = document.getElementById('yearFilter');
@@ -2295,7 +1992,6 @@ class RServiceTracker {
         }
     }
 
-    // Filter balance sheet
     async filterBalanceSheet() {
         try {
             const monthFilter = document.getElementById('monthFilter');
@@ -2311,7 +2007,6 @@ class RServiceTracker {
             const workRecords = await this.db.getAllWorkRecords();
             const payments = await this.db.getAllPayments();
             
-            // Filter records based on selected month and year
             let filteredRecords = workRecords;
             
             if (selectedMonth !== 'all') {
@@ -2324,16 +2019,13 @@ class RServiceTracker {
             
             console.log('Filtered records:', filteredRecords.length, 'out of', workRecords.length);
             
-            // Sort records by date (newest first)
             const sortedRecords = filteredRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            // Create filtered table
             const tableHtml = this.createBalanceSheetTable(sortedRecords, payments);
             
             const tableContainer = document.getElementById('balanceSheetTable');
             if (tableContainer) {
                 tableContainer.innerHTML = tableHtml;
-                console.log('Balance sheet table updated with filters');
             }
             
         } catch (error) {
@@ -2342,26 +2034,22 @@ class RServiceTracker {
         }
     }
 
-    // Show analytics
     async showAnalytics() {
         try {
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('analyticsView').style.display = 'block';
             
-            // Update charts
             await this.charts.updateCharts();
         } catch (error) {
             console.error('Error showing analytics:', error);
         }
     }
 
-    // Show calendar
     async showCalendar() {
         try {
             const dashboard = document.getElementById('dashboard');
             const calendarView = document.getElementById('calendarView');
             
-            // Hide dashboard with fade out
             if (dashboard) {
                 dashboard.style.opacity = '0';
                 dashboard.style.transform = 'translateY(-20px)';
@@ -2370,13 +2058,11 @@ class RServiceTracker {
                 }, 200);
             }
             
-            // Show calendar with animations
             if (calendarView) {
                 setTimeout(() => {
                     calendarView.style.display = 'block';
                     calendarView.classList.add('animate-slide-up');
                     
-                    // Add animation to calendar grid after a delay
                     setTimeout(() => {
                         const calendarGrid = document.getElementById('calendarGrid');
                         if (calendarGrid) {
@@ -2386,7 +2072,6 @@ class RServiceTracker {
                 }, 200);
             }
             
-            // Update calendar
             if (this.calendar) {
                 await this.calendar.updateCalendar();
             }
@@ -2395,7 +2080,6 @@ class RServiceTracker {
         }
     }
 
-    // Show streak info
     showStreakInfo() {
         const message = this.currentStats.currentStreak > 0 
             ? `Amazing! You have a ${this.currentStats.currentStreak} day work streak! Keep it up!`
@@ -2404,7 +2088,6 @@ class RServiceTracker {
         this.notifications.showToast(message, 'info');
     }
 
-    // Handle clear data
     handleClearData() {
         console.log('Clear data button clicked');
         this.notifications.showConfirmation(
@@ -2416,19 +2099,16 @@ class RServiceTracker {
                     
                     this.notifications.showToast('All data cleared successfully', 'success');
                     
-                    // Reset UI
                     this.currentStats = await this.db.getEarningsStats();
                     this.updateDashboard();
                     await this.updateTodayStatus();
                     this.hidePaidButton();
                     
-                    // Update views
                     await this.charts.updateCharts();
                     if (this.calendar) {
                         await this.calendar.updateCalendar();
                     }
                     
-                    console.log('Data cleared and UI updated');
                 } catch (error) {
                     console.error('Error clearing data:', error);
                     this.notifications.showToast('Error clearing data: ' + error.message, 'error');
@@ -2437,7 +2117,6 @@ class RServiceTracker {
         );
     }
 
-    // Handle export PDF
     async handleExportPDF() {
         try {
             console.log('Starting PDF export...');
@@ -2452,7 +2131,6 @@ class RServiceTracker {
             
             if (success) {
                 this.notifications.updateLoadingToast(loadingToast, 'PDF exported successfully!', 'success');
-                console.log('PDF export completed successfully');
             } else {
                 this.notifications.updateLoadingToast(loadingToast, 'Error exporting PDF', 'error');
                 console.log('PDF export failed');
@@ -2464,13 +2142,11 @@ class RServiceTracker {
         }
     }
 
-    // Generate export data
     async generateExportData() {
         const workRecords = await this.db.getAllWorkRecords();
         const payments = await this.db.getAllPayments();
         const stats = await this.db.getEarningsStats();
         
-        // Add payment status to work records
         const enhancedRecords = workRecords.map(record => ({
             ...record,
             paid: this.isRecordPaid(record, payments)
@@ -2483,7 +2159,6 @@ class RServiceTracker {
         };
     }
 
-    // Show about modal
     showAboutModal() {
         const aboutModal = document.getElementById('aboutModal');
         if (aboutModal) {
@@ -2491,7 +2166,6 @@ class RServiceTracker {
         }
     }
 
-    // Show error message
     showError(message) {
         if (this.notifications) {
             this.notifications.showToast(message, 'error');
@@ -2500,26 +2174,19 @@ class RServiceTracker {
         }
     }
 
-    // Handle app updates (if service worker was implemented)
     handleAppUpdate() {
-        // This would be used with service workers for PWA functionality
         console.log('App update available');
     }
 
-    // Setup PWA install prompt and service worker
     setupPWAInstall() {
-        // Register service worker for better notification support
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(registration => {
-                    console.log('Service Worker registered successfully:', registration);
                     
-                    // Update service worker if needed
                     registration.addEventListener('updatefound', () => {
                         console.log('Service Worker update found');
                     });
                     
-                    // Set registration for notifications
                     this.serviceWorkerRegistration = registration;
                 })
                 .catch(error => {
@@ -2529,14 +2196,12 @@ class RServiceTracker {
             console.log('Service Worker not supported');
         }
 
-        // PWA install prompt
         let deferredPrompt;
         
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             
-            // Show install button or prompt
             const installBtn = document.getElementById('installBtn');
             if (installBtn) {
                 installBtn.style.display = 'block';
@@ -2552,7 +2217,6 @@ class RServiceTracker {
             }
         });
         
-        // Check if already installed
         window.addEventListener('appinstalled', () => {
             console.log('PWA was installed');
             const installBtn = document.getElementById('installBtn');
@@ -2562,7 +2226,6 @@ class RServiceTracker {
         });
     }
 
-    // Verify configuration is working
     verifyConfiguration() {
         console.log('Verifying configuration...');
         const config = window.R_SERVICE_CONFIG || {};
@@ -2574,7 +2237,6 @@ class RServiceTracker {
             console.log('PAYMENT_THRESHOLD:', config.PAYMENT_THRESHOLD);
             console.log('INCREMENT_VALUE:', config.INCREMENT_VALUE);
             
-            // Also verify ConfigManager if available
             if (window.ConfigManager) {
                 console.log('[CONFIG] ConfigManager is available');
                 try {
@@ -2589,7 +2251,6 @@ class RServiceTracker {
         } else {
             console.warn('[CONFIG] Configuration values are missing or invalid. Falling back to defaults.');
             console.log('Current Config:', config);
-            // Fallback to defaults if config is missing or invalid
             window.R_SERVICE_CONFIG = {
                 DAILY_WAGE: 25,
                 PAYMENT_THRESHOLD: 4,
@@ -2602,7 +2263,6 @@ class RServiceTracker {
     }
 }
 
-// Performance monitoring
 const performanceMonitor = {
     startTime: performance.now(),
     markTime: (label) => {
@@ -2613,18 +2273,15 @@ const performanceMonitor = {
     }
 };
 
-// Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     performanceMonitor.markTime('DOM-loaded');
     
-    // Use requestIdleCallback for better performance
     if (window.requestIdleCallback) {
         requestIdleCallback(() => {
             performanceMonitor.markTime('App-init-start');
             window.app = new RServiceTracker();
         });
     } else {
-        // Fallback for older browsers
         setTimeout(() => {
             performanceMonitor.markTime('App-init-start');
             window.app = new RServiceTracker();
@@ -2632,12 +2289,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Handle beforeunload for data safety
 window.addEventListener('beforeunload', (e) => {
-    // Could save any pending data here if needed
 });
 
-// Handle online/offline status
 window.addEventListener('online', () => {
     console.log('App is online');
 });
