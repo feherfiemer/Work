@@ -656,9 +656,15 @@ class NotificationManager {
             masterGain.connect(ctx.destination);
             masterGain.gain.setValueAtTime(0.5, now);
 
-            // Multiple coin drop sounds for realism
-            const coinFreqs = [800, 650, 750]; // Different coin sizes
-            coinFreqs.forEach((freq, index) => {
+            // Enhanced coin drop sequence with different coin types
+            const coinSequence = [
+                { freq: 1200, size: 'quarter', time: 0, duration: 0.18, volume: 0.5 },
+                { freq: 900, size: 'nickel', time: 0.06, duration: 0.15, volume: 0.45 },
+                { freq: 800, size: 'penny', time: 0.12, duration: 0.12, volume: 0.4 },
+                { freq: 650, size: 'dime', time: 0.18, duration: 0.1, volume: 0.35 }
+            ];
+            
+            coinSequence.forEach((coin, index) => {
                 const coinOsc = ctx.createOscillator();
                 const coinGain = ctx.createGain();
                 const coinFilter = ctx.createBiquadFilter();
@@ -667,35 +673,35 @@ class NotificationManager {
                 coinFilter.connect(coinGain);
                 coinGain.connect(masterGain);
                 
-                // Metallic coin sound with realistic bounce
+                // More realistic metallic coin resonance
                 coinOsc.type = 'triangle';
                 coinFilter.type = 'bandpass';
-                coinFilter.frequency.setValueAtTime(1500 + index * 200, now + index * 0.05);
-                coinFilter.Q.setValueAtTime(4, now + index * 0.05);
+                coinFilter.frequency.setValueAtTime(coin.freq * 1.8, now + coin.time);
+                coinFilter.Q.setValueAtTime(6, now + coin.time);
                 
-                coinOsc.frequency.setValueAtTime(freq, now + index * 0.05);
-                coinOsc.frequency.exponentialRampToValueAtTime(freq * 0.5, now + index * 0.05 + 0.15);
-                coinGain.gain.setValueAtTime(0.4 - index * 0.1, now + index * 0.05);
-                coinGain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.05 + 0.3);
+                coinOsc.frequency.setValueAtTime(coin.freq, now + coin.time);
+                coinOsc.frequency.exponentialRampToValueAtTime(coin.freq * 0.4, now + coin.time + coin.duration);
+                coinGain.gain.setValueAtTime(coin.volume, now + coin.time);
+                coinGain.gain.exponentialRampToValueAtTime(0.01, now + coin.time + coin.duration);
                 
-                coinOsc.start(now + index * 0.05);
-                coinOsc.stop(now + index * 0.05 + 0.3);
+                coinOsc.start(now + coin.time);
+                coinOsc.stop(now + coin.time + coin.duration);
             });
 
-            // Success chime (like mobile payment success)
-            const successOsc = ctx.createOscillator();
-            const successGain = ctx.createGain();
+            // Cash register "cha-ching" bell after coins
+            const chingOsc = ctx.createOscillator();
+            const chingGain = ctx.createGain();
             
-            successOsc.connect(successGain);
-            successGain.connect(masterGain);
+            chingOsc.connect(chingGain);
+            chingGain.connect(masterGain);
             
-            successOsc.type = 'sine';
-            successOsc.frequency.setValueAtTime(1320, now + 0.25); // E6 note - pleasant and uplifting
-            successGain.gain.setValueAtTime(0.4, now + 0.25);
-            successGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+            chingOsc.type = 'sine';
+            chingOsc.frequency.setValueAtTime(1760, now + 0.3); // A6 note - classic cash register bell
+            chingGain.gain.setValueAtTime(0.6, now + 0.3);
+            chingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
             
-            successOsc.start(now + 0.25);
-            successOsc.stop(now + 0.8);
+            chingOsc.start(now + 0.3);
+            chingOsc.stop(now + 0.9);
 
             console.log('Realistic coin collection sound played');
         } catch (error) {
@@ -731,27 +737,28 @@ class NotificationManager {
             masterGain.connect(ctx.destination);
             masterGain.gain.setValueAtTime(0.6, now);
             
-            // ATM/Card reader processing sound
-            const processingOsc = ctx.createOscillator();
-            const processingGain = ctx.createGain();
-            const processingFilter = ctx.createBiquadFilter();
+            // ATM/POS terminal beep sequence (transaction approved)
+            const beepSequence = [
+                { freq: 800, time: 0, duration: 0.1 },    // Card reader beep
+                { freq: 1000, time: 0.12, duration: 0.08 }, // Processing beep
+                { freq: 1200, time: 0.22, duration: 0.12 }  // Approval beep
+            ];
             
-            processingOsc.connect(processingFilter);
-            processingFilter.connect(processingGain);
-            processingGain.connect(masterGain);
-            
-            processingOsc.type = 'sawtooth';
-            processingFilter.type = 'bandpass';
-            processingFilter.frequency.setValueAtTime(800, now);
-            processingFilter.Q.setValueAtTime(2, now);
-            
-            processingOsc.frequency.setValueAtTime(200, now);
-            processingOsc.frequency.linearRampToValueAtTime(180, now + 0.1);
-            processingGain.gain.setValueAtTime(0.3, now);
-            processingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-            
-            processingOsc.start(now);
-            processingOsc.stop(now + 0.15);
+            beepSequence.forEach((beep, index) => {
+                const beepOsc = ctx.createOscillator();
+                const beepGain = ctx.createGain();
+                
+                beepOsc.connect(beepGain);
+                beepGain.connect(masterGain);
+                
+                beepOsc.type = 'square';
+                beepOsc.frequency.setValueAtTime(beep.freq, now + beep.time);
+                beepGain.gain.setValueAtTime(0.3, now + beep.time);
+                beepGain.gain.exponentialRampToValueAtTime(0.01, now + beep.time + beep.duration);
+                
+                beepOsc.start(now + beep.time);
+                beepOsc.stop(now + beep.time + beep.duration);
+            });
             
             // Classic cash register drawer opening
             const drawerOsc = ctx.createOscillator();
