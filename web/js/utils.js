@@ -400,25 +400,61 @@ class Utils {
             doc.circle(200 + (i * 2), 5 + (i * 2), 0.5, 'F');
         }
         
-        // Professional separator line with enhanced styling
-        doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(1);
-        doc.line(15, 45, 195, 45);
+        // Professional gradient separator border with enhanced styling
+        const borderY = 45;
+        const borderHeight = 2;
+        const borderWidth = 180;
+        const borderStartX = 15;
         
-        // Add subtle decorative elements at line ends
-        doc.setFillColor(...colors.primary);
-        doc.circle(15, 45, 1, 'F');
-        doc.circle(195, 45, 1, 'F');
+        // Create gradient effect for the border
+        const gradientSteps = 20;
+        const stepWidth = borderWidth / gradientSteps;
+        
+        for (let i = 0; i < gradientSteps; i++) {
+            const progress = i / gradientSteps;
+            const [r, g, b] = colors.primary;
+            const [ar, ag, ab] = colors.accent || colors.primary;
+            
+            // Interpolate between primary and accent colors
+            const gradR = Math.round(r + (ar - r) * progress);
+            const gradG = Math.round(g + (ag - g) * progress);
+            const gradB = Math.round(b + (ab - b) * progress);
+            
+            doc.setFillColor(gradR, gradG, gradB);
+            doc.rect(borderStartX + (i * stepWidth), borderY, stepWidth + 0.5, borderHeight, 'F');
+        }
+        
+        // Add subtle decorative elements at border ends with theme colors
+        doc.setFillColor(...colors.accent || colors.primary);
+        doc.circle(15, 46, 1, 'F');
+        doc.circle(195, 46, 1, 'F');
     }
 
     addFooter(doc, colors) {
         const footerY = 285;
         
-        // Footer background
-        doc.setFillColor(245, 245, 245);
+        // Footer background with theme colors
+        doc.setFillColor(...colors.light);
         doc.rect(0, footerY, 210, 12, 'F');
         
-        // Footer content
+        // Footer border with theme gradient
+        const borderSteps = 10;
+        const stepWidth = 210 / borderSteps;
+        for (let i = 0; i < borderSteps; i++) {
+            const progress = i / borderSteps;
+            const [r, g, b] = colors.primary;
+            const [ar, ag, ab] = colors.accent || colors.primary;
+            
+            // Create subtle gradient line at top of footer
+            const gradR = Math.round(r + (ar - r) * progress);
+            const gradG = Math.round(g + (ag - g) * progress);
+            const gradB = Math.round(b + (ab - b) * progress);
+            
+            doc.setFillColor(gradR, gradG, gradB);
+            doc.rect(i * stepWidth, footerY, stepWidth + 0.5, 0.5, 'F');
+        }
+        
+        // Footer content with consistent alignment
         doc.setExoFont('normal');
         doc.setFontSize(7);
         doc.setTextColor(...colors.secondary);
@@ -426,7 +462,7 @@ class Utils {
         doc.text('R-Service Tracker - Professional Work Management System', 15, footerY + 5);
         doc.text('Generated automatically - All data remains private on your device', 15, footerY + 8);
         
-        // Page number (for multi-page support)
+        // Page number (for multi-page support) - right aligned
         doc.text(`Page ${doc.getCurrentPageInfo().pageNumber}`, 185, footerY + 8);
         
         // Security notice
@@ -434,17 +470,30 @@ class Utils {
         doc.text('🔒 Privacy Protected', 150, footerY + 5);
     }
 
+    // Helper function for consistent section headers
+    addSectionHeader(doc, colors, title, yPos, height = 15, isLight = false) {
+        if (isLight) {
+            doc.setFillColor(...colors.light);
+            doc.setTextColor(...colors.secondary);
+        } else {
+            doc.setFillColor(...colors.secondary);
+            doc.setTextColor(255, 255, 255);
+        }
+        
+        doc.rect(15, yPos - 5, 180, height, 'F');
+        doc.setExoFont('bold');
+        doc.setFontSize(14);
+        doc.text(title, 20, yPos + 5);
+        
+        return yPos;
+    }
+
     addCompanyInfo(doc, colors, yPos) {
         // Add some spacing before the section
         yPos += 5;
         
-        doc.setFillColor(...colors.light);
-        doc.rect(15, yPos - 5, 180, 25, 'F');
-        
-        doc.setExoFont('bold');
-        doc.setFontSize(14);
-        doc.setTextColor(...colors.secondary);
-        doc.text('SERVICE PROVIDER INFORMATION', 20, yPos + 5);
+        // Use consistent section header styling
+        yPos = this.addSectionHeader(doc, colors, 'SERVICE PROVIDER INFORMATION', yPos, 25, true);
         
         doc.setExoFont('normal');
         doc.setFontSize(10);
@@ -462,13 +511,8 @@ class Utils {
             yPos = 20;
         }
         
-        doc.setFillColor(...colors.primary);
-        doc.rect(15, yPos - 5, 180, 15, 'F');
-        
-        doc.setExoFont('bold');
-        doc.setFontSize(14);
-        doc.setTextColor(255, 255, 255);
-        doc.text('EXECUTIVE SUMMARY', 20, yPos + 5);
+        // Use consistent section header
+        yPos = this.addSectionHeader(doc, colors, 'EXECUTIVE SUMMARY', yPos);
         yPos += 20;
         
         const metrics = [
@@ -505,13 +549,8 @@ class Utils {
             yPos = 20;
         }
         
-        doc.setFillColor(...colors.light);
-        doc.rect(15, yPos - 5, 180, 15, 'F');
-        
-        doc.setExoFont('bold');
-        doc.setFontSize(14);
-        doc.setTextColor(...colors.secondary);
-        doc.text('FINANCIAL ANALYTICS', 20, yPos + 5);
+        // Use consistent section header
+        yPos = this.addSectionHeader(doc, colors, 'FINANCIAL ANALYTICS', yPos, 15, true);
         yPos += 25;
         
         const avgEarningsPerDay = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
@@ -570,13 +609,8 @@ class Utils {
             yPos = 20;
         }
         
-        doc.setFillColor(...colors.secondary);
-        doc.rect(15, yPos - 5, 180, 15, 'F');
-        
-        doc.setExoFont('bold');
-        doc.setFontSize(14);
-        doc.setTextColor(255, 255, 255);
-        doc.text('DETAILED WORK RECORDS', 20, yPos + 5);
+        // Use consistent section header
+        yPos = this.addSectionHeader(doc, colors, 'DETAILED WORK RECORDS', yPos);
         yPos += 25;
         
         doc.setFillColor(...colors.light);
@@ -661,13 +695,8 @@ class Utils {
             yPos = 20;
         }
         
-        doc.setFillColor(...colors.success);
-        doc.rect(15, yPos - 5, 180, 15, 'F');
-        
-        doc.setExoFont('bold');
-        doc.setFontSize(14);
-        doc.setTextColor(255, 255, 255);
-        doc.text('PAYMENT TRANSACTION HISTORY', 20, yPos + 5);
+        // Use consistent section header
+        yPos = this.addSectionHeader(doc, colors, 'PAYMENT TRANSACTION HISTORY', yPos);
         yPos += 25;
         
         const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
@@ -755,13 +784,8 @@ class Utils {
             yPos = 20;
         }
         
-        doc.setFillColor(...colors.warning);
-        doc.rect(15, yPos - 5, 180, 15, 'F');
-        
-        doc.setExoFont('bold');
-        doc.setFontSize(14);
-        doc.setTextColor(255, 255, 255);
-        doc.text('PERFORMANCE INSIGHTS AND RECOMMENDATIONS', 20, yPos + 5);
+        // Use consistent section header
+        yPos = this.addSectionHeader(doc, colors, 'PERFORMANCE INSIGHTS AND RECOMMENDATIONS', yPos);
         yPos += 25;
         
         const workDays = summary.totalWorked || 0;
