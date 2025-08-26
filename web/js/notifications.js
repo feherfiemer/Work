@@ -471,15 +471,21 @@ class NotificationManager {
     
     playSoundType(soundType) {
         if (soundType === 'done') {
-            // Premium work completion sound sequence
+            // Premium work completion sound sequence with celebratory layers
             this.playSuccessSound(); 
-            setTimeout(() => this.playSystematicSound('success', 'high'), 300);
+            setTimeout(() => this.playSystematicSound('success', 'high'), 200);
+            setTimeout(() => this.playSystematicSound('success', 'medium'), 400);
             setTimeout(() => this.playSystematicSound('success', 'low'), 600);
+            // Add achievement chime
+            setTimeout(() => this.createAchievementChime(), 800);
         } else if (soundType === 'paid') {
-            // Ultra-premium payment sound sequence
+            // Ultra-premium payment sound sequence with luxury confirmation
             this.playPaymentSound();
-            setTimeout(() => this.playSystematicSound('payment', 'high'), 800);
-            setTimeout(() => this.playSystematicSound('payment', 'medium'), 1200);
+            setTimeout(() => this.playSystematicSound('payment', 'high'), 600);
+            setTimeout(() => this.playSystematicSound('payment', 'medium'), 900);
+            setTimeout(() => this.createLuxuryConfirmation(), 1200);
+            // Add cash register finale
+            setTimeout(() => this.createCashRegisterFinale(), 1500);
         }
     }
 
@@ -1175,6 +1181,128 @@ class NotificationManager {
             console.warn('Could not create audio context:', error);
         }
     }
+    // Create achievement chime for work completion
+    createAchievementChime() {
+        if (!this.audioContext) return;
+        
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create a beautiful bell-like chime
+            const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 - Major chord
+            
+            frequencies.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(freq, now);
+                
+                filter.type = "lowpass";
+                filter.frequency.setValueAtTime(freq * 2, now);
+                filter.Q.setValueAtTime(15, now);
+                
+                const startTime = now + (index * 0.1);
+                gain.gain.setValueAtTime(0.3, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 1.5);
+            });
+        } catch (error) {
+            console.warn("Error creating achievement chime:", error);
+        }
+    }
+    
+    // Create luxury confirmation sound for payments
+    createLuxuryConfirmation() {
+        if (!this.audioContext) return;
+        
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create sophisticated confirmation tone
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc1.connect(filter);
+            osc2.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc1.type = "triangle";
+            osc2.type = "sine";
+            
+            osc1.frequency.setValueAtTime(800, now);
+            osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.3);
+            
+            osc2.frequency.setValueAtTime(400, now);
+            osc2.frequency.exponentialRampToValueAtTime(600, now + 0.3);
+            
+            filter.type = "bandpass";
+            filter.frequency.setValueAtTime(1000, now);
+            filter.Q.setValueAtTime(8, now);
+            
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+            
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + 0.8);
+            osc2.stop(now + 0.8);
+        } catch (error) {
+            console.warn("Error creating luxury confirmation:", error);
+        }
+    }
+    
+    // Create cash register finale sound
+    createCashRegisterFinale() {
+        if (!this.audioContext) return;
+        
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create realistic cash register "cha-ching" finale
+            const frequencies = [440, 550, 660, 880]; // Rich harmonic content
+            
+            frequencies.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = index < 2 ? "sawtooth" : "triangle";
+                osc.frequency.setValueAtTime(freq, now);
+                
+                filter.type = "bandpass";
+                filter.frequency.setValueAtTime(freq * 1.5, now);
+                filter.Q.setValueAtTime(12, now);
+                
+                const startTime = now + (index * 0.05);
+                gain.gain.setValueAtTime(0.2, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.4);
+            });
+        } catch (error) {
+            console.warn("Error creating cash register finale:", error);
+        }
+    }
+
     setDatabase(db) {
         this.db = db;
     }
@@ -1233,3 +1361,4 @@ style.textContent = `
 }
 `;
 document.head.appendChild(style);
+

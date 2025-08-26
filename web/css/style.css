@@ -4335,3 +4335,96 @@ button.disabled:hover {
   color: var(--text-primary) !important;
 }
 
+
+/* White outline for selected/active buttons in monochrome dark theme */
+[data-theme="monochrome-dark"] .btn:focus,
+[data-theme="monochrome-dark"] button:focus,
+[data-theme="monochrome-dark"] .btn:active,
+[data-theme="monochrome-dark"] button:active {
+  outline: 2px solid #FFFFFF !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme="monochrome-dark"] .btn.selected,
+[data-theme="monochrome-dark"] button.selected,
+[data-theme="monochrome-dark"] .payment-btn.selected {
+  outline: 2px solid #FFFFFF !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme="monochrome-dark"] .color-btn.active,
+[data-theme="monochrome-dark"] .mode-btn.active {
+  outline: 2px solid #FFFFFF !important;
+  outline-offset: 2px !important;
+}
+
+
+/* Mark as Paid Button - Consistent Styling Across All Themes */
+#paidBtn {
+  background: var(--success) !important;
+  color: white !important;
+  border: 2px solid var(--success) !important;
+  transition: all 0.3s ease !important;
+}
+
+#paidBtn:hover {
+  background: var(--success) !important;
+  opacity: 0.9 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(var(--success-alpha), 0.4) !important;
+}
+
+#paidBtn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 4px 15px rgba(var(--success-alpha), 0.3) !important;
+}
+
+#paidBtn:disabled {
+  background: var(--success) !important;
+  color: white !important;
+  border: 2px solid var(--success) !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
+#paidBtn:disabled:hover {
+  background: var(--success) !important;
+  color: white !important;
+  opacity: 0.6 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Monochrome dark theme specific paid button styling */
+[data-theme="monochrome-dark"] #paidBtn {
+  background: var(--success) !important;
+  color: var(--background) !important;
+  border: 2px solid var(--success) !important;
+}
+
+[data-theme="monochrome-dark"] #paidBtn:hover {
+  background: var(--success) !important;
+  color: var(--background) !important;
+  opacity: 0.9 !important;
+}
+
+[data-theme="monochrome-dark"] #paidBtn:disabled {
+  background: var(--success) !important;
+  color: var(--background) !important;
+  border: 2px solid var(--success) !important;
+  opacity: 0.6 !important;
+}
+
+[data-theme="monochrome-dark"] #paidBtn:disabled:hover {
+  background: var(--success) !important;
+  color: var(--background) !important;
+  opacity: 0.6 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
