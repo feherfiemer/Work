@@ -129,14 +129,27 @@ class Utils {
             }
 
             console.log('PDF Export: jsPDF is available');
-            const doc = new jsPDF();
+            const doc = new jsPDF({
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'portrait'
+            });
             console.log('PDF Export: jsPDF document created');
+            
+            // Set clean document properties to override any default titles
+            doc.setProperties({
+                title: 'R-Service Tracker Report',
+                subject: 'Work Management Report',
+                author: 'R-Service Tracker',
+                creator: 'R-Service Tracker v2.1.2',
+                producer: 'R-Service Tracker PDF Generator',
+                keywords: 'work tracker, payment report, R-Service'
+            });
             
             const colors = this.getPDFColorsFromTheme();
             console.log('PDF Export: Using theme colors:', colors);
             
             this.addHeader(doc, colors);
-            this.addFooter(doc, colors);
             
             let yPos = 65;
             
@@ -162,7 +175,7 @@ class Utils {
                 yPos = this.addPerformanceMetrics(doc, colors, data.summary, yPos);
             }
             
-            this.addFooter(doc, colors, data);
+            this.addFooter(doc, colors);
             
             console.log('PDF Export: Saving PDF with filename:', filename);
             doc.save(filename);
