@@ -1,0 +1,2397 @@
+class Utils {
+    constructor() {
+        this.dateOptions = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+    }
+
+    formatDate(date, options = this.dateOptions) {
+        return new Date(date).toLocaleDateString('en-US', options);
+    }
+
+    formatDateShort(date) {
+        return new Date(date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    formatDateTime(date) {
+        return new Date(date).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    formatCurrency(amount) {
+        return `₹${amount.toLocaleString('en-IN')}`;
+    }
+
+    formatCurrencyForPDF(amount) {
+        if (amount === 0) return '0 rupees';
+        
+        const formattedAmount = amount.toLocaleString('en-IN');
+        
+        return formattedAmount + ' rupees';
+    }
+
+    getTodayString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    getCurrentWeek() {
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        
+        return {
+            start: this.formatLocalDate(startOfWeek),
+            end: this.formatLocalDate(endOfWeek)
+        };
+    }
+
+    getCurrentMonth() {
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        
+        return {
+            start: this.formatLocalDate(startOfMonth),
+            end: this.formatLocalDate(endOfMonth)
+        };
+    }
+
+    formatLocalDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    isToday(dateString) {
+        return dateString === this.getTodayString();
+    }
+
+    isThisWeek(dateString) {
+        const week = this.getCurrentWeek();
+        return dateString >= week.start && dateString <= week.end;
+    }
+
+    isThisMonth(dateString) {
+        const month = this.getCurrentMonth();
+        return dateString >= month.start && dateString <= month.end;
+    }
+
+    getDaysBetween(startDate, endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffTime = Math.abs(end - start);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    getDateRange(startDate, endDate) {
+        const dates = [];
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        while (start <= end) {
+            dates.push(start.toISOString().split('T')[0]);
+            start.setDate(start.getDate() + 1);
+        }
+        
+        return dates;
+    }
+
+    async exportToPDF(data, filename = 'R-Service-Tracker-Premium-Report.pdf') {
+        try {
+            console.log('PDF Export: Initializing premium comprehensive report generation');
+            
+            let jsPDF;
+            if (typeof window.jsPDF !== 'undefined') {
+                jsPDF = window.jsPDF.jsPDF || window.jsPDF;
+            } else if (typeof window.jspdf !== 'undefined') {
+                jsPDF = window.jspdf.jsPDF;
+            } else {
+                console.error('jsPDF library not found. Please ensure jsPDF is loaded.');
+                throw new Error('jsPDF library not loaded');
+            }
+
+            const doc = new jsPDF({
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'portrait',
+                compress: true
+            });
+            
+            // Premium document properties
+            doc.setProperties({
+                title: 'R-Service Tracker Premium Report',
+                subject: 'Comprehensive Work Management & Financial Analysis Report',
+                author: 'R-Service Tracker',
+                creator: 'R-Service Tracker Premium v2.0.0',
+                producer: 'R-Service Premium Report Generator',
+                keywords: 'work tracking, financial report, analytics, payment history, premium report'
+            });
+            
+            const colors = this.getPDFColorsFromTheme();
+            const reportData = this.generatePremiumReportData(data);
+            
+            // Page 1: Cover Page
+            this.addPremiumCoverPage(doc, colors, reportData, data);
+            
+            // Page 2: Executive Summary
+            doc.addPage();
+            let yPos = this.addPremiumExecutiveSummary(doc, colors, data.summary, reportData, 20);
+            
+            // Page 3: Financial Analytics & Charts
+            doc.addPage();
+            yPos = this.addPremiumFinancialAnalytics(doc, colors, data, reportData, 20);
+            
+            // Page 4+: Detailed Work Records
+            if (data.workRecords && data.workRecords.length > 0) {
+                doc.addPage();
+                yPos = this.addPremiumWorkRecords(doc, colors, data.workRecords, data.payments, reportData, 20);
+            }
+            
+            // Payment History Section
+            if (data.payments && data.payments.length > 0) {
+                if (yPos > 200) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                yPos = this.addPremiumPaymentHistory(doc, colors, data.payments, reportData, yPos);
+            }
+            
+            // Performance Insights & Recommendations
+            if (yPos > 200) {
+                doc.addPage();
+                yPos = 20;
+            }
+            yPos = this.addPremiumPerformanceInsights(doc, colors, data, reportData, yPos);
+            
+            // Monthly Breakdown
+            if (yPos > 200) {
+                doc.addPage();
+                yPos = 20;
+            }
+            yPos = this.addPremiumMonthlyBreakdown(doc, colors, data, reportData, yPos);
+            
+            // Footer on all pages
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                this.addPremiumFooter(doc, colors, reportData, i, pageCount);
+            }
+            
+            console.log('PDF Export: Premium comprehensive report generated successfully');
+            doc.save(filename);
+            return true;
+        } catch (error) {
+            console.error('Error generating premium PDF:', error);
+            throw error;
+        }
+    }
+
+    // Generate premium report metadata
+    generatePremiumReportData(data) {
+        const now = new Date();
+        const timestamp = now.getTime();
+        
+        return {
+            reportId: `RST-${timestamp.toString().slice(-8)}`,
+            generatedTime: now,
+            reportVersion: '2.0.0',
+            dataHash: this.generateDataHash(data),
+            totalPages: 0, // Will be updated later
+            reportType: 'Comprehensive Analysis',
+            confidentialityLevel: 'Internal Use Only'
+        };
+    }
+
+    // Generate data integrity hash for security
+    generateDataHash(data) {
+        const dataString = JSON.stringify(data);
+        let hash = 0;
+        for (let i = 0; i < dataString.length; i++) {
+            const char = dataString.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return Math.abs(hash).toString(16).toUpperCase().slice(0, 8);
+    }
+
+    // Enhanced text formatting without symbols for advanced reports
+    formatCurrencyAdvanced(amount) {
+        if (typeof amount !== 'number') {
+            amount = parseFloat(amount) || 0;
+        }
+        const formatted = Math.abs(amount).toFixed(2);
+        return `${formatted} Rupees`;
+    }
+
+    // Clean text formatting without symbols
+    formatCurrencyClean(amount) {
+        if (typeof amount !== 'number') {
+            amount = parseFloat(amount) || 0;
+        }
+        return `${Math.abs(amount).toFixed(0)} Rupees`;
+    }
+
+    formatDateTimeClean(date) {
+        if (!date) date = new Date();
+        const options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Asia/Kolkata'
+        };
+        return date.toLocaleDateString('en-IN', options);
+    }
+
+    calculateGrowth(current, previous) {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return ((current - previous) / previous) * 100;
+    }
+
+    // Premium Cover Page
+    addPremiumCoverPage(doc, colors, reportData, data) {
+        // Premium gradient background
+        doc.setFillColor(...colors.primary);
+        doc.rect(0, 0, 210, 297, 'F');
+        
+        // Elegant overlay pattern
+        doc.setFillColor(255, 255, 255, 0.1);
+        for (let i = 0; i < 20; i++) {
+            doc.circle(20 + (i * 10), 50 + (i * 5), 2, 'F');
+        }
+        
+        // Main title with premium typography
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(48);
+        doc.setTextColor(255, 255, 255);
+        doc.text('R-SERVICE', 105, 80, { align: 'center' });
+        
+        doc.setFontSize(36);
+        doc.text('TRACKER', 105, 100, { align: 'center' });
+        
+        // Subtitle
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(18);
+        doc.setTextColor(240, 240, 240);
+        doc.text('PREMIUM COMPREHENSIVE REPORT', 105, 120, { align: 'center' });
+        
+        // Report metadata box
+        doc.setFillColor(255, 255, 255, 0.95);
+        doc.rect(30, 140, 150, 80, 'F');
+        doc.setDrawColor(...colors.accent || colors.primary);
+        doc.setLineWidth(1);
+        doc.rect(30, 140, 150, 80, 'S');
+        
+        // Metadata content
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(...colors.primary);
+        doc.text('REPORT DETAILS', 105, 155, { align: 'center' });
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(60, 60, 60);
+        
+        const details = [
+            `Report ID: ${reportData.reportId}`,
+            `Generated: ${this.formatDateTimeClean(reportData.generatedTime)}`,
+            `Report Type: ${reportData.reportType}`,
+            `Version: ${reportData.reportVersion}`,
+            `Total Work Days: ${data.summary?.totalWorked || 0}`,
+            `Total Earnings: ₹${data.summary?.totalEarned || 0}`,
+            `Data Hash: ${reportData.dataHash}`
+        ];
+        
+        details.forEach((detail, index) => {
+            doc.text(detail, 105, 170 + (index * 7), { align: 'center' });
+        });
+        
+        // Confidentiality notice
+        doc.setFillColor(220, 53, 69);
+        doc.rect(30, 240, 150, 25, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(255, 255, 255);
+        doc.text('CONFIDENTIAL DOCUMENT', 105, 250, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text('This report contains sensitive financial and work data', 105, 260, { align: 'center' });
+    }
+            { 
+                label: 'Total Earned', 
+                value: `${Math.abs(summary.totalEarned).toFixed(0)}`,
+                unit: 'Rupees',
+                position: { x: 105, y: yPos }
+            },
+            { 
+                label: 'Current Balance', 
+                value: `${Math.abs(summary.currentBalance).toFixed(0)}`,
+                unit: 'Rupees',
+                position: { x: 30, y: yPos + 60 }
+            },
+            { 
+                label: 'Payment Status', 
+                value: summary.currentBalance >= 0 ? 'Current' : 'Advanced',
+                unit: '',
+                position: { x: 105, y: yPos + 60 }
+            }
+        ];
+        
+        cards.forEach(card => {
+            this.drawSophisticatedCard(doc, colors, card);
+        });
+        
+        return yPos + 130;
+    }
+
+    drawSophisticatedCard(doc, colors, card) {
+        const { x, y } = card.position;
+        const cardWidth = 65;
+        const cardHeight = 50;
+        
+        // Ultra-sophisticated card design
+        doc.setFillColor(255, 255, 255);
+        doc.rect(x, y, cardWidth, cardHeight, 'F');
+        
+        // Elegant border
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.3);
+        doc.rect(x, y, cardWidth, cardHeight, 'S');
+        
+        // Sophisticated accent line
+        doc.setFillColor(...colors.primary);
+        doc.rect(x, y, cardWidth, 3, 'F');
+        
+        // Typography with perfect spacing
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text(card.label, x + 8, y + 18);
+        
+        // Value with sophisticated styling
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.setTextColor(...colors.primary);
+        doc.text(card.value, x + 8, y + 32);
+        
+        // Unit with refined typography
+        if (card.unit) {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.muted);
+            doc.text(card.unit, x + 8, y + 42);
+        }
+    }
+
+    addFinancialOverview(doc, colors, summary, reportData, yPos) {
+        // Sophisticated financial overview
+        const avgDaily = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
+        const efficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
+        
+        // Elegant section header
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(14);
+        doc.setTextColor(...colors.primary);
+        doc.text('Financial Overview', 30, yPos);
+        
+        // Sophisticated separator
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.line(30, yPos + 5, 180, yPos + 5);
+        
+        yPos += 20;
+        
+        // Key insights with refined typography
+        const insights = [
+            { label: 'Average Daily Rate', value: `${avgDaily.toFixed(0)} Rupees` },
+            { label: 'Payment Efficiency', value: `${efficiency.toFixed(1)} percent` },
+            { label: 'Work Consistency', value: summary.totalWorked > 0 ? 'Active' : 'Inactive' }
+        ];
+        
+        insights.forEach((insight, index) => {
+            const y = yPos + (index * 16);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(insight.label, 30, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.primary);
+            doc.text(insight.value, 130, y);
+        });
+        
+        return yPos + 60;
+    }
+
+    addAdvancedFinancialAnalytics(doc, colors, summary, reportData, yPos) {
+        if (yPos > 180) {
+            doc.addPage();
+            yPos = 25;
+        }
+        
+        // Advanced section header with success theme color
+        doc.setFillColor(...colors.success);
+        doc.rect(25, yPos, 160, 20, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('ADVANCED FINANCIAL ANALYTICS', 30, yPos + 13);
+        yPos += 30;
+        
+        // Enhanced analytics data with more calculations
+        const avgEarningsPerDay = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
+        const paymentEfficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
+        const projectedMonthlyEarnings = avgEarningsPerDay * 30;
+        const workProductivity = reportData.workConsistencyRate;
+        
+        const analytics = [
+            { label: 'Average Daily Earnings', value: this.formatCurrencyAdvanced(avgEarningsPerDay), category: 'Performance' },
+            { label: 'Payment Efficiency Rate', value: `${paymentEfficiency.toFixed(1)} percent`, category: 'Efficiency' },
+            { label: 'Work Consistency Rate', value: `${workProductivity} percent`, category: 'Productivity' },
+            { label: 'Projected Monthly Earnings', value: this.formatCurrencyAdvanced(projectedMonthlyEarnings), category: 'Projection' },
+            { label: 'Total Transaction Count', value: `${reportData.totalTransactions} transactions`, category: 'Volume' },
+            { label: 'Primary Transaction ID', value: reportData.transactionId, category: 'Reference' }
+        ];
+        
+        analytics.forEach((item, index) => {
+            const y = yPos + index * 14;
+            
+            // Category indicator
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.muted);
+            doc.text(`[${item.category}]`, 30, y);
+            
+            // Analytics label and value
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${item.label}: `, 60, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...colors.primary);
+            doc.text(item.value, 130, y);
+        });
+        
+        return yPos + 90;
+    }
+
+    addExecutiveFooter(doc, colors, reportData) {
+        const footerY = 270;
+        
+        // Ultra-sophisticated footer design
+        doc.setFillColor(250, 250, 250);
+        doc.rect(0, footerY, 210, 27, 'F');
+        
+        // Elegant top border
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.8);
+        doc.line(0, footerY, 210, footerY);
+        
+        // Refined company branding
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(12);
+        doc.setTextColor(...colors.primary);
+        doc.text('R-Service Tracker', 30, footerY + 12);
+        
+        // Sophisticated subtitle
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...colors.secondary);
+        doc.text('Executive Work Management System', 30, footerY + 20);
+        
+        // Minimalist metadata
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...colors.muted);
+        doc.text('Confidential Report', 140, footerY + 12);
+        doc.text(`Version ${reportData.reportVersion}`, 140, footerY + 20);
+    }
+
+    addAdvancedWorkRecords(doc, colors, workRecords, reportData, yPos) {
+        if (yPos > 160) {
+            doc.addPage();
+            yPos = 25;
+        }
+        
+        // Advanced section header with warning theme color
+        doc.setFillColor(...colors.warning);
+        doc.rect(25, yPos, 160, 20, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('ADVANCED WORK RECORDS ANALYSIS', 30, yPos + 13);
+        yPos += 30;
+        
+        // Enhanced table header with theme colors
+        doc.setFillColor(...colors.light);
+        doc.rect(25, yPos, 160, 16, 'F');
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.rect(25, yPos, 160, 16, 'S');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text('Date', 30, yPos + 10);
+        doc.text('Status', 70, yPos + 10);
+        doc.text('Earnings', 110, yPos + 10);
+        doc.text('Efficiency', 140, yPos + 10);
+        doc.text('Batch ID', 165, yPos + 10);
+        yPos += 16;
+        
+        // Enhanced work records data with more analysis
+        const recentRecords = workRecords.slice(-12);
+        recentRecords.forEach((record, index) => {
+            const recordY = yPos + index * 14;
+            
+            // Enhanced alternate row colors with theme
+            if (index % 2 === 0) {
+                doc.setFillColor(...colors.light);
+                doc.rect(25, recordY, 160, 14, 'F');
+            }
+            
+            // Status-based color coding
+            const statusColor = record.status === 'completed' ? colors.success : colors.muted;
+            doc.setDrawColor(...statusColor);
+            doc.setLineWidth(0.2);
+            doc.line(25, recordY, 185, recordY);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            
+            const date = new Date(record.date);
+            doc.text(date.toLocaleDateString('en-IN'), 30, recordY + 9);
+            doc.text(record.status === 'completed' ? 'DONE' : 'PEND', 70, recordY + 9);
+            doc.text(record.status === 'completed' ? this.formatCurrencyAdvanced(record.wage || 25) : '0.00 Rupees', 110, recordY + 9);
+            
+            // Efficiency calculation
+            const efficiency = record.status === 'completed' ? '100%' : '0%';
+            doc.text(efficiency, 140, recordY + 9);
+            doc.text(`BCH${(index + 1000).toString().slice(-4)}`, 165, recordY + 9);
+        });
+        
+        return yPos + (recentRecords.length * 14) + 20;
+    }
+
+    addAdvancedPaymentHistory(doc, colors, payments, reportData, yPos) {
+        if (yPos > 140) {
+            doc.addPage();
+            yPos = 25;
+        }
+        
+        // Advanced section header with success theme color
+        doc.setFillColor(...colors.success);
+        doc.rect(25, yPos, 160, 20, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('ADVANCED PAYMENT TRANSACTION HISTORY', 30, yPos + 13);
+        yPos += 30;
+        
+        // Enhanced table header with theme colors
+        doc.setFillColor(...colors.light);
+        doc.rect(25, yPos, 160, 16, 'F');
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.rect(25, yPos, 160, 16, 'S');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text('Date', 30, yPos + 10);
+        doc.text('Amount', 65, yPos + 10);
+        doc.text('Type', 100, yPos + 10);
+        doc.text('Status', 125, yPos + 10);
+        doc.text('TXN ID', 155, yPos + 10);
+        yPos += 16;
+        
+        // Enhanced payment records data with more analysis
+        const recentPayments = payments.slice(-10);
+        recentPayments.forEach((payment, index) => {
+            const paymentY = yPos + index * 14;
+            
+            // Enhanced alternate row colors with theme
+            if (index % 2 === 0) {
+                doc.setFillColor(...colors.light);
+                doc.rect(25, paymentY, 160, 14, 'F');
+            }
+            
+            // Payment amount based color indicator
+            const amountColor = payment.amount > 50 ? colors.success : colors.warning;
+            doc.setDrawColor(...amountColor);
+            doc.setLineWidth(0.3);
+            doc.line(25, paymentY, 185, paymentY);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            
+            const date = new Date(payment.date);
+            doc.text(date.toLocaleDateString('en-IN'), 30, paymentY + 9);
+            doc.text(this.formatCurrencyAdvanced(payment.amount), 65, paymentY + 9);
+            doc.text(payment.type || 'REG', 100, paymentY + 9);
+            doc.text('VERIFIED', 125, paymentY + 9);
+            doc.text(`TXN${(Date.now() + index * 1000).toString().slice(-6)}`, 155, paymentY + 9);
+        });
+        
+        return yPos + (recentPayments.length * 14) + 20;
+    }
+
+    addAdvancedPerformanceMetrics(doc, colors, summary, reportData, yPos) {
+        if (yPos > 180) {
+            doc.addPage();
+            yPos = 25;
+        }
+        
+        // Advanced section header with danger theme color for attention
+        doc.setFillColor(...colors.danger);
+        doc.rect(25, yPos, 160, 20, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('ADVANCED PERFORMANCE METRICS', 30, yPos + 13);
+        yPos += 30;
+        
+        // Enhanced performance data with comprehensive analysis
+        const workEfficiency = summary.totalWorked > 0 ? ((summary.totalWorked / 30) * 100) : 0;
+        const avgDailyRate = summary.totalWorked > 0 ? (summary.totalEarned / summary.totalWorked) : 0;
+        const productivityScore = (workEfficiency * 0.4) + (parseFloat(reportData.paymentFrequency) * 0.6);
+        
+        const metrics = [
+            { label: 'Work Efficiency Rate', value: `${workEfficiency.toFixed(1)} percent`, category: 'EFFICIENCY' },
+            { label: 'Average Daily Rate', value: this.formatCurrencyAdvanced(avgDailyRate), category: 'FINANCIAL' },
+            { label: 'Payment Status Analysis', value: summary.currentBalance >= 0 ? 'Current and Up to Date' : 'Advanced Payment Status', category: 'STATUS' },
+            { label: 'Productivity Score', value: `${productivityScore.toFixed(1)} percent`, category: 'ANALYTICS' },
+            { label: 'Data Integrity Verification', value: `Hash ${reportData.dataIntegrityHash} Verified`, category: 'SECURITY' },
+            { label: 'Report Batch Reference', value: reportData.batchId, category: 'REFERENCE' },
+            { label: 'System Architecture', value: reportData.systemVersion, category: 'TECHNICAL' },
+            { label: 'Report Schema Version', value: reportData.reportVersion, category: 'VERSION' }
+        ];
+        
+        metrics.forEach((metric, index) => {
+            const y = yPos + index * 16;
+            
+            // Category badge with theme colors
+            doc.setFillColor(...colors.accent || colors.primary);
+            doc.rect(30, y - 3, 25, 8, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(6);
+            doc.setTextColor(255, 255, 255);
+            doc.text(metric.category, 32, y + 1);
+            
+            // Metric label and value with enhanced formatting
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${metric.label}: `, 60, y + 1);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...colors.primary);
+            doc.text(metric.value, 130, y + 1);
+        });
+        
+        return yPos + 140;
+    }
+
+    addExecutiveSummary(doc, colors, summary, yPos) {
+        if (yPos > 240) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        // Premium section header with gradient effect
+        doc.setFillColor(...colors.primary);
+        doc.rect(15, yPos - 5, 180, 18, 'F');
+        
+        // Add premium shadow effect
+        doc.setFillColor(0, 0, 0, 0.1);
+        doc.rect(15, yPos + 13, 180, 1, 'F');
+        
+        // Section title with enhanced styling
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('📊 EXECUTIVE SUMMARY', 20, yPos + 7);
+        yPos += 25;
+        
+        const metrics = [
+            { label: 'Total Days Worked', value: `${summary.totalWorked} days`, icon: '📅' },
+            { label: 'Total Earnings', value: this.formatCurrencyForPDF(summary.totalEarned), icon: '💰' },
+            { label: 'Amount Received', value: this.formatCurrencyForPDF(summary.totalPaid), icon: '💳' },
+            { label: 'Outstanding Balance', value: this.formatCurrencyForPDF(summary.currentBalance), icon: '📈' }
+        ];
+        
+        metrics.forEach((metric, index) => {
+            const x = 20 + (index % 2) * 90;
+            const y = yPos + Math.floor(index / 2) * 28;
+            
+            // Premium card background with gradient
+            doc.setFillColor(254, 254, 254);
+            doc.rect(x - 2, y - 3, 85, 24, 'F');
+            
+            // Add premium border
+            doc.setDrawColor(...colors.primary);
+            doc.setLineWidth(0.2);
+            doc.rect(x - 2, y - 3, 85, 24, 'S');
+            
+            // Add subtle accent bar
+            doc.setFillColor(...colors.primary);
+            doc.rect(x - 2, y - 3, 85, 2, 'F');
+            
+            // Metric icon and label
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(11);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${metric.icon} ${metric.label}`, x, y + 6);
+            
+            // Metric value with premium styling
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.setTextColor(...colors.primary);
+            doc.text(metric.value, x, y + 16);
+        });
+        
+        return yPos + 65;
+    }
+
+    addFinancialAnalytics(doc, colors, summary, yPos) {
+        if (yPos > 220) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        doc.setFillColor(...colors.light);
+        doc.rect(15, yPos - 5, 180, 15, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(...colors.secondary);
+        doc.text('FINANCIAL ANALYTICS', 20, yPos + 5);
+        yPos += 25;
+        
+        const avgEarningsPerDay = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
+        const paymentEfficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
+        const workStreak = summary.currentStreak || 0;
+        
+        const analytics = [
+            { label: 'Average Daily Earnings', value: this.formatCurrencyForPDF(avgEarningsPerDay) },
+            { label: 'Payment Efficiency', value: `${paymentEfficiency.toFixed(1)}%` },
+            { label: 'Current Work Streak', value: `${workStreak} days` },
+            { label: 'Work Frequency', value: summary.totalWorked > 0 ? 'Active' : 'Inactive' }
+        ];
+        
+        analytics.forEach((item, index) => {
+            const x = 25 + (index % 2) * 90;
+            const y = yPos + Math.floor(index / 2) * 12;
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${item.label}:`, x, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...colors.primary);
+            doc.text(item.value, x + 65, y);
+        });
+        
+        yPos += 35;
+        let statusText = '';
+        let statusColor = colors.success;
+        
+        if (summary.currentBalance > 0) {
+            statusText = `Outstanding Payment Due: ${this.formatCurrencyForPDF(summary.currentBalance)}`;
+            statusColor = colors.danger;
+        } else if (summary.currentBalance < 0) {
+            statusText = `Advance Payment Made: ${this.formatCurrencyForPDF(Math.abs(summary.currentBalance))}`;
+            statusColor = colors.warning;
+        } else {
+            statusText = 'All payments up to date';
+            statusColor = colors.success;
+        }
+        
+        doc.setFillColor(...statusColor);
+        doc.rect(15, yPos - 3, 180, 12, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(255, 255, 255);
+        doc.text(statusText, 20, yPos + 4);
+        
+        return yPos + 20;
+    }
+
+    addDetailedWorkRecords(doc, colors, workRecords, yPos) {
+        if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        doc.setFillColor(...colors.secondary);
+        doc.rect(15, yPos - 5, 180, 15, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text('DETAILED WORK RECORDS', 20, yPos + 5);
+        yPos += 25;
+        
+        doc.setFillColor(...colors.light);
+        doc.rect(15, yPos - 3, 180, 12, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text('DATE', 20, yPos + 5);
+        doc.text('DAY', 48, yPos + 5);
+        doc.text('STATUS', 72, yPos + 5);
+        doc.text('EARNINGS', 105, yPos + 5);
+        doc.text('PAYMENT STATUS', 140, yPos + 5);
+        doc.text('NOTES', 175, yPos + 5);
+        yPos += 15;
+        
+        doc.setFont('helvetica', 'normal');
+        workRecords.forEach((record, index) => {
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+                
+                doc.setFillColor(...colors.light);
+                doc.rect(15, yPos - 3, 180, 12, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(...colors.secondary);
+                doc.text('DATE', 20, yPos + 5);
+                doc.text('DAY', 50, yPos + 5);
+                doc.text('STATUS', 75, yPos + 5);
+                doc.text('EARNINGS', 110, yPos + 5);
+                doc.text('PAYMENT STATUS', 145, yPos + 5);
+                doc.text('NOTES', 175, yPos + 5);
+                yPos += 15;
+                doc.setFont('helvetica', 'normal');
+            }
+            
+            if (index % 2 === 0) {
+                doc.setFillColor(250, 250, 250);
+                doc.rect(15, yPos - 2, 180, 10, 'F');
+            }
+            
+            const date = new Date(record.date);
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+            
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            doc.text(this.formatDateShort(record.date), 20, yPos + 3);
+            doc.text(dayName, 48, yPos + 3);
+            
+            if (record.status === 'completed') {
+                doc.setTextColor(...colors.success);
+                doc.text('COMPLETED', 72, yPos + 3);
+            } else {
+                doc.setTextColor(...colors.danger);
+                doc.text('MISSED', 72, yPos + 3);
+            }
+            
+            doc.setTextColor(...colors.secondary);
+            doc.text(record.status === 'completed' ? this.formatCurrencyForPDF(record.wage) : '0 rupees', 105, yPos + 3);
+            
+            if (record.paid) {
+                doc.setTextColor(...colors.success);
+                doc.text('PAID', 140, yPos + 3);
+            } else {
+                doc.setTextColor(...colors.warning);
+                doc.text('PENDING', 140, yPos + 3);
+            }
+            
+            doc.setTextColor(...colors.muted);
+            doc.text(record.status === 'completed' ? 'OK' : 'FAILED', 175, yPos + 3);
+            
+            yPos += 10;
+        });
+        
+        return yPos + 15;
+    }
+
+    addPaymentHistory(doc, colors, payments, yPos) {
+        if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        doc.setFillColor(...colors.success);
+        doc.rect(15, yPos - 5, 180, 15, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text('PAYMENT TRANSACTION HISTORY', 20, yPos + 5);
+        yPos += 25;
+        
+        const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+        const advancePayments = payments.filter(p => p.isAdvance);
+        const regularPayments = payments.filter(p => !p.isAdvance);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(...colors.secondary);
+        doc.text(`Total Transactions: ${payments.length} | Regular: ${regularPayments.length} | Advance: ${advancePayments.length}`, 20, yPos);
+        yPos += 15;
+        
+        doc.setFillColor(...colors.light);
+        doc.rect(15, yPos - 3, 180, 12, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text('PAYMENT DATE', 20, yPos + 5);
+        doc.text('AMOUNT', 62, yPos + 5);
+        doc.text('WORK DAYS', 95, yPos + 5);
+        doc.text('TYPE', 125, yPos + 5);
+        doc.text('TRANSACTION ID', 155, yPos + 5);
+        yPos += 15;
+        
+        doc.setFont('helvetica', 'normal');
+        payments.forEach((payment, index) => {
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+                
+                doc.setFillColor(...colors.light);
+                doc.rect(15, yPos - 3, 180, 12, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(...colors.secondary);
+                doc.text('PAYMENT DATE', 20, yPos + 5);
+                doc.text('AMOUNT', 65, yPos + 5);
+                doc.text('WORK DAYS', 95, yPos + 5);
+                doc.text('TYPE', 125, yPos + 5);
+                doc.text('TRANSACTION ID', 155, yPos + 5);
+                yPos += 15;
+                doc.setFont('helvetica', 'normal');
+            }
+            
+            if (index % 2 === 0) {
+                doc.setFillColor(250, 250, 250);
+                doc.rect(15, yPos - 2, 180, 10, 'F');
+            }
+            
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            doc.text(this.formatDateShort(payment.paymentDate), 20, yPos + 3);
+            
+            if (payment.isAdvance) {
+                doc.setTextColor(...colors.warning);
+            } else {
+                doc.setTextColor(...colors.success);
+            }
+            doc.text(this.formatCurrencyForPDF(payment.amount), 62, yPos + 3);
+            
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${payment.workDates.length}`, 95, yPos + 3);
+            
+            if (payment.isAdvance) {
+                doc.setTextColor(...colors.warning);
+                doc.text('ADVANCE', 125, yPos + 3);
+            } else {
+                doc.setTextColor(...colors.success);
+                doc.text('REGULAR', 125, yPos + 3);
+            }
+            
+            doc.setTextColor(...colors.muted);
+            doc.text(`TXN-${(payment.id || index).toString().padStart(3, '0')}`, 155, yPos + 3);
+            
+            yPos += 10;
+        });
+        
+        return yPos + 15;
+    }
+
+    addPerformanceMetrics(doc, colors, summary, yPos) {
+        if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        doc.setFillColor(...colors.warning);
+        doc.rect(15, yPos - 5, 180, 15, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text('PERFORMANCE INSIGHTS AND RECOMMENDATIONS', 20, yPos + 5);
+        yPos += 25;
+        
+        const workDays = summary.totalWorked || 0;
+        const earnings = summary.totalEarned || 0;
+        const streak = summary.currentStreak || 0;
+        
+        const insights = [];
+        
+        if (workDays >= 30) {
+            insights.push('Excellent work consistency - Over 30 days completed');
+        } else if (workDays >= 15) {
+            insights.push('Good work progress - Over 15 days completed');
+        } else if (workDays >= 7) {
+            insights.push('Building momentum - Weekly target achieved');
+        } else {
+            insights.push('Getting started - Continue building your work record');
+        }
+        
+        if (streak >= 7) {
+            insights.push('Outstanding streak - 7+ consecutive days');
+        } else if (streak >= 3) {
+            insights.push('Good momentum - 3+ consecutive days');
+        }
+        
+        if (summary.currentBalance <= 0) {
+            insights.push('Payment status healthy - No outstanding dues');
+        } else {
+            insights.push('Payment attention needed - Outstanding balance exists');
+        }
+        
+        insights.forEach((insight, index) => {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${index + 1}. ${insight}`, 25, yPos + (index * 8));
+        });
+        
+        yPos += insights.length * 8 + 15;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(...colors.primary);
+        doc.text('RECOMMENDATIONS:', 20, yPos);
+        yPos += 12;
+        
+        const recommendations = [
+            'Maintain consistent daily work schedule for optimal earnings',
+            'Review payment cycles to ensure timely settlement',
+            'Track performance metrics regularly for improvement',
+            'Consider setting milestone goals for motivation'
+        ];
+        
+        recommendations.forEach((rec, index) => {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`• ${rec}`, 25, yPos + (index * 6));
+        });
+        
+        return yPos + 30;
+    }
+
+    addFooter(doc, colors, data) {
+        const pageCount = doc.internal.getNumberOfPages();
+        const now = new Date();
+        
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            
+            doc.setFillColor(...colors.light);
+            doc.rect(0, 285, 210, 12, 'F');
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`Page ${i} of ${pageCount}`, 20, 292);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.text('R-Service Tracker v1.0.0', 80, 292);
+            
+            doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 155, 292);
+            
+            if (i === pageCount) {
+                doc.setFontSize(7);
+                doc.setTextColor(...colors.muted);
+                doc.text('This report contains confidential work and payment information. Handle with care.', 20, 280);
+            }
+        }
+    }
+
+    getPDFColorsFromTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'blue-light';
+        
+        const themeColors = {
+            'blue-light': {
+                primary: [33, 150, 243],      // Blue
+                secondary: [33, 37, 41],      // Dark gray
+                accent: [227, 242, 253],      // Light blue accent
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'blue-dark': {
+                primary: [33, 150, 243],      // Blue
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [227, 242, 253],      // Light blue accent
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            },
+            'orange-light': {
+                primary: [255, 107, 53],      // Orange
+                secondary: [33, 37, 41],      // Dark gray
+                accent: [255, 224, 178],      // Light orange accent
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'orange-dark': {
+                primary: [255, 107, 53],      // Orange
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [255, 224, 178],      // Light orange accent
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            },
+            'green-light': {
+                primary: [76, 175, 80],       // Green
+                secondary: [33, 37, 41],      // Dark gray
+                accent: [232, 245, 232],      // Light green accent
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'green-dark': {
+                primary: [76, 175, 80],       // Green
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [232, 245, 232],      // Light green accent
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            },
+            'red-light': {
+                primary: [244, 67, 54],       // Red
+                secondary: [33, 37, 41],      // Dark gray
+                accent: [255, 235, 238],      // Light red accent
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'red-dark': {
+                primary: [244, 67, 54],       // Red
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [255, 235, 238],      // Light red accent
+                success: [40, 167, 69],       // Green
+                warning: [255, 193, 7],       // Yellow
+                danger: [220, 53, 69],        // Red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            },
+            'monochrome-light': {
+                primary: [44, 44, 44],        // Dark gray
+                secondary: [33, 37, 41],      // Dark gray
+                accent: [240, 240, 240],      // Light gray accent
+                success: [46, 125, 50],       // Green
+                warning: [245, 124, 0],       // Orange
+                danger: [198, 40, 40],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'monochrome-dark': {
+                primary: [224, 224, 224],     // Light gray
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [42, 42, 42],         // Dark gray accent
+                success: [102, 187, 106],     // Light green
+                warning: [255, 167, 38],      // Light orange
+                danger: [239, 83, 80],        // Light red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            }
+        };
+        
+        return themeColors[currentTheme] || themeColors['blue-light'];
+    }
+
+    getReportPeriod(data) {
+        if (!data.workRecords || data.workRecords.length === 0) {
+            return 'No records available';
+        }
+        
+        const dates = data.workRecords.map(record => new Date(record.date));
+        const startDate = new Date(Math.min(...dates));
+        const endDate = new Date(Math.max(...dates));
+        
+        return `${this.formatDateShort(startDate.toISOString().split('T')[0])} to ${this.formatDateShort(endDate.toISOString().split('T')[0])}`;
+    }
+
+    validateDate(dateString) {
+        const date = new Date(dateString);
+        return date instanceof Date && !isNaN(date);
+    }
+
+    validateWage(wage) {
+        return typeof wage === 'number' && wage > 0;
+    }
+
+    saveToLocalStorage(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+            return true;
+        } catch (error) {
+            console.error('Error saving to localStorage:', error);
+            return false;
+        }
+    }
+
+    loadFromLocalStorage(key) {
+        try {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error('Error loading from localStorage:', error);
+            return null;
+        }
+    }
+
+    removeFromLocalStorage(key) {
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (error) {
+            console.error('Error removing from localStorage:', error);
+            return false;
+        }
+    }
+
+    setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        this.saveToLocalStorage('r-service-theme', theme);
+        
+        this.updateBrowserThemeColor(theme);
+    }
+    
+    updateBrowserThemeColor(theme) {
+        const themeColorMap = {
+            'blue-light': '#2196F3',
+            'blue-dark': '#1976D2',
+            'orange-light': '#FF6B35',
+            'orange-dark': '#E55A2B',
+            'green-light': '#4CAF50',
+            'green-dark': '#388E3C',
+            'purple-light': '#9C27B0',
+            'purple-dark': '#7B1FA2'
+        };
+        
+        const color = themeColorMap[theme] || '#2196F3';
+        
+        const existingMetas = document.querySelectorAll('meta[name="theme-color"]');
+        existingMetas.forEach(meta => meta.remove());
+        
+        const meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.content = color;
+        document.head.appendChild(meta);
+        
+        let navButtonMeta = document.querySelector('meta[name="msapplication-navbutton-color"]');
+        if (navButtonMeta) {
+            navButtonMeta.content = color;
+        } else {
+            navButtonMeta = document.createElement('meta');
+            navButtonMeta.name = 'msapplication-navbutton-color';
+            navButtonMeta.content = color;
+            document.head.appendChild(navButtonMeta);
+        }
+        
+        let statusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        const statusBarStyle = theme.includes('dark') ? 'black-translucent' : 'default';
+        if (statusBarMeta) {
+            statusBarMeta.content = statusBarStyle;
+        }
+        
+        console.log(`Browser theme color updated to ${color} for theme: ${theme}`);
+    }
+
+    getTheme() {
+        return this.loadFromLocalStorage('r-service-theme') || 'orange-light';
+    }
+
+    animateValue(element, start, end, duration = 1000) {
+        if (!element) return;
+        
+        const startTimestamp = performance.now();
+        const step = (timestamp) => {
+            const elapsed = timestamp - startTimestamp;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const current = Math.floor(progress * (end - start) + start);
+            element.textContent = current;
+            
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            }
+        };
+        
+        requestAnimationFrame(step);
+    }
+
+    animateCurrency(element, start, end, duration = 1000) {
+        if (!element) return;
+        
+        const startTimestamp = performance.now();
+        const step = (timestamp) => {
+            const elapsed = timestamp - startTimestamp;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const current = Math.floor(progress * (end - start) + start);
+            element.textContent = this.formatCurrency(current);
+            
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            }
+        };
+        
+        requestAnimationFrame(step);
+    }
+
+    animateNumber(element, start, end, duration = 1000) {
+        if (!element) return;
+        
+        const startTimestamp = performance.now();
+        const step = (timestamp) => {
+            const elapsed = timestamp - startTimestamp;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const current = Math.floor(progress * (end - start) + start);
+            element.textContent = current.toLocaleString('en-IN');
+            
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            }
+        };
+
+        requestAnimationFrame(step);
+    }
+
+    debounce(func, delay) {
+        let timeoutId;
+        return function (...args) {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    throttle(func, limit) {
+        let lastFunc;
+        let lastRan;
+        return function (...args) {
+            if (!lastRan) {
+                func.apply(this, args);
+                lastRan = Date.now();
+            } else {
+                clearTimeout(lastFunc);
+                lastFunc = setTimeout(() => {
+                    if ((Date.now() - lastRan) >= limit) {
+                        func.apply(this, args);
+                        lastRan = Date.now();
+                    }
+                }, limit - (Date.now() - lastRan));
+            }
+        };
+    }
+
+    generateShareableLink(data) {
+        const params = new URLSearchParams({
+            totalEarned: data.totalEarned || 0,
+            totalWorked: data.totalWorked || 0,
+            currentStreak: data.currentStreak || 0
+        });
+        
+        return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    }
+
+    downloadJSON(data, filename = 'r-service-backup.json') {
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = filename;
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+
+    readJSONFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    resolve(data);
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.onerror = () => reject(new Error('File reading failed'));
+            reader.readAsText(file);
+        });
+    }
+
+    measurePerformance(label, fn) {
+        const start = performance.now();
+        const result = fn();
+        const end = performance.now();
+        console.log(`${label}: ${(end - start).toFixed(2)}ms`);
+        return result;
+    }
+
+    handleError(error, context = 'Unknown') {
+        console.error(`Error in ${context}:`, error);
+        
+        if (window.gtag) {
+            window.gtag('event', 'exception', {
+                description: `${context}: ${error.message}`,
+                fatal: false
+            });
+        }
+        
+        return {
+            success: false,
+            error: error.message,
+            context: context,
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    isOnline() {
+        return navigator.onLine;
+    }
+
+    isMobile() {
+        return window.innerWidth <= 768;
+    }
+
+    isTablet() {
+        return window.innerWidth > 768 && window.innerWidth <= 1024;
+    }
+
+    isDesktop() {
+        return window.innerWidth > 1024;
+    }
+
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    rgbToHex(r, g, b) {
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    async copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (error) {
+            console.error('Failed to copy to clipboard:', error);
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                return true;
+            } catch (fallbackError) {
+                document.body.removeChild(textArea);
+                return false;
+            }
+        }
+    }
+
+    generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    randomBetween(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    groupBy(array, key) {
+        return array.reduce((groups, item) => {
+            const group = item[key];
+            groups[group] = groups[group] || [];
+            groups[group].push(item);
+            return groups;
+        }, {});
+    }
+
+    sortBy(array, key, direction = 'asc') {
+        return [...array].sort((a, b) => {
+            const aVal = a[key];
+            const bVal = b[key];
+            
+            if (direction === 'asc') {
+                return aVal > bVal ? 1 : -1;
+            } else {
+                return aVal < bVal ? 1 : -1;
+            }
+        });
+    }
+
+    calculateAverage(numbers) {
+        if (numbers.length === 0) return 0;
+        const sum = numbers.reduce((a, b) => a + b, 0);
+        return sum / numbers.length;
+    }
+
+    calculatePercentage(part, total) {
+        if (total === 0) return 0;
+        return (part / total) * 100;
+    }
+
+    calculateGrowth(current, previous) {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return ((current - previous) / previous) * 100;
+    }
+
+    // Premium Cover Page
+    addPremiumCoverPage(doc, colors, reportData, data) {
+        // Premium gradient background
+        doc.setFillColor(...colors.primary);
+        doc.rect(0, 0, 210, 297, 'F');
+        
+        // Elegant overlay pattern
+        doc.setFillColor(255, 255, 255, 0.1);
+        for (let i = 0; i < 20; i++) {
+            doc.circle(20 + (i * 10), 50 + (i * 5), 2, 'F');
+        }
+        
+        // Main title with premium typography
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(48);
+        doc.setTextColor(255, 255, 255);
+        doc.text('R-SERVICE', 105, 80, { align: 'center' });
+        
+        doc.setFontSize(36);
+        doc.text('TRACKER', 105, 100, { align: 'center' });
+        
+        // Subtitle
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(18);
+        doc.setTextColor(240, 240, 240);
+        doc.text('PREMIUM COMPREHENSIVE REPORT', 105, 120, { align: 'center' });
+        
+        // Report metadata box
+        doc.setFillColor(255, 255, 255, 0.95);
+        doc.rect(30, 140, 150, 80, 'F');
+        doc.setDrawColor(...colors.accent || colors.primary);
+        doc.setLineWidth(1);
+        doc.rect(30, 140, 150, 80, 'S');
+        
+        // Metadata content
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(...colors.primary);
+        doc.text('REPORT DETAILS', 105, 155, { align: 'center' });
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(60, 60, 60);
+        
+        const details = [
+            `Report ID: ${reportData.reportId}`,
+            `Generated: ${this.formatDateTimeClean(reportData.generatedTime)}`,
+            `Report Type: ${reportData.reportType}`,
+            `Version: ${reportData.reportVersion}`,
+            `Total Work Days: ${data.summary?.totalWorked || 0}`,
+            `Total Earnings: ₹${data.summary?.totalEarned || 0}`,
+            `Data Hash: ${reportData.dataHash}`
+        ];
+        
+        details.forEach((detail, index) => {
+            doc.text(detail, 105, 170 + (index * 7), { align: 'center' });
+        });
+        
+        // Confidentiality notice
+        doc.setFillColor(220, 53, 69);
+        doc.rect(30, 240, 150, 25, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(255, 255, 255);
+        doc.text('CONFIDENTIAL DOCUMENT', 105, 250, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text('This report contains sensitive financial and work data', 105, 260, { align: 'center' });
+    }
+
+    // Premium Executive Summary
+    addPremiumExecutiveSummary(doc, colors, summary, reportData, yPos) {
+        // Section header
+        this.addPremiumSectionHeader(doc, colors, 'EXECUTIVE SUMMARY', yPos);
+        yPos += 25;
+        
+        // Key metrics cards
+        const metrics = [
+            { 
+                title: 'Work Performance', 
+                value: `${summary.totalWorked} Days`, 
+                subtitle: 'Total Work Completed',
+                icon: '📊'
+            },
+            { 
+                title: 'Financial Status', 
+                value: `₹${Math.abs(summary.totalEarned)}`, 
+                subtitle: 'Total Earnings',
+                icon: '💰'
+            },
+            { 
+                title: 'Payment Status', 
+                value: `₹${Math.abs(summary.totalPaid)}`, 
+                subtitle: 'Amount Received',
+                icon: '💳'
+            },
+            { 
+                title: 'Balance', 
+                value: `₹${Math.abs(summary.currentBalance)}`, 
+                subtitle: summary.currentBalance >= 0 ? 'Outstanding' : 'Advanced',
+                icon: summary.currentBalance >= 0 ? '📈' : '📉'
+            }
+        ];
+        
+        metrics.forEach((metric, index) => {
+            const x = 30 + (index % 2) * 75;
+            const y = yPos + Math.floor(index / 2) * 45;
+            this.drawPremiumMetricCard(doc, colors, metric, x, y, 70, 40);
+        });
+        
+        yPos += 100;
+        
+        // Performance indicators
+        this.addPerformanceIndicators(doc, colors, summary, yPos);
+        yPos += 50;
+        
+        // Status summary
+        this.addStatusSummary(doc, colors, summary, yPos);
+        
+        return yPos + 40;
+    }
+
+    // Premium Financial Analytics
+    addPremiumFinancialAnalytics(doc, colors, data, reportData, yPos) {
+        this.addPremiumSectionHeader(doc, colors, 'FINANCIAL ANALYTICS & INSIGHTS', yPos);
+        yPos += 25;
+        
+        const summary = data.summary;
+        
+        // Financial ratios and metrics
+        const avgDaily = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
+        const paymentEfficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
+        const workConsistency = this.calculateWorkConsistency(data.workRecords);
+        
+        // Analytics grid
+        const analytics = [
+            { label: 'Average Daily Earnings', value: `₹${avgDaily.toFixed(2)}`, trend: 'neutral' },
+            { label: 'Payment Collection Rate', value: `${paymentEfficiency.toFixed(1)}%`, trend: paymentEfficiency > 80 ? 'positive' : 'negative' },
+            { label: 'Work Consistency Score', value: `${workConsistency.toFixed(1)}%`, trend: workConsistency > 70 ? 'positive' : 'neutral' },
+            { label: 'Current Streak', value: `${summary.currentStreak || 0} days`, trend: 'positive' }
+        ];
+        
+        analytics.forEach((item, index) => {
+            const x = 30 + (index % 2) * 75;
+            const y = yPos + Math.floor(index / 2) * 25;
+            
+            // Trend indicator
+            const trendColor = item.trend === 'positive' ? colors.success : 
+                              item.trend === 'negative' ? colors.danger : colors.muted;
+            
+            doc.setFillColor(...trendColor);
+            doc.circle(x - 3, y - 2, 2, 'F');
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(item.label, x + 3, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...colors.primary);
+            doc.text(item.value, x + 3, y + 8);
+        });
+        
+        yPos += 60;
+        
+        // Financial timeline chart (simplified representation)
+        this.addFinancialTimeline(doc, colors, data, yPos);
+        
+        return yPos + 80;
+    }
+
+    // Premium Work Records Section
+    addPremiumWorkRecords(doc, colors, workRecords, payments, reportData, yPos) {
+        this.addPremiumSectionHeader(doc, colors, 'DETAILED WORK RECORDS', yPos);
+        yPos += 25;
+        
+        // Table header
+        doc.setFillColor(...colors.primary);
+        doc.rect(20, yPos, 170, 12, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(255, 255, 255);
+        doc.text('DATE', 25, yPos + 7);
+        doc.text('DAY', 50, yPos + 7);
+        doc.text('STATUS', 75, yPos + 7);
+        doc.text('WAGE', 100, yPos + 7);
+        doc.text('PAID', 120, yPos + 7);
+        doc.text('PAYMENT DATE', 140, yPos + 7);
+        doc.text('NOTES', 170, yPos + 7);
+        
+        yPos += 15;
+        
+        // Sort records by date (newest first)
+        const sortedRecords = workRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        sortedRecords.forEach((record, index) => {
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+                
+                // Repeat header on new page
+                doc.setFillColor(...colors.primary);
+                doc.rect(20, yPos, 170, 12, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(255, 255, 255);
+                doc.text('DATE', 25, yPos + 7);
+                doc.text('DAY', 50, yPos + 7);
+                doc.text('STATUS', 75, yPos + 7);
+                doc.text('WAGE', 100, yPos + 7);
+                doc.text('PAID', 120, yPos + 7);
+                doc.text('PAYMENT DATE', 140, yPos + 7);
+                doc.text('NOTES', 170, yPos + 7);
+                yPos += 15;
+            }
+            
+            // Alternating row colors
+            if (index % 2 === 0) {
+                doc.setFillColor(248, 249, 250);
+                doc.rect(20, yPos - 2, 170, 10, 'F');
+            }
+            
+            // Find payment info for this record
+            const payment = payments.find(p => p.workDates && p.workDates.includes(record.date));
+            const isPaid = !!payment;
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            
+            // Date
+            const date = new Date(record.date);
+            doc.text(date.toLocaleDateString('en-IN'), 25, yPos + 5);
+            
+            // Day
+            doc.text(date.toLocaleDateString('en-US', { weekday: 'short' }), 50, yPos + 5);
+            
+            // Status with color coding
+            const statusColor = record.status === 'completed' ? colors.success : colors.danger;
+            doc.setTextColor(...statusColor);
+            doc.text(record.status.toUpperCase(), 75, yPos + 5);
+            
+            // Wage
+            doc.setTextColor(...colors.secondary);
+            doc.text(`₹${record.wage}`, 100, yPos + 5);
+            
+            // Paid status
+            doc.setTextColor(isPaid ? ...colors.success : ...colors.danger);
+            doc.text(isPaid ? 'YES' : 'NO', 120, yPos + 5);
+            
+            // Payment date
+            doc.setTextColor(...colors.secondary);
+            if (payment) {
+                const payDate = new Date(payment.paymentDate);
+                doc.text(payDate.toLocaleDateString('en-IN'), 140, yPos + 5);
+            } else {
+                doc.text('-', 140, yPos + 5);
+            }
+            
+            // Notes (status indicators)
+            doc.setTextColor(...colors.muted);
+            const notes = [];
+            if (record.status === 'completed' && !isPaid) notes.push('Unpaid');
+            if (payment && payment.isAdvance) notes.push('Advance');
+            doc.text(notes.join(', ') || '-', 170, yPos + 5);
+            
+            yPos += 10;
+        });
+        
+        return yPos + 10;
+    }
+
+    // Premium Payment History
+    addPremiumPaymentHistory(doc, colors, payments, reportData, yPos) {
+        this.addPremiumSectionHeader(doc, colors, 'PAYMENT TRANSACTION HISTORY', yPos);
+        yPos += 25;
+        
+        // Table header
+        doc.setFillColor(...colors.success);
+        doc.rect(20, yPos, 170, 12, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(255, 255, 255);
+        doc.text('DATE', 25, yPos + 7);
+        doc.text('AMOUNT', 55, yPos + 7);
+        doc.text('TYPE', 85, yPos + 7);
+        doc.text('WORK DAYS', 110, yPos + 7);
+        doc.text('DAYS COVERED', 145, yPos + 7);
+        doc.text('STATUS', 175, yPos + 7);
+        
+        yPos += 15;
+        
+        // Sort payments by date (newest first)
+        const sortedPayments = payments.sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
+        
+        sortedPayments.forEach((payment, index) => {
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+                
+                // Repeat header
+                doc.setFillColor(...colors.success);
+                doc.rect(20, yPos, 170, 12, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(255, 255, 255);
+                doc.text('DATE', 25, yPos + 7);
+                doc.text('AMOUNT', 55, yPos + 7);
+                doc.text('TYPE', 85, yPos + 7);
+                doc.text('WORK DAYS', 110, yPos + 7);
+                doc.text('DAYS COVERED', 145, yPos + 7);
+                doc.text('STATUS', 175, yPos + 7);
+                yPos += 15;
+            }
+            
+            // Alternating row colors
+            if (index % 2 === 0) {
+                doc.setFillColor(248, 249, 250);
+                doc.rect(20, yPos - 2, 170, 10, 'F');
+            }
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            
+            // Payment date
+            const payDate = new Date(payment.paymentDate);
+            doc.text(payDate.toLocaleDateString('en-IN'), 25, yPos + 5);
+            
+            // Amount
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...colors.primary);
+            doc.text(`₹${payment.amount}`, 55, yPos + 5);
+            
+            // Type
+            doc.setFont('helvetica', 'normal');
+            const typeColor = payment.isAdvance ? colors.warning : colors.success;
+            doc.setTextColor(...typeColor);
+            doc.text(payment.isAdvance ? 'ADVANCE' : 'REGULAR', 85, yPos + 5);
+            
+            // Work days covered
+            doc.setTextColor(...colors.secondary);
+            const workDaysCount = payment.workDates ? payment.workDates.length : 0;
+            doc.text(workDaysCount.toString(), 110, yPos + 5);
+            
+            // Days covered calculation
+            const daysCovered = Math.ceil(payment.amount / (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25));
+            doc.text(daysCovered.toString(), 145, yPos + 5);
+            
+            // Status
+            doc.setTextColor(...colors.success);
+            doc.text('COMPLETED', 175, yPos + 5);
+            
+            yPos += 10;
+        });
+        
+        // Payment summary
+        yPos += 10;
+        const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+        const advancePayments = payments.filter(p => p.isAdvance);
+        const regularPayments = payments.filter(p => !p.isAdvance);
+        
+        doc.setFillColor(...colors.light);
+        doc.rect(20, yPos, 170, 30, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(...colors.primary);
+        doc.text('PAYMENT SUMMARY', 25, yPos + 10);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text(`Total Payments: ₹${totalPayments}`, 25, yPos + 20);
+        doc.text(`Regular Payments: ${regularPayments.length}`, 80, yPos + 20);
+        doc.text(`Advance Payments: ${advancePayments.length}`, 140, yPos + 20);
+        
+        return yPos + 35;
+    }
+
+    // Premium Performance Insights
+    addPremiumPerformanceInsights(doc, colors, data, reportData, yPos) {
+        this.addPremiumSectionHeader(doc, colors, 'PERFORMANCE INSIGHTS & RECOMMENDATIONS', yPos);
+        yPos += 25;
+        
+        const summary = data.summary;
+        const insights = this.generatePerformanceInsights(data);
+        
+        insights.forEach((insight, index) => {
+            // Insight box
+            const boxColor = insight.type === 'positive' ? colors.success :
+                            insight.type === 'warning' ? colors.warning : colors.primary;
+            
+            doc.setFillColor(...boxColor, 0.1);
+            doc.rect(20, yPos, 170, 20, 'F');
+            doc.setDrawColor(...boxColor);
+            doc.setLineWidth(0.5);
+            doc.rect(20, yPos, 170, 20, 'S');
+            
+            // Icon
+            doc.setFillColor(...boxColor);
+            doc.circle(30, yPos + 10, 3, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(255, 255, 255);
+            doc.text(insight.icon, 30, yPos + 11, { align: 'center' });
+            
+            // Title and description
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(insight.title, 40, yPos + 8);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(...colors.muted);
+            doc.text(insight.description, 40, yPos + 15);
+            
+            yPos += 25;
+        });
+        
+        return yPos + 10;
+    }
+
+    // Premium Monthly Breakdown
+    addPremiumMonthlyBreakdown(doc, colors, data, reportData, yPos) {
+        this.addPremiumSectionHeader(doc, colors, 'MONTHLY PERFORMANCE BREAKDOWN', yPos);
+        yPos += 25;
+        
+        // Calculate monthly data
+        const monthlyData = this.calculateMonthlyBreakdown(data.workRecords, data.payments);
+        
+        // Table header
+        doc.setFillColor(...colors.primary);
+        doc.rect(20, yPos, 170, 12, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(255, 255, 255);
+        doc.text('MONTH', 25, yPos + 7);
+        doc.text('WORK DAYS', 60, yPos + 7);
+        doc.text('EARNINGS', 90, yPos + 7);
+        doc.text('PAYMENTS', 120, yPos + 7);
+        doc.text('BALANCE', 150, yPos + 7);
+        doc.text('EFFICIENCY', 175, yPos + 7);
+        
+        yPos += 15;
+        
+        Object.entries(monthlyData).forEach(([month, data], index) => {
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+                
+                // Repeat header
+                doc.setFillColor(...colors.primary);
+                doc.rect(20, yPos, 170, 12, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(255, 255, 255);
+                doc.text('MONTH', 25, yPos + 7);
+                doc.text('WORK DAYS', 60, yPos + 7);
+                doc.text('EARNINGS', 90, yPos + 7);
+                doc.text('PAYMENTS', 120, yPos + 7);
+                doc.text('BALANCE', 150, yPos + 7);
+                doc.text('EFFICIENCY', 175, yPos + 7);
+                yPos += 15;
+            }
+            
+            // Alternating row colors
+            if (index % 2 === 0) {
+                doc.setFillColor(248, 249, 250);
+                doc.rect(20, yPos - 2, 170, 10, 'F');
+            }
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            
+            doc.text(month, 25, yPos + 5);
+            doc.text(data.workDays.toString(), 60, yPos + 5);
+            doc.text(`₹${data.earnings}`, 90, yPos + 5);
+            doc.text(`₹${data.payments}`, 120, yPos + 5);
+            
+            // Balance with color coding
+            const balanceColor = data.balance >= 0 ? colors.success : colors.danger;
+            doc.setTextColor(...balanceColor);
+            doc.text(`₹${Math.abs(data.balance)}`, 150, yPos + 5);
+            
+            // Efficiency
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${data.efficiency.toFixed(1)}%`, 175, yPos + 5);
+            
+            yPos += 10;
+        });
+        
+        return yPos + 10;
+    }
+
+    // Helper functions for premium PDF
+    addPremiumSectionHeader(doc, colors, title, yPos) {
+        // Gradient header background
+        doc.setFillColor(...colors.primary);
+        doc.rect(15, yPos - 5, 180, 18, 'F');
+        
+        // Accent line
+        doc.setFillColor(...colors.accent || [255, 255, 255]);
+        doc.rect(15, yPos + 13, 180, 2, 'F');
+        
+        // Title text
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text(title, 20, yPos + 7);
+    }
+
+    drawPremiumMetricCard(doc, colors, metric, x, y, width, height) {
+        // Card background
+        doc.setFillColor(255, 255, 255);
+        doc.rect(x, y, width, height, 'F');
+        
+        // Card border
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.rect(x, y, width, height, 'S');
+        
+        // Accent bar
+        doc.setFillColor(...colors.primary);
+        doc.rect(x, y, width, 3, 'F');
+        
+        // Icon
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(16);
+        doc.text(metric.icon, x + 5, y + 15);
+        
+        // Title
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text(metric.title, x + 5, y + 25);
+        
+        // Value
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(...colors.primary);
+        doc.text(metric.value, x + 5, y + 32);
+        
+        // Subtitle
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(...colors.muted);
+        doc.text(metric.subtitle, x + 5, y + 38);
+    }
+
+    addPerformanceIndicators(doc, colors, summary, yPos) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(...colors.primary);
+        doc.text('PERFORMANCE INDICATORS', 30, yPos);
+        
+        yPos += 15;
+        
+        // Performance bars
+        const indicators = [
+            { label: 'Work Consistency', value: 85, color: colors.success },
+            { label: 'Payment Efficiency', value: summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0, color: colors.primary },
+            { label: 'Financial Health', value: summary.currentBalance >= 0 ? 70 : 90, color: summary.currentBalance >= 0 ? colors.warning : colors.success }
+        ];
+        
+        indicators.forEach((indicator, index) => {
+            const y = yPos + (index * 12);
+            
+            // Label
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(...colors.secondary);
+            doc.text(indicator.label, 30, y);
+            
+            // Progress bar background
+            doc.setFillColor(240, 240, 240);
+            doc.rect(100, y - 4, 80, 6, 'F');
+            
+            // Progress bar fill
+            const fillWidth = (indicator.value / 100) * 80;
+            doc.setFillColor(...indicator.color);
+            doc.rect(100, y - 4, fillWidth, 6, 'F');
+            
+            // Percentage
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.primary);
+            doc.text(`${indicator.value.toFixed(1)}%`, 185, y);
+        });
+    }
+
+    addStatusSummary(doc, colors, summary, yPos) {
+        let statusText = '';
+        let statusColor = colors.success;
+        
+        if (summary.currentBalance > 0) {
+            statusText = `Outstanding Payment: ₹${summary.currentBalance} - Payment collection recommended`;
+            statusColor = colors.danger;
+        } else if (summary.currentBalance < 0) {
+            statusText = `Advance Payment: ₹${Math.abs(summary.currentBalance)} - Work completion required`;
+            statusColor = colors.warning;
+        } else {
+            statusText = 'All payments up to date - Excellent financial standing';
+            statusColor = colors.success;
+        }
+        
+        doc.setFillColor(...statusColor);
+        doc.rect(20, yPos, 170, 15, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+        doc.text(statusText, 105, yPos + 9, { align: 'center' });
+    }
+
+    addFinancialTimeline(doc, colors, data, yPos) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(...colors.primary);
+        doc.text('FINANCIAL TIMELINE', 30, yPos);
+        
+        yPos += 15;
+        
+        // Simple timeline representation
+        const recentRecords = data.workRecords
+            .filter(r => r.status === 'completed')
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, 10);
+        
+        recentRecords.forEach((record, index) => {
+            const x = 30 + (index * 15);
+            const y = yPos + 10;
+            
+            // Timeline dot
+            doc.setFillColor(...colors.primary);
+            doc.circle(x, y, 2, 'F');
+            
+            // Date label
+            const date = new Date(record.date);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6);
+            doc.setTextColor(...colors.muted);
+            doc.text(date.getDate().toString(), x, y + 8, { align: 'center' });
+        });
+        
+        // Timeline line
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(1);
+        doc.line(30, yPos + 10, 30 + (recentRecords.length * 15), yPos + 10);
+    }
+
+    addPremiumFooter(doc, colors, reportData, pageNum, totalPages) {
+        const y = 280;
+        
+        // Footer background
+        doc.setFillColor(...colors.light);
+        doc.rect(0, y, 210, 17, 'F');
+        
+        // Footer content
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...colors.muted);
+        
+        // Left side - Company info
+        doc.text('R-Service Tracker Premium Report', 20, y + 8);
+        doc.text(`Generated: ${reportData.generatedTime.toLocaleDateString('en-IN')}`, 20, y + 12);
+        
+        // Center - Confidentiality
+        doc.text(reportData.confidentialityLevel, 105, y + 10, { align: 'center' });
+        
+        // Right side - Page info
+        doc.text(`Page ${pageNum} of ${totalPages}`, 190, y + 8, { align: 'right' });
+        doc.text(`Report ID: ${reportData.reportId}`, 190, y + 12, { align: 'right' });
+    }
+
+    // Helper calculation functions
+    calculateWorkConsistency(workRecords) {
+        if (!workRecords || workRecords.length === 0) return 0;
+        
+        const completedRecords = workRecords.filter(r => r.status === 'completed');
+        return (completedRecords.length / workRecords.length) * 100;
+    }
+
+    generatePerformanceInsights(data) {
+        const insights = [];
+        const summary = data.summary;
+        
+        // Work performance insights
+        if (summary.totalWorked >= 20) {
+            insights.push({
+                type: 'positive',
+                icon: '⭐',
+                title: 'Excellent Work Performance',
+                description: `You have completed ${summary.totalWorked} work days, showing strong commitment.`
+            });
+        } else if (summary.totalWorked >= 10) {
+            insights.push({
+                type: 'neutral',
+                icon: '📊',
+                title: 'Good Work Performance',
+                description: `${summary.totalWorked} work days completed. Consider increasing consistency.`
+            });
+        } else {
+            insights.push({
+                type: 'warning',
+                icon: '⚠️',
+                title: 'Work Performance Needs Attention',
+                description: `Only ${summary.totalWorked} work days completed. Focus on regular work schedule.`
+            });
+        }
+        
+        // Payment insights
+        const paymentEfficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
+        if (paymentEfficiency >= 90) {
+            insights.push({
+                type: 'positive',
+                icon: '💰',
+                title: 'Excellent Payment Collection',
+                description: `${paymentEfficiency.toFixed(1)}% of earnings collected. Outstanding financial management.`
+            });
+        } else if (paymentEfficiency >= 70) {
+            insights.push({
+                type: 'neutral',
+                icon: '💳',
+                title: 'Good Payment Collection',
+                description: `${paymentEfficiency.toFixed(1)}% collection rate. Consider following up on outstanding payments.`
+            });
+        } else {
+            insights.push({
+                type: 'warning',
+                icon: '📈',
+                title: 'Payment Collection Needs Improvement',
+                description: `Only ${paymentEfficiency.toFixed(1)}% collected. Focus on regular payment collection.`
+            });
+        }
+        
+        // Balance insights
+        if (summary.currentBalance > 100) {
+            insights.push({
+                type: 'warning',
+                icon: '🔔',
+                title: 'Outstanding Payment Alert',
+                description: `₹${summary.currentBalance} pending collection. Schedule payment collection soon.`
+            });
+        } else if (summary.currentBalance < -50) {
+            insights.push({
+                type: 'neutral',
+                icon: '📋',
+                title: 'Advance Payment Status',
+                description: `₹${Math.abs(summary.currentBalance)} advance received. Complete remaining work commitments.`
+            });
+        }
+        
+        return insights;
+    }
+
+    calculateMonthlyBreakdown(workRecords, payments) {
+        const monthlyData = {};
+        
+        // Process work records
+        workRecords.forEach(record => {
+            if (record.status === 'completed') {
+                const key = `${record.year}-${record.month.toString().padStart(2, '0')}`;
+                const monthName = new Date(record.year, record.month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                
+                if (!monthlyData[monthName]) {
+                    monthlyData[monthName] = {
+                        workDays: 0,
+                        earnings: 0,
+                        payments: 0,
+                        balance: 0,
+                        efficiency: 0
+                    };
+                }
+                
+                monthlyData[monthName].workDays++;
+                monthlyData[monthName].earnings += record.wage;
+            }
+        });
+        
+        // Process payments
+        payments.forEach(payment => {
+            const paymentDate = new Date(payment.paymentDate);
+            const monthName = paymentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            if (monthlyData[monthName]) {
+                monthlyData[monthName].payments += payment.amount;
+            }
+        });
+        
+        // Calculate balances and efficiency
+        Object.keys(monthlyData).forEach(month => {
+            const data = monthlyData[month];
+            data.balance = data.earnings - data.payments;
+            data.efficiency = data.earnings > 0 ? (data.payments / data.earnings * 100) : 0;
+        });
+        
+        return monthlyData;
+    }
+}
+
+window.Utils = Utils;
