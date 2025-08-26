@@ -141,7 +141,7 @@ class Utils {
                 title: 'R-Service Tracker Report',
                 subject: 'Work Management Report',
                 author: 'R-Service Tracker',
-                creator: 'R-Service Tracker v2.1.2',
+                creator: 'R-Service Tracker v1.0.0',
                 producer: 'R-Service Tracker PDF Generator',
                 keywords: 'work tracker, payment report, R-Service'
             });
@@ -669,7 +669,7 @@ class Utils {
             doc.text(`Page ${i} of ${pageCount}`, 20, 292);
             
             doc.setFont('helvetica', 'normal');
-            doc.text('R-Service Tracker v2.1.2', 80, 292);
+            doc.text('R-Service Tracker v1.0.0', 80, 292);
             
             doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 155, 292);
             

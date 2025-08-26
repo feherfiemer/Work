@@ -1,5 +1,5 @@
-// Service Worker for R-Service Tracker PWA v3.0.0 Final
-const CACHE_NAME = 'r-service-tracker-v3.0.0-final';
+// Service Worker for R-Service Tracker PWA v1.0.0
+const CACHE_NAME = 'r-service-tracker-v1.0.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -21,7 +21,7 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', event => {
-  console.log('[SW] Installing service worker v3.0.0 final...');
+  console.log('[SW] Installing service worker v1.0.0...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -37,7 +37,7 @@ self.addEventListener('install', event => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating service worker v3.0.0 final...');
+  console.log('[SW] Activating service worker v1.0.0...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -174,4 +174,4 @@ self.addEventListener('message', event => {
   }
 });
 
-console.log('[SW] R-Service Tracker Service Worker v3.0.0 Final loaded');
+console.log('[SW] R-Service Tracker Service Worker v1.0.0 loaded');

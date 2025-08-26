@@ -599,7 +599,7 @@ The advance payment liability tracking system is revolutionary in its approach, 
 ---
 
 *This documentation covers the complete R-Service Tracker system from architectural overview to detailed troubleshooting. For additional support, refer to the source code comments and built-in testing tools.*
-## Latest System Updates (v2.2.0)
+## Latest System Updates (v1.0.0)
 
 ### Calendar Icon Optimization
 - **Reduced Icon Sizes**: Calendar work and payment indicators reduced from 18px to 12px
