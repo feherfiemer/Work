@@ -114,7 +114,7 @@ class Utils {
         return dates;
     }
 
-    async exportToPDF(data, filename = 'R-Service-Tracker-Report.pdf') {
+    async exportToPDF(data, filename = 'Service-Tracker-Report.pdf') {
         try {
             console.log('PDF Export: Starting with data:', data);
             
@@ -138,12 +138,12 @@ class Utils {
             
             // Set clean document properties to override any default titles
             doc.setProperties({
-                title: 'R-Service Tracker Report',
+                title: 'Service Tracker Report',
                 subject: 'Work Management Report',
-                author: 'R-Service Tracker',
-                creator: 'R-Service Tracker v1.0.0',
-                producer: 'R-Service Tracker PDF Generator',
-                keywords: 'work tracker, payment report, R-Service'
+                author: 'Service Tracker',
+                creator: 'Service Tracker v1.0.0',
+                producer: 'Service Tracker PDF Generator',
+                keywords: 'work tracker, payment report, Service'
             });
             
             const colors = this.getPDFColorsFromTheme();
@@ -215,7 +215,7 @@ class Utils {
         doc.setFontSize(24);
         doc.setTextColor(255, 255, 255);
         doc.text('✓', 15, 22);
-        doc.text('R-Service Tracker', 25, 22);
+        doc.text('Service Tracker', 25, 22);
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(11);
@@ -255,7 +255,7 @@ class Utils {
         doc.setFontSize(7);
         doc.setTextColor(...colors.secondary);
         
-        doc.text('R-Service Tracker - Professional Work Management System', 15, footerY + 5);
+        doc.text('Service Tracker - Professional Work Management System', 15, footerY + 5);
         doc.text('Generated automatically - All data remains private on your device', 15, footerY + 8);
         
         // Page number (for multi-page support)
@@ -277,7 +277,7 @@ class Utils {
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
-        doc.text('Service: R-Service Work Tracking', 25, yPos + 13);
+        doc.text('Service: Service Work Tracking', 25, yPos + 13);
         doc.text('Report Type: Professional Work Summary', 25, yPos + 18);
         doc.text(`Daily Rate: ${this.formatCurrencyForPDF(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)} per day`, 110, yPos + 13);
         doc.text('Currency: Indian Rupees (INR)', 110, yPos + 18);
@@ -669,7 +669,7 @@ class Utils {
             doc.text(`Page ${i} of ${pageCount}`, 20, 292);
             
             doc.setFont('helvetica', 'normal');
-            doc.text('R-Service Tracker v1.0.0', 80, 292);
+            doc.text('Service Tracker v1.0.0', 80, 292);
             
             doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 155, 292);
             
