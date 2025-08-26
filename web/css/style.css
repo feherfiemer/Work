@@ -2732,10 +2732,55 @@ select:focus {
   }
 }
 
-/* About Modal Styling */
+/* About Modal Styling - Minimized */
 .about-content {
-  max-width: 500px;
+  max-width: 450px;
   margin: 0 auto;
+  text-align: center;
+}
+
+.features-compact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.feature-highlight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface-alt);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.feature-highlight i {
+  color: var(--primary);
+  font-size: 1.2em;
+}
+
+.feature-highlight span {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.privacy-info {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+
+.privacy-info p {
+  margin: 8px 0;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.privacy-info i {
+  color: var(--primary);
+  margin-right: 8px;
 }
 
 .app-title {
@@ -4005,6 +4050,15 @@ select:focus {
 
 /* Responsive adjustments for about modal */
 @media (max-width: 768px) {
+  .features-compact {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .feature-highlight {
+    padding: 10px;
+  }
+  
   .features-grid {
     grid-template-columns: 1fr;
     gap: 1rem;

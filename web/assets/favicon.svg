@@ -1,10 +1,29 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Black background circle -->
-  <circle cx="256" cy="256" r="256" fill="#000000"/>
+  <!-- Modern gradient background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976D2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="checkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E3F2FD;stop-opacity:1" />
+    </linearGradient>
+  </defs>
   
-  <!-- White outline circle -->
-  <circle cx="256" cy="256" r="224" fill="none" stroke="#FFFFFF" stroke-width="32"/>
+  <!-- Main background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGradient)"/>
   
-  <!-- White check mark -->
-  <path d="M144 256L224 336L368 176" stroke="#FFFFFF" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Inner circle for depth -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#FFFFFF" stroke-width="8" opacity="0.2"/>
+  
+  <!-- Modern checkmark with better proportions -->
+  <path d="M160 256L220 316L350 184" stroke="url(#checkGradient)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Small "R" indicator in top right -->
+  <circle cx="380" cy="132" r="24" fill="#FFFFFF"/>
+  <text x="380" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2196F3">R</text>
+  
+  <!-- Subtle shadow effect -->
+  <circle cx="256" cy="256" r="240" fill="none" stroke="#000000" stroke-width="2" opacity="0.1"/>
 </svg>

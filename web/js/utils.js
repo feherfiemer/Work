@@ -136,8 +136,9 @@ class Utils {
             console.log('PDF Export: Using theme colors:', colors);
             
             this.addHeader(doc, colors);
+            this.addFooter(doc, colors);
             
-            let yPos = 70;
+            let yPos = 65;
             
             yPos = this.addCompanyInfo(doc, colors, yPos);
             
@@ -174,32 +175,68 @@ class Utils {
     }
 
     addHeader(doc, colors) {
+        // Main header background with gradient effect
         doc.setFillColor(...colors.primary);
-        doc.rect(0, 0, 210, 45, 'F');
+        doc.rect(0, 0, 210, 35, 'F');
         
+        // Add subtle accent bar
+        doc.setFillColor(...colors.accent);
+        doc.rect(0, 35, 210, 3, 'F');
+        
+        // App title with checkmark icon
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(28);
+        doc.setFontSize(24);
         doc.setTextColor(255, 255, 255);
-        doc.text('R-Service Tracker', 15, 25);
+        doc.text('✓', 15, 22);
+        doc.text('R-Service Tracker', 25, 22);
         
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(12);
-        doc.text('Work & Payment Management System', 25, 33);
+        doc.setFontSize(11);
+        doc.text('Professional Work & Payment Management Report', 25, 30);
         
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.text('COMPREHENSIVE WORK REPORT', 25, 42);
+        // Metadata section background
+        doc.setFillColor(248, 248, 248);
+        doc.rect(0, 38, 210, 15, 'F');
         
-        doc.setDrawColor(255, 255, 255);
-        doc.setLineWidth(1);
-        doc.line(15, 47, 195, 47);
-        
+        // Report metadata
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.setTextColor(...colors.secondary);
         const now = new Date();
-        doc.text(`Generated: ${this.formatDateTime(now)}`, 145, 55);
-        doc.text(`Report ID: RST-${now.getTime().toString().slice(-8)}`, 145, 60);
+        const reportId = `RST-${now.getTime().toString().slice(-8)}`;
+        
+        doc.text(`Generated: ${this.formatDateTime(now)}`, 15, 46);
+        doc.text(`Report ID: ${reportId}`, 15, 50);
+        doc.text('Timezone: Asia/Kolkata (IST)', 110, 46);
+        doc.text('Format: PDF Summary Report', 110, 50);
+        
+        // Professional border line
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.line(15, 55, 195, 55);
+    }
+
+    addFooter(doc, colors) {
+        const footerY = 285;
+        
+        // Footer background
+        doc.setFillColor(245, 245, 245);
+        doc.rect(0, footerY, 210, 12, 'F');
+        
+        // Footer content
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(...colors.secondary);
+        
+        doc.text('R-Service Tracker - Professional Work Management System', 15, footerY + 5);
+        doc.text('Generated automatically - All data remains private on your device', 15, footerY + 8);
+        
+        // Page number (for multi-page support)
+        doc.text(`Page ${doc.getCurrentPageInfo().pageNumber}`, 185, footerY + 8);
+        
+        // Security notice
+        doc.setTextColor(...colors.primary);
+        doc.text('🔒 Privacy Protected', 150, footerY + 5);
     }
 
     addCompanyInfo(doc, colors, yPos) {
@@ -214,9 +251,9 @@ class Utils {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         doc.text('Service: R-Service Work Tracking', 25, yPos + 13);
-        doc.text('System Version: 2.1.4', 25, yPos + 18);
-        doc.text(`Daily Rate: ${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} rupees per day`, 110, yPos + 13);
-        doc.text('Currency: Indian Rupees', 110, yPos + 18);
+        doc.text('Report Type: Professional Work Summary', 25, yPos + 18);
+        doc.text(`Daily Rate: ${this.formatCurrencyForPDF(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)} per day`, 110, yPos + 13);
+        doc.text('Currency: Indian Rupees (INR)', 110, yPos + 18);
         
         return yPos + 35;
     }

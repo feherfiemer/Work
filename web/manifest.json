@@ -1,7 +1,7 @@
 {
-  "name": "R-Service Tracker v3.0.0 Final - Daily Work & Payment Manager",
-  "short_name": "R-Service Tracker",
-  "description": "Professional daily work tracking and payment management system with streamlined notifications, premium audio, and perfect dark theme support",
+  "name": "R-Service Tracker",
+  "short_name": "R-Service",
+  "description": "Professional work tracking and payment management system for freelancers and contractors",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a1a",
