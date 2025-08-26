@@ -4238,17 +4238,19 @@ button.disabled:hover {
 }
 /* ===== DISABLED DONE BUTTON STYLING ===== */
 
-/* When work is already done, show disabled themed style instead of hiding */
+/* When work is already done, show disabled themed style instead of green background */
 #doneBtn:disabled,
-
 #doneBtn:disabled:hover,
-
-/* Success state styling for completed work */
 #doneBtn.completed {
-  background: linear-gradient(135deg, var(--success), #45a049) !important;
-  color: white !important;
-  border: 2px solid var(--success) !important;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3) !important;
+  /* Use original button theme colors but with disabled appearance */
+  background: var(--primary) !important;
+  color: var(--text-on-primary) !important;
+  border: 2px solid var(--primary) !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
 }
 
 /* ===== MONOCHROME DARK THEME FIXES ===== */
@@ -4285,20 +4287,7 @@ button.disabled:hover {
 }
 
 
-/* Enhanced disabled button styling - keeps theme color but shows disabled state */
-#doneBtn:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-  transform: none !important;
-  box-shadow: none !important;
-  pointer-events: none !important;
-}
-
-#doneBtn:disabled:hover {
-  transform: none !important;
-  box-shadow: none !important;
-  opacity: 0.6 !important;
-}
+/* Disabled button styling is now consolidated above */
 
 
 /* Additional monochrome dark theme button fixes */

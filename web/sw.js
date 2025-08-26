@@ -1,5 +1,5 @@
-// Service Worker for R-Service Tracker PWA with Background Notifications
-const CACHE_NAME = 'r-service-tracker-v2.2.0';
+// Service Worker for R-Service Tracker PWA v3.0.0 Final
+const CACHE_NAME = 'r-service-tracker-v3.0.0-final';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -15,17 +15,13 @@ const urlsToCache = [
   '/assets/favicon.svg',
   '/assets/icon-192.png',
   '/assets/icon-512.png',
-  '/manifest.json',
-  // External resources
-  'https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700;800&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
-  'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+  '/manifest.json'
+  // Note: External resources are loaded dynamically for better performance
 ];
 
 // Install event - cache resources
 self.addEventListener('install', event => {
-  console.log('[SW] Installing service worker v2.2.0...');
+  console.log('[SW] Installing service worker v3.0.0 final...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -41,7 +37,7 @@ self.addEventListener('install', event => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating service worker v2.2.0...');
+  console.log('[SW] Activating service worker v3.0.0 final...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -123,10 +119,10 @@ function setupBackgroundNotifications() {
 
 // Schedule periodic notification checks
 function schedulePeriodicCheck() {
-  // Set up a check every minute
+  // Optimized: Check every 5 minutes for better performance
   setInterval(() => {
     checkForScheduledNotifications();
-  }, 60000); // 60 seconds
+  }, 300000); // 5 minutes
   
   // Also check immediately
   checkForScheduledNotifications();
@@ -236,7 +232,7 @@ async function showBackgroundNotification(type, config) {
   let title, body, actions;
   
   if (type === 'payment') {
-    title = 'Payment Reminder - R-Service Tracker';
+    title = '💰 Payment Reminder - R-Service';
     body = 'Time to check your payment status! Don\'t forget to collect your earnings.';
     actions = [
       {
@@ -246,13 +242,13 @@ async function showBackgroundNotification(type, config) {
       },
       {
         action: 'dismiss',
-        title: '❌ Dismiss',
+        title: '✅ Got it',
         icon: iconUrl
       }
     ];
   } else if (type === 'work') {
-    title = 'Work Reminder - R-Service Tracker';
-    body = 'Don\'t forget to mark your work as completed today! Keep your streak going.';
+    title = '⚡ Work Reminder - R-Service';
+    body = 'Ready to mark today\'s work as completed? Keep your streak going strong!';
     actions = [
       {
         action: 'mark-done',
@@ -261,7 +257,7 @@ async function showBackgroundNotification(type, config) {
       },
       {
         action: 'remind-later',
-        title: '⏰ Remind Later',
+        title: '⏰ Later (30m)',
         icon: iconUrl
       }
     ];
@@ -421,15 +417,15 @@ async function handleMarkAsDone(baseUrl) {
   }
 }
 
-// Schedule remind later
+// Schedule remind later - optimized timing
 async function scheduleRemindLater() {
   console.log('[SW] Scheduling reminder for later...');
   
-  // Schedule notification for 1 hour later
+  // Schedule notification for 30 minutes later (more reasonable)
   setTimeout(async () => {
     const config = await getStoredConfig();
     await showBackgroundNotification('work', config);
-  }, 60 * 60 * 1000); // 1 hour
+  }, 30 * 60 * 1000); // 30 minutes
 }
 
 // Open app
@@ -515,4 +511,4 @@ self.addEventListener('push', event => {
   );
 });
 
-console.log('[SW] R-Service Tracker Service Worker v2.2.0 loaded');
+console.log('[SW] R-Service Tracker Service Worker v3.0.0 Final loaded');
