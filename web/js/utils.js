@@ -236,7 +236,7 @@ class Utils {
         doc.setTextColor(...titleColor);
         doc.text('Professional Work & Payment Management Report', 28, 31);
         
-        // Theme-specific decorative elements (without metadata section)
+        // Clean decorative elements (only gradient border, no corner lines)
         this.addThemeDecorativeElements(doc, colors, currentTheme);
     }
 
@@ -264,19 +264,7 @@ class Utils {
             doc.rect(0, i * stepHeight, 210, stepHeight, 'F');
         }
         
-        // Add theme-specific pattern overlay
-        this.addThemePattern(doc, colors, currentTheme, headerHeight);
-        
-        // Enhanced accent bar with gradient
-        if (colors.accent && Array.isArray(colors.accent)) {
-            doc.setFillColor(...colors.accent);
-            doc.rect(0, headerHeight, 210, 4, 'F');
-            
-            // Add subtle shadow effect under accent bar
-            const [ar, ag, ab] = colors.accent;
-            doc.setFillColor(Math.max(0, ar - 30), Math.max(0, ag - 30), Math.max(0, ab - 30));
-            doc.rect(0, headerHeight + 4, 210, 1, 'F');
-        }
+        // Removed theme patterns and accent bars to keep header completely clean with only gradient
     }
 
     addThemePattern(doc, colors, currentTheme, headerHeight) {
@@ -385,21 +373,7 @@ class Utils {
 
 
     addThemeDecorativeElements(doc, colors, currentTheme) {
-        // Add theme-specific decorative corner elements
-        const cornerSize = 8;
-        doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(1);
-        
-        // Top-right corner decoration
-        doc.line(210 - cornerSize, 0, 210, 0);
-        doc.line(210, 0, 210, cornerSize);
-        
-        // Add small accent dots
-        doc.setFillColor(...colors.accent || colors.primary);
-        for (let i = 0; i < 3; i++) {
-            doc.circle(200 + (i * 2), 5 + (i * 2), 0.5, 'F');
-        }
-        
+        // Only add gradient separator border, no corner lines or dots to keep header clean
         // Professional gradient separator border with enhanced styling
         const borderY = 45;
         const borderHeight = 2;
