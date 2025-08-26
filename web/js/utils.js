@@ -175,13 +175,27 @@ class Utils {
     }
 
     addHeader(doc, colors) {
-        // Main header background with gradient effect
-        doc.setFillColor(...colors.primary);
-        doc.rect(0, 0, 210, 35, 'F');
-        
-        // Add subtle accent bar
-        doc.setFillColor(...colors.accent);
-        doc.rect(0, 35, 210, 3, 'F');
+        try {
+            // Main header background with gradient effect
+            doc.setFillColor(...colors.primary);
+            doc.rect(0, 0, 210, 35, 'F');
+            
+            // Add subtle accent bar
+            if (colors.accent && Array.isArray(colors.accent)) {
+                doc.setFillColor(...colors.accent);
+                doc.rect(0, 35, 210, 3, 'F');
+            } else {
+                // Fallback to a lighter version of primary color
+                const [r, g, b] = colors.primary;
+                doc.setFillColor(Math.min(255, r + 50), Math.min(255, g + 50), Math.min(255, b + 50));
+                doc.rect(0, 35, 210, 3, 'F');
+            }
+        } catch (error) {
+            console.error('Error in addHeader:', error);
+            // Continue with basic header without accent bar
+            doc.setFillColor(33, 150, 243); // Default blue
+            doc.rect(0, 0, 210, 35, 'F');
+        }
         
         // App title with checkmark icon
         doc.setFont('helvetica', 'bold');
@@ -659,8 +673,9 @@ class Utils {
         
         const themeColors = {
             'blue-light': {
-                primary: [74, 144, 226],      // Blue
+                primary: [33, 150, 243],      // Blue
                 secondary: [33, 37, 41],      // Dark gray
+                accent: [227, 242, 253],      // Light blue accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
@@ -668,8 +683,9 @@ class Utils {
                 muted: [117, 117, 117]        // Muted gray
             },
             'blue-dark': {
-                primary: [74, 144, 226],      // Blue
+                primary: [33, 150, 243],      // Blue
                 secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [227, 242, 253],      // Light blue accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
@@ -679,6 +695,7 @@ class Utils {
             'orange-light': {
                 primary: [255, 107, 53],      // Orange
                 secondary: [33, 37, 41],      // Dark gray
+                accent: [255, 224, 178],      // Light orange accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
@@ -688,6 +705,7 @@ class Utils {
             'orange-dark': {
                 primary: [255, 107, 53],      // Orange
                 secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [255, 224, 178],      // Light orange accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
@@ -695,8 +713,9 @@ class Utils {
                 muted: [173, 181, 189]        // Light muted for dark theme
             },
             'green-light': {
-                primary: [40, 167, 69],       // Green
+                primary: [76, 175, 80],       // Green
                 secondary: [33, 37, 41],      // Dark gray
+                accent: [232, 245, 232],      // Light green accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
@@ -704,8 +723,9 @@ class Utils {
                 muted: [117, 117, 117]        // Muted gray
             },
             'green-dark': {
-                primary: [40, 167, 69],       // Green
+                primary: [76, 175, 80],       // Green
                 secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [232, 245, 232],      // Light green accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
@@ -713,8 +733,9 @@ class Utils {
                 muted: [173, 181, 189]        // Light muted for dark theme
             },
             'red-light': {
-                primary: [220, 53, 69],       // Red
+                primary: [244, 67, 54],       // Red
                 secondary: [33, 37, 41],      // Dark gray
+                accent: [255, 235, 238],      // Light red accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
@@ -722,11 +743,32 @@ class Utils {
                 muted: [117, 117, 117]        // Muted gray
             },
             'red-dark': {
-                primary: [220, 53, 69],       // Red
+                primary: [244, 67, 54],       // Red
                 secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [255, 235, 238],      // Light red accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
+                light: [33, 37, 41],          // Dark gray for dark theme
+                muted: [173, 181, 189]        // Light muted for dark theme
+            },
+            'monochrome-light': {
+                primary: [44, 44, 44],        // Dark gray
+                secondary: [33, 37, 41],      // Dark gray
+                accent: [240, 240, 240],      // Light gray accent
+                success: [46, 125, 50],       // Green
+                warning: [245, 124, 0],       // Orange
+                danger: [198, 40, 40],        // Red
+                light: [248, 249, 250],       // Light gray
+                muted: [117, 117, 117]        // Muted gray
+            },
+            'monochrome-dark': {
+                primary: [224, 224, 224],     // Light gray
+                secondary: [248, 249, 250],   // Light gray for dark theme
+                accent: [42, 42, 42],         // Dark gray accent
+                success: [102, 187, 106],     // Light green
+                warning: [255, 167, 38],      // Light orange
+                danger: [239, 83, 80],        // Light red
                 light: [33, 37, 41],          // Dark gray for dark theme
                 muted: [173, 181, 189]        // Light muted for dark theme
             }
