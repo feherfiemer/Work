@@ -1,10 +1,10 @@
 <svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Curved black background -->
-  <rect width="192" height="192" rx="36" ry="36" fill="#000000"/>
+  <!-- Curved blue background -->
+  <rect width="192" height="192" rx="36" ry="36" fill="#2196F3"/>
   
-  <!-- Dashed white border with more padding and matching curves -->
-  <rect x="30" y="30" width="132" height="132" rx="24" ry="24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-dasharray="6,3"/>
+  <!-- White border with padding -->
+  <rect x="30" y="30" width="132" height="132" rx="24" ry="24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="6,3"/>
   
-  <!-- Larger tick mark -->
-  <path d="M67 96L87 116L127 66" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- White tick mark -->
+  <path d="M67 96L87 116L127 66" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

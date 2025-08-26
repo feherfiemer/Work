@@ -1015,7 +1015,7 @@ class RServiceTracker {
 
     resetSettings() {
         this.notifications.showConfirmation(
-            'Are you sure you want to reset all settings to default values?\n\nThis will:\n• Set daily wage to ₹25\n• Set payment period to 4 days\n• Set maximum amount to ₹1000\n• Regenerate payment options',
+            'Reset all settings to defaults?\n\n• Daily wage: ₹25\n• Payment period: 4 days\n• Max amount: ₹1000',
             () => {
                 try {
                     if (window.ConfigManager) {

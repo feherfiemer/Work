@@ -1528,7 +1528,7 @@ body {
   justify-content: center;
   align-items: center;
   text-align: center;
-  border-radius: var(--border-radius);
+  border-radius: 12px;
   cursor: pointer;
   box-shadow: none;
   border: 1px solid var(--border);
