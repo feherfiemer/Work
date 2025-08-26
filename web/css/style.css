@@ -4292,13 +4292,13 @@ button.disabled:hover {
 }
 /* ===== DISABLED DONE BUTTON STYLING ===== */
 
-/* When work is already done, show disabled themed style instead of green background */
+/* When work is already done, show disabled themed style with white text */
 #doneBtn:disabled,
 #doneBtn:disabled:hover,
 #doneBtn.completed {
-  /* Use original button theme colors but with disabled appearance */
+  /* Use original button theme colors but with disabled appearance and white text */
   background: var(--primary) !important;
-  color: var(--text-on-primary) !important;
+  color: #FFFFFF !important;
   border: 2px solid var(--primary) !important;
   opacity: 0.6 !important;
   cursor: not-allowed !important;
