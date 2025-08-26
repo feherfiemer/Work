@@ -116,7 +116,7 @@ class Utils {
 
     async exportToPDF(data, filename = 'R-Service-Tracker-Report.pdf') {
         try {
-            console.log('PDF Export: Starting premium PDF generation with data:', data);
+            console.log('PDF Export: Initializing executive report generation');
             
             let jsPDF;
             if (typeof window.jsPDF !== 'undefined') {
@@ -128,7 +128,6 @@ class Utils {
                 throw new Error('jsPDF library not loaded');
             }
 
-            console.log('PDF Export: Initializing premium PDF document');
             const doc = new jsPDF({
                 unit: 'mm',
                 format: 'a4',
@@ -136,98 +135,51 @@ class Utils {
                 compress: true
             });
             
-            // Set advanced document properties with clean text only
+            // Executive document properties
             doc.setProperties({
-                title: 'R-Service Tracker Professional Report',
-                subject: 'Advanced Work Management and Payment Analytics Report',
-                author: 'R-Service Tracker System',
-                creator: 'R-Service Tracker Professional v1.0.0',
-                producer: 'R-Service Advanced PDF Generator',
-                keywords: 'work management, payment tracking, analytics, professional report'
+                title: 'R-Service Tracker Executive Report',
+                subject: 'Work Management Executive Summary',
+                author: 'R-Service Tracker',
+                creator: 'R-Service Tracker Executive v2.0.0',
+                producer: 'R-Service Executive Report Generator',
+                keywords: 'executive summary, work tracking, financial report'
             });
             
             const colors = this.getPDFColorsFromTheme();
-            const reportData = this.generateAdvancedReportData(data);
-            console.log('PDF Export: Using current theme colors and advanced data');
+            const reportData = this.generateExecutiveReportData(data);
             
-            this.addAdvancedHeader(doc, colors, reportData);
+            this.addExecutiveHeader(doc, colors, reportData);
             
-            let yPos = 95;
-            
-            yPos = this.addAdvancedCompanySection(doc, colors, reportData, yPos);
+            let yPos = 75;
             
             if (data.summary) {
-                yPos = this.addAdvancedExecutiveSummary(doc, colors, data.summary, reportData, yPos);
+                yPos = this.addExecutiveSummarySection(doc, colors, data.summary, reportData, yPos);
             }
             
             if (data.summary) {
-                yPos = this.addAdvancedFinancialAnalytics(doc, colors, data.summary, reportData, yPos);
+                yPos = this.addFinancialOverview(doc, colors, data.summary, reportData, yPos);
             }
             
-            if (data.workRecords && data.workRecords.length > 0) {
-                yPos = this.addAdvancedWorkRecords(doc, colors, data.workRecords, reportData, yPos);
-            }
+            this.addExecutiveFooter(doc, colors, reportData);
             
-            if (data.payments && data.payments.length > 0) {
-                yPos = this.addAdvancedPaymentHistory(doc, colors, data.payments, reportData, yPos);
-            }
-            
-            if (data.summary) {
-                yPos = this.addAdvancedPerformanceMetrics(doc, colors, data.summary, reportData, yPos);
-            }
-            
-            this.addAdvancedFooter(doc, colors, reportData);
-            
-            console.log('PDF Export: Saving advanced PDF with filename:', filename);
+            console.log('PDF Export: Executive report generated successfully');
             doc.save(filename);
-            console.log('PDF Export: Advanced PDF with theme-based styling generated successfully');
             return true;
         } catch (error) {
-            console.error('Error generating premium PDF:', error);
+            console.error('Error generating executive PDF:', error);
             throw error;
         }
     }
 
-    // Generate advanced report data with comprehensive IDs and analytics
-    generateAdvancedReportData(data) {
+    // Generate executive report data - essential information only
+    generateExecutiveReportData(data) {
         const now = new Date();
         const timestamp = now.getTime();
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'blue-light';
-        
-        // Calculate advanced analytics
-        const workRecords = data.workRecords || [];
-        const payments = data.payments || [];
-        const summary = data.summary || {};
-        
-        const workDaysThisMonth = workRecords.filter(record => {
-            const recordDate = new Date(record.date);
-            return recordDate.getMonth() === now.getMonth() && recordDate.getFullYear() === now.getFullYear();
-        }).length;
-        
-        const avgPaymentAmount = payments.length > 0 ? payments.reduce((sum, p) => sum + p.amount, 0) / payments.length : 0;
-        const workConsistencyRate = workDaysThisMonth > 0 ? (workDaysThisMonth / now.getDate() * 100).toFixed(1) : '0.0';
-        const paymentFrequency = payments.length > 0 ? (payments.length / (workRecords.length || 1) * 100).toFixed(1) : '0.0';
         
         return {
             reportId: `RST${timestamp.toString().slice(-8)}`,
-            transactionId: `TXN${(timestamp + 12345).toString().slice(-8)}`,
-            batchId: `BCH${(timestamp + 67890).toString().slice(-8)}`,
-            sessionId: `SES${(timestamp + 11111).toString().slice(-8)}`,
-            auditId: `AUD${(timestamp + 54321).toString().slice(-8)}`,
-            complianceId: `CMP${(timestamp + 98765).toString().slice(-8)}`,
             generatedTime: now,
-            reportVersion: '2.0.0',
-            systemVersion: 'Professional v1.0.0',
-            currentTheme: currentTheme,
-            reportPeriod: this.getReportPeriod(data),
-            workDaysThisMonth: workDaysThisMonth,
-            avgPaymentAmount: avgPaymentAmount,
-            workConsistencyRate: workConsistencyRate,
-            paymentFrequency: paymentFrequency,
-            totalTransactions: payments.length,
-            dataIntegrityHash: this.generateDataHash(data),
-            reportClassification: 'CONFIDENTIAL',
-            complianceStatus: 'VERIFIED'
+            reportVersion: '2.0.0'
         };
     }
 
@@ -273,151 +225,171 @@ class Utils {
         return date.toLocaleDateString('en-IN', options);
     }
 
-    addAdvancedHeader(doc, colors, reportData) {
-        // Advanced header background with theme-based colors
-        doc.setFillColor(...colors.primary);
-        doc.rect(0, 0, 210, 50, 'F');
+    addExecutiveHeader(doc, colors, reportData) {
+        // Ultra-sophisticated gradient header
+        const gradient = this.createSophisticatedGradient(colors);
+        doc.setFillColor(...gradient.primary);
+        doc.rect(0, 0, 210, 45, 'F');
         
-        // Theme-based accent bar
-        if (colors.accent) {
-            doc.setFillColor(...colors.accent);
-            doc.rect(0, 50, 210, 4, 'F');
-        }
+        // Elegant accent stripe
+        doc.setFillColor(...gradient.accent);
+        doc.rect(0, 45, 210, 2, 'F');
         
-        // Company branding section with enhanced design
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(34);
-        doc.setTextColor(255, 255, 255);
-        doc.text('R-Service Tracker', 25, 28);
-        
-        // Advanced subtitle with classification
+        // Sophisticated typography
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(12);
-        doc.text('Advanced Work Management and Payment Analytics Report', 25, 40);
+        doc.setFontSize(36);
+        doc.setTextColor(255, 255, 255);
+        doc.text('R-Service Tracker', 30, 25);
         
-        // Classification and security notice
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.text(`${reportData.reportClassification} - ${reportData.complianceStatus}`, 25, 46);
+        // Elegant subtitle
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(240, 240, 240);
+        doc.text('Executive Summary Report', 30, 35);
         
-        // Enhanced metadata section
-        doc.setFillColor(...colors.light);
-        doc.rect(0, 56, 210, 24, 'F');
+        // Minimalist metadata
+        doc.setFillColor(252, 252, 252);
+        doc.rect(0, 49, 210, 16, 'F');
         
-        // Advanced metadata with more details
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(...colors.secondary);
         
-        doc.text(`Generated: ${this.formatDateTimeClean(reportData.generatedTime)}`, 25, 64);
-        doc.text(`Report ID: ${reportData.reportId}`, 25, 68);
-        doc.text(`Audit ID: ${reportData.auditId}`, 25, 72);
-        doc.text(`Data Hash: ${reportData.dataIntegrityHash}`, 25, 76);
+        doc.text(`${this.formatDateTimeClean(reportData.generatedTime)}`, 30, 58);
+        doc.text(`Report ${reportData.reportId}`, 140, 58);
         
-        doc.text(`Theme: ${reportData.currentTheme}`, 120, 64);
-        doc.text(`Period: ${reportData.reportPeriod}`, 120, 68);
-        doc.text(`Version: ${reportData.reportVersion}`, 120, 72);
-        doc.text(`Compliance: ${reportData.complianceId}`, 120, 76);
-        
-        // Professional separator line with theme colors
-        doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(1.2);
-        doc.line(25, 85, 185, 85);
-    }
-
-    addAdvancedCompanySection(doc, colors, reportData, yPos) {
-        // Advanced company information section with enhanced details
-        doc.setFillColor(...colors.light);
-        doc.rect(25, yPos, 160, 45, 'F');
-        
-        // Theme-based section border
+        // Sophisticated separator
         doc.setDrawColor(...colors.primary);
         doc.setLineWidth(0.8);
-        doc.rect(25, yPos, 160, 45, 'S');
-        
-        // Section header with theme colors
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.setTextColor(...colors.primary);
-        doc.text('SERVICE PROVIDER INFORMATION', 30, yPos + 12);
-        
-        // Separator line
-        doc.setDrawColor(...colors.accent || colors.primary);
-        doc.setLineWidth(0.3);
-        doc.line(30, yPos + 15, 180, yPos + 15);
-        
-        // Enhanced information content with more details
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-        doc.setTextColor(...colors.secondary);
-        
-        doc.text('Service Provider: R-Service Work Tracking System', 30, yPos + 22);
-        doc.text('Report Classification: Advanced Work Management Analytics', 30, yPos + 27);
-        doc.text(`Daily Rate: ${this.formatCurrencyAdvanced(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)} per day`, 30, yPos + 32);
-        doc.text(`Work Days This Month: ${reportData.workDaysThisMonth} days`, 30, yPos + 37);
-        doc.text(`Consistency Rate: ${reportData.workConsistencyRate} percent`, 30, yPos + 42);
-        
-        return yPos + 55;
+        doc.line(30, 70, 180, 70);
     }
 
-    addAdvancedExecutiveSummary(doc, colors, summary, reportData, yPos) {
-        if (yPos > 220) {
-            doc.addPage();
-            yPos = 25;
-        }
-        
-        // Advanced section header with theme colors
-        doc.setFillColor(...colors.primary);
-        doc.rect(25, yPos, 160, 22, 'F');
-        
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(18);
-        doc.setTextColor(255, 255, 255);
-        doc.text('EXECUTIVE SUMMARY AND ANALYTICS', 30, yPos + 14);
-        yPos += 32;
-        
-        // Enhanced summary metrics with more details
-        const metrics = [
-            { label: 'Total Days Worked', value: `${summary.totalWorked} days`, detail: `This Month: ${reportData.workDaysThisMonth}` },
-            { label: 'Total Earnings', value: this.formatCurrencyAdvanced(summary.totalEarned), detail: `Avg Per Day: ${this.formatCurrencyAdvanced(summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0)}` },
-            { label: 'Amount Received', value: this.formatCurrencyAdvanced(summary.totalPaid), detail: `Avg Payment: ${this.formatCurrencyAdvanced(reportData.avgPaymentAmount)}` },
-            { label: 'Outstanding Balance', value: this.formatCurrencyAdvanced(summary.currentBalance), detail: `Payment Frequency: ${reportData.paymentFrequency}%` }
+    createSophisticatedGradient(colors) {
+        return {
+            primary: colors.primary,
+            accent: colors.accent || [
+                Math.min(255, colors.primary[0] + 40),
+                Math.min(255, colors.primary[1] + 40),
+                Math.min(255, colors.primary[2] + 40)
+            ]
+        };
+    }
+
+    addExecutiveSummarySection(doc, colors, summary, reportData, yPos) {
+        // Ultra-sophisticated summary cards
+        const cards = [
+            { 
+                label: 'Total Worked', 
+                value: `${summary.totalWorked}`,
+                unit: 'days',
+                position: { x: 30, y: yPos }
+            },
+            { 
+                label: 'Total Earned', 
+                value: `${Math.abs(summary.totalEarned).toFixed(0)}`,
+                unit: 'Rupees',
+                position: { x: 105, y: yPos }
+            },
+            { 
+                label: 'Current Balance', 
+                value: `${Math.abs(summary.currentBalance).toFixed(0)}`,
+                unit: 'Rupees',
+                position: { x: 30, y: yPos + 60 }
+            },
+            { 
+                label: 'Payment Status', 
+                value: summary.currentBalance >= 0 ? 'Current' : 'Advanced',
+                unit: '',
+                position: { x: 105, y: yPos + 60 }
+            }
         ];
         
-        metrics.forEach((metric, index) => {
-            const x = 30 + (index % 2) * 80;
-            const y = yPos + Math.floor(index / 2) * 32;
-            
-            // Enhanced metric card with theme colors
-            doc.setFillColor(...colors.light);
-            doc.rect(x, y, 75, 28, 'F');
-            doc.setDrawColor(...colors.primary);
-            doc.setLineWidth(0.4);
-            doc.rect(x, y, 75, 28, 'S');
-            
-            // Metric header bar
-            doc.setFillColor(...colors.accent || colors.primary);
-            doc.rect(x, y, 75, 4, 'F');
-            
-            // Metric content with enhanced details
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            doc.setTextColor(...colors.secondary);
-            doc.text(metric.label, x + 3, y + 10);
-            
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(11);
-            doc.setTextColor(...colors.primary);
-            doc.text(metric.value, x + 3, y + 17);
-            
-            // Additional detail
+        cards.forEach(card => {
+            this.drawSophisticatedCard(doc, colors, card);
+        });
+        
+        return yPos + 130;
+    }
+
+    drawSophisticatedCard(doc, colors, card) {
+        const { x, y } = card.position;
+        const cardWidth = 65;
+        const cardHeight = 50;
+        
+        // Ultra-sophisticated card design
+        doc.setFillColor(255, 255, 255);
+        doc.rect(x, y, cardWidth, cardHeight, 'F');
+        
+        // Elegant border
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.3);
+        doc.rect(x, y, cardWidth, cardHeight, 'S');
+        
+        // Sophisticated accent line
+        doc.setFillColor(...colors.primary);
+        doc.rect(x, y, cardWidth, 3, 'F');
+        
+        // Typography with perfect spacing
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text(card.label, x + 8, y + 18);
+        
+        // Value with sophisticated styling
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.setTextColor(...colors.primary);
+        doc.text(card.value, x + 8, y + 32);
+        
+        // Unit with refined typography
+        if (card.unit) {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
             doc.setTextColor(...colors.muted);
-            doc.text(metric.detail, x + 3, y + 24);
+            doc.text(card.unit, x + 8, y + 42);
+        }
+    }
+
+    addFinancialOverview(doc, colors, summary, reportData, yPos) {
+        // Sophisticated financial overview
+        const avgDaily = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
+        const efficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
+        
+        // Elegant section header
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(14);
+        doc.setTextColor(...colors.primary);
+        doc.text('Financial Overview', 30, yPos);
+        
+        // Sophisticated separator
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.line(30, yPos + 5, 180, yPos + 5);
+        
+        yPos += 20;
+        
+        // Key insights with refined typography
+        const insights = [
+            { label: 'Average Daily Rate', value: `${avgDaily.toFixed(0)} Rupees` },
+            { label: 'Payment Efficiency', value: `${efficiency.toFixed(1)} percent` },
+            { label: 'Work Consistency', value: summary.totalWorked > 0 ? 'Active' : 'Inactive' }
+        ];
+        
+        insights.forEach((insight, index) => {
+            const y = yPos + (index * 16);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(insight.label, 30, y);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.primary);
+            doc.text(insight.value, 130, y);
         });
         
-        return yPos + 70;
+        return yPos + 60;
     }
 
     addAdvancedFinancialAnalytics(doc, colors, summary, reportData, yPos) {
@@ -474,46 +446,36 @@ class Utils {
         return yPos + 90;
     }
 
-    addAdvancedFooter(doc, colors, reportData) {
+    addExecutiveFooter(doc, colors, reportData) {
         const footerY = 270;
         
-        // Advanced footer background with theme colors
-        doc.setFillColor(...colors.light);
+        // Ultra-sophisticated footer design
+        doc.setFillColor(250, 250, 250);
         doc.rect(0, footerY, 210, 27, 'F');
         
-        // Theme-based top border
+        // Elegant top border
         doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(1.2);
+        doc.setLineWidth(0.8);
         doc.line(0, footerY, 210, footerY);
         
-        // Accent stripe
-        doc.setFillColor(...colors.accent || colors.primary);
-        doc.rect(0, footerY + 1, 210, 2, 'F');
-        
-        // Enhanced company information
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        doc.setTextColor(...colors.primary);
-        doc.text('R-Service Tracker', 25, footerY + 10);
-        
+        // Refined company branding
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(...colors.secondary);
-        doc.text('Advanced Work Management and Analytics System', 25, footerY + 16);
-        doc.text('Generated automatically - All data remains private and secure on your device', 25, footerY + 21);
-        
-        // Advanced right side information with more details
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
+        doc.setFontSize(12);
         doc.setTextColor(...colors.primary);
-        doc.text('Data Security: PROTECTED', 130, footerY + 8);
+        doc.text('R-Service Tracker', 30, footerY + 12);
         
+        // Sophisticated subtitle
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...colors.secondary);
+        doc.text('Executive Work Management System', 30, footerY + 20);
+        
+        // Minimalist metadata
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(...colors.muted);
-        doc.text(`Page ${doc.getCurrentPageInfo().pageNumber} | Theme: ${reportData.currentTheme}`, 130, footerY + 14);
-        doc.text(`Session: ${reportData.sessionId}`, 130, footerY + 18);
-        doc.text(`Hash: ${reportData.dataIntegrityHash} | ${reportData.complianceStatus}`, 130, footerY + 22);
+        doc.text('Confidential Report', 140, footerY + 12);
+        doc.text(`Version ${reportData.reportVersion}`, 140, footerY + 20);
     }
 
     addAdvancedWorkRecords(doc, colors, workRecords, reportData, yPos) {
