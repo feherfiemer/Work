@@ -515,7 +515,8 @@ class Utils {
             doc.text(`₹${record.wage}`, 100, yPos + 5);
             
             // Paid status
-            doc.setTextColor(isPaid ? ...colors.success : ...colors.danger);
+            const paidStatusColor = isPaid ? colors.success : colors.danger;
+            doc.setTextColor(...paidStatusColor);
             doc.text(isPaid ? 'YES' : 'NO', 120, yPos + 5);
             
             // Payment date

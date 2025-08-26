@@ -19,17 +19,36 @@ class RServiceTracker {
         const startTime = Date.now();
         
         while (Date.now() - startTime < maxWait) {
-            if (typeof Utils !== 'undefined' && 
-                typeof DatabaseManager !== 'undefined' && 
-                typeof NotificationManager !== 'undefined') {
+            const utilsReady = typeof Utils !== 'undefined';
+            const dbReady = typeof DatabaseManager !== 'undefined';
+            const notificationsReady = typeof NotificationManager !== 'undefined';
+            const configReady = typeof window.R_SERVICE_CONFIG !== 'undefined' || typeof ConfigManager !== 'undefined';
+            
+            console.log('Dependency check:', { utilsReady, dbReady, notificationsReady, configReady });
+            
+            if (utilsReady && dbReady && notificationsReady && configReady) {
                 console.log('All dependencies loaded successfully');
                 return;
             }
-            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            await new Promise(resolve => setTimeout(resolve, 50));
         }
         
         console.error('Failed to load all dependencies within timeout');
-        throw new Error('Dependencies not loaded');
+        
+        // Try to continue with available dependencies
+        const availableDeps = [];
+        if (typeof Utils !== 'undefined') availableDeps.push('Utils');
+        if (typeof DatabaseManager !== 'undefined') availableDeps.push('DatabaseManager');
+        if (typeof NotificationManager !== 'undefined') availableDeps.push('NotificationManager');
+        
+        console.log('Available dependencies:', availableDeps);
+        
+        if (availableDeps.length === 0) {
+            throw new Error('No dependencies loaded - please refresh the page');
+        } else {
+            console.warn('Proceeding with partial dependencies:', availableDeps);
+        }
     }
 
     async init() {
@@ -39,14 +58,37 @@ class RServiceTracker {
             this.showLoadingScreen();
             
             // Initialize utilities
-            this.utils = new Utils();
+            if (typeof Utils !== 'undefined') {
+                this.utils = new Utils();
+                console.log('Utils initialized successfully');
+            } else {
+                console.error('Utils not available');
+                throw new Error('Utils class not loaded');
+            }
             
             // Initialize database
-            this.db = new DatabaseManager();
-            await this.db.init();
+            if (typeof DatabaseManager !== 'undefined') {
+                this.db = new DatabaseManager();
+                await this.db.init();
+                console.log('Database initialized successfully');
+            } else {
+                console.error('DatabaseManager not available');
+                throw new Error('DatabaseManager class not loaded');
+            }
             
             // Initialize notifications
-            this.notifications = new NotificationManager();
+            if (typeof NotificationManager !== 'undefined') {
+                this.notifications = new NotificationManager();
+                console.log('Notifications initialized successfully');
+            } else {
+                console.warn('NotificationManager not available - using fallback');
+                this.notifications = {
+                    showToast: (message, type) => console.log(`[${type}] ${message}`),
+                    showSuccess: (message) => console.log(`[success] ${message}`),
+                    showError: (message) => console.error(`[error] ${message}`),
+                    showWarning: (message) => console.warn(`[warning] ${message}`)
+                };
+            }
             
             // Initialize UI components
             this.initializeComponents();
@@ -64,6 +106,11 @@ class RServiceTracker {
             this.hideLoadingScreen();
             
             console.log('R-Service Tracker initialized successfully');
+            
+            // Show success message
+            if (this.notifications && this.notifications.showSuccess) {
+                this.notifications.showSuccess('R-Service Tracker loaded successfully!');
+            }
             
         } catch (error) {
             console.error('Error initializing application:', error);
