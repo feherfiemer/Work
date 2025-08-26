@@ -2,19 +2,34 @@ class RServiceTracker {
     constructor() {
         this.db = null;
         this.notifications = null;
-        this.charts = null;
-        this.calendar = null;
         this.utils = null;
-        
-        this.currentStats = {};
-        this.isInitialized = false;
+        this.currentView = 'dashboard';
+        this.charts = {};
         this.pendingUnpaidDates = [];
         this.selectedPaymentAmount = null;
-        this.currentColor = 'blue';
-        this.currentMode = 'light';
-        this.updateDashboardTimeout = null;
         
-        this.init();
+        // Wait for all dependencies to load
+        this.waitForDependencies().then(() => {
+            this.init();
+        });
+    }
+
+    async waitForDependencies() {
+        const maxWait = 10000; // 10 seconds max wait
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < maxWait) {
+            if (typeof Utils !== 'undefined' && 
+                typeof DatabaseManager !== 'undefined' && 
+                typeof NotificationManager !== 'undefined') {
+                console.log('All dependencies loaded successfully');
+                return;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        console.error('Failed to load all dependencies within timeout');
+        throw new Error('Dependencies not loaded');
     }
 
     async init() {
@@ -23,135 +38,121 @@ class RServiceTracker {
             
             this.showLoadingScreen();
             
+            // Initialize utilities
             this.utils = new Utils();
             
+            // Initialize database
             this.db = new DatabaseManager();
             await this.db.init();
             
-            if (typeof NotificationManager !== 'undefined') {
-                    this.notifications = new NotificationManager();
-                } else {
-                    console.error('NotificationManager not available, retrying...');
-                    setTimeout(() => {
-                        if (typeof NotificationManager !== 'undefined') {
-                            this.notifications = new NotificationManager();
-                        }
-                    }, 100);
-                }
-            this.notifications.setDatabase(this.db);
+            // Initialize notifications
+            this.notifications = new NotificationManager();
             
-            this.charts = new ChartsManager(this.db);
+            // Initialize UI components
+            this.initializeComponents();
             
-            this.calendar = new CalendarManager(this.db);
-            
-            this.loadTheme();
-            
+            // Setup event listeners
             this.setupEventListeners();
             
-            await this.loadInitialData();
+            // Update dashboard
+            await this.updateDashboard();
             
+            // Initialize theme
+            this.initializeTheme();
             
-            this.setupPWAInstall();
-            
-            
+            // Hide loading screen
             this.hideLoadingScreen();
             
-            await this.initializeViews();
-            
-            this.updateCurrentYear();
-            
-            this.isInitialized = true;
-            
-            this.verifyConfiguration();
-            
-            window.testNotifications = () => {
-                if (this.notifications) {
-                    this.notifications.testAllNotifications();
-                } else {
-                    console.error('Notifications not initialized');
-                }
-            };
-            
-            window.testAllSystems = async () => {
-                console.log('[SYSTEM] Testing all R-Service Tracker systems...');
-                
-                try {
-                                    console.log('[DATABASE] Testing database...');
-                const stats = await this.db.getEarningsStats();
-                console.log('[DATABASE] Database working - Current stats:', stats);
-                
-                console.log('[NOTIFICATIONS] Testing notifications...');
-                this.notifications.testAllNotifications();
-                
-                console.log('[CHARTS] Testing charts...');
-                if (this.charts) {
-                    await this.charts.updateCharts();
-                    console.log('[CHARTS] Charts system working');
-                }
-                
-                console.log('[CALENDAR] Testing calendar...');
-                if (this.calendar) {
-                    this.calendar.render();
-                    console.log('[CALENDAR] Calendar system working');
-                }
-                
-                console.log('[UTILITIES] Testing utilities...');
-                const testDate = this.utils.formatDate(new Date());
-                console.log('[UTILITIES] Utilities working - Test date:', testDate);
-                
-                console.log('[PWA] Testing PWA features...');
-                if ('serviceWorker' in navigator) {
-                    console.log('[PWA] Service Worker supported');
-                }
-                
-                    this.notifications.showToast('All systems tested successfully!', 'success', 5000);
-                    
-                } catch (error) {
-                    console.error('[SYSTEM] System test failed:', error);
-                    this.notifications.showToast('System test failed: ' + error.message, 'error', 5000);
-                }
-            };
-            
-            setTimeout(() => {
-                this.checkAdvancePaymentNotification();
-            }, 2000);
+            console.log('R-Service Tracker initialized successfully');
             
         } catch (error) {
             console.error('Error initializing application:', error);
-            
-            try {
-                if (!window.R_SERVICE_CONFIG) {
-                    window.R_SERVICE_CONFIG = {
-                        DAILY_WAGE: 25,
-                        PAYMENT_THRESHOLD: 4,
-                        INCREMENT_VALUE: 25,
-                        PAYMENT_DAY_DURATION: 4,
-                        MAX_PAYMENT_AMOUNT: 500
-                    };
-                    console.log('Fallback configuration set');
-                }
-                
-                if (!this.notifications) {
-                    if (typeof NotificationManager !== 'undefined') {
-                    this.notifications = new NotificationManager();
-                } else {
-                    console.error('NotificationManager not available, retrying...');
-                    setTimeout(() => {
-                        if (typeof NotificationManager !== 'undefined') {
-                            this.notifications = new NotificationManager();
-                        }
-                    }, 100);
-                }
-                }
-                
-                this.hideLoadingScreen();
-                this.showError('Application initialized with limited functionality. Some features may not work properly.');
-                
-            } catch (criticalError) {
-                console.error('Critical initialization error:', criticalError);
-                this.hideLoadingScreen();
-                this.showError('Critical error: Please refresh the page');
-            }
+            this.showErrorScreen(error.message);
+        }
+    }
+
+    initializeComponents() {
+        // Initialize charts if available
+        if (typeof ChartsManager !== 'undefined') {
+            this.charts = new ChartsManager(this.db);
+        }
+        
+        // Initialize calendar if available
+        if (typeof CalendarManager !== 'undefined') {
+            this.calendar = new CalendarManager(this.db);
+        }
+        
+        // Set current year in footer
+        this.updateCurrentYear();
+    }
+
+    initializeTheme() {
+        // Load saved theme or default
+        const savedTheme = localStorage.getItem('r-service-theme') || 'blue-light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Update theme selector if available
+        this.updateThemeSelector(savedTheme);
+    }
+
+    updateThemeSelector(theme) {
+        const [color, mode] = theme.split('-');
+        
+        // Update color buttons
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.color === color);
+        });
+        
+        // Update mode buttons
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+    }
+
+    updateCurrentYear() {
+        const yearElement = document.getElementById('currentYear');
+        if (yearElement) {
+            yearElement.textContent = new Date().getFullYear();
+        }
+    }
+
+    showErrorScreen(message) {
+        this.hideLoadingScreen();
+        
+        // Show error message
+        if (this.notifications) {
+            this.notifications.showError(`Initialization Error: ${message}`, 10000);
+        } else {
+            // Fallback error display
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #f8d7da;
+                color: #721c24;
+                padding: 2rem;
+                border-radius: 0.5rem;
+                border: 1px solid #f5c6cb;
+                max-width: 400px;
+                text-align: center;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            `;
+            errorDiv.innerHTML = `
+                <h3 style="margin: 0 0 1rem 0;">Initialization Error</h3>
+                <p style="margin: 0 0 1rem 0;">${message}</p>
+                <button onclick="location.reload()" style="
+                    background: #721c24;
+                    color: white;
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 0.25rem;
+                    cursor: pointer;
+                ">Reload Page</button>
+            `;
+            document.body.appendChild(errorDiv);
         }
     }
 
