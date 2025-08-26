@@ -486,6 +486,8 @@ class NotificationManager {
             setTimeout(() => this.createLuxuryConfirmation(), 1200);
             // Add cash register finale
             setTimeout(() => this.createCashRegisterFinale(), 1500);
+            // Final premium flourish with cathedral reverb
+            setTimeout(() => this.createPremiumFinish(), 1800);
         }
     }
 
@@ -1181,6 +1183,146 @@ class NotificationManager {
             console.warn('Could not create audio context:', error);
         }
     }
+    
+    // Missing systematic sound methods implementation
+    playPaymentSequence(intensity = 'medium') {
+        const settings = this.getAudioSettings();
+        const ctx = this.audioContext;
+        const now = ctx.currentTime;
+        const volume = settings.volumes[intensity];
+        
+        // Ascending payment sequence (C5 -> E5 -> G5)
+        const sequence = [523.25, 659.25, 783.99];
+        
+        sequence.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + index * 0.15);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(freq * 2, now + index * 0.15);
+            filter.Q.setValueAtTime(8, now + index * 0.15);
+            
+            gain.gain.setValueAtTime(volume, now + index * 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.15 + 0.4);
+            
+            osc.start(now + index * 0.15);
+            osc.stop(now + index * 0.15 + 0.4);
+        });
+    }
+    
+    playWarningTone(intensity = 'medium') {
+        const settings = this.getAudioSettings();
+        const ctx = this.audioContext;
+        const now = ctx.currentTime;
+        const volume = settings.volumes[intensity];
+        
+        // Two-tone warning pattern
+        const frequencies = [349.23, 415.30]; // F4 -> G#4
+        
+        frequencies.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, now + index * 0.3);
+            
+            gain.gain.setValueAtTime(volume, now + index * 0.3);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.3 + 0.25);
+            
+            osc.start(now + index * 0.3);
+            osc.stop(now + index * 0.3 + 0.25);
+        });
+    }
+    
+    playErrorSequence(intensity = 'medium') {
+        const settings = this.getAudioSettings();
+        const ctx = this.audioContext;
+        const now = ctx.currentTime;
+        const volume = settings.volumes[intensity];
+        
+        // Descending error sequence (D4 -> C4 -> B3)
+        const sequence = [293.66, 261.63, 246.94];
+        
+        sequence.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now + index * 0.2);
+            
+            gain.gain.setValueAtTime(volume, now + index * 0.2);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.2 + 0.3);
+            
+            osc.start(now + index * 0.2);
+            osc.stop(now + index * 0.2 + 0.3);
+        });
+    }
+    
+    playInfoChime(intensity = 'medium') {
+        const settings = this.getAudioSettings();
+        const ctx = this.audioContext;
+        const now = ctx.currentTime;
+        const volume = settings.volumes[intensity];
+        
+        // Pleasant info chime (G4)
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(392.00, now); // G4
+        
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(784, now);
+        filter.Q.setValueAtTime(5, now);
+        
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+        
+        osc.start(now);
+        osc.stop(now + 0.6);
+    }
+    
+    playSystemBeep(intensity = 'medium') {
+        const settings = this.getAudioSettings();
+        const ctx = this.audioContext;
+        const now = ctx.currentTime;
+        const volume = settings.volumes[intensity];
+        
+        // Simple system beep (A4)
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440.00, now); // A4
+        
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        
+        osc.start(now);
+        osc.stop(now + 0.2);
+    }
     // Create achievement chime for work completion
     createAchievementChime() {
         if (!this.audioContext) return;
@@ -1300,6 +1442,87 @@ class NotificationManager {
             });
         } catch (error) {
             console.warn("Error creating cash register finale:", error);
+        }
+    }
+    
+    // Create premium finish with enhanced reverb for ultimate luxury feel
+    createPremiumFinish() {
+        if (!this.audioContext) return;
+        
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create a luxurious cathedral bell finish with enhanced reverb
+            const frequencies = [261.63, 329.63, 392.00, 523.25]; // C Major chord progression
+            
+            // Main luxurious bell tones
+            frequencies.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                const reverb = ctx.createConvolver();
+                
+                // Create artificial reverb using delay and feedback
+                const delay = ctx.createDelay(0.3);
+                const feedback = ctx.createGain();
+                const delayGain = ctx.createGain();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(delay);
+                delay.connect(feedback);
+                feedback.connect(delay);
+                feedback.connect(delayGain);
+                delayGain.connect(ctx.destination);
+                gain.connect(ctx.destination);
+                
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(freq, now + index * 0.1);
+                
+                filter.type = "lowpass";
+                filter.frequency.setValueAtTime(freq * 3, now + index * 0.1);
+                filter.Q.setValueAtTime(15, now + index * 0.1);
+                
+                delay.delayTime.setValueAtTime(0.15, now + index * 0.1);
+                feedback.gain.setValueAtTime(0.3, now + index * 0.1);
+                delayGain.gain.setValueAtTime(0.2, now + index * 0.1);
+                
+                const startTime = now + (index * 0.1);
+                gain.gain.setValueAtTime(0.3, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 2.0);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 2.0);
+            });
+            
+            // Add shimmer effect
+            setTimeout(() => {
+                for (let i = 0; i < 5; i++) {
+                    const shimmerOsc = ctx.createOscillator();
+                    const shimmerGain = ctx.createGain();
+                    const shimmerFilter = ctx.createBiquadFilter();
+                    
+                    shimmerOsc.connect(shimmerFilter);
+                    shimmerFilter.connect(shimmerGain);
+                    shimmerGain.connect(ctx.destination);
+                    
+                    shimmerOsc.type = "sine";
+                    shimmerOsc.frequency.setValueAtTime(1047 + (i * 200), ctx.currentTime);
+                    
+                    shimmerFilter.type = "highpass";
+                    shimmerFilter.frequency.setValueAtTime(800, ctx.currentTime);
+                    
+                    shimmerGain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    shimmerGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+                    
+                    shimmerOsc.start(ctx.currentTime);
+                    shimmerOsc.stop(ctx.currentTime + 1.5);
+                }
+            }, 200);
+            
+        } catch (error) {
+            console.warn("Error creating premium finish:", error);
         }
     }
 

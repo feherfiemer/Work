@@ -126,7 +126,7 @@ class RServiceTracker {
                         PAYMENT_THRESHOLD: 4,
                         INCREMENT_VALUE: 25,
                         PAYMENT_DAY_DURATION: 4,
-                        MAX_PAYMENT_AMOUNT: 1000
+                        MAX_PAYMENT_AMOUNT: 500
                     };
                     console.log('Fallback configuration set');
                 }
@@ -642,7 +642,7 @@ class RServiceTracker {
         this.originalSettings = {
             INCREMENT_VALUE: config.INCREMENT_VALUE || 25,
             PAYMENT_DAY_DURATION: config.PAYMENT_DAY_DURATION || 4,
-            MAX_PAYMENT_AMOUNT: config.MAX_PAYMENT_AMOUNT || 1000
+            MAX_PAYMENT_AMOUNT: config.MAX_PAYMENT_AMOUNT || 500
         };
         console.log('Original settings stored:', this.originalSettings);
     }
@@ -710,7 +710,7 @@ class RServiceTracker {
             config = {
                 INCREMENT_VALUE: 25,
                 PAYMENT_DAY_DURATION: 4,
-                MAX_PAYMENT_AMOUNT: 1000
+                MAX_PAYMENT_AMOUNT: 500
             };
         }
         return config;

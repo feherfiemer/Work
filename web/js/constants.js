@@ -8,7 +8,7 @@
         CURRENCY_NAME: 'rupees',
         INCREMENT_VALUE: 25, // Default increment for payment amounts
         PAYMENT_DAY_DURATION: 4, // Default payment day duration
-        MAX_PAYMENT_AMOUNT: 1000, // Default maximum payment amount
+        MAX_PAYMENT_AMOUNT: 500, // Default maximum payment amount
         TIMEZONE: 'Asia/Kolkata' // IST timezone
     };
 
@@ -63,7 +63,7 @@
         generatePaymentAmounts() {
             const config = this.getConfig();
             const increment = config.INCREMENT_VALUE || 25;
-            const maxAmount = config.MAX_PAYMENT_AMOUNT || 1000;
+            const maxAmount = config.MAX_PAYMENT_AMOUNT || 500;
             
             const amounts = [];
             for (let amount = increment; amount <= maxAmount; amount += increment) {
@@ -72,7 +72,7 @@
             
             if (amounts.length === 0) {
                 const dailyWage = config.DAILY_WAGE || 25;
-                return [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 1000];
+                return [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 500];
             }
             
             return amounts;
