@@ -151,7 +151,7 @@ class Utils {
             
             this.addHeader(doc, colors);
             
-            let yPos = 65;
+            let yPos = 80;
             
             yPos = this.addCompanyInfo(doc, colors, yPos);
             
@@ -189,143 +189,246 @@ class Utils {
 
     addHeader(doc, colors) {
         try {
-            // Main header background with gradient effect
+            // Premium gradient header background
             doc.setFillColor(...colors.primary);
-            doc.rect(0, 0, 210, 35, 'F');
+            doc.rect(0, 0, 210, 40, 'F');
             
-            // Add subtle accent bar
+            // Add premium accent gradient bar
             if (colors.accent && Array.isArray(colors.accent)) {
                 doc.setFillColor(...colors.accent);
-                doc.rect(0, 35, 210, 3, 'F');
+                doc.rect(0, 40, 210, 4, 'F');
             } else {
-                // Fallback to a lighter version of primary color
+                // Enhanced fallback gradient effect
                 const [r, g, b] = colors.primary;
-                doc.setFillColor(Math.min(255, r + 50), Math.min(255, g + 50), Math.min(255, b + 50));
-                doc.rect(0, 35, 210, 3, 'F');
+                doc.setFillColor(Math.min(255, r + 30), Math.min(255, g + 30), Math.min(255, b + 30));
+                doc.rect(0, 40, 210, 4, 'F');
             }
+            
+            // Premium shadow effect
+            doc.setFillColor(0, 0, 0, 0.1);
+            doc.rect(0, 44, 210, 1, 'F');
+            
         } catch (error) {
             console.error('Error in addHeader:', error);
-            // Continue with basic header without accent bar
-            doc.setFillColor(33, 150, 243); // Default blue
-            doc.rect(0, 0, 210, 35, 'F');
+            // Enhanced fallback header
+            doc.setFillColor(33, 150, 243);
+            doc.rect(0, 0, 210, 40, 'F');
         }
         
-        // App title with checkmark icon
+        // Premium logo section with proper alignment
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(24);
+        doc.setFontSize(28);
         doc.setTextColor(255, 255, 255);
-        doc.text('✓', 15, 22);
-        doc.text('R-Service Tracker', 25, 22);
         
+        // Properly positioned checkmark icon with better spacing
+        doc.text('✓', 20, 25);
+        
+        // Main title with optimal spacing and alignment
+        doc.text('R-Service Tracker', 35, 25);
+        
+        // Premium subtitle with enhanced positioning
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(11);
-        doc.text('Professional Work & Payment Management Report', 25, 30);
+        doc.setFontSize(12);
+        doc.setTextColor(255, 255, 255);
+        doc.text('Professional Work & Payment Management Report', 35, 35);
         
-        // Metadata section background
-        doc.setFillColor(248, 248, 248);
-        doc.rect(0, 38, 210, 15, 'F');
+        // Premium metadata section with enhanced design
+        doc.setFillColor(250, 250, 250);
+        doc.rect(0, 47, 210, 18, 'F');
         
-        // Report metadata
+        // Add subtle border to metadata section
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.3);
+        doc.line(0, 47, 210, 47);
+        doc.line(0, 65, 210, 65);
+        
+        // Enhanced report metadata with better typography
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
+        doc.setFontSize(9);
         doc.setTextColor(...colors.secondary);
         const now = new Date();
         const reportId = `RST-${now.getTime().toString().slice(-8)}`;
         
-        doc.text(`Generated: ${this.formatDateTime(now)}`, 15, 46);
-        doc.text(`Report ID: ${reportId}`, 15, 50);
-        doc.text('Timezone: Asia/Kolkata (IST)', 110, 46);
-        doc.text('Format: PDF Summary Report', 110, 50);
+        // Left column metadata
+        doc.text(`Generated: ${this.formatDateTime(now)}`, 20, 54);
+        doc.text(`Report ID: ${reportId}`, 20, 59);
         
-        // Professional border line
+        // Right column metadata with better alignment
+        doc.text('Timezone: Asia/Kolkata (IST)', 115, 54);
+        doc.text('Format: Premium PDF Report', 115, 59);
+        
+        // Premium separator line with enhanced styling
         doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(0.5);
-        doc.line(15, 55, 195, 55);
+        doc.setLineWidth(0.8);
+        doc.line(20, 70, 190, 70);
+        
+        // Add subtle accent dots for premium feel
+        doc.setFillColor(...colors.primary);
+        doc.circle(20, 70, 1, 'F');
+        doc.circle(190, 70, 1, 'F');
     }
 
     addFooter(doc, colors) {
-        const footerY = 285;
+        const footerY = 280;
         
-        // Footer background
-        doc.setFillColor(245, 245, 245);
-        doc.rect(0, footerY, 210, 12, 'F');
+        // Premium footer with gradient background
+        doc.setFillColor(248, 249, 250);
+        doc.rect(0, footerY, 210, 17, 'F');
         
-        // Footer content
+        // Add premium top border
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.line(0, footerY, 210, footerY);
+        
+        // Premium accent line
+        doc.setFillColor(...colors.primary);
+        doc.rect(0, footerY, 210, 1, 'F');
+        
+        // Enhanced footer content with better typography
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...colors.primary);
+        
+        // Company branding
+        doc.text('R-Service Tracker', 20, footerY + 7);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7);
         doc.setTextColor(...colors.secondary);
+        doc.text('Professional Work Management System', 20, footerY + 11);
         
-        doc.text('R-Service Tracker - Professional Work Management System', 15, footerY + 5);
-        doc.text('Generated automatically - All data remains private on your device', 15, footerY + 8);
+        // Privacy and security information
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.text('Generated automatically - All data remains private on your device', 20, footerY + 15);
         
-        // Page number (for multi-page support)
-        doc.text(`Page ${doc.getCurrentPageInfo().pageNumber}`, 185, footerY + 8);
-        
-        // Security notice
+        // Right side information with better alignment
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
         doc.setTextColor(...colors.primary);
-        doc.text('🔒 Privacy Protected', 150, footerY + 5);
+        doc.text('🔒 Privacy Protected', 140, footerY + 7);
+        
+        // Page number with premium styling
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(...colors.secondary);
+        doc.text(`Page ${doc.getCurrentPageInfo().pageNumber}`, 175, footerY + 11);
+        
+        // Premium timestamp
+        const now = new Date();
+        doc.text(`${now.toLocaleDateString('en-IN')}`, 175, footerY + 15);
     }
 
     addCompanyInfo(doc, colors, yPos) {
-        doc.setFillColor(...colors.light);
-        doc.rect(15, yPos - 5, 180, 25, 'F');
+        // Premium service provider section with enhanced design
+        doc.setFillColor(252, 253, 254);
+        doc.rect(15, yPos - 5, 180, 30, 'F');
         
+        // Add premium border
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.3);
+        doc.rect(15, yPos - 5, 180, 30, 'S');
+        
+        // Section header with premium styling
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
-        doc.setTextColor(...colors.secondary);
+        doc.setTextColor(...colors.primary);
         doc.text('SERVICE PROVIDER INFORMATION', 20, yPos + 5);
         
+        // Add decorative line under header
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.line(20, yPos + 8, 190, yPos + 8);
+        
+        // Enhanced content with better formatting
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
-        doc.text('Service: Service Work Tracking', 25, yPos + 13);
-        doc.text('Report Type: Professional Work Summary', 25, yPos + 18);
-        doc.text(`Daily Rate: ${this.formatCurrencyForPDF(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)} per day`, 110, yPos + 13);
-        doc.text('Currency: Indian Rupees (INR)', 110, yPos + 18);
+        doc.setTextColor(...colors.secondary);
         
-        return yPos + 35;
+        // Left column information
+        doc.text('Service:', 25, yPos + 16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('R-Service Work Tracking', 55, yPos + 16);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.text('Report Type:', 25, yPos + 21);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Premium Work Summary', 70, yPos + 21);
+        
+        // Right column information with better alignment
+        doc.setFont('helvetica', 'normal');
+        doc.text('Daily Rate:', 115, yPos + 16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.primary);
+        doc.text(`${this.formatCurrencyForPDF(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)} per day`, 155, yPos + 16);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colors.secondary);
+        doc.text('Currency:', 115, yPos + 21);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Indian Rupees (₹)', 155, yPos + 21);
+        
+        return yPos + 40;
     }
 
     addExecutiveSummary(doc, colors, summary, yPos) {
-        if (yPos > 250) {
+        if (yPos > 240) {
             doc.addPage();
             yPos = 20;
         }
         
+        // Premium section header with gradient effect
         doc.setFillColor(...colors.primary);
-        doc.rect(15, yPos - 5, 180, 15, 'F');
+        doc.rect(15, yPos - 5, 180, 18, 'F');
         
+        // Add premium shadow effect
+        doc.setFillColor(0, 0, 0, 0.1);
+        doc.rect(15, yPos + 13, 180, 1, 'F');
+        
+        // Section title with enhanced styling
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
+        doc.setFontSize(16);
         doc.setTextColor(255, 255, 255);
-        doc.text('EXECUTIVE SUMMARY', 20, yPos + 5);
-        yPos += 20;
+        doc.text('📊 EXECUTIVE SUMMARY', 20, yPos + 7);
+        yPos += 25;
         
         const metrics = [
-            { label: 'Total Days Worked', value: `${summary.totalWorked} days` },
-            { label: 'Total Earnings', value: this.formatCurrencyForPDF(summary.totalEarned) },
-            { label: 'Amount Received', value: this.formatCurrencyForPDF(summary.totalPaid) },
-            { label: 'Outstanding Balance', value: this.formatCurrencyForPDF(summary.currentBalance) }
+            { label: 'Total Days Worked', value: `${summary.totalWorked} days`, icon: '📅' },
+            { label: 'Total Earnings', value: this.formatCurrencyForPDF(summary.totalEarned), icon: '💰' },
+            { label: 'Amount Received', value: this.formatCurrencyForPDF(summary.totalPaid), icon: '💳' },
+            { label: 'Outstanding Balance', value: this.formatCurrencyForPDF(summary.currentBalance), icon: '📈' }
         ];
         
         metrics.forEach((metric, index) => {
             const x = 20 + (index % 2) * 90;
-            const y = yPos + Math.floor(index / 2) * 25;
+            const y = yPos + Math.floor(index / 2) * 28;
             
-            doc.setFillColor(252, 252, 252);
-            doc.rect(x - 2, y - 3, 85, 20, 'F');
+            // Premium card background with gradient
+            doc.setFillColor(254, 254, 254);
+            doc.rect(x - 2, y - 3, 85, 24, 'F');
             
-            doc.setFont('helvetica', 'bold');
+            // Add premium border
+            doc.setDrawColor(...colors.primary);
+            doc.setLineWidth(0.2);
+            doc.rect(x - 2, y - 3, 85, 24, 'S');
+            
+            // Add subtle accent bar
+            doc.setFillColor(...colors.primary);
+            doc.rect(x - 2, y - 3, 85, 2, 'F');
+            
+            // Metric icon and label
+            doc.setFont('helvetica', 'normal');
             doc.setFontSize(11);
             doc.setTextColor(...colors.secondary);
-            doc.text(metric.label, x, y + 5);
+            doc.text(`${metric.icon} ${metric.label}`, x, y + 6);
             
+            // Metric value with premium styling
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(13);
+            doc.setFontSize(14);
             doc.setTextColor(...colors.primary);
-            doc.text(metric.value, x, y + 13);
+            doc.text(metric.value, x, y + 16);
         });
         
-        return yPos + 60;
+        return yPos + 65;
     }
 
     addFinancialAnalytics(doc, colors, summary, yPos) {
