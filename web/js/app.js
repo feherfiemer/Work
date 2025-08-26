@@ -727,7 +727,7 @@ class RServiceTracker {
                 config = {
                     INCREMENT_VALUE: 25,
                     PAYMENT_DAY_DURATION: 4,
-                    MAX_PAYMENT_AMOUNT: 1000
+                    MAX_PAYMENT_AMOUNT: 500
                 };
                 console.warn('Using fallback configuration');
             }
@@ -738,7 +738,7 @@ class RServiceTracker {
 
             if (incrementInput) incrementInput.value = config.INCREMENT_VALUE || 25;
             if (durationInput) durationInput.value = config.PAYMENT_DAY_DURATION || 4;
-            if (maxPaymentInput) maxPaymentInput.value = config.MAX_PAYMENT_AMOUNT || 1000;
+            if (maxPaymentInput) maxPaymentInput.value = config.MAX_PAYMENT_AMOUNT || 500;
             
         } catch (error) {
             console.error('Error loading settings:', error);
@@ -748,7 +748,7 @@ class RServiceTracker {
 
             if (incrementInput) incrementInput.value = 25;
             if (durationInput) durationInput.value = 4;
-            if (maxPaymentInput) maxPaymentInput.value = 1000;
+            if (maxPaymentInput) maxPaymentInput.value = 500;
         }
     }
 
@@ -898,7 +898,7 @@ class RServiceTracker {
             const newConfig = {
                 INCREMENT_VALUE: parseInt(incrementInput.value) || 25,
                 PAYMENT_DAY_DURATION: parseInt(durationInput.value) || 4,
-                MAX_PAYMENT_AMOUNT: parseInt(maxPaymentInput.value) || 1000
+                MAX_PAYMENT_AMOUNT: parseInt(maxPaymentInput.value) || 500
             };
 
             newConfig.DAILY_WAGE = newConfig.INCREMENT_VALUE;
@@ -1015,7 +1015,7 @@ class RServiceTracker {
 
     resetSettings() {
         this.notifications.showConfirmation(
-            'Reset all settings to defaults?\n\n• Daily wage: ₹25\n• Payment period: 4 days\n• Max amount: ₹1000',
+            'Reset all settings to defaults?\n\n• Daily wage: ₹25\n• Payment period: 4 days\n• Max amount: ₹500',
             () => {
                 try {
                     if (window.ConfigManager) {
@@ -1514,13 +1514,13 @@ class RServiceTracker {
                 amounts = window.ConfigManager.generatePaymentAmounts();
             } else {
                 const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-                amounts = [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 1000];
+                amounts = [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 500];
                 console.warn('Using fallback payment amounts based on daily wage:', dailyWage);
             }
             
             if (!Array.isArray(amounts) || amounts.length === 0) {
                 const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-                amounts = [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 1000];
+                amounts = [dailyWage, dailyWage*2, dailyWage*3, dailyWage*4, dailyWage*8, dailyWage*12, dailyWage*16, dailyWage*20, dailyWage*24, 500];
             }
             
             amounts.forEach(amount => {
@@ -1535,7 +1535,7 @@ class RServiceTracker {
         } catch (error) {
             console.error('Error generating payment buttons:', error);
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-            const fallbackAmounts = [dailyWage, dailyWage*2, dailyWage*4, dailyWage*8, dailyWage*20, 1000];
+            const fallbackAmounts = [dailyWage, dailyWage*2, dailyWage*4, dailyWage*8, dailyWage*20, 500];
             fallbackAmounts.forEach(amount => {
                 const button = document.createElement('button');
                 button.className = 'payment-btn';
@@ -2256,7 +2256,7 @@ class RServiceTracker {
                 PAYMENT_THRESHOLD: 4,
                 INCREMENT_VALUE: 25,
                 PAYMENT_DAY_DURATION: 4,
-                MAX_PAYMENT_AMOUNT: 1000
+                MAX_PAYMENT_AMOUNT: 500
             };
             console.log('Fallback to default config:', window.R_SERVICE_CONFIG);
         }
