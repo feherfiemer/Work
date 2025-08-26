@@ -1,16 +1,10 @@
 <svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Rounded background -->
-  <rect width="192" height="192" rx="42" ry="42" fill="#2196F3"/>
+  <!-- Curved black background -->
+  <rect width="192" height="192" rx="36" ry="36" fill="#000000"/>
   
-  <!-- Inner favicon with padding (centered 96x96) -->
-  <g transform="translate(48, 48)">
-    <!-- Black background circle -->
-    <circle cx="48" cy="48" r="48" fill="#000000"/>
-    
-    <!-- White outline circle -->
-    <circle cx="48" cy="48" r="41" fill="none" stroke="#FFFFFF" stroke-width="3"/>
-    
-    <!-- White checkmark -->
-    <path d="M34 48L43 57L64 36" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  </g>
+  <!-- Dashed white border with padding -->
+  <rect x="18" y="18" width="156" height="156" rx="24" ry="24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="8,4"/>
+  
+  <!-- Larger tick mark -->
+  <path d="M60 96L82 118L135 66" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
