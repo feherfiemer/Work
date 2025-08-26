@@ -1102,6 +1102,8 @@ class RServiceTracker {
         if (earningsInsightBtn && earningsInsightTooltip) {
             earningsInsightBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
+                // Play click sound
+                this.playClickSound();
                 await this.toggleEarningsInsight(e.target);
             });
         }
@@ -1178,51 +1180,70 @@ class RServiceTracker {
         // Show tooltip temporarily to measure its size
         tooltip.style.visibility = 'hidden';
         tooltip.style.opacity = '1';
+        tooltip.style.display = 'block';
         const tooltipRect = tooltipContent.getBoundingClientRect();
         tooltip.style.visibility = '';
         tooltip.style.opacity = '';
+        tooltip.style.display = '';
         
-        // Calculate available space
-        const spaceAbove = targetRect.top;
-        const spaceBelow = window.innerHeight - targetRect.bottom;
-        const spaceLeft = targetRect.left;
-        const spaceRight = window.innerWidth - targetRect.right;
+        // Add padding for safe margins
+        const MARGIN = 15;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Calculate available space with margins
+        const spaceAbove = targetRect.top - MARGIN;
+        const spaceBelow = viewportHeight - targetRect.bottom - MARGIN;
+        const spaceLeft = targetRect.left - MARGIN;
+        const spaceRight = viewportWidth - targetRect.right - MARGIN;
         
         let position = 'bottom'; // default
         let left, top;
         
-        // Determine best position
-        if (spaceBelow >= tooltipRect.height + 10) {
-            // Show below
+        // Determine best position based on available space
+        if (spaceBelow >= tooltipRect.height) {
+            // Show below (preferred)
             position = 'bottom';
             top = targetRect.bottom + 10;
             left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
-        } else if (spaceAbove >= tooltipRect.height + 10) {
+        } else if (spaceAbove >= tooltipRect.height) {
             // Show above
             position = 'top';
             top = targetRect.top - tooltipRect.height - 10;
             left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
-        } else if (spaceRight >= tooltipRect.width + 10) {
+        } else if (spaceRight >= tooltipRect.width) {
             // Show right
             position = 'right';
             left = targetRect.right + 10;
             top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
-        } else if (spaceLeft >= tooltipRect.width + 10) {
+        } else if (spaceLeft >= tooltipRect.width) {
             // Show left
             position = 'left';
             left = targetRect.left - tooltipRect.width - 10;
             top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
         } else {
-            // Fallback to bottom with adjusted positioning
-            position = 'bottom';
-            top = targetRect.bottom + 10;
-            left = Math.max(10, Math.min(window.innerWidth - tooltipRect.width - 10, 
-                           targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2)));
+            // Force fit - use position with most space
+            const maxSpace = Math.max(spaceBelow, spaceAbove, spaceLeft, spaceRight);
+            if (maxSpace === spaceBelow || maxSpace === spaceAbove) {
+                position = maxSpace === spaceBelow ? 'bottom' : 'top';
+                top = maxSpace === spaceBelow ? targetRect.bottom + 5 : targetRect.top - tooltipRect.height - 5;
+                left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+            } else {
+                position = maxSpace === spaceRight ? 'right' : 'left';
+                left = maxSpace === spaceRight ? targetRect.right + 5 : targetRect.left - tooltipRect.width - 5;
+                top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+            }
         }
         
-        // Ensure tooltip stays within viewport
-        left = Math.max(10, Math.min(window.innerWidth - tooltipRect.width - 10, left));
-        top = Math.max(10, Math.min(window.innerHeight - tooltipRect.height - 10, top));
+        // Strict viewport boundaries enforcement
+        left = Math.max(MARGIN, Math.min(viewportWidth - tooltipRect.width - MARGIN, left));
+        top = Math.max(MARGIN, Math.min(viewportHeight - tooltipRect.height - MARGIN, top));
+        
+        // Special handling for very small screens
+        if (viewportWidth < 400) {
+            left = MARGIN;
+            tooltip.style.maxWidth = `${viewportWidth - (MARGIN * 2)}px`;
+        }
         
         // Apply position
         tooltip.style.left = `${left}px`;
@@ -1239,13 +1260,14 @@ class RServiceTracker {
 
     async generateEarningsStatusMessage(stats) {
         const { totalWorked, totalEarned, totalPaid, currentBalance } = stats;
+        const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
         
         // Check for advance payment status
         const advanceStatus = await this.db.getAdvancePaymentStatus();
         
         // New user - no work done
         if (totalWorked === 0) {
-            return "Welcome to R-Service Tracker! No work completed yet. Start tracking your daily tasks to begin earning.";
+            return `🎯 Professional Work Tracker Status\n\nWelcome to R-Service Tracker! Your earnings journey begins here.\n\n📋 Current Status: No work sessions recorded\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)} per day\n🚀 Next Step: Click "Mark as Done" when you complete your first work day to start tracking your professional earnings.`;
         }
         
         // Handle advance payment scenarios
@@ -1253,30 +1275,58 @@ class RServiceTracker {
             const remainingDays = advanceStatus.workRemainingForAdvance;
             const advanceAmount = advanceStatus.totalAdvanceAmount;
             const completedDays = totalWorked - remainingDays;
+            const progressPercent = Math.round((completedDays / (completedDays + remainingDays)) * 100);
             
-            return `Advance payment progress: You received ${this.utils.formatCurrency(advanceAmount)} advance. Completed ${completedDays} of ${totalWorked} required days. ${remainingDays} more day${remainingDays > 1 ? 's' : ''} needed to complete advance payment obligation.`;
+            return `💰 Advance Payment Tracking\n\n📊 Advance Amount: ${this.utils.formatCurrency(advanceAmount)}\n✅ Work Completed: ${completedDays} day${completedDays !== 1 ? 's' : ''} (${progressPercent}%)\n⏳ Remaining Obligation: ${remainingDays} day${remainingDays !== 1 ? 's' : ''}\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n\n🎯 Continue your excellent work progress to complete the advance payment obligation. You're making great strides toward fulfilling your commitment!`;
         }
         
         // Has worked but no payments made
         if (totalWorked > 0 && totalPaid === 0) {
-            return `You have completed ${totalWorked} day${totalWorked > 1 ? 's' : ''} of work with ${this.utils.formatCurrency(currentBalance)} pending payment. No payments collected yet.`;
+            const estimatedEarnings = totalWorked * dailyWage;
+            return `📈 Outstanding Payment Summary\n\n✅ Work Sessions Completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}\n💰 Pending Payment: ${this.utils.formatCurrency(currentBalance)}\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n💳 Payment Status: No collections yet\n\n🔔 Recommendation: Consider initiating payment collection process as you have successfully completed ${totalWorked} professional work session${totalWorked !== 1 ? 's' : ''}.`;
         }
         
         // Has worked and received some payments
         if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
-            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             const pendingDays = Math.ceil(currentBalance / dailyWage);
+            const paymentEfficiency = Math.round((totalPaid / (totalPaid + currentBalance)) * 100);
             
-            return `Work progress: ${totalWorked} day${totalWorked > 1 ? 's' : ''} completed, ${this.utils.formatCurrency(totalPaid)} collected. ${pendingDays} day${pendingDays > 1 ? 's' : ''} (${this.utils.formatCurrency(currentBalance)}) pending payment.`;
+            return `📊 Comprehensive Earnings Overview\n\n✅ Total Work Sessions: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}\n💰 Payments Collected: ${this.utils.formatCurrency(totalPaid)}\n⏳ Outstanding Balance: ${this.utils.formatCurrency(currentBalance)} (${pendingDays} day${pendingDays !== 1 ? 's' : ''})\n📈 Payment Efficiency: ${paymentEfficiency}%\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n\n🎯 Excellent progress! You're maintaining consistent work output with regular payment collections.`;
         }
         
         // All payments up to date
         if (totalWorked > 0 && currentBalance === 0) {
-            return `Excellent! ${totalWorked} day${totalWorked > 1 ? 's' : ''} of work completed with ${this.utils.formatCurrency(totalPaid)} total earned. All payments are up to date.`;
+            const avgMonthlyEarnings = totalPaid; // This could be refined with date calculations
+            return `🏆 Outstanding Achievement Status\n\n✅ Work Sessions Completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}\n💰 Total Earnings Collected: ${this.utils.formatCurrency(totalPaid)}\n📊 Payment Status: 100% Up-to-date\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n🎯 Efficiency Rating: Excellent\n\n🌟 Congratulations! You've maintained perfect payment management while delivering consistent professional work. Your disciplined approach to both work completion and payment tracking is exemplary.`;
         }
         
         // Fallback message
-        return "Track your daily work and manage payments efficiently with R-Service Tracker.";
+        return `🔧 R-Service Professional Tracker\n\nYour comprehensive solution for professional work tracking and payment management.\n\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n📋 Features: Work logging, payment tracking, progress analytics\n🎯 Goal: Streamline your professional earnings management`;
+    }
+
+    playClickSound() {
+        try {
+            // Create a subtle click sound using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Configure sound - short, subtle click
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (error) {
+            // Fallback: no sound if Web Audio API is not available
+            console.debug('Click sound not available:', error);
+        }
     }
 
     setupModalHandlers() {
