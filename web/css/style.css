@@ -4579,78 +4579,87 @@ button.disabled:hover {
   box-shadow: none !important;
 }
 
-/* ===== EARNINGS INSIGHT TOOLTIP ===== */
-.earnings-insight-tooltip {
-  position: absolute;
-  top: 100%;
-  right: 0;
+/* ===== EARNINGS TOOLTIP ===== */
+.earnings-tooltip {
+  position: fixed;
   z-index: var(--z-toast);
-  margin-top: 0.5rem;
   opacity: 0;
-  transform: translateY(-10px);
-  transition: var(--transition-fast);
+  visibility: hidden;
   pointer-events: none;
+  transition: all var(--transition-fast);
+  transform: scale(0.8);
 }
 
-.earnings-insight-tooltip.show {
+.earnings-tooltip.show {
   opacity: 1;
-  transform: translateY(0);
+  visibility: visible;
   pointer-events: auto;
+  transform: scale(1);
 }
 
-.insight-tooltip-content {
+.tooltip-content {
   background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius-small);
   box-shadow: var(--shadow-medium);
-  border: 1px solid var(--border);
   padding: 0.75rem 1rem;
-  max-width: 250px;
+  max-width: 280px;
   min-width: 200px;
-  position: relative;
-}
-
-.insight-tooltip-content::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  right: 1rem;
-  width: 12px;
-  height: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-bottom: none;
-  border-right: none;
-  transform: rotate(45deg);
-}
-
-.insight-tooltip-content p {
-  margin: 0;
   font-size: 0.875rem;
   line-height: 1.4;
   color: var(--text-primary);
-  text-align: left;
+  word-wrap: break-word;
 }
 
-/* Position tooltip relative to earnings card */
-.earnings-card {
-  position: relative;
+.tooltip-arrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+
+/* Arrow positioning classes - will be added dynamically */
+.earnings-tooltip.top .tooltip-arrow {
+  bottom: -5px;
+  left: 50%;
+  margin-left: -4px;
+  border-top: none;
+  border-left: none;
+}
+
+.earnings-tooltip.bottom .tooltip-arrow {
+  top: -5px;
+  left: 50%;
+  margin-left: -4px;
+  border-bottom: none;
+  border-right: none;
+}
+
+.earnings-tooltip.left .tooltip-arrow {
+  right: -5px;
+  top: 50%;
+  margin-top: -4px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.earnings-tooltip.right .tooltip-arrow {
+  left: -5px;
+  top: 50%;
+  margin-top: -4px;
+  border-right: none;
+  border-top: none;
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-  .earnings-insight-tooltip {
-    right: -1rem;
-    left: -1rem;
-    max-width: none;
-  }
-  
-  .insight-tooltip-content {
-    max-width: none;
-    min-width: auto;
-  }
-  
-  .insight-tooltip-content::before {
-    right: 2rem;
+  .tooltip-content {
+    max-width: 240px;
+    min-width: 180px;
+    font-size: 0.8rem;
+    padding: 0.6rem 0.8rem;
   }
 }
 

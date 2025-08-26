@@ -1102,7 +1102,7 @@ class RServiceTracker {
         if (earningsInsightBtn && earningsInsightTooltip) {
             earningsInsightBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                await this.toggleEarningsInsight();
+                await this.toggleEarningsInsight(e.target);
             });
         }
 
@@ -1122,20 +1122,27 @@ class RServiceTracker {
                 this.hideEarningsInsight();
             }
         });
+
+        // Close tooltip on scroll
+        window.addEventListener('scroll', () => {
+            if (earningsInsightTooltip && earningsInsightTooltip.classList.contains('show')) {
+                this.hideEarningsInsight();
+            }
+        });
     }
 
-    async toggleEarningsInsight() {
+    async toggleEarningsInsight(targetElement) {
         const tooltip = document.getElementById('earningsInsightTooltip');
         if (tooltip) {
             if (tooltip.classList.contains('show')) {
                 this.hideEarningsInsight();
             } else {
-                await this.showEarningsInsight();
+                await this.showEarningsInsight(targetElement);
             }
         }
     }
 
-    async showEarningsInsight() {
+    async showEarningsInsight(targetElement) {
         try {
             const stats = await this.db.getEarningsStats();
             
@@ -1148,9 +1155,10 @@ class RServiceTracker {
                 messageEl.textContent = statusMessage;
             }
             
-            // Show tooltip
+            // Position and show tooltip
             const tooltip = document.getElementById('earningsInsightTooltip');
-            if (tooltip) {
+            if (tooltip && targetElement) {
+                this.positionTooltip(tooltip, targetElement);
                 tooltip.classList.add('show');
             }
         } catch (error) {
@@ -1159,10 +1167,73 @@ class RServiceTracker {
         }
     }
 
+    positionTooltip(tooltip, targetElement) {
+        // Get target button position
+        const targetRect = targetElement.getBoundingClientRect();
+        const tooltipContent = tooltip.querySelector('.tooltip-content');
+        
+        // Reset classes
+        tooltip.classList.remove('top', 'bottom', 'left', 'right');
+        
+        // Show tooltip temporarily to measure its size
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.opacity = '1';
+        const tooltipRect = tooltipContent.getBoundingClientRect();
+        tooltip.style.visibility = '';
+        tooltip.style.opacity = '';
+        
+        // Calculate available space
+        const spaceAbove = targetRect.top;
+        const spaceBelow = window.innerHeight - targetRect.bottom;
+        const spaceLeft = targetRect.left;
+        const spaceRight = window.innerWidth - targetRect.right;
+        
+        let position = 'bottom'; // default
+        let left, top;
+        
+        // Determine best position
+        if (spaceBelow >= tooltipRect.height + 10) {
+            // Show below
+            position = 'bottom';
+            top = targetRect.bottom + 10;
+            left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+        } else if (spaceAbove >= tooltipRect.height + 10) {
+            // Show above
+            position = 'top';
+            top = targetRect.top - tooltipRect.height - 10;
+            left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+        } else if (spaceRight >= tooltipRect.width + 10) {
+            // Show right
+            position = 'right';
+            left = targetRect.right + 10;
+            top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+        } else if (spaceLeft >= tooltipRect.width + 10) {
+            // Show left
+            position = 'left';
+            left = targetRect.left - tooltipRect.width - 10;
+            top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+        } else {
+            // Fallback to bottom with adjusted positioning
+            position = 'bottom';
+            top = targetRect.bottom + 10;
+            left = Math.max(10, Math.min(window.innerWidth - tooltipRect.width - 10, 
+                           targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2)));
+        }
+        
+        // Ensure tooltip stays within viewport
+        left = Math.max(10, Math.min(window.innerWidth - tooltipRect.width - 10, left));
+        top = Math.max(10, Math.min(window.innerHeight - tooltipRect.height - 10, top));
+        
+        // Apply position
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+        tooltip.classList.add(position);
+    }
+
     hideEarningsInsight() {
         const tooltip = document.getElementById('earningsInsightTooltip');
         if (tooltip) {
-            tooltip.classList.remove('show');
+            tooltip.classList.remove('show', 'top', 'bottom', 'left', 'right');
         }
     }
 
