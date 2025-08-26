@@ -138,12 +138,12 @@ class Utils {
             
             // Set clean document properties to override any default titles
             doc.setProperties({
-                title: 'Service Tracker Report',
+                title: 'R-Service Tracker Report',
                 subject: 'Work Management Report',
-                author: 'Service Tracker',
-                creator: 'Service Tracker v1.0.0',
-                producer: 'Service Tracker PDF Generator',
-                keywords: 'work tracker, payment report, Service'
+                author: 'R-Service Tracker',
+                creator: 'R-Service Tracker v1.0.0',
+                producer: 'R-Service Tracker PDF Generator',
+                keywords: 'work tracker, payment report, R-Service'
             });
             
             const colors = this.getPDFColorsFromTheme();
@@ -215,7 +215,7 @@ class Utils {
         doc.setFontSize(24);
         doc.setTextColor(255, 255, 255);
         doc.text('✓', 15, 22);
-        doc.text('Service Tracker', 25, 22);
+        doc.text('R-Service Tracker', 25, 22);
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(11);
@@ -255,7 +255,7 @@ class Utils {
         doc.setFontSize(7);
         doc.setTextColor(...colors.secondary);
         
-        doc.text('Service Tracker - Professional Work Management System', 15, footerY + 5);
+        doc.text('R-Service Tracker - Professional Work Management System', 15, footerY + 5);
         doc.text('Generated automatically - All data remains private on your device', 15, footerY + 8);
         
         // Page number (for multi-page support)
@@ -669,7 +669,7 @@ class Utils {
             doc.text(`Page ${i} of ${pageCount}`, 20, 292);
             
             doc.setFont('helvetica', 'normal');
-            doc.text('Service Tracker v1.0.0', 80, 292);
+            doc.text('R-Service Tracker v1.0.0', 80, 292);
             
             doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 155, 292);
             
