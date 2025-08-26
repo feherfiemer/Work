@@ -1325,7 +1325,7 @@ class RServiceTracker {
             
             if (doneBtnEl) {
                 doneBtnEl.disabled = true;
-                doneBtnEl.classList.add('already-done');
+                
                 doneBtnEl.innerHTML = '<i class="fas fa-check"></i> Already Done';
             }
         } else {
@@ -1336,7 +1336,7 @@ class RServiceTracker {
             
             if (doneBtnEl) {
                 doneBtnEl.disabled = false;
-                doneBtnEl.classList.remove('already-done');
+                
                 doneBtnEl.innerHTML = '<i class="fas fa-check"></i> Mark as Done';
             }
         }
@@ -1412,7 +1412,7 @@ class RServiceTracker {
             if (doneBtn) {
                 doneBtn.disabled = true;
                 doneBtn.innerHTML = '<i class="fas fa-check"></i> Already Done';
-                doneBtn.classList.add('already-done');
+                
             }
             console.log('Marking work as done for date:', today);
             

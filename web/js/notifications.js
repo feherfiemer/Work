@@ -93,9 +93,6 @@ class NotificationManager {
         
         this.showToast(title + (options.body ? ': ' + options.body : ''), options.toastType || 'info', options.toastDuration || 5000);
         
-        if ('vibrate' in navigator && options.vibrate !== false) {
-            navigator.vibrate([200, 100, 200]);
-        }
         
         return null;
     }
@@ -474,9 +471,15 @@ class NotificationManager {
     
     playSoundType(soundType) {
         if (soundType === 'done') {
-            this.playSuccessSound(); setTimeout(() => this.playSystematicSound('success', 'high'), 300);
+            // Premium work completion sound sequence
+            this.playSuccessSound(); 
+            setTimeout(() => this.playSystematicSound('success', 'high'), 300);
+            setTimeout(() => this.playSystematicSound('success', 'low'), 600);
         } else if (soundType === 'paid') {
-            this.playSystematicSound('payment', 'medium');
+            // Ultra-premium payment sound sequence
+            this.playPaymentSound();
+            setTimeout(() => this.playSystematicSound('payment', 'high'), 800);
+            setTimeout(() => this.playSystematicSound('payment', 'medium'), 1200);
         }
     }
 
