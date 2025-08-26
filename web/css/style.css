@@ -4581,165 +4581,76 @@ button.disabled:hover {
 
 /* ===== EARNINGS INSIGHT TOOLTIP ===== */
 .earnings-insight-tooltip {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: var(--z-modal);
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: var(--blur-medium);
-  -webkit-backdrop-filter: var(--blur-medium);
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: var(--z-toast);
+  margin-top: 0.5rem;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: var(--transition-fast);
+  pointer-events: none;
+}
+
+.earnings-insight-tooltip.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .insight-tooltip-content {
   background: var(--surface);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-heavy);
-  border: 1px solid var(--border);
-  max-width: 400px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: slideInUp 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.insight-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.insight-header h4 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.insight-header i {
-  color: var(--primary);
-  font-size: 1.1rem;
-}
-
-.close-insight-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: var(--transition-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-}
-
-.close-insight-btn:hover {
-  background: rgba(var(--primary-rgb), 0.1);
-  color: var(--primary);
-}
-
-.insight-body {
-  padding: 1.5rem;
-}
-
-.insight-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.insight-metric {
-  text-align: center;
-  padding: 1rem;
-  background: var(--surface-alt);
   border-radius: var(--border-radius-small);
+  box-shadow: var(--shadow-medium);
   border: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+  max-width: 250px;
+  min-width: 200px;
+  position: relative;
 }
 
-.metric-label {
+.insight-tooltip-content::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 1rem;
+  width: 12px;
+  height: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-right: none;
+  transform: rotate(45deg);
+}
+
+.insight-tooltip-content p {
+  margin: 0;
   font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-.metric-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.insight-summary {
-  padding: 1rem;
-  background: rgba(var(--primary-rgb), 0.05);
-  border-radius: var(--border-radius-small);
-  border-left: 4px solid var(--primary);
-}
-
-.insight-summary p {
-  margin: 0;
+  line-height: 1.4;
   color: var(--text-primary);
-  font-size: 0.95rem;
-  line-height: 1.5;
+  text-align: left;
 }
 
-/* Mobile responsive for insight tooltip */
+/* Position tooltip relative to earnings card */
+.earnings-card {
+  position: relative;
+}
+
+/* Mobile responsive */
 @media (max-width: 768px) {
+  .earnings-insight-tooltip {
+    right: -1rem;
+    left: -1rem;
+    max-width: none;
+  }
+  
   .insight-tooltip-content {
-    max-width: 95%;
-    margin: 1rem;
+    max-width: none;
+    min-width: auto;
   }
   
-  .insight-header {
-    padding: 1rem 1rem 0.75rem 1rem;
-  }
-  
-  .insight-header h4 {
-    font-size: 1.1rem;
-  }
-  
-  .insight-body {
-    padding: 1rem;
-  }
-  
-  .insight-metrics {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-  
-  .insight-metric {
-    padding: 0.75rem;
-  }
-  
-  .metric-value {
-    font-size: 1.1rem;
+  .insight-tooltip-content::before {
+    right: 2rem;
   }
 }
 

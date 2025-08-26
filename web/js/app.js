@@ -1098,55 +1098,60 @@ class RServiceTracker {
     setupEarningsInsight() {
         const earningsInsightBtn = document.getElementById('earningsInsightBtn');
         const earningsInsightTooltip = document.getElementById('earningsInsightTooltip');
-        const closeInsightTooltip = document.getElementById('closeInsightTooltip');
 
         if (earningsInsightBtn && earningsInsightTooltip) {
-            earningsInsightBtn.addEventListener('click', async () => {
-                await this.showEarningsInsight();
+            earningsInsightBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await this.toggleEarningsInsight();
             });
         }
 
-        if (closeInsightTooltip && earningsInsightTooltip) {
-            closeInsightTooltip.addEventListener('click', () => {
+        // Close tooltip when clicking outside
+        document.addEventListener('click', (e) => {
+            if (earningsInsightTooltip && 
+                !earningsInsightTooltip.contains(e.target) && 
+                !earningsInsightBtn.contains(e.target) &&
+                earningsInsightTooltip.classList.contains('show')) {
                 this.hideEarningsInsight();
-            });
-        }
-
-        // Close tooltip when clicking on overlay
-        if (earningsInsightTooltip) {
-            earningsInsightTooltip.addEventListener('click', (e) => {
-                if (e.target === earningsInsightTooltip) {
-                    this.hideEarningsInsight();
-                }
-            });
-        }
+            }
+        });
 
         // Close tooltip on escape key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && earningsInsightTooltip && earningsInsightTooltip.style.display !== 'none') {
+            if (e.key === 'Escape' && earningsInsightTooltip && earningsInsightTooltip.classList.contains('show')) {
                 this.hideEarningsInsight();
             }
         });
     }
 
+    async toggleEarningsInsight() {
+        const tooltip = document.getElementById('earningsInsightTooltip');
+        if (tooltip) {
+            if (tooltip.classList.contains('show')) {
+                this.hideEarningsInsight();
+            } else {
+                await this.showEarningsInsight();
+            }
+        }
+    }
+
     async showEarningsInsight() {
         try {
             const stats = await this.db.getEarningsStats();
-            const workRecords = await this.db.getAllWorkRecords();
-            const payments = await this.db.getAllPayments();
             
-            // Calculate insights
-            const insights = this.calculateEarningsInsights(stats, workRecords, payments);
+            // Generate professional status message
+            const statusMessage = this.generateEarningsStatusMessage(stats);
             
             // Update tooltip content
-            this.updateInsightTooltipContent(insights);
+            const messageEl = document.getElementById('earningsStatusMessage');
+            if (messageEl) {
+                messageEl.textContent = statusMessage;
+            }
             
             // Show tooltip
             const tooltip = document.getElementById('earningsInsightTooltip');
             if (tooltip) {
-                tooltip.style.display = 'flex';
-                // Trigger animation by forcing a reflow
-                tooltip.offsetHeight;
+                tooltip.classList.add('show');
             }
         } catch (error) {
             console.error('Error showing earnings insight:', error);
@@ -1157,78 +1162,35 @@ class RServiceTracker {
     hideEarningsInsight() {
         const tooltip = document.getElementById('earningsInsightTooltip');
         if (tooltip) {
-            tooltip.style.display = 'none';
+            tooltip.classList.remove('show');
         }
     }
 
-    calculateEarningsInsights(stats, workRecords, payments) {
-        const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+    generateEarningsStatusMessage(stats) {
+        const { totalWorked, totalEarned, totalPaid, currentBalance } = stats;
         
-        // Average daily earnings
-        const avgDailyEarnings = stats.totalWorked > 0 ? stats.totalEarned / stats.totalWorked : 0;
-        
-        // Payment efficiency
-        const paymentEfficiency = stats.totalEarned > 0 ? (stats.totalPaid / stats.totalEarned * 100) : 0;
-        
-        // Current month earnings
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-        const currentMonthPayments = payments.filter(payment => {
-            const paymentDate = new Date(payment.paymentDate);
-            return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
-        });
-        const monthlyProgress = currentMonthPayments.reduce((sum, payment) => sum + payment.amount, 0);
-        
-        // Generate summary message
-        let summaryText = '';
-        if (stats.totalWorked === 0) {
-            summaryText = 'Start working to see your earnings insights! 💪';
-        } else if (stats.currentStreak > 7) {
-            summaryText = `Amazing work streak! You've been consistent for ${stats.currentStreak} days. Keep it up! 🔥`;
-        } else if (paymentEfficiency >= 80) {
-            summaryText = 'Great payment management! You\'re staying on top of your earnings. 📈';
-        } else if (stats.currentBalance > 200) {
-            summaryText = 'You have a good amount pending. Consider collecting your payment soon! 💰';
-        } else {
-            summaryText = 'Keep up the great work! Your earning patterns show consistent progress. 📊';
+        // New user - no work done
+        if (totalWorked === 0) {
+            return "Welcome to R-Service Tracker! No work completed yet. Start tracking your daily tasks to begin earning.";
         }
         
-        return {
-            avgDailyEarnings,
-            paymentEfficiency,
-            currentStreak: stats.currentStreak,
-            monthlyProgress,
-            summaryText
-        };
-    }
-
-    updateInsightTooltipContent(insights) {
-        // Update metric values
-        const avgDailyEarningsEl = document.getElementById('avgDailyEarnings');
-        const paymentEfficiencyEl = document.getElementById('paymentEfficiency');
-        const currentWorkStreakEl = document.getElementById('currentWorkStreak');
-        const monthlyProgressEl = document.getElementById('monthlyProgress');
-        const insightSummaryTextEl = document.getElementById('insightSummaryText');
-
-        if (avgDailyEarningsEl) {
-            avgDailyEarningsEl.textContent = this.utils.formatCurrency(Math.round(insights.avgDailyEarnings));
+        // Has worked but no payments made
+        if (totalWorked > 0 && totalPaid === 0) {
+            return `You have completed ${totalWorked} day${totalWorked > 1 ? 's' : ''} of work with ${this.utils.formatCurrency(currentBalance)} pending payment. No payments collected yet.`;
         }
-
-        if (paymentEfficiencyEl) {
-            paymentEfficiencyEl.textContent = `${insights.paymentEfficiency.toFixed(1)}%`;
+        
+        // Has worked and received some payments
+        if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
+            return `Work progress: ${totalWorked} day${totalWorked > 1 ? 's' : ''} completed, ${this.utils.formatCurrency(totalPaid)} collected, ${this.utils.formatCurrency(currentBalance)} pending payment.`;
         }
-
-        if (currentWorkStreakEl) {
-            currentWorkStreakEl.textContent = `${insights.currentStreak} days`;
+        
+        // All payments up to date
+        if (totalWorked > 0 && currentBalance === 0) {
+            return `Excellent! ${totalWorked} day${totalWorked > 1 ? 's' : ''} of work completed with ${this.utils.formatCurrency(totalPaid)} total earned. All payments are up to date.`;
         }
-
-        if (monthlyProgressEl) {
-            monthlyProgressEl.textContent = this.utils.formatCurrency(insights.monthlyProgress);
-        }
-
-        if (insightSummaryTextEl) {
-            insightSummaryTextEl.textContent = insights.summaryText;
-        }
+        
+        // Fallback message
+        return "Track your daily work and manage payments efficiently with R-Service Tracker.";
     }
 
     setupModalHandlers() {
