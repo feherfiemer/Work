@@ -1267,7 +1267,7 @@ class RServiceTracker {
         
         // New user - no work done
         if (totalWorked === 0) {
-            return `🎯 Professional Work Tracker Status\n\nWelcome to R-Service Tracker! Your earnings journey begins here.\n\n📋 Current Status: No work sessions recorded\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)} per day\n🚀 Next Step: Click "Mark as Done" when you complete your first work day to start tracking your professional earnings.`;
+            return `Welcome to R-Service Tracker!\nDaily Rate: ${this.utils.formatCurrency(dailyWage)}\nStart by clicking "Mark as Done" when you complete work.`;
         }
         
         // Handle advance payment scenarios
@@ -1275,38 +1275,34 @@ class RServiceTracker {
             const remainingDays = advanceStatus.workRemainingForAdvance;
             const advanceAmount = advanceStatus.totalAdvanceAmount;
             const completedDays = totalWorked - remainingDays;
-            const progressPercent = Math.round((completedDays / (completedDays + remainingDays)) * 100);
             
-            return `💰 Advance Payment Tracking\n\n📊 Advance Amount: ${this.utils.formatCurrency(advanceAmount)}\n✅ Work Completed: ${completedDays} day${completedDays !== 1 ? 's' : ''} (${progressPercent}%)\n⏳ Remaining Obligation: ${remainingDays} day${remainingDays !== 1 ? 's' : ''}\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n\n🎯 Continue your excellent work progress to complete the advance payment obligation. You're making great strides toward fulfilling your commitment!`;
+            return `Advance: ${this.utils.formatCurrency(advanceAmount)} received\nProgress: ${completedDays}/${totalWorked} days completed\nRemaining: ${remainingDays} days to fulfill obligation`;
         }
         
         // Has worked but no payments made
         if (totalWorked > 0 && totalPaid === 0) {
-            const estimatedEarnings = totalWorked * dailyWage;
-            return `📈 Outstanding Payment Summary\n\n✅ Work Sessions Completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}\n💰 Pending Payment: ${this.utils.formatCurrency(currentBalance)}\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n💳 Payment Status: No collections yet\n\n🔔 Recommendation: Consider initiating payment collection process as you have successfully completed ${totalWorked} professional work session${totalWorked !== 1 ? 's' : ''}.`;
+            return `Work Completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}\nPending Payment: ${this.utils.formatCurrency(currentBalance)}\nNo payments collected yet`;
         }
         
         // Has worked and received some payments
         if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
             const pendingDays = Math.ceil(currentBalance / dailyWage);
-            const paymentEfficiency = Math.round((totalPaid / (totalPaid + currentBalance)) * 100);
             
-            return `📊 Comprehensive Earnings Overview\n\n✅ Total Work Sessions: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}\n💰 Payments Collected: ${this.utils.formatCurrency(totalPaid)}\n⏳ Outstanding Balance: ${this.utils.formatCurrency(currentBalance)} (${pendingDays} day${pendingDays !== 1 ? 's' : ''})\n📈 Payment Efficiency: ${paymentEfficiency}%\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n\n🎯 Excellent progress! You're maintaining consistent work output with regular payment collections.`;
+            return `Total Work: ${totalWorked} days | Collected: ${this.utils.formatCurrency(totalPaid)}\nPending: ${this.utils.formatCurrency(currentBalance)} (${pendingDays} day${pendingDays !== 1 ? 's' : ''})\nPayment efficiency looks good!`;
         }
         
         // All payments up to date
         if (totalWorked > 0 && currentBalance === 0) {
-            const avgMonthlyEarnings = totalPaid; // This could be refined with date calculations
-            return `🏆 Outstanding Achievement Status\n\n✅ Work Sessions Completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}\n💰 Total Earnings Collected: ${this.utils.formatCurrency(totalPaid)}\n📊 Payment Status: 100% Up-to-date\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n🎯 Efficiency Rating: Excellent\n\n🌟 Congratulations! You've maintained perfect payment management while delivering consistent professional work. Your disciplined approach to both work completion and payment tracking is exemplary.`;
+            return `Perfect! ${totalWorked} days completed\nTotal Earned: ${this.utils.formatCurrency(totalPaid)}\nAll payments are up-to-date`;
         }
         
         // Fallback message
-        return `🔧 R-Service Professional Tracker\n\nYour comprehensive solution for professional work tracking and payment management.\n\n💼 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n📋 Features: Work logging, payment tracking, progress analytics\n🎯 Goal: Streamline your professional earnings management`;
+        return `R-Service Professional Tracker\nDaily Rate: ${this.utils.formatCurrency(dailyWage)}\nTrack work and manage payments efficiently`;
     }
 
     playClickSound() {
         try {
-            // Create a subtle click sound using Web Audio API
+            // Create a more pleasant pop/click sound
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -1314,15 +1310,18 @@ class RServiceTracker {
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            // Configure sound - short, subtle click
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+            // Configure sound - pleasant pop sound
+            oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.05);
+            oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.15);
             
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
             
+            oscillator.type = 'triangle'; // Softer sound than sine
             oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
+            oscillator.stop(audioContext.currentTime + 0.15);
         } catch (error) {
             // Fallback: no sound if Web Audio API is not available
             console.debug('Click sound not available:', error);
@@ -1726,7 +1725,7 @@ class RServiceTracker {
             
             const pendingAmount = this.pendingUnpaidDates.length * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
             unpaidDaysEl.textContent = this.pendingUnpaidDates.length;
-            pendingAmountEl.textContent = pendingAmount;
+            pendingAmountEl.textContent = this.utils.formatCurrency(pendingAmount);
             
             console.log('Payment modal - Unpaid days:', this.pendingUnpaidDates.length, 'Pending amount:', pendingAmount);
             
