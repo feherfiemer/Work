@@ -1041,7 +1041,7 @@ class RServiceTracker {
                                 this.notifications.updateLoadingToast(loadingToast, 'Settings reset to defaults!', 'success');
                             }
                             
-                            this.notifications.showToast('All settings reset to default values', 'success', 5000);
+                            this.notifications.showToast('All settings reset to default values (Maximum amount: ₹500)', 'success', 5000);
                         }, 1000);
                     }
                 } catch (error) {
