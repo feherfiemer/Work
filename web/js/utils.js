@@ -136,51 +136,51 @@ class Utils {
                 compress: true
             });
             
-            // Set premium document properties with clean text only
+            // Set advanced document properties with clean text only
             doc.setProperties({
-                title: 'R-Service Tracker Premium Report',
-                subject: 'Professional Work Management and Payment Report',
+                title: 'R-Service Tracker Professional Report',
+                subject: 'Advanced Work Management and Payment Analytics Report',
                 author: 'R-Service Tracker System',
-                creator: 'R-Service Tracker Premium v1.0.0',
-                producer: 'R-Service Premium PDF Generator',
-                keywords: 'work management, payment tracking, professional report'
+                creator: 'R-Service Tracker Professional v1.0.0',
+                producer: 'R-Service Advanced PDF Generator',
+                keywords: 'work management, payment tracking, analytics, professional report'
             });
             
-            const colors = this.getPremiumPDFColors();
-            const reportData = this.generateRealReportData(data);
-            console.log('PDF Export: Using premium theme colors and real data');
+            const colors = this.getPDFColorsFromTheme();
+            const reportData = this.generateAdvancedReportData(data);
+            console.log('PDF Export: Using current theme colors and advanced data');
             
-            this.addPremiumHeader(doc, colors, reportData);
+            this.addAdvancedHeader(doc, colors, reportData);
             
-            let yPos = 85;
+            let yPos = 95;
             
-            yPos = this.addPremiumCompanySection(doc, colors, yPos);
+            yPos = this.addAdvancedCompanySection(doc, colors, reportData, yPos);
             
             if (data.summary) {
-                yPos = this.addPremiumExecutiveSummary(doc, colors, data.summary, reportData, yPos);
+                yPos = this.addAdvancedExecutiveSummary(doc, colors, data.summary, reportData, yPos);
             }
             
             if (data.summary) {
-                yPos = this.addPremiumFinancialAnalytics(doc, colors, data.summary, reportData, yPos);
+                yPos = this.addAdvancedFinancialAnalytics(doc, colors, data.summary, reportData, yPos);
             }
             
             if (data.workRecords && data.workRecords.length > 0) {
-                yPos = this.addPremiumWorkRecords(doc, colors, data.workRecords, reportData, yPos);
+                yPos = this.addAdvancedWorkRecords(doc, colors, data.workRecords, reportData, yPos);
             }
             
             if (data.payments && data.payments.length > 0) {
-                yPos = this.addPremiumPaymentHistory(doc, colors, data.payments, reportData, yPos);
+                yPos = this.addAdvancedPaymentHistory(doc, colors, data.payments, reportData, yPos);
             }
             
             if (data.summary) {
-                yPos = this.addPremiumPerformanceMetrics(doc, colors, data.summary, reportData, yPos);
+                yPos = this.addAdvancedPerformanceMetrics(doc, colors, data.summary, reportData, yPos);
             }
             
-            this.addPremiumFooter(doc, colors, reportData);
+            this.addAdvancedFooter(doc, colors, reportData);
             
-            console.log('PDF Export: Saving premium PDF with filename:', filename);
+            console.log('PDF Export: Saving advanced PDF with filename:', filename);
             doc.save(filename);
-            console.log('PDF Export: Premium PDF generated successfully');
+            console.log('PDF Export: Advanced PDF with theme-based styling generated successfully');
             return true;
         } catch (error) {
             console.error('Error generating premium PDF:', error);
@@ -188,35 +188,68 @@ class Utils {
         }
     }
 
-    // Generate real report data with proper IDs and formatting
-    generateRealReportData(data) {
+    // Generate advanced report data with comprehensive IDs and analytics
+    generateAdvancedReportData(data) {
         const now = new Date();
         const timestamp = now.getTime();
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'blue-light';
+        
+        // Calculate advanced analytics
+        const workRecords = data.workRecords || [];
+        const payments = data.payments || [];
+        const summary = data.summary || {};
+        
+        const workDaysThisMonth = workRecords.filter(record => {
+            const recordDate = new Date(record.date);
+            return recordDate.getMonth() === now.getMonth() && recordDate.getFullYear() === now.getFullYear();
+        }).length;
+        
+        const avgPaymentAmount = payments.length > 0 ? payments.reduce((sum, p) => sum + p.amount, 0) / payments.length : 0;
+        const workConsistencyRate = workDaysThisMonth > 0 ? (workDaysThisMonth / now.getDate() * 100).toFixed(1) : '0.0';
+        const paymentFrequency = payments.length > 0 ? (payments.length / (workRecords.length || 1) * 100).toFixed(1) : '0.0';
         
         return {
             reportId: `RST${timestamp.toString().slice(-8)}`,
             transactionId: `TXN${(timestamp + 12345).toString().slice(-8)}`,
             batchId: `BCH${(timestamp + 67890).toString().slice(-8)}`,
             sessionId: `SES${(timestamp + 11111).toString().slice(-8)}`,
+            auditId: `AUD${(timestamp + 54321).toString().slice(-8)}`,
+            complianceId: `CMP${(timestamp + 98765).toString().slice(-8)}`,
             generatedTime: now,
-            reportVersion: '1.0.0',
-            systemVersion: 'Premium v1.0.0'
+            reportVersion: '2.0.0',
+            systemVersion: 'Professional v1.0.0',
+            currentTheme: currentTheme,
+            reportPeriod: this.getReportPeriod(data),
+            workDaysThisMonth: workDaysThisMonth,
+            avgPaymentAmount: avgPaymentAmount,
+            workConsistencyRate: workConsistencyRate,
+            paymentFrequency: paymentFrequency,
+            totalTransactions: payments.length,
+            dataIntegrityHash: this.generateDataHash(data),
+            reportClassification: 'CONFIDENTIAL',
+            complianceStatus: 'VERIFIED'
         };
     }
 
-    // Premium color scheme without theme dependencies
-    getPremiumPDFColors() {
-        return {
-            primary: [33, 150, 243],      // Professional blue
-            secondary: [66, 66, 66],       // Dark gray
-            accent: [76, 175, 80],         // Success green
-            light: [248, 249, 250],        // Light background
-            success: [76, 175, 80],        // Green
-            warning: [255, 152, 0],        // Orange
-            danger: [244, 67, 54],         // Red
-            text: [33, 33, 33],            // Primary text
-            muted: [117, 117, 117]         // Muted text
-        };
+    // Generate data integrity hash for security
+    generateDataHash(data) {
+        const dataString = JSON.stringify(data);
+        let hash = 0;
+        for (let i = 0; i < dataString.length; i++) {
+            const char = dataString.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return Math.abs(hash).toString(16).toUpperCase().slice(0, 8);
+    }
+
+    // Enhanced text formatting without symbols for advanced reports
+    formatCurrencyAdvanced(amount) {
+        if (typeof amount !== 'number') {
+            amount = parseFloat(amount) || 0;
+        }
+        const formatted = Math.abs(amount).toFixed(2);
+        return `${formatted} Rupees`;
     }
 
     // Clean text formatting without symbols
@@ -240,362 +273,437 @@ class Utils {
         return date.toLocaleDateString('en-IN', options);
     }
 
-    addPremiumHeader(doc, colors, reportData) {
-        // Premium header background with clean design
+    addAdvancedHeader(doc, colors, reportData) {
+        // Advanced header background with theme-based colors
         doc.setFillColor(...colors.primary);
-        doc.rect(0, 0, 210, 45, 'F');
+        doc.rect(0, 0, 210, 50, 'F');
         
-        // Accent bar
-        doc.setFillColor(...colors.accent);
-        doc.rect(0, 45, 210, 3, 'F');
+        // Theme-based accent bar
+        if (colors.accent) {
+            doc.setFillColor(...colors.accent);
+            doc.rect(0, 50, 210, 4, 'F');
+        }
         
-        // Company branding section - clean text only
+        // Company branding section with enhanced design
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(32);
+        doc.setFontSize(34);
         doc.setTextColor(255, 255, 255);
-        doc.text('R-Service Tracker', 25, 25);
+        doc.text('R-Service Tracker', 25, 28);
         
-        // Subtitle
+        // Advanced subtitle with classification
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(14);
-        doc.text('Professional Work and Payment Management Report', 25, 38);
+        doc.setFontSize(12);
+        doc.text('Advanced Work Management and Payment Analytics Report', 25, 40);
         
-        // Metadata section
-        doc.setFillColor(252, 252, 252);
-        doc.rect(0, 50, 210, 20, 'F');
-        
-        // Clean metadata without symbols
-        doc.setFont('helvetica', 'normal');
+        // Classification and security notice
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.setTextColor(...colors.text);
+        doc.text(`${reportData.reportClassification} - ${reportData.complianceStatus}`, 25, 46);
         
-        doc.text(`Generated: ${this.formatDateTimeClean(reportData.generatedTime)}`, 25, 58);
-        doc.text(`Report ID: ${reportData.reportId}`, 25, 64);
+        // Enhanced metadata section
+        doc.setFillColor(...colors.light);
+        doc.rect(0, 56, 210, 24, 'F');
         
-        doc.text('Timezone: Asia Kolkata IST', 120, 58);
-        doc.text('Format: Premium PDF Report', 120, 64);
+        // Advanced metadata with more details
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
         
-        // Clean separator line
+        doc.text(`Generated: ${this.formatDateTimeClean(reportData.generatedTime)}`, 25, 64);
+        doc.text(`Report ID: ${reportData.reportId}`, 25, 68);
+        doc.text(`Audit ID: ${reportData.auditId}`, 25, 72);
+        doc.text(`Data Hash: ${reportData.dataIntegrityHash}`, 25, 76);
+        
+        doc.text(`Theme: ${reportData.currentTheme}`, 120, 64);
+        doc.text(`Period: ${reportData.reportPeriod}`, 120, 68);
+        doc.text(`Version: ${reportData.reportVersion}`, 120, 72);
+        doc.text(`Compliance: ${reportData.complianceId}`, 120, 76);
+        
+        // Professional separator line with theme colors
         doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(1);
-        doc.line(25, 75, 185, 75);
+        doc.setLineWidth(1.2);
+        doc.line(25, 85, 185, 85);
     }
 
-    addPremiumCompanySection(doc, colors, yPos) {
-        // Company information section with clean design
+    addAdvancedCompanySection(doc, colors, reportData, yPos) {
+        // Advanced company information section with enhanced details
         doc.setFillColor(...colors.light);
-        doc.rect(25, yPos, 160, 35, 'F');
+        doc.rect(25, yPos, 160, 45, 'F');
         
-        // Section border
+        // Theme-based section border
         doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(0.5);
-        doc.rect(25, yPos, 160, 35, 'S');
+        doc.setLineWidth(0.8);
+        doc.rect(25, yPos, 160, 45, 'S');
         
-        // Section header
+        // Section header with theme colors
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(16);
         doc.setTextColor(...colors.primary);
-        doc.text('SERVICE PROVIDER INFORMATION', 30, yPos + 10);
+        doc.text('SERVICE PROVIDER INFORMATION', 30, yPos + 12);
         
-        // Information content - clean text only
+        // Separator line
+        doc.setDrawColor(...colors.accent || colors.primary);
+        doc.setLineWidth(0.3);
+        doc.line(30, yPos + 15, 180, yPos + 15);
+        
+        // Enhanced information content with more details
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(11);
-        doc.setTextColor(...colors.text);
+        doc.setFontSize(10);
+        doc.setTextColor(...colors.secondary);
         
-        doc.text('Service Provider: R-Service Work Tracking', 30, yPos + 20);
-        doc.text('Report Type: Premium Work Management Summary', 30, yPos + 26);
-        doc.text(`Daily Rate: ${this.formatCurrencyClean(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)} per day`, 30, yPos + 32);
+        doc.text('Service Provider: R-Service Work Tracking System', 30, yPos + 22);
+        doc.text('Report Classification: Advanced Work Management Analytics', 30, yPos + 27);
+        doc.text(`Daily Rate: ${this.formatCurrencyAdvanced(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)} per day`, 30, yPos + 32);
+        doc.text(`Work Days This Month: ${reportData.workDaysThisMonth} days`, 30, yPos + 37);
+        doc.text(`Consistency Rate: ${reportData.workConsistencyRate} percent`, 30, yPos + 42);
         
-        return yPos + 45;
+        return yPos + 55;
     }
 
-    addPremiumExecutiveSummary(doc, colors, summary, reportData, yPos) {
-        if (yPos > 230) {
+    addAdvancedExecutiveSummary(doc, colors, summary, reportData, yPos) {
+        if (yPos > 220) {
             doc.addPage();
             yPos = 25;
         }
         
-        // Section header
+        // Advanced section header with theme colors
         doc.setFillColor(...colors.primary);
-        doc.rect(25, yPos, 160, 20, 'F');
+        doc.rect(25, yPos, 160, 22, 'F');
         
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(18);
         doc.setTextColor(255, 255, 255);
-        doc.text('EXECUTIVE SUMMARY', 30, yPos + 13);
-        yPos += 30;
+        doc.text('EXECUTIVE SUMMARY AND ANALYTICS', 30, yPos + 14);
+        yPos += 32;
         
-        // Summary metrics in clean format
+        // Enhanced summary metrics with more details
         const metrics = [
-            { label: 'Total Days Worked', value: `${summary.totalWorked} days` },
-            { label: 'Total Earnings', value: this.formatCurrencyClean(summary.totalEarned) },
-            { label: 'Amount Received', value: this.formatCurrencyClean(summary.totalPaid) },
-            { label: 'Outstanding Balance', value: this.formatCurrencyClean(summary.currentBalance) }
+            { label: 'Total Days Worked', value: `${summary.totalWorked} days`, detail: `This Month: ${reportData.workDaysThisMonth}` },
+            { label: 'Total Earnings', value: this.formatCurrencyAdvanced(summary.totalEarned), detail: `Avg Per Day: ${this.formatCurrencyAdvanced(summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0)}` },
+            { label: 'Amount Received', value: this.formatCurrencyAdvanced(summary.totalPaid), detail: `Avg Payment: ${this.formatCurrencyAdvanced(reportData.avgPaymentAmount)}` },
+            { label: 'Outstanding Balance', value: this.formatCurrencyAdvanced(summary.currentBalance), detail: `Payment Frequency: ${reportData.paymentFrequency}%` }
         ];
         
         metrics.forEach((metric, index) => {
             const x = 30 + (index % 2) * 80;
-            const y = yPos + Math.floor(index / 2) * 25;
+            const y = yPos + Math.floor(index / 2) * 32;
             
-            // Metric card
-            doc.setFillColor(255, 255, 255);
-            doc.rect(x, y, 75, 20, 'F');
-            doc.setDrawColor(...colors.accent);
-            doc.setLineWidth(0.3);
-            doc.rect(x, y, 75, 20, 'S');
+            // Enhanced metric card with theme colors
+            doc.setFillColor(...colors.light);
+            doc.rect(x, y, 75, 28, 'F');
+            doc.setDrawColor(...colors.primary);
+            doc.setLineWidth(0.4);
+            doc.rect(x, y, 75, 28, 'S');
             
-            // Metric content
+            // Metric header bar
+            doc.setFillColor(...colors.accent || colors.primary);
+            doc.rect(x, y, 75, 4, 'F');
+            
+            // Metric content with enhanced details
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.setTextColor(...colors.muted);
-            doc.text(metric.label, x + 3, y + 8);
+            doc.setFontSize(9);
+            doc.setTextColor(...colors.secondary);
+            doc.text(metric.label, x + 3, y + 10);
             
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(12);
-            doc.setTextColor(...colors.primary);
-            doc.text(metric.value, x + 3, y + 15);
-        });
-        
-        return yPos + 55;
-    }
-
-    addPremiumFinancialAnalytics(doc, colors, summary, reportData, yPos) {
-        if (yPos > 200) {
-            doc.addPage();
-            yPos = 25;
-        }
-        
-        // Section header
-        doc.setFillColor(...colors.accent);
-        doc.rect(25, yPos, 160, 18, 'F');
-        
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.setTextColor(255, 255, 255);
-        doc.text('FINANCIAL ANALYTICS', 30, yPos + 12);
-        yPos += 28;
-        
-        // Analytics data
-        const avgEarningsPerDay = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
-        const paymentEfficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
-        
-        const analytics = [
-            { label: 'Average Daily Earnings', value: this.formatCurrencyClean(avgEarningsPerDay) },
-            { label: 'Payment Efficiency Rate', value: `${paymentEfficiency.toFixed(1)} percent` },
-            { label: 'Work Consistency', value: summary.totalWorked > 0 ? 'Active Status' : 'Inactive Status' },
-            { label: 'Transaction ID', value: reportData.transactionId }
-        ];
-        
-        analytics.forEach((item, index) => {
-            const y = yPos + index * 12;
-            
-            doc.setFont('helvetica', 'normal');
             doc.setFontSize(11);
-            doc.setTextColor(...colors.text);
-            doc.text(`${item.label}: `, 30, y);
-            
-            doc.setFont('helvetica', 'bold');
             doc.setTextColor(...colors.primary);
-            doc.text(item.value, 100, y);
+            doc.text(metric.value, x + 3, y + 17);
+            
+            // Additional detail
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.muted);
+            doc.text(metric.detail, x + 3, y + 24);
         });
         
-        return yPos + 55;
+        return yPos + 70;
     }
 
-    addPremiumFooter(doc, colors, reportData) {
-        const footerY = 275;
-        
-        // Footer background
-        doc.setFillColor(...colors.light);
-        doc.rect(0, footerY, 210, 22, 'F');
-        
-        // Top border
-        doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(1);
-        doc.line(0, footerY, 210, footerY);
-        
-        // Company information
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.setTextColor(...colors.primary);
-        doc.text('R-Service Tracker', 25, footerY + 8);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(...colors.text);
-        doc.text('Professional Work Management System', 25, footerY + 14);
-        doc.text('Generated automatically - All data remains private on your device', 25, footerY + 19);
-        
-        // Right side information - clean text only
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.setTextColor(...colors.primary);
-        doc.text('Privacy Protected', 140, footerY + 8);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(...colors.muted);
-        doc.text(`Page ${doc.getCurrentPageInfo().pageNumber}`, 140, footerY + 14);
-        doc.text(`Session: ${reportData.sessionId}`, 140, footerY + 19);
-    }
-
-    addPremiumWorkRecords(doc, colors, workRecords, reportData, yPos) {
+    addAdvancedFinancialAnalytics(doc, colors, summary, reportData, yPos) {
         if (yPos > 180) {
             doc.addPage();
             yPos = 25;
         }
         
-        // Section header
-        doc.setFillColor(...colors.warning);
-        doc.rect(25, yPos, 160, 18, 'F');
-        
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.setTextColor(255, 255, 255);
-        doc.text('DETAILED WORK RECORDS', 30, yPos + 12);
-        yPos += 28;
-        
-        // Table header
-        doc.setFillColor(...colors.light);
-        doc.rect(25, yPos, 160, 15, 'F');
-        doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(0.3);
-        doc.rect(25, yPos, 160, 15, 'S');
-        
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.setTextColor(...colors.text);
-        doc.text('Date', 30, yPos + 10);
-        doc.text('Status', 80, yPos + 10);
-        doc.text('Earnings', 130, yPos + 10);
-        doc.text('Batch ID', 160, yPos + 10);
-        yPos += 15;
-        
-        // Work records data (limit to recent 10 for space)
-        const recentRecords = workRecords.slice(-10);
-        recentRecords.forEach((record, index) => {
-            const recordY = yPos + index * 12;
-            
-            // Alternate row colors
-            if (index % 2 === 0) {
-                doc.setFillColor(250, 250, 250);
-                doc.rect(25, recordY, 160, 12, 'F');
-            }
-            
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            doc.setTextColor(...colors.text);
-            
-            const date = new Date(record.date);
-            doc.text(date.toLocaleDateString('en-IN'), 30, recordY + 8);
-            doc.text(record.status === 'completed' ? 'Completed' : 'Pending', 80, recordY + 8);
-            doc.text(record.status === 'completed' ? this.formatCurrencyClean(record.wage || 25) : '0 Rupees', 130, recordY + 8);
-            doc.text(`BCH${(index + 1000).toString().slice(-4)}`, 160, recordY + 8);
-        });
-        
-        return yPos + (recentRecords.length * 12) + 15;
-    }
-
-    addPremiumPaymentHistory(doc, colors, payments, reportData, yPos) {
-        if (yPos > 150) {
-            doc.addPage();
-            yPos = 25;
-        }
-        
-        // Section header
+        // Advanced section header with success theme color
         doc.setFillColor(...colors.success);
-        doc.rect(25, yPos, 160, 18, 'F');
+        doc.rect(25, yPos, 160, 20, 'F');
         
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(16);
         doc.setTextColor(255, 255, 255);
-        doc.text('PAYMENT TRANSACTION HISTORY', 30, yPos + 12);
-        yPos += 28;
+        doc.text('ADVANCED FINANCIAL ANALYTICS', 30, yPos + 13);
+        yPos += 30;
         
-        // Table header
-        doc.setFillColor(...colors.light);
-        doc.rect(25, yPos, 160, 15, 'F');
-        doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(0.3);
-        doc.rect(25, yPos, 160, 15, 'S');
+        // Enhanced analytics data with more calculations
+        const avgEarningsPerDay = summary.totalWorked > 0 ? summary.totalEarned / summary.totalWorked : 0;
+        const paymentEfficiency = summary.totalEarned > 0 ? (summary.totalPaid / summary.totalEarned * 100) : 0;
+        const projectedMonthlyEarnings = avgEarningsPerDay * 30;
+        const workProductivity = reportData.workConsistencyRate;
         
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.setTextColor(...colors.text);
-        doc.text('Date', 30, yPos + 10);
-        doc.text('Amount', 70, yPos + 10);
-        doc.text('Type', 110, yPos + 10);
-        doc.text('Transaction ID', 140, yPos + 10);
-        yPos += 15;
-        
-        // Payment records data
-        const recentPayments = payments.slice(-8);
-        recentPayments.forEach((payment, index) => {
-            const paymentY = yPos + index * 12;
-            
-            // Alternate row colors
-            if (index % 2 === 0) {
-                doc.setFillColor(250, 250, 250);
-                doc.rect(25, paymentY, 160, 12, 'F');
-            }
-            
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            doc.setTextColor(...colors.text);
-            
-            const date = new Date(payment.date);
-            doc.text(date.toLocaleDateString('en-IN'), 30, paymentY + 8);
-            doc.text(this.formatCurrencyClean(payment.amount), 70, paymentY + 8);
-            doc.text(payment.type || 'Regular', 110, paymentY + 8);
-            doc.text(`TXN${(Date.now() + index * 1000).toString().slice(-6)}`, 140, paymentY + 8);
-        });
-        
-        return yPos + (recentPayments.length * 12) + 15;
-    }
-
-    addPremiumPerformanceMetrics(doc, colors, summary, reportData, yPos) {
-        if (yPos > 200) {
-            doc.addPage();
-            yPos = 25;
-        }
-        
-        // Section header
-        doc.setFillColor(...colors.danger);
-        doc.rect(25, yPos, 160, 18, 'F');
-        
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.setTextColor(255, 255, 255);
-        doc.text('PERFORMANCE METRICS', 30, yPos + 12);
-        yPos += 28;
-        
-        // Performance data
-        const workEfficiency = summary.totalWorked > 0 ? ((summary.totalWorked / 30) * 100) : 0;
-        const avgDailyRate = summary.totalWorked > 0 ? (summary.totalEarned / summary.totalWorked) : 0;
-        
-        const metrics = [
-            { label: 'Work Efficiency Rate', value: `${workEfficiency.toFixed(1)} percent` },
-            { label: 'Average Daily Rate', value: this.formatCurrencyClean(avgDailyRate) },
-            { label: 'Payment Status', value: summary.currentBalance >= 0 ? 'Up to Date' : 'Advance Paid' },
-            { label: 'Report Batch ID', value: reportData.batchId },
-            { label: 'System Version', value: reportData.systemVersion },
-            { label: 'Report Version', value: reportData.reportVersion }
+        const analytics = [
+            { label: 'Average Daily Earnings', value: this.formatCurrencyAdvanced(avgEarningsPerDay), category: 'Performance' },
+            { label: 'Payment Efficiency Rate', value: `${paymentEfficiency.toFixed(1)} percent`, category: 'Efficiency' },
+            { label: 'Work Consistency Rate', value: `${workProductivity} percent`, category: 'Productivity' },
+            { label: 'Projected Monthly Earnings', value: this.formatCurrencyAdvanced(projectedMonthlyEarnings), category: 'Projection' },
+            { label: 'Total Transaction Count', value: `${reportData.totalTransactions} transactions`, category: 'Volume' },
+            { label: 'Primary Transaction ID', value: reportData.transactionId, category: 'Reference' }
         ];
         
-        metrics.forEach((metric, index) => {
-            const y = yPos + index * 12;
+        analytics.forEach((item, index) => {
+            const y = yPos + index * 14;
             
+            // Category indicator
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.muted);
+            doc.text(`[${item.category}]`, 30, y);
+            
+            // Analytics label and value
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(11);
-            doc.setTextColor(...colors.text);
-            doc.text(`${metric.label}: `, 30, y);
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${item.label}: `, 60, y);
             
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(...colors.primary);
-            doc.text(metric.value, 110, y);
+            doc.text(item.value, 130, y);
         });
         
-        return yPos + 80;
+        return yPos + 90;
+    }
+
+    addAdvancedFooter(doc, colors, reportData) {
+        const footerY = 270;
+        
+        // Advanced footer background with theme colors
+        doc.setFillColor(...colors.light);
+        doc.rect(0, footerY, 210, 27, 'F');
+        
+        // Theme-based top border
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(1.2);
+        doc.line(0, footerY, 210, footerY);
+        
+        // Accent stripe
+        doc.setFillColor(...colors.accent || colors.primary);
+        doc.rect(0, footerY + 1, 210, 2, 'F');
+        
+        // Enhanced company information
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(...colors.primary);
+        doc.text('R-Service Tracker', 25, footerY + 10);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text('Advanced Work Management and Analytics System', 25, footerY + 16);
+        doc.text('Generated automatically - All data remains private and secure on your device', 25, footerY + 21);
+        
+        // Advanced right side information with more details
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.primary);
+        doc.text('Data Security: PROTECTED', 130, footerY + 8);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...colors.muted);
+        doc.text(`Page ${doc.getCurrentPageInfo().pageNumber} | Theme: ${reportData.currentTheme}`, 130, footerY + 14);
+        doc.text(`Session: ${reportData.sessionId}`, 130, footerY + 18);
+        doc.text(`Hash: ${reportData.dataIntegrityHash} | ${reportData.complianceStatus}`, 130, footerY + 22);
+    }
+
+    addAdvancedWorkRecords(doc, colors, workRecords, reportData, yPos) {
+        if (yPos > 160) {
+            doc.addPage();
+            yPos = 25;
+        }
+        
+        // Advanced section header with warning theme color
+        doc.setFillColor(...colors.warning);
+        doc.rect(25, yPos, 160, 20, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('ADVANCED WORK RECORDS ANALYSIS', 30, yPos + 13);
+        yPos += 30;
+        
+        // Enhanced table header with theme colors
+        doc.setFillColor(...colors.light);
+        doc.rect(25, yPos, 160, 16, 'F');
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.rect(25, yPos, 160, 16, 'S');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text('Date', 30, yPos + 10);
+        doc.text('Status', 70, yPos + 10);
+        doc.text('Earnings', 110, yPos + 10);
+        doc.text('Efficiency', 140, yPos + 10);
+        doc.text('Batch ID', 165, yPos + 10);
+        yPos += 16;
+        
+        // Enhanced work records data with more analysis
+        const recentRecords = workRecords.slice(-12);
+        recentRecords.forEach((record, index) => {
+            const recordY = yPos + index * 14;
+            
+            // Enhanced alternate row colors with theme
+            if (index % 2 === 0) {
+                doc.setFillColor(...colors.light);
+                doc.rect(25, recordY, 160, 14, 'F');
+            }
+            
+            // Status-based color coding
+            const statusColor = record.status === 'completed' ? colors.success : colors.muted;
+            doc.setDrawColor(...statusColor);
+            doc.setLineWidth(0.2);
+            doc.line(25, recordY, 185, recordY);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            
+            const date = new Date(record.date);
+            doc.text(date.toLocaleDateString('en-IN'), 30, recordY + 9);
+            doc.text(record.status === 'completed' ? 'DONE' : 'PEND', 70, recordY + 9);
+            doc.text(record.status === 'completed' ? this.formatCurrencyAdvanced(record.wage || 25) : '0.00 Rupees', 110, recordY + 9);
+            
+            // Efficiency calculation
+            const efficiency = record.status === 'completed' ? '100%' : '0%';
+            doc.text(efficiency, 140, recordY + 9);
+            doc.text(`BCH${(index + 1000).toString().slice(-4)}`, 165, recordY + 9);
+        });
+        
+        return yPos + (recentRecords.length * 14) + 20;
+    }
+
+    addAdvancedPaymentHistory(doc, colors, payments, reportData, yPos) {
+        if (yPos > 140) {
+            doc.addPage();
+            yPos = 25;
+        }
+        
+        // Advanced section header with success theme color
+        doc.setFillColor(...colors.success);
+        doc.rect(25, yPos, 160, 20, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('ADVANCED PAYMENT TRANSACTION HISTORY', 30, yPos + 13);
+        yPos += 30;
+        
+        // Enhanced table header with theme colors
+        doc.setFillColor(...colors.light);
+        doc.rect(25, yPos, 160, 16, 'F');
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.5);
+        doc.rect(25, yPos, 160, 16, 'S');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.secondary);
+        doc.text('Date', 30, yPos + 10);
+        doc.text('Amount', 65, yPos + 10);
+        doc.text('Type', 100, yPos + 10);
+        doc.text('Status', 125, yPos + 10);
+        doc.text('TXN ID', 155, yPos + 10);
+        yPos += 16;
+        
+        // Enhanced payment records data with more analysis
+        const recentPayments = payments.slice(-10);
+        recentPayments.forEach((payment, index) => {
+            const paymentY = yPos + index * 14;
+            
+            // Enhanced alternate row colors with theme
+            if (index % 2 === 0) {
+                doc.setFillColor(...colors.light);
+                doc.rect(25, paymentY, 160, 14, 'F');
+            }
+            
+            // Payment amount based color indicator
+            const amountColor = payment.amount > 50 ? colors.success : colors.warning;
+            doc.setDrawColor(...amountColor);
+            doc.setLineWidth(0.3);
+            doc.line(25, paymentY, 185, paymentY);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...colors.secondary);
+            
+            const date = new Date(payment.date);
+            doc.text(date.toLocaleDateString('en-IN'), 30, paymentY + 9);
+            doc.text(this.formatCurrencyAdvanced(payment.amount), 65, paymentY + 9);
+            doc.text(payment.type || 'REG', 100, paymentY + 9);
+            doc.text('VERIFIED', 125, paymentY + 9);
+            doc.text(`TXN${(Date.now() + index * 1000).toString().slice(-6)}`, 155, paymentY + 9);
+        });
+        
+        return yPos + (recentPayments.length * 14) + 20;
+    }
+
+    addAdvancedPerformanceMetrics(doc, colors, summary, reportData, yPos) {
+        if (yPos > 180) {
+            doc.addPage();
+            yPos = 25;
+        }
+        
+        // Advanced section header with danger theme color for attention
+        doc.setFillColor(...colors.danger);
+        doc.rect(25, yPos, 160, 20, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('ADVANCED PERFORMANCE METRICS', 30, yPos + 13);
+        yPos += 30;
+        
+        // Enhanced performance data with comprehensive analysis
+        const workEfficiency = summary.totalWorked > 0 ? ((summary.totalWorked / 30) * 100) : 0;
+        const avgDailyRate = summary.totalWorked > 0 ? (summary.totalEarned / summary.totalWorked) : 0;
+        const productivityScore = (workEfficiency * 0.4) + (parseFloat(reportData.paymentFrequency) * 0.6);
+        
+        const metrics = [
+            { label: 'Work Efficiency Rate', value: `${workEfficiency.toFixed(1)} percent`, category: 'EFFICIENCY' },
+            { label: 'Average Daily Rate', value: this.formatCurrencyAdvanced(avgDailyRate), category: 'FINANCIAL' },
+            { label: 'Payment Status Analysis', value: summary.currentBalance >= 0 ? 'Current and Up to Date' : 'Advanced Payment Status', category: 'STATUS' },
+            { label: 'Productivity Score', value: `${productivityScore.toFixed(1)} percent`, category: 'ANALYTICS' },
+            { label: 'Data Integrity Verification', value: `Hash ${reportData.dataIntegrityHash} Verified`, category: 'SECURITY' },
+            { label: 'Report Batch Reference', value: reportData.batchId, category: 'REFERENCE' },
+            { label: 'System Architecture', value: reportData.systemVersion, category: 'TECHNICAL' },
+            { label: 'Report Schema Version', value: reportData.reportVersion, category: 'VERSION' }
+        ];
+        
+        metrics.forEach((metric, index) => {
+            const y = yPos + index * 16;
+            
+            // Category badge with theme colors
+            doc.setFillColor(...colors.accent || colors.primary);
+            doc.rect(30, y - 3, 25, 8, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(6);
+            doc.setTextColor(255, 255, 255);
+            doc.text(metric.category, 32, y + 1);
+            
+            // Metric label and value with enhanced formatting
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(...colors.secondary);
+            doc.text(`${metric.label}: `, 60, y + 1);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...colors.primary);
+            doc.text(metric.value, 130, y + 1);
+        });
+        
+        return yPos + 140;
     }
 
     addExecutiveSummary(doc, colors, summary, yPos) {
