@@ -136,6 +136,23 @@ class Utils {
             });
             console.log('PDF Export: jsPDF document created');
             
+            // Add Exo font support (fallback to helvetica if not available)
+            try {
+                // Try to use a web-safe font that's similar to Exo
+                // Since Exo isn't built into jsPDF, we'll use helvetica with a comment
+                // In a real implementation, you would need to add the Exo font file to jsPDF
+                console.log('PDF Export: Using helvetica as Exo font fallback');
+                
+                // Add helper method to document for consistent font usage
+                doc.setExoFont = function(style = 'normal') {
+                    // Use helvetica as fallback for Exo font
+                    // This maintains the same API while using available fonts
+                    this.setFont('helvetica', style);
+                };
+            } catch (fontError) {
+                console.log('PDF Export: Font setup completed with fallback');
+            }
+            
             // Set clean document properties to override any default titles
             doc.setProperties({
                 title: 'R-Service Tracker Report',
@@ -151,7 +168,7 @@ class Utils {
             
             this.addHeader(doc, colors);
             
-            let yPos = 68; // Adjusted for enhanced header
+            let yPos = 50; // Adjusted for header without metadata section
             
             yPos = this.addCompanyInfo(doc, colors, yPos);
             
@@ -209,22 +226,19 @@ class Utils {
         const iconStyle = this.getIconStyleForTheme(currentTheme);
         
         // App title with theme-specific icon and styling
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(26);
         doc.setTextColor(...titleColor);
         doc.text(iconStyle, 15, 23);
         doc.text('R-Service Tracker', 28, 23);
         
         // Subtitle with enhanced styling
-        doc.setFont('helvetica', 'normal');
+        doc.setExoFont('normal');
         doc.setFontSize(10);
         doc.setTextColor(...titleColor);
         doc.text('Professional Work & Payment Management Report', 28, 31);
         
-        // Enhanced metadata section with theme-aware styling
-        this.addEnhancedMetadata(doc, colors, currentTheme, isDarkTheme);
-        
-        // Theme-specific decorative elements
+        // Theme-specific decorative elements (without metadata section)
         this.addThemeDecorativeElements(doc, colors, currentTheme);
     }
 
@@ -361,45 +375,16 @@ class Utils {
     }
 
     getIconStyleForTheme(currentTheme) {
-        // Return theme-appropriate icon
-        if (currentTheme.includes('blue')) return '⚡'; // Tech/electric
-        if (currentTheme.includes('orange')) return '🔥'; // Energy/fire
-        if (currentTheme.includes('green')) return '🌱'; // Growth/nature
-        if (currentTheme.includes('red')) return '🎯'; // Target/precision
-        if (currentTheme.includes('monochrome')) return '▪'; // Minimalist square
-        return '✓'; // Default checkmark
+        // Return simple text-based icons without special characters
+        if (currentTheme.includes('blue')) return 'TECH'; // Tech/electric
+        if (currentTheme.includes('orange')) return 'FIRE'; // Energy/fire
+        if (currentTheme.includes('green')) return 'ECO'; // Growth/nature
+        if (currentTheme.includes('red')) return 'PRO'; // Target/precision
+        if (currentTheme.includes('monochrome')) return 'MIN'; // Minimalist
+        return 'RST'; // Default R-Service Tracker
     }
 
-    addEnhancedMetadata(doc, colors, currentTheme, isDarkTheme) {
-        const metadataY = 43;
-        const metadataHeight = 15;
-        
-        // Enhanced metadata background with subtle gradient
-        const bgColor = isDarkTheme ? [45, 45, 45] : [248, 248, 248];
-        doc.setFillColor(...bgColor);
-        doc.rect(0, metadataY, 210, metadataHeight, 'F');
-        
-        // Add subtle border
-        doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(0.2);
-        doc.line(0, metadataY, 210, metadataY);
-        doc.line(0, metadataY + metadataHeight, 210, metadataY + metadataHeight);
-        
-        // Report metadata with enhanced formatting
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.setTextColor(...colors.secondary);
-        const now = new Date();
-        const reportId = `RST-${now.getTime().toString().slice(-8)}`;
-        
-        // Left column
-        doc.text(`📅 Generated: ${this.formatDateTime(now)}`, 15, metadataY + 6);
-        doc.text(`🆔 Report ID: ${reportId}`, 15, metadataY + 10);
-        
-        // Right column
-        doc.text(`🌍 Timezone: Asia/Kolkata (IST)`, 110, metadataY + 6);
-        doc.text(`📄 Format: Enhanced PDF Report`, 110, metadataY + 10);
-    }
+
 
     addThemeDecorativeElements(doc, colors, currentTheme) {
         // Add theme-specific decorative corner elements
@@ -420,12 +405,12 @@ class Utils {
         // Professional separator line with enhanced styling
         doc.setDrawColor(...colors.primary);
         doc.setLineWidth(1);
-        doc.line(15, 60, 195, 60);
+        doc.line(15, 45, 195, 45);
         
         // Add subtle decorative elements at line ends
         doc.setFillColor(...colors.primary);
-        doc.circle(15, 60, 1, 'F');
-        doc.circle(195, 60, 1, 'F');
+        doc.circle(15, 45, 1, 'F');
+        doc.circle(195, 45, 1, 'F');
     }
 
     addFooter(doc, colors) {
@@ -436,7 +421,7 @@ class Utils {
         doc.rect(0, footerY, 210, 12, 'F');
         
         // Footer content
-        doc.setFont('helvetica', 'normal');
+        doc.setExoFont('normal');
         doc.setFontSize(7);
         doc.setTextColor(...colors.secondary);
         
@@ -455,12 +440,12 @@ class Utils {
         doc.setFillColor(...colors.light);
         doc.rect(15, yPos - 5, 180, 25, 'F');
         
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(14);
         doc.setTextColor(...colors.secondary);
         doc.text('SERVICE PROVIDER INFORMATION', 20, yPos + 5);
         
-        doc.setFont('helvetica', 'normal');
+        doc.setExoFont('normal');
         doc.setFontSize(10);
         doc.text('Service: R-Service Work Tracking', 25, yPos + 13);
         doc.text('Report Type: Professional Work Summary', 25, yPos + 18);
@@ -479,7 +464,7 @@ class Utils {
         doc.setFillColor(...colors.primary);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(14);
         doc.setTextColor(255, 255, 255);
         doc.text('EXECUTIVE SUMMARY', 20, yPos + 5);
@@ -499,12 +484,12 @@ class Utils {
             doc.setFillColor(252, 252, 252);
             doc.rect(x - 2, y - 3, 85, 20, 'F');
             
-            doc.setFont('helvetica', 'bold');
+            doc.setExoFont('bold');
             doc.setFontSize(11);
             doc.setTextColor(...colors.secondary);
             doc.text(metric.label, x, y + 5);
             
-            doc.setFont('helvetica', 'bold');
+            doc.setExoFont('bold');
             doc.setFontSize(13);
             doc.setTextColor(...colors.primary);
             doc.text(metric.value, x, y + 13);
@@ -522,7 +507,7 @@ class Utils {
         doc.setFillColor(...colors.light);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(14);
         doc.setTextColor(...colors.secondary);
         doc.text('FINANCIAL ANALYTICS', 20, yPos + 5);
@@ -543,12 +528,12 @@ class Utils {
             const x = 25 + (index % 2) * 90;
             const y = yPos + Math.floor(index / 2) * 12;
             
-            doc.setFont('helvetica', 'normal');
+            doc.setExoFont('normal');
             doc.setFontSize(10);
             doc.setTextColor(...colors.secondary);
             doc.text(`${item.label}:`, x, y);
             
-            doc.setFont('helvetica', 'bold');
+            doc.setExoFont('bold');
             doc.setTextColor(...colors.primary);
             doc.text(item.value, x + 65, y);
         });
@@ -570,7 +555,7 @@ class Utils {
         
         doc.setFillColor(...statusColor);
         doc.rect(15, yPos - 3, 180, 12, 'F');
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(11);
         doc.setTextColor(255, 255, 255);
         doc.text(statusText, 20, yPos + 4);
@@ -587,7 +572,7 @@ class Utils {
         doc.setFillColor(...colors.secondary);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(14);
         doc.setTextColor(255, 255, 255);
         doc.text('DETAILED WORK RECORDS', 20, yPos + 5);
@@ -596,7 +581,7 @@ class Utils {
         doc.setFillColor(...colors.light);
         doc.rect(15, yPos - 3, 180, 12, 'F');
         
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(9);
         doc.setTextColor(...colors.secondary);
         doc.text('DATE', 20, yPos + 5);
@@ -607,7 +592,7 @@ class Utils {
         doc.text('NOTES', 175, yPos + 5);
         yPos += 15;
         
-        doc.setFont('helvetica', 'normal');
+        doc.setExoFont('normal');
         workRecords.forEach((record, index) => {
             if (yPos > 270) {
                 doc.addPage();
@@ -615,7 +600,7 @@ class Utils {
                 
                 doc.setFillColor(...colors.light);
                 doc.rect(15, yPos - 3, 180, 12, 'F');
-                doc.setFont('helvetica', 'bold');
+                doc.setExoFont('bold');
                 doc.setFontSize(9);
                 doc.setTextColor(...colors.secondary);
                 doc.text('DATE', 20, yPos + 5);
@@ -625,7 +610,7 @@ class Utils {
                 doc.text('PAYMENT STATUS', 145, yPos + 5);
                 doc.text('NOTES', 175, yPos + 5);
                 yPos += 15;
-                doc.setFont('helvetica', 'normal');
+                doc.setExoFont('normal');
             }
             
             if (index % 2 === 0) {
@@ -678,7 +663,7 @@ class Utils {
         doc.setFillColor(...colors.success);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(14);
         doc.setTextColor(255, 255, 255);
         doc.text('PAYMENT TRANSACTION HISTORY', 20, yPos + 5);
@@ -688,7 +673,7 @@ class Utils {
         const advancePayments = payments.filter(p => p.isAdvance);
         const regularPayments = payments.filter(p => !p.isAdvance);
         
-        doc.setFont('helvetica', 'normal');
+        doc.setExoFont('normal');
         doc.setFontSize(10);
         doc.setTextColor(...colors.secondary);
         doc.text(`Total Transactions: ${payments.length} | Regular: ${regularPayments.length} | Advance: ${advancePayments.length}`, 20, yPos);
@@ -697,7 +682,7 @@ class Utils {
         doc.setFillColor(...colors.light);
         doc.rect(15, yPos - 3, 180, 12, 'F');
         
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(9);
         doc.setTextColor(...colors.secondary);
         doc.text('PAYMENT DATE', 20, yPos + 5);
@@ -707,7 +692,7 @@ class Utils {
         doc.text('TRANSACTION ID', 155, yPos + 5);
         yPos += 15;
         
-        doc.setFont('helvetica', 'normal');
+        doc.setExoFont('normal');
         payments.forEach((payment, index) => {
             if (yPos > 270) {
                 doc.addPage();
@@ -715,7 +700,7 @@ class Utils {
                 
                 doc.setFillColor(...colors.light);
                 doc.rect(15, yPos - 3, 180, 12, 'F');
-                doc.setFont('helvetica', 'bold');
+                doc.setExoFont('bold');
                 doc.setFontSize(9);
                 doc.setTextColor(...colors.secondary);
                 doc.text('PAYMENT DATE', 20, yPos + 5);
@@ -724,7 +709,7 @@ class Utils {
                 doc.text('TYPE', 125, yPos + 5);
                 doc.text('TRANSACTION ID', 155, yPos + 5);
                 yPos += 15;
-                doc.setFont('helvetica', 'normal');
+                doc.setExoFont('normal');
             }
             
             if (index % 2 === 0) {
@@ -772,7 +757,7 @@ class Utils {
         doc.setFillColor(...colors.warning);
         doc.rect(15, yPos - 5, 180, 15, 'F');
         
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(14);
         doc.setTextColor(255, 255, 255);
         doc.text('PERFORMANCE INSIGHTS AND RECOMMENDATIONS', 20, yPos + 5);
@@ -807,7 +792,7 @@ class Utils {
         }
         
         insights.forEach((insight, index) => {
-            doc.setFont('helvetica', 'normal');
+            doc.setExoFont('normal');
             doc.setFontSize(10);
             doc.setTextColor(...colors.secondary);
             doc.text(`${index + 1}. ${insight}`, 25, yPos + (index * 8));
@@ -815,7 +800,7 @@ class Utils {
         
         yPos += insights.length * 8 + 15;
         
-        doc.setFont('helvetica', 'bold');
+        doc.setExoFont('bold');
         doc.setFontSize(12);
         doc.setTextColor(...colors.primary);
         doc.text('RECOMMENDATIONS:', 20, yPos);
@@ -829,7 +814,7 @@ class Utils {
         ];
         
         recommendations.forEach((rec, index) => {
-            doc.setFont('helvetica', 'normal');
+            doc.setExoFont('normal');
             doc.setFontSize(9);
             doc.setTextColor(...colors.secondary);
             doc.text(`• ${rec}`, 25, yPos + (index * 6));
@@ -848,12 +833,12 @@ class Utils {
             doc.setFillColor(...colors.light);
             doc.rect(0, 285, 210, 12, 'F');
             
-            doc.setFont('helvetica', 'bold');
+            doc.setExoFont('bold');
             doc.setFontSize(8);
             doc.setTextColor(...colors.secondary);
             doc.text(`Page ${i} of ${pageCount}`, 20, 292);
             
-            doc.setFont('helvetica', 'normal');
+            doc.setExoFont('normal');
             doc.text('R-Service Tracker v1.0.0', 80, 292);
             
             doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 155, 292);
