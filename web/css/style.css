@@ -1010,6 +1010,16 @@ body {
   align-items: start;
 }
 
+/* ===== DASHBOARD ===== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+}
+
 /* ===== CARDS ===== */
 .card {
   background: linear-gradient(135deg, var(--surface), var(--surface-alt));
@@ -1562,16 +1572,54 @@ body {
 /* ===== CHARTS ===== */
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
 }
 
 .chart-container {
   background: var(--surface);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-light);
   border: 1px solid var(--border);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100%;
+}
+
+/* ===== VIEW SECTIONS ===== */
+.view-section {
+  width: 100%;
+  max-width: 100%;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.view-header h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 /* ===== MODALS ===== */
@@ -1877,6 +1925,7 @@ body {
   .dashboard-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+    padding: 0 0.5rem;
   }
   
   .toast-container {
@@ -1988,10 +2037,23 @@ body {
   
   .charts-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 0.5rem;
   }
   
   .chart-container {
     padding: 1rem;
+    margin: 0;
+  }
+  
+  .view-section {
+    padding: 1rem;
+  }
+  
+  .view-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
   
   .modal-content {

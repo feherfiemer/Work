@@ -215,8 +215,8 @@ class CalendarManager {
         indicators.style.cssText = `
             display: flex;
             flex-direction: row;
-            gap: 0.25rem;
-            margin-top: 0.25rem;
+            gap: 0.15rem;
+            margin-top: 0.1rem;
             flex-wrap: nowrap;
             justify-content: center;
             align-items: center;
@@ -230,13 +230,14 @@ class CalendarManager {
                 background: var(--success);
                 color: white;
                 border-radius: 50%;
-                width: 12px;
-                height: 12px;
+                width: 10px;
+                height: 10px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 0.6rem;
+                font-size: 0.5rem;
                 flex-shrink: 0;
+                margin: 0 1px;
             `;
             indicators.appendChild(workIndicator);
 
@@ -251,13 +252,14 @@ class CalendarManager {
                     background: var(--info);
                     color: white;
                     border-radius: 50%;
-                    width: 12px;
-                    height: 12px;
+                    width: 10px;
+                    height: 10px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 0.6rem;
+                    font-size: 0.5rem;
                     flex-shrink: 0;
+                    margin: 0 1px;
                 `;
                 indicators.appendChild(paidIndicator);
             }

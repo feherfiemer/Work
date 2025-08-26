@@ -2,9 +2,9 @@
   <!-- Curved black background -->
   <rect width="192" height="192" rx="36" ry="36" fill="#000000"/>
   
-  <!-- Dashed white border with padding -->
-  <rect x="18" y="18" width="156" height="156" rx="24" ry="24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="8,4"/>
+  <!-- Dashed white border with more padding and matching curves -->
+  <rect x="30" y="30" width="132" height="132" rx="24" ry="24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-dasharray="6,3"/>
   
   <!-- Larger tick mark -->
-  <path d="M60 96L82 118L135 66" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M67 96L87 116L127 66" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
