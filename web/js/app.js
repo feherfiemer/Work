@@ -307,6 +307,8 @@ class RServiceTracker {
         this.setupViewNavigation();
         
         this.setupModalHandlers();
+        
+        this.setupEarningsInsight();
 
         document.addEventListener('click', (e) => {
             if (sideMenu && !sideMenu.contains(e.target) && !menuToggle.contains(e.target)) {
@@ -1091,6 +1093,142 @@ class RServiceTracker {
                 });
             }
         });
+    }
+
+    setupEarningsInsight() {
+        const earningsInsightBtn = document.getElementById('earningsInsightBtn');
+        const earningsInsightTooltip = document.getElementById('earningsInsightTooltip');
+        const closeInsightTooltip = document.getElementById('closeInsightTooltip');
+
+        if (earningsInsightBtn && earningsInsightTooltip) {
+            earningsInsightBtn.addEventListener('click', async () => {
+                await this.showEarningsInsight();
+            });
+        }
+
+        if (closeInsightTooltip && earningsInsightTooltip) {
+            closeInsightTooltip.addEventListener('click', () => {
+                this.hideEarningsInsight();
+            });
+        }
+
+        // Close tooltip when clicking on overlay
+        if (earningsInsightTooltip) {
+            earningsInsightTooltip.addEventListener('click', (e) => {
+                if (e.target === earningsInsightTooltip) {
+                    this.hideEarningsInsight();
+                }
+            });
+        }
+
+        // Close tooltip on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && earningsInsightTooltip && earningsInsightTooltip.style.display !== 'none') {
+                this.hideEarningsInsight();
+            }
+        });
+    }
+
+    async showEarningsInsight() {
+        try {
+            const stats = await this.db.getEarningsStats();
+            const workRecords = await this.db.getAllWorkRecords();
+            const payments = await this.db.getAllPayments();
+            
+            // Calculate insights
+            const insights = this.calculateEarningsInsights(stats, workRecords, payments);
+            
+            // Update tooltip content
+            this.updateInsightTooltipContent(insights);
+            
+            // Show tooltip
+            const tooltip = document.getElementById('earningsInsightTooltip');
+            if (tooltip) {
+                tooltip.style.display = 'flex';
+                // Trigger animation by forcing a reflow
+                tooltip.offsetHeight;
+            }
+        } catch (error) {
+            console.error('Error showing earnings insight:', error);
+            this.notifications.showToast('Error loading insights', 'error');
+        }
+    }
+
+    hideEarningsInsight() {
+        const tooltip = document.getElementById('earningsInsightTooltip');
+        if (tooltip) {
+            tooltip.style.display = 'none';
+        }
+    }
+
+    calculateEarningsInsights(stats, workRecords, payments) {
+        const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+        
+        // Average daily earnings
+        const avgDailyEarnings = stats.totalWorked > 0 ? stats.totalEarned / stats.totalWorked : 0;
+        
+        // Payment efficiency
+        const paymentEfficiency = stats.totalEarned > 0 ? (stats.totalPaid / stats.totalEarned * 100) : 0;
+        
+        // Current month earnings
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const currentMonthPayments = payments.filter(payment => {
+            const paymentDate = new Date(payment.paymentDate);
+            return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+        });
+        const monthlyProgress = currentMonthPayments.reduce((sum, payment) => sum + payment.amount, 0);
+        
+        // Generate summary message
+        let summaryText = '';
+        if (stats.totalWorked === 0) {
+            summaryText = 'Start working to see your earnings insights! 💪';
+        } else if (stats.currentStreak > 7) {
+            summaryText = `Amazing work streak! You've been consistent for ${stats.currentStreak} days. Keep it up! 🔥`;
+        } else if (paymentEfficiency >= 80) {
+            summaryText = 'Great payment management! You\'re staying on top of your earnings. 📈';
+        } else if (stats.currentBalance > 200) {
+            summaryText = 'You have a good amount pending. Consider collecting your payment soon! 💰';
+        } else {
+            summaryText = 'Keep up the great work! Your earning patterns show consistent progress. 📊';
+        }
+        
+        return {
+            avgDailyEarnings,
+            paymentEfficiency,
+            currentStreak: stats.currentStreak,
+            monthlyProgress,
+            summaryText
+        };
+    }
+
+    updateInsightTooltipContent(insights) {
+        // Update metric values
+        const avgDailyEarningsEl = document.getElementById('avgDailyEarnings');
+        const paymentEfficiencyEl = document.getElementById('paymentEfficiency');
+        const currentWorkStreakEl = document.getElementById('currentWorkStreak');
+        const monthlyProgressEl = document.getElementById('monthlyProgress');
+        const insightSummaryTextEl = document.getElementById('insightSummaryText');
+
+        if (avgDailyEarningsEl) {
+            avgDailyEarningsEl.textContent = this.utils.formatCurrency(Math.round(insights.avgDailyEarnings));
+        }
+
+        if (paymentEfficiencyEl) {
+            paymentEfficiencyEl.textContent = `${insights.paymentEfficiency.toFixed(1)}%`;
+        }
+
+        if (currentWorkStreakEl) {
+            currentWorkStreakEl.textContent = `${insights.currentStreak} days`;
+        }
+
+        if (monthlyProgressEl) {
+            monthlyProgressEl.textContent = this.utils.formatCurrency(insights.monthlyProgress);
+        }
+
+        if (insightSummaryTextEl) {
+            insightSummaryTextEl.textContent = insights.summaryText;
+        }
     }
 
     setupModalHandlers() {
