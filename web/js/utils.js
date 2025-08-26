@@ -168,7 +168,7 @@ class Utils {
             
             this.addHeader(doc, colors);
             
-            let yPos = 50; // Adjusted for header without metadata section
+            let yPos = 55; // Better spacing after header for cleaner layout
             
             yPos = this.addCompanyInfo(doc, colors, yPos);
             
@@ -223,14 +223,12 @@ class Utils {
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'blue-light';
         const isDarkTheme = currentTheme.includes('dark');
         const titleColor = this.getTitleColorForTheme(currentTheme, isDarkTheme);
-        const iconStyle = this.getIconStyleForTheme(currentTheme);
         
-        // App title with theme-specific icon and styling
+        // App title with clean styling
         doc.setExoFont('bold');
         doc.setFontSize(26);
         doc.setTextColor(...titleColor);
-        doc.text(iconStyle, 15, 23);
-        doc.text('R-Service Tracker', 28, 23);
+        doc.text('R-Service Tracker', 15, 23);
         
         // Subtitle with enhanced styling
         doc.setExoFont('normal');
@@ -376,12 +374,12 @@ class Utils {
 
     getIconStyleForTheme(currentTheme) {
         // Return simple text-based icons without special characters
-        if (currentTheme.includes('blue')) return 'TECH'; // Tech/electric
-        if (currentTheme.includes('orange')) return 'FIRE'; // Energy/fire
-        if (currentTheme.includes('green')) return 'ECO'; // Growth/nature
-        if (currentTheme.includes('red')) return 'PRO'; // Target/precision
-        if (currentTheme.includes('monochrome')) return 'MIN'; // Minimalist
-        return 'RST'; // Default R-Service Tracker
+        if (currentTheme.includes('blue')) return 'R-ST'; // R-Service Tracker
+        if (currentTheme.includes('orange')) return 'R-ST'; // R-Service Tracker
+        if (currentTheme.includes('green')) return 'R-ST'; // R-Service Tracker
+        if (currentTheme.includes('red')) return 'R-ST'; // R-Service Tracker
+        if (currentTheme.includes('monochrome')) return 'R-ST'; // R-Service Tracker
+        return 'R-ST'; // Default R-Service Tracker
     }
 
 
@@ -437,6 +435,9 @@ class Utils {
     }
 
     addCompanyInfo(doc, colors, yPos) {
+        // Add some spacing before the section
+        yPos += 5;
+        
         doc.setFillColor(...colors.light);
         doc.rect(15, yPos - 5, 180, 25, 'F');
         
@@ -452,7 +453,7 @@ class Utils {
         doc.text(`Daily Rate: ${this.formatCurrencyForPDF(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)} per day`, 110, yPos + 13);
         doc.text('Currency: Indian Rupees (INR)', 110, yPos + 18);
         
-        return yPos + 35;
+        return yPos + 40; // Extra spacing after this section
     }
 
     addExecutiveSummary(doc, colors, summary, yPos) {

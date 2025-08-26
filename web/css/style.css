@@ -461,6 +461,7 @@ body {
   padding: 1rem 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 80px; /* Consistent header height for desktop */
 }
 
 .logo {
@@ -513,14 +514,14 @@ body {
 /* ===== MAIN CONTAINER ===== */
 .main-container {
   min-height: 100vh;
-  padding-top: 5rem;
+  padding-top: 80px; /* Match header height consistently */
   animation: fadeIn var(--transition-slow);
 }
 
 .main-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem 2rem 2rem 2rem; /* Reduce top padding since main-container handles header spacing */
 }
 
 /* ===== SIDE MENU ===== */
@@ -1922,6 +1923,10 @@ body {
     min-height: 60px; /* Consistent header height */
   }
   
+  .main-container {
+    padding-top: 60px; /* Match tablet header height */
+  }
+  
   .dashboard-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -2086,6 +2091,10 @@ body {
     min-height: 56px; /* Consistent header height */
   }
   
+  .main-container {
+    padding-top: 56px; /* Match mobile header height */
+  }
+  
 
   
   .main-content {
@@ -2196,6 +2205,10 @@ body {
   .header-content {
     padding: 0.5rem;
     min-height: 52px; /* Consistent header height */
+  }
+  
+  .main-container {
+    padding-top: 52px; /* Match very small mobile header height */
   }
   
 
