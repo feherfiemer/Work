@@ -151,7 +151,7 @@ class Utils {
             
             this.addHeader(doc, colors);
             
-            let yPos = 65;
+            let yPos = 68; // Adjusted for enhanced header
             
             yPos = this.addCompanyInfo(doc, colors, yPos);
             
@@ -189,58 +189,243 @@ class Utils {
 
     addHeader(doc, colors) {
         try {
-            // Main header background with gradient effect
-            doc.setFillColor(...colors.primary);
-            doc.rect(0, 0, 210, 35, 'F');
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'blue-light';
+            const isDarkTheme = currentTheme.includes('dark');
             
-            // Add subtle accent bar
-            if (colors.accent && Array.isArray(colors.accent)) {
-                doc.setFillColor(...colors.accent);
-                doc.rect(0, 35, 210, 3, 'F');
-            } else {
-                // Fallback to a lighter version of primary color
-                const [r, g, b] = colors.primary;
-                doc.setFillColor(Math.min(255, r + 50), Math.min(255, g + 50), Math.min(255, b + 50));
-                doc.rect(0, 35, 210, 3, 'F');
-            }
+            // Create a sophisticated gradient header based on theme
+            this.createThemeBasedHeader(doc, colors, currentTheme, isDarkTheme);
+            
         } catch (error) {
             console.error('Error in addHeader:', error);
-            // Continue with basic header without accent bar
+            // Fallback to basic header
             doc.setFillColor(33, 150, 243); // Default blue
             doc.rect(0, 0, 210, 35, 'F');
         }
         
-        // App title with checkmark icon
+        // Dynamic title styling based on theme
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'blue-light';
+        const isDarkTheme = currentTheme.includes('dark');
+        const titleColor = this.getTitleColorForTheme(currentTheme, isDarkTheme);
+        const iconStyle = this.getIconStyleForTheme(currentTheme);
+        
+        // App title with theme-specific icon and styling
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(24);
-        doc.setTextColor(255, 255, 255);
-        doc.text('✓', 15, 22);
-        doc.text('R-Service Tracker', 25, 22);
+        doc.setFontSize(26);
+        doc.setTextColor(...titleColor);
+        doc.text(iconStyle, 15, 23);
+        doc.text('R-Service Tracker', 28, 23);
         
+        // Subtitle with enhanced styling
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(11);
-        doc.text('Professional Work & Payment Management Report', 25, 30);
+        doc.setFontSize(10);
+        doc.setTextColor(...titleColor);
+        doc.text('Professional Work & Payment Management Report', 28, 31);
         
-        // Metadata section background
-        doc.setFillColor(248, 248, 248);
-        doc.rect(0, 38, 210, 15, 'F');
+        // Enhanced metadata section with theme-aware styling
+        this.addEnhancedMetadata(doc, colors, currentTheme, isDarkTheme);
         
-        // Report metadata
+        // Theme-specific decorative elements
+        this.addThemeDecorativeElements(doc, colors, currentTheme);
+    }
+
+    createThemeBasedHeader(doc, colors, currentTheme, isDarkTheme) {
+        const headerHeight = 38;
+        
+        // Base header background
+        doc.setFillColor(...colors.primary);
+        doc.rect(0, 0, 210, headerHeight, 'F');
+        
+        // Create gradient effect simulation with multiple rectangles
+        const gradientSteps = 8;
+        const stepHeight = headerHeight / gradientSteps;
+        
+        for (let i = 0; i < gradientSteps; i++) {
+            const opacity = 1 - (i * 0.08); // Gradually decrease opacity
+            const [r, g, b] = colors.primary;
+            
+            // Calculate lighter shade for gradient effect
+            const lightR = Math.min(255, Math.round(r + (255 - r) * (1 - opacity)));
+            const lightG = Math.min(255, Math.round(g + (255 - g) * (1 - opacity)));
+            const lightB = Math.min(255, Math.round(b + (255 - b) * (1 - opacity)));
+            
+            doc.setFillColor(lightR, lightG, lightB);
+            doc.rect(0, i * stepHeight, 210, stepHeight, 'F');
+        }
+        
+        // Add theme-specific pattern overlay
+        this.addThemePattern(doc, colors, currentTheme, headerHeight);
+        
+        // Enhanced accent bar with gradient
+        if (colors.accent && Array.isArray(colors.accent)) {
+            doc.setFillColor(...colors.accent);
+            doc.rect(0, headerHeight, 210, 4, 'F');
+            
+            // Add subtle shadow effect under accent bar
+            const [ar, ag, ab] = colors.accent;
+            doc.setFillColor(Math.max(0, ar - 30), Math.max(0, ag - 30), Math.max(0, ab - 30));
+            doc.rect(0, headerHeight + 4, 210, 1, 'F');
+        }
+    }
+
+    addThemePattern(doc, colors, currentTheme, headerHeight) {
+        // Add subtle geometric patterns based on theme
+        doc.setDrawColor(...colors.accent || [255, 255, 255]);
+        doc.setLineWidth(0.3);
+        
+        if (currentTheme.includes('blue')) {
+            // Tech-inspired circuit pattern for blue themes
+            this.drawCircuitPattern(doc, headerHeight);
+        } else if (currentTheme.includes('orange')) {
+            // Dynamic wave pattern for orange themes
+            this.drawWavePattern(doc, headerHeight);
+        } else if (currentTheme.includes('green')) {
+            // Organic leaf pattern for green themes
+            this.drawLeafPattern(doc, headerHeight);
+        } else if (currentTheme.includes('red')) {
+            // Angular geometric pattern for red themes
+            this.drawGeometricPattern(doc, headerHeight);
+        } else if (currentTheme.includes('monochrome')) {
+            // Minimalist line pattern for monochrome themes
+            this.drawMinimalistPattern(doc, headerHeight);
+        }
+    }
+
+    drawCircuitPattern(doc, headerHeight) {
+        // Subtle circuit-like lines in the header
+        for (let i = 0; i < 3; i++) {
+            const y = 8 + (i * 8);
+            doc.line(160 + (i * 10), y, 180 + (i * 10), y);
+            doc.line(180 + (i * 10), y, 180 + (i * 10), y + 6);
+            doc.circle(182 + (i * 10), y + 3, 1);
+        }
+    }
+
+    drawWavePattern(doc, headerHeight) {
+        // Flowing wave pattern
+        doc.setLineWidth(0.5);
+        for (let i = 0; i < 2; i++) {
+            const baseY = 12 + (i * 12);
+            let prevX = 160, prevY = baseY;
+            for (let x = 165; x < 200; x += 5) {
+                const y = baseY + Math.sin((x - 160) * 0.3) * 3;
+                doc.line(prevX, prevY, x, y);
+                prevX = x; prevY = y;
+            }
+        }
+    }
+
+    drawLeafPattern(doc, headerHeight) {
+        // Organic leaf-like shapes
+        doc.setLineWidth(0.4);
+        for (let i = 0; i < 4; i++) {
+            const x = 165 + (i * 8);
+            const y = 15 + (i % 2) * 8;
+            // Simple leaf shape
+            doc.ellipse(x, y, 2, 4);
+            doc.line(x, y - 4, x, y + 4);
+        }
+    }
+
+    drawGeometricPattern(doc, headerHeight) {
+        // Sharp angular patterns
+        doc.setLineWidth(0.4);
+        for (let i = 0; i < 3; i++) {
+            const x = 170 + (i * 10);
+            const y = 15;
+            // Diamond shapes
+            doc.line(x, y - 4, x + 3, y);
+            doc.line(x + 3, y, x, y + 4);
+            doc.line(x, y + 4, x - 3, y);
+            doc.line(x - 3, y, x, y - 4);
+        }
+    }
+
+    drawMinimalistPattern(doc, headerHeight) {
+        // Clean, minimal lines
+        doc.setLineWidth(0.3);
+        for (let i = 0; i < 5; i++) {
+            const x = 170 + (i * 5);
+            doc.line(x, 10, x, 25);
+            if (i % 2 === 0) {
+                doc.line(x, 17, x + 4, 17);
+            }
+        }
+    }
+
+    getTitleColorForTheme(currentTheme, isDarkTheme) {
+        // Return appropriate title color based on theme
+        if (currentTheme.includes('monochrome') && isDarkTheme) {
+            return [33, 37, 41]; // Dark text for light background in monochrome dark
+        }
+        return [255, 255, 255]; // White text for most themes
+    }
+
+    getIconStyleForTheme(currentTheme) {
+        // Return theme-appropriate icon
+        if (currentTheme.includes('blue')) return '⚡'; // Tech/electric
+        if (currentTheme.includes('orange')) return '🔥'; // Energy/fire
+        if (currentTheme.includes('green')) return '🌱'; // Growth/nature
+        if (currentTheme.includes('red')) return '🎯'; // Target/precision
+        if (currentTheme.includes('monochrome')) return '▪'; // Minimalist square
+        return '✓'; // Default checkmark
+    }
+
+    addEnhancedMetadata(doc, colors, currentTheme, isDarkTheme) {
+        const metadataY = 43;
+        const metadataHeight = 15;
+        
+        // Enhanced metadata background with subtle gradient
+        const bgColor = isDarkTheme ? [45, 45, 45] : [248, 248, 248];
+        doc.setFillColor(...bgColor);
+        doc.rect(0, metadataY, 210, metadataHeight, 'F');
+        
+        // Add subtle border
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(0.2);
+        doc.line(0, metadataY, 210, metadataY);
+        doc.line(0, metadataY + metadataHeight, 210, metadataY + metadataHeight);
+        
+        // Report metadata with enhanced formatting
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(...colors.secondary);
         const now = new Date();
         const reportId = `RST-${now.getTime().toString().slice(-8)}`;
         
-        doc.text(`Generated: ${this.formatDateTime(now)}`, 15, 46);
-        doc.text(`Report ID: ${reportId}`, 15, 50);
-        doc.text('Timezone: Asia/Kolkata (IST)', 110, 46);
-        doc.text('Format: PDF Summary Report', 110, 50);
+        // Left column
+        doc.text(`📅 Generated: ${this.formatDateTime(now)}`, 15, metadataY + 6);
+        doc.text(`🆔 Report ID: ${reportId}`, 15, metadataY + 10);
         
-        // Professional border line
+        // Right column
+        doc.text(`🌍 Timezone: Asia/Kolkata (IST)`, 110, metadataY + 6);
+        doc.text(`📄 Format: Enhanced PDF Report`, 110, metadataY + 10);
+    }
+
+    addThemeDecorativeElements(doc, colors, currentTheme) {
+        // Add theme-specific decorative corner elements
+        const cornerSize = 8;
         doc.setDrawColor(...colors.primary);
-        doc.setLineWidth(0.5);
-        doc.line(15, 55, 195, 55);
+        doc.setLineWidth(1);
+        
+        // Top-right corner decoration
+        doc.line(210 - cornerSize, 0, 210, 0);
+        doc.line(210, 0, 210, cornerSize);
+        
+        // Add small accent dots
+        doc.setFillColor(...colors.accent || colors.primary);
+        for (let i = 0; i < 3; i++) {
+            doc.circle(200 + (i * 2), 5 + (i * 2), 0.5, 'F');
+        }
+        
+        // Professional separator line with enhanced styling
+        doc.setDrawColor(...colors.primary);
+        doc.setLineWidth(1);
+        doc.line(15, 60, 195, 60);
+        
+        // Add subtle decorative elements at line ends
+        doc.setFillColor(...colors.primary);
+        doc.circle(15, 60, 1, 'F');
+        doc.circle(195, 60, 1, 'F');
     }
 
     addFooter(doc, colors) {
