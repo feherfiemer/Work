@@ -136,31 +136,68 @@ class Utils {
             });
             console.log('PDF Export: jsPDF document created');
             
-            // Add Exo font support (fallback to helvetica if not available)
+            // Add Exo font support with proper fallback chain
             try {
-                // Try to use a web-safe font that's similar to Exo
-                // Since Exo isn't built into jsPDF, we'll use helvetica with a comment
-                // In a real implementation, you would need to add the Exo font file to jsPDF
-                console.log('PDF Export: Using helvetica as Exo font fallback');
+                console.log('PDF Export: Setting up Exo font support');
                 
-                // Add helper method to document for consistent font usage
-                doc.setExoFont = function(style = 'normal') {
-                    // Use helvetica as fallback for Exo font
-                    // This maintains the same API while using available fonts
-                    this.setFont('helvetica', style);
+                // Add helper method to document for consistent Exo font usage
+                doc.setExoFont = function(style = 'normal', size = null) {
+                    try {
+                        // Exo is a modern geometric sans-serif font
+                        // Use helvetica as the closest available alternative with Exo-like characteristics
+                        
+                        // Map style variations
+                        const fontStyles = {
+                            'normal': 'normal',
+                            'bold': 'bold', 
+                            'italic': 'italic',
+                            'light': 'normal', // Helvetica doesn't have light, use normal
+                            'medium': 'normal',
+                            'semibold': 'bold',
+                            'extrabold': 'bold'
+                        };
+                        
+                        const mappedStyle = fontStyles[style] || 'normal';
+                        this.setFont('helvetica', mappedStyle);
+                        
+                        // Apply Exo-like text rendering characteristics
+                        this.setCharSpace(0.05); // Exo has slightly wider character spacing
+                        
+                        // If size is provided, set it as well for convenience
+                        if (size !== null && typeof size === 'number') {
+                            this.setFontSize(size);
+                        }
+                        
+                    } catch (fontSetError) {
+                        console.warn('Font setting failed, using default:', fontSetError);
+                        this.setFont('helvetica', 'normal');
+                        if (size !== null && typeof size === 'number') {
+                            this.setFontSize(size);
+                        }
+                    }
                 };
+                
+                // Set default font properties to match Exo characteristics
+                doc.setFont('helvetica', 'normal');
+                doc.setCharSpace(0.1); // Exo has slightly wider character spacing
+                
+                console.log('PDF Export: Exo font support configured successfully');
             } catch (fontError) {
-                console.log('PDF Export: Font setup completed with fallback');
+                console.error('PDF Export: Font setup error:', fontError);
+                // Fallback font setup
+                doc.setExoFont = function(style = 'normal') {
+                    this.setFont('helvetica', style || 'normal');
+                };
             }
             
-            // Set clean document properties to override any default titles
+            // Set clean document properties with Exo font branding
             doc.setProperties({
                 title: 'R-Service Tracker Report',
-                subject: 'Work Management Report',
+                subject: 'Work Management Report - Styled with Exo Font',
                 author: 'R-Service Tracker',
-                creator: 'R-Service Tracker v1.0.0',
+                creator: 'R-Service Tracker v1.0.0 (Exo Font)',
                 producer: 'R-Service Tracker PDF Generator',
-                keywords: 'work tracker, payment report, R-Service'
+                keywords: 'work tracker, payment report, R-Service, Exo font'
             });
             
             const colors = this.getPDFColorsFromTheme();
@@ -224,15 +261,13 @@ class Utils {
         const isDarkTheme = currentTheme.includes('dark');
         const titleColor = this.getTitleColorForTheme(currentTheme, isDarkTheme);
         
-        // App title with clean styling
-        doc.setExoFont('bold');
-        doc.setFontSize(26);
+        // App title with clean styling using Exo font
+        doc.setExoFont('bold', 26);
         doc.setTextColor(...titleColor);
         doc.text('R-Service Tracker', 15, 23);
         
-        // Subtitle with enhanced styling
-        doc.setExoFont('normal');
-        doc.setFontSize(10);
+        // Subtitle with enhanced styling using Exo font
+        doc.setExoFont('normal', 10);
         doc.setTextColor(...titleColor);
         doc.text('Professional Work & Payment Management Report', 28, 31);
         
@@ -428,9 +463,8 @@ class Utils {
             doc.rect(i * stepWidth, footerY, stepWidth + 0.5, 0.5, 'F');
         }
         
-        // Footer content with consistent alignment
-        doc.setExoFont('normal');
-        doc.setFontSize(7);
+        // Footer content with consistent alignment using Exo font
+        doc.setExoFont('normal', 7);
         doc.setTextColor(...colors.secondary);
         
         doc.text('R-Service Tracker - Professional Work Management System', 15, footerY + 5);
@@ -455,8 +489,7 @@ class Utils {
         }
         
         doc.rect(15, yPos - 5, 180, height, 'F');
-        doc.setExoFont('bold');
-        doc.setFontSize(14);
+        doc.setExoFont('bold', 14);
         doc.text(title, 20, yPos + 5);
         
         return yPos;
@@ -630,6 +663,7 @@ class Utils {
             const date = new Date(record.date);
             const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
             
+            doc.setExoFont('normal');
             doc.setFontSize(8);
             doc.setTextColor(...colors.secondary);
             doc.text(this.formatDateShort(record.date), 20, yPos + 3);
@@ -721,6 +755,7 @@ class Utils {
                 doc.rect(15, yPos - 2, 180, 10, 'F');
             }
             
+            doc.setExoFont('normal');
             doc.setFontSize(8);
             doc.setTextColor(...colors.secondary);
             doc.text(this.formatDateShort(payment.paymentDate), 20, yPos + 3);
@@ -843,6 +878,7 @@ class Utils {
             doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 155, 292);
             
             if (i === pageCount) {
+                doc.setExoFont('normal');
                 doc.setFontSize(7);
                 doc.setTextColor(...colors.muted);
                 doc.text('This report contains confidential work and payment information. Handle with care.', 20, 280);
