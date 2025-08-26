@@ -1147,7 +1147,7 @@ class RServiceTracker {
             const stats = await this.db.getEarningsStats();
             
             // Generate professional status message
-            const statusMessage = this.generateEarningsStatusMessage(stats);
+            const statusMessage = await this.generateEarningsStatusMessage(stats);
             
             // Update tooltip content
             const messageEl = document.getElementById('earningsStatusMessage');
@@ -1237,12 +1237,24 @@ class RServiceTracker {
         }
     }
 
-    generateEarningsStatusMessage(stats) {
+    async generateEarningsStatusMessage(stats) {
         const { totalWorked, totalEarned, totalPaid, currentBalance } = stats;
+        
+        // Check for advance payment status
+        const advanceStatus = await this.db.getAdvancePaymentStatus();
         
         // New user - no work done
         if (totalWorked === 0) {
             return "Welcome to R-Service Tracker! No work completed yet. Start tracking your daily tasks to begin earning.";
+        }
+        
+        // Handle advance payment scenarios
+        if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0) {
+            const remainingDays = advanceStatus.workRemainingForAdvance;
+            const advanceAmount = advanceStatus.totalAdvanceAmount;
+            const completedDays = totalWorked - remainingDays;
+            
+            return `Advance payment progress: You received ${this.utils.formatCurrency(advanceAmount)} advance. Completed ${completedDays} of ${totalWorked} required days. ${remainingDays} more day${remainingDays > 1 ? 's' : ''} needed to complete advance payment obligation.`;
         }
         
         // Has worked but no payments made
@@ -1252,7 +1264,10 @@ class RServiceTracker {
         
         // Has worked and received some payments
         if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
-            return `Work progress: ${totalWorked} day${totalWorked > 1 ? 's' : ''} completed, ${this.utils.formatCurrency(totalPaid)} collected, ${this.utils.formatCurrency(currentBalance)} pending payment.`;
+            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+            const pendingDays = Math.ceil(currentBalance / dailyWage);
+            
+            return `Work progress: ${totalWorked} day${totalWorked > 1 ? 's' : ''} completed, ${this.utils.formatCurrency(totalPaid)} collected. ${pendingDays} day${pendingDays > 1 ? 's' : ''} (${this.utils.formatCurrency(currentBalance)}) pending payment.`;
         }
         
         // All payments up to date

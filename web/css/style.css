@@ -1128,26 +1128,25 @@ body {
   background: transparent;
   border: none;
   color: var(--primary);
-  font-size: 1.1rem;
+  font-size: 1rem;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.25rem;
   border-radius: 50%;
   transition: var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2rem;
+  height: 2rem;
 }
 
 .earnings-insight-btn:hover {
   background: rgba(var(--primary-rgb), 0.1);
-  transform: scale(1.1);
   color: var(--primary-dark);
 }
 
 .earnings-insight-btn:active {
-  transform: scale(0.95);
+  background: rgba(var(--primary-rgb), 0.15);
 }
 
 .earnings-info {
@@ -4598,8 +4597,8 @@ button.disabled:hover {
 }
 
 .tooltip-content {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(var(--primary-rgb), 0.95);
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
   border-radius: var(--border-radius-small);
   box-shadow: var(--shadow-medium);
   padding: 0.75rem 1rem;
@@ -4607,16 +4606,18 @@ button.disabled:hover {
   min-width: 200px;
   font-size: 0.875rem;
   line-height: 1.4;
-  color: var(--text-primary);
+  color: var(--surface);
   word-wrap: break-word;
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
 }
 
 .tooltip-arrow {
   position: absolute;
   width: 8px;
   height: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(var(--primary-rgb), 0.95);
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
   transform: rotate(45deg);
 }
 
