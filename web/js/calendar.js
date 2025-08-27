@@ -732,6 +732,11 @@ class CalendarManager {
                         await window.app.updatePendingUnpaidDates();
                         await window.app.updatePaidButtonVisibility();
                         
+                        // Trigger payment check to potentially hide paid button
+                        if (typeof window.app.checkPendingPayments === 'function') {
+                            await window.app.checkPendingPayments();
+                        }
+                        
                         if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
                             await window.app.charts.updateCharts();
                         }
@@ -800,7 +805,7 @@ class CalendarManager {
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             
             // Add work record
-            await this.db.addWorkRecord(dateString, 'completed', dailyWage);
+            await this.db.addWorkRecord(dateString, dailyWage, 'completed');
             console.log('Work record added successfully');
 
             if (window.app && window.app.notifications) {
@@ -833,6 +838,11 @@ class CalendarManager {
                         
                         if (typeof window.app.checkPendingPayments === 'function') {
                             await window.app.checkPendingPayments();
+                        }
+                        
+                        // Ensure paid button visibility is updated
+                        if (typeof window.app.updatePaidButtonVisibility === 'function') {
+                            await window.app.updatePaidButtonVisibility();
                         }
                         
                         console.log('App dashboard updated after marking as done');

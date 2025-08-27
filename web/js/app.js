@@ -1715,6 +1715,41 @@ class RServiceTracker {
         } else {
             this.hidePaidButton();
         }
+
+        // Check if we should show PWA recommendation after work completion
+        this.checkPWARecommendationAfterWork();
+    }
+
+    async checkPWARecommendationAfterWork() {
+        try {
+            // Check if PWA is already installed
+            const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
+                               window.navigator.standalone === true;
+            
+            if (isInstalled) return;
+
+            // Check if PWA is supported
+            const isPWASupported = 'serviceWorker' in navigator && 
+                                  (window.matchMedia('(display-mode: standalone)').matches !== undefined || 
+                                   window.navigator.standalone !== undefined);
+            
+            if (!isPWASupported) return;
+
+            const shouldShow = await this.shouldShowPWARecommendation();
+            if (shouldShow && !document.getElementById('pwaInstallBanner').classList.contains('show')) {
+                // Show PWA recommendation if criteria are met
+                setTimeout(() => {
+                    const deferredPrompt = window.deferredPrompt;
+                    if (deferredPrompt) {
+                        this.showInstallRecommendation(deferredPrompt);
+                    } else {
+                        this.showInstallRecommendationGeneric();
+                    }
+                }, 2000); // Show after 2 seconds
+            }
+        } catch (error) {
+            console.error('[PWA] Error checking PWA recommendation after work:', error);
+        }
     }
 
     async updatePaidButtonVisibility() {
@@ -1791,6 +1826,9 @@ class RServiceTracker {
             }
             
             await this.checkPendingPayments();
+            
+            // Ensure paid button shows immediately if eligible
+            await this.updatePaidButtonVisibility();
             
         } catch (error) {
             console.error('Error marking work as done:', error);
@@ -2560,6 +2598,7 @@ class RServiceTracker {
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            window.deferredPrompt = e; // Store globally for access from other methods
             
             // Show install banner on every visit for supported browsers (removed dismissed check)
             if (!isInstalled && !installBannerShown) {
@@ -2592,17 +2631,20 @@ class RServiceTracker {
             }
         });
         
-        // Show PWA recommendation for all supported browsers on every visit
-        setTimeout(() => {
+        // Show PWA recommendation based on payment duration logic
+        setTimeout(async () => {
             if (!installBannerShown && isPWASupported && !isInstalled) {
-                if (deferredPrompt) {
-                    // Chrome/Edge - with native install prompt
-                    this.showInstallRecommendation(deferredPrompt);
-                } else {
-                    // Safari/Firefox - show generic instructions
-                    this.showInstallRecommendationGeneric();
+                const shouldShowPWA = await this.shouldShowPWARecommendation();
+                if (shouldShowPWA) {
+                    if (deferredPrompt) {
+                        // Chrome/Edge - with native install prompt
+                        this.showInstallRecommendation(deferredPrompt);
+                    } else {
+                        // Safari/Firefox - show generic instructions
+                        this.showInstallRecommendationGeneric();
+                    }
+                    installBannerShown = true;
                 }
-                installBannerShown = true;
             }
         }, 5000); // Show after 5 seconds
     }
@@ -2652,15 +2694,58 @@ class RServiceTracker {
 
     dismissInstallRecommendation() {
         this.hideInstallRecommendation();
-        // Only dismiss for this session - show on every visit
-        sessionStorage.setItem('pwa-install-dismissed-session', 'true');
+        // Store dismissal with payment duration logic
+        const paymentDuration = window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || 4;
+        const dismissUntil = Date.now() + (paymentDuration * 24 * 60 * 60 * 1000); // Dismiss for payment duration days
+        localStorage.setItem('pwa-install-dismissed-until', dismissUntil.toString());
         
         this.notifications.showToast('You can still install the app from your browser menu if needed.', 'info', 5000);
     }
 
+    async shouldShowPWARecommendation() {
+        try {
+            // Check if PWA was recently dismissed
+            const dismissedUntil = localStorage.getItem('pwa-install-dismissed-until');
+            if (dismissedUntil && Date.now() < parseInt(dismissedUntil)) {
+                return false;
+            }
+
+            // Check payment day duration logic
+            const paymentDuration = window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || 4;
+            
+            // Get unpaid work records
+            const workRecords = await this.db.getAllWorkRecords();
+            const payments = await this.db.getAllPayments();
+            
+            const unpaidRecords = workRecords.filter(record => {
+                if (record.status !== 'completed') return false;
+                
+                const recordDate = new Date(record.date);
+                const hasPayment = payments.some(payment => {
+                    const paymentStartDate = new Date(payment.startDate);
+                    const paymentEndDate = new Date(payment.endDate);
+                    return recordDate >= paymentStartDate && recordDate <= paymentEndDate;
+                });
+                
+                return !hasPayment;
+            });
+
+            // Show PWA recommendation when user has enough unpaid work days
+            const shouldShow = unpaidRecords.length >= paymentDuration;
+            
+            console.log(`[PWA] Payment duration: ${paymentDuration}, Unpaid days: ${unpaidRecords.length}, Should show PWA: ${shouldShow}`);
+            
+            return shouldShow;
+        } catch (error) {
+            console.error('[PWA] Error checking PWA recommendation logic:', error);
+            return false; // Don't show if there's an error
+        }
+    }
+
     showInstallRecommendationGeneric() {
-        // Check if already dismissed this session
-        if (sessionStorage.getItem('pwa-install-dismissed-session') === 'true') {
+        // Check if already dismissed based on payment duration
+        const dismissedUntil = localStorage.getItem('pwa-install-dismissed-until');
+        if (dismissedUntil && Date.now() < parseInt(dismissedUntil)) {
             return;
         }
 
