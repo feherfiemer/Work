@@ -4422,56 +4422,27 @@ button.disabled:hover {
     margin-bottom: 0.5rem;
   }
 }
-/* ===== PREMIUM PWA INSTALL BANNER ===== */
+/* ===== SIMPLE PWA INSTALL BANNER ===== */
 .pwa-install-banner {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, 
-    rgba(33, 150, 243, 0.98), 
-    rgba(21, 101, 192, 0.98),
-    rgba(13, 71, 161, 0.99)
-  );
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--primary);
   color: white;
   z-index: var(--z-toast);
-  box-shadow: 
-    0 12px 40px rgba(33, 150, 243, 0.4),
-    0 8px 24px rgba(0, 0, 0, 0.15),
-    inset 0 2px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   transform: translateY(-100%);
-  transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
-  overflow: hidden;
+  transition: transform 0.3s ease;
 }
 
-.pwa-install-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  animation: shimmer 3s infinite;
-}
-
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
+.pwa-install-banner.simple {
+  background: var(--primary);
 }
 
 .pwa-install-banner.show {
   transform: translateY(0);
-  animation: slideInDown 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 @keyframes slideInDown {
@@ -4493,10 +4464,10 @@ button.disabled:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .install-banner-icon {
@@ -4536,47 +4507,49 @@ button.disabled:hover {
 
 .install-banner-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   align-items: center;
 }
 
 .install-btn {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.9), 
-    rgba(255, 255, 255, 0.8)
-  );
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.9);
   color: var(--primary);
-  padding: 0.75rem 1.5rem;
-  font-size: 0.95rem;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  border-radius: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .install-btn:hover {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 1), 
-    rgba(255, 255, 255, 0.95)
-  );
-  transform: translateY(-2px);
-  box-shadow: 
-    0 8px 25px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: white;
+  transform: translateY(-1px);
 }
 
-.install-btn:active {
-  transform: translateY(-1px);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 
 .dismiss-btn {
@@ -4989,16 +4962,18 @@ button.disabled:hover {
 
 /* ===== EARNINGS TOOLTIP ===== */
 .earnings-tooltip {
-  position: fixed;
+  position: fixed !important;
   z-index: var(--z-toast);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: all var(--transition-fast);
   transform: scale(0.8);
-  /* Ensure tooltip stays fixed and doesn't move with scroll */
+  /* Ensure tooltip stays completely fixed */
   will-change: transform, opacity;
   contain: layout style paint;
+  top: auto !important;
+  left: auto !important;
 }
 
 .earnings-tooltip.show {
@@ -5030,20 +5005,21 @@ button.disabled:hover {
 
 .tooltip-arrow {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background: rgba(var(--primary-rgb), 0.95);
-  border: 1px solid rgba(var(--primary-rgb), 0.3);
+  border: 1px solid rgba(var(--primary-rgb), 0.5);
   transform: rotate(45deg);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.1s ease 0.1s, visibility 0.1s ease 0.1s;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 1;
+  /* Ensure arrow is always visible */
+  display: block !important;
 }
 
 .earnings-tooltip.show .tooltip-arrow {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 0.1s ease 0.05s, visibility 0.1s ease 0.05s;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Arrow positioning classes - dynamically positioned */
@@ -5087,6 +5063,286 @@ button.disabled:hover {
     min-width: calc(100vw - 30px);
     font-size: 0.75rem;
     padding: 0.5rem 0.7rem;
+  }
+}
+
+/* ===== PREMIUM ABOUT MODAL ===== */
+.about-modal-content {
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(135deg, var(--surface), rgba(var(--primary-rgb), 0.02));
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.about-modal-header {
+  background: linear-gradient(135deg, var(--primary), rgba(var(--primary-rgb), 0.9));
+  color: white;
+  padding: 1.5rem;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+  pointer-events: none;
+}
+
+.about-header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.about-app-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.about-brand-icon {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.9);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.about-app-brand h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.version-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.about-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.about-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1) rotate(90deg);
+}
+
+.about-modal-body {
+  padding: 0;
+}
+
+.premium-about {
+  padding: 2rem;
+}
+
+.app-description-premium h4 {
+  color: var(--primary);
+  margin: 0 0 1rem 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.app-description-premium p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.features-premium {
+  margin: 2rem 0;
+}
+
+.features-premium h5 {
+  color: var(--text-primary);
+  margin: 0 0 1.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.feature-premium {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(var(--primary-rgb), 0.05);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
+  transition: all 0.3s ease;
+}
+
+.feature-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(var(--primary-rgb), 0.1);
+  border-color: rgba(var(--primary-rgb), 0.2);
+}
+
+.feature-icon-wrapper {
+  background: var(--primary);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+}
+
+.feature-content h6 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.feature-content p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.about-highlights {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.highlight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: var(--border-radius-large);
+  border: 1px solid;
+  transition: all 0.3s ease;
+}
+
+.highlight-item.security {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), rgba(76, 175, 80, 0.02));
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
+.highlight-item.premium {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.05), rgba(255, 193, 7, 0.02));
+  border-color: rgba(255, 193, 7, 0.2);
+}
+
+.highlight-item.tech {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.05), rgba(33, 150, 243, 0.02));
+  border-color: rgba(33, 150, 243, 0.2);
+}
+
+.highlight-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.highlight-item i {
+  font-size: 1.5rem;
+  padding: 0.75rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.highlight-item.security i {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+}
+
+.highlight-item.premium i {
+  background: rgba(255, 193, 7, 0.1);
+  color: #FFC107;
+}
+
+.highlight-item.tech i {
+  background: rgba(33, 150, 243, 0.1);
+  color: #2196F3;
+}
+
+.highlight-item h6 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.highlight-item p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.about-footer {
+  text-align: center;
+  padding: 2rem 0 0 0;
+  border-top: 1px solid rgba(var(--primary-rgb), 0.1);
+  margin-top: 2rem;
+}
+
+.about-footer p {
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.6;
+}
+
+.copyright {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .about-modal-content {
+    max-width: 95vw;
+    margin: 1rem;
+  }
+  
+  .premium-about {
+    padding: 1.5rem;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .highlight-item {
+    padding: 1rem;
   }
 }
 

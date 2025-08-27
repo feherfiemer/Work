@@ -394,22 +394,50 @@ class CalendarManager {
                         Mark as Done
                     </button>
                 `;
-            } else {
-                content += `
-                    <div class="future-date-notice" style="
-                        margin-top: 1rem;
-                        padding: 0.75rem;
-                        background: var(--warning);
-                        color: white;
-                        border-radius: var(--border-radius);
-                        text-align: center;
-                        font-weight: 500;
-                    ">
-                        <i class="fas fa-calendar-times"></i>
-                        Cannot mark work for future dates
-                    </div>
-                `;
             }
+        }
+        
+        // Add Force Paid button for any past or today date (regardless of work completion)
+        if (isPastOrTodayDate) {
+            content += `
+                <button class="force-paid-btn" data-date="${dateString}" style="
+                    margin-top: 0.5rem;
+                    width: 100%;
+                    padding: 0.75rem;
+                    background: linear-gradient(135deg, var(--success), #45a049);
+                    color: white;
+                    border: none;
+                    border-radius: var(--border-radius);
+                    cursor: pointer;
+                    font-family: var(--font-family);
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    box-shadow: var(--shadow-light);
+                    transition: all var(--transition-fast);
+                ">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    Force Mark as Paid
+                </button>
+            `;
+        } else {
+            content += `
+                <div class="future-date-notice" style="
+                    margin-top: 1rem;
+                    padding: 0.75rem;
+                    background: var(--warning);
+                    color: white;
+                    border-radius: var(--border-radius);
+                    text-align: center;
+                    font-weight: 500;
+                ">
+                    <i class="fas fa-calendar-times"></i>
+                    Cannot mark work or payments for future dates
+                </div>
+            `;
         }
 
         content += `</div>`;
@@ -713,13 +741,9 @@ class CalendarManager {
                 throw new Error('Database not available');
             }
             
+            // Allow force payment for any date, not just completed work
             const workRecord = await this.db.getWorkRecord(dateString);
-            if (!workRecord || workRecord.status !== 'completed') {
-                if (window.app && window.app.notifications) {
-                    window.app.notifications.showToast('Can only force payment for completed work days!', 'warning');
-                }
-                return;
-            }
+            console.log('Work record for force payment:', workRecord);
 
             const payments = await this.db.getAllPayments();
             const isAlreadyPaid = payments.some(payment => 
@@ -783,6 +807,11 @@ class CalendarManager {
                         window.app.updateDashboard();
                         await window.app.updatePendingUnpaidDates();
                         await window.app.updatePaidButtonVisibility();
+                        
+                        // Explicitly update advance payment system
+                        if (typeof window.app.checkAdvancePaymentNotification === 'function') {
+                            await window.app.checkAdvancePaymentNotification();
+                        }
                         
                         // Trigger payment check to potentially hide paid button
                         if (typeof window.app.checkPendingPayments === 'function') {
@@ -905,6 +934,11 @@ class CalendarManager {
                         
                         await window.app.updatePendingUnpaidDates();
                         await window.app.updatePaidButtonVisibility();
+                        
+                        // Explicitly update advance payment system
+                        if (typeof window.app.checkAdvancePaymentNotification === 'function') {
+                            await window.app.checkAdvancePaymentNotification();
+                        }
                         
                         if (typeof window.app.checkPendingPayments === 'function') {
                             await window.app.checkPendingPayments();

@@ -1146,8 +1146,11 @@ class RServiceTracker {
             }
         });
 
-        // Tooltip now uses fixed positioning, so no need to reposition on scroll
-        // It will automatically stay fixed relative to the viewport
+        // Tooltip uses fixed positioning and should not move on scroll
+        // Remove any scroll handlers to ensure it stays fixed
+        window.addEventListener('scroll', () => {
+            // Do nothing - let tooltip stay fixed where it is
+        });
     }
 
     async toggleEarningsInsight(targetElement) {
@@ -2589,7 +2592,7 @@ class RServiceTracker {
         let deferredPrompt;
         let installBannerShown = false;
         
-        // Check if already installed or dismissed
+        // Check if already installed
         const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
                            window.navigator.standalone === true;
         const isDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
@@ -2598,8 +2601,8 @@ class RServiceTracker {
             e.preventDefault();
             deferredPrompt = e;
             
-            // Show install banner if conditions are met
-            if (!isInstalled && !isDismissed && !installBannerShown) {
+            // Show install banner on every visit unless dismissed or installed
+            if (!isInstalled && !installBannerShown) {
                 this.showInstallRecommendation(deferredPrompt);
                 installBannerShown = true;
             }
@@ -2627,16 +2630,22 @@ class RServiceTracker {
             }
         });
         
-        // Show banner after some user interaction if not shown yet
+        // Show banner on first visit or payment days
         setTimeout(async () => {
             if (!isInstalled && !installBannerShown) {
                 const shouldShowOnPaymentDay = await this.shouldShowPWAOnPaymentDay();
-                if ((!isDismissed || shouldShowOnPaymentDay) && deferredPrompt) {
-                    this.showInstallRecommendation(deferredPrompt);
+                // Show if not dismissed, or if dismissed but it's a payment day
+                if (!isDismissed || shouldShowOnPaymentDay) {
+                    // Only show if we have the prompt or it's a generic prompt
+                    if (deferredPrompt) {
+                        this.showInstallRecommendation(deferredPrompt);
+                    } else {
+                        this.showInstallRecommendationGeneric();
+                    }
                     installBannerShown = true;
                 }
             }
-        }, 30000); // Show after 30 seconds if not shown yet
+        }, 3000); // Show after 3 seconds on first visit
     }
 
     showInstallRecommendation(deferredPrompt) {

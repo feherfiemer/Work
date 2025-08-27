@@ -473,21 +473,23 @@ class NotificationManager {
         if (soundType === 'done') {
             // Ultra-premium work completion sound sequence with advanced layers
             this.playEnhancedSuccessSound(); 
-            setTimeout(() => this.createWorkCompletionChime(), 200);
-            setTimeout(() => this.createAchievementBells(), 400);
-            setTimeout(() => this.createSuccessHarmony(), 650);
-            setTimeout(() => this.createPremiumWorkFinale(), 850);
-            setTimeout(() => this.createGoldenSparkles(), 1100);
+            setTimeout(() => this.createWorkCompletionChime(), 150);
+            setTimeout(() => this.createAchievementBells(), 300);
+            setTimeout(() => this.createSuccessHarmony(), 500);
+            setTimeout(() => this.createPremiumWorkFinale(), 700);
+            setTimeout(() => this.createGoldenSparkles(), 900);
+            setTimeout(() => this.createHeavenlyAscension(), 1200);
         } else if (soundType === 'paid') {
             // Ultra-premium banking payment sound sequence with layered effects
             this.playBankingTransactionSound();
-            setTimeout(() => this.createCardProcessingSound(), 120);
-            setTimeout(() => this.createCashRegisterKaching(), 280);
-            setTimeout(() => this.createDigitalPaymentConfirmation(), 450);
-            setTimeout(() => this.createATMReceiptSound(), 650);
-            setTimeout(() => this.createWealthySuccessFinale(), 850);
-            setTimeout(() => this.createPremiumPaymentFinale(), 1100);
-            setTimeout(() => this.createCrystalChimes(), 1350);
+            setTimeout(() => this.createCardProcessingSound(), 100);
+            setTimeout(() => this.createCashRegisterKaching(), 250);
+            setTimeout(() => this.createDigitalPaymentConfirmation(), 400);
+            setTimeout(() => this.createATMReceiptSound(), 550);
+            setTimeout(() => this.createWealthySuccessFinale(), 700);
+            setTimeout(() => this.createPremiumPaymentFinale(), 900);
+            setTimeout(() => this.createCrystalChimes(), 1200);
+            setTimeout(() => this.createCelestialCelebration(), 1500);
         }
     }
 
@@ -2243,6 +2245,113 @@ class NotificationManager {
             console.log('Crystal chimes created');
         } catch (error) {
             console.warn('Error creating crystal chimes:', error);
+        }
+    }
+
+    createHeavenlyAscension() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Heavenly ascending sound with ethereal qualities
+            const ascensionFreqs = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568, 1976]; // C major scale ascending
+            
+            ascensionFreqs.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                const reverb = ctx.createDelay(0.8);
+                const reverbGain = ctx.createGain();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                gain.connect(reverb);
+                reverb.connect(reverbGain);
+                reverbGain.connect(ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + index * 0.1);
+                osc.frequency.exponentialRampToValueAtTime(freq * 2, now + index * 0.1 + 1.0);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(freq * 4, now + index * 0.1);
+                filter.Q.setValueAtTime(5, now + index * 0.1);
+                
+                gain.gain.setValueAtTime(0.02, now + index * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.1 + 1.0);
+                
+                reverbGain.gain.setValueAtTime(0.01, now + index * 0.1);
+                reverb.delayTime.setValueAtTime(0.3 + index * 0.05, now + index * 0.1);
+                
+                osc.start(now + index * 0.1);
+                osc.stop(now + index * 0.1 + 1.0);
+            });
+            
+            console.log('Heavenly ascension created');
+        } catch (error) {
+            console.warn('Error creating heavenly ascension:', error);
+        }
+    }
+
+    createCelestialCelebration() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Celestial celebration with rich harmonic content
+            const celestialChord = [
+                [261.63, 329.63, 392.00, 523.25], // C major chord in multiple octaves
+                [293.66, 369.99, 440.00, 587.33], // D major chord
+                [349.23, 440.00, 523.25, 698.46]  // F major chord
+            ];
+            
+            celestialChord.forEach((chord, chordIndex) => {
+                chord.forEach((freq, noteIndex) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    const filter = ctx.createBiquadFilter();
+                    const delay = ctx.createDelay(1.0);
+                    const delayGain = ctx.createGain();
+                    const feedback = ctx.createGain();
+                    
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(ctx.destination);
+                    gain.connect(delay);
+                    delay.connect(delayGain);
+                    delayGain.connect(ctx.destination);
+                    delay.connect(feedback);
+                    feedback.connect(delay);
+                    
+                    osc.type = 'triangle';
+                    const startTime = now + chordIndex * 0.3;
+                    osc.frequency.setValueAtTime(freq, startTime);
+                    osc.frequency.exponentialRampToValueAtTime(freq * 0.995, startTime + 2.0);
+                    
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(freq * 2, startTime);
+                    filter.Q.setValueAtTime(4, startTime);
+                    
+                    gain.gain.setValueAtTime(0.03, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 2.0);
+                    
+                    delayGain.gain.setValueAtTime(0.2, startTime);
+                    feedback.gain.setValueAtTime(0.25, startTime);
+                    delay.delayTime.setValueAtTime(0.25 + noteIndex * 0.05, startTime);
+                    
+                    osc.start(startTime);
+                    osc.stop(startTime + 2.0);
+                });
+            });
+            
+            console.log('Celestial celebration created');
+        } catch (error) {
+            console.warn('Error creating celestial celebration:', error);
         }
     }
 
