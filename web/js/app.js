@@ -2540,32 +2540,122 @@ class RServiceTracker {
         }
 
         let deferredPrompt;
+        let installBannerShown = false;
+        
+        // Check if already installed or dismissed
+        const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
+                           window.navigator.standalone === true;
+        const isDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
         
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             
+            // Show install banner if conditions are met
+            if (!isInstalled && !isDismissed && !installBannerShown) {
+                this.showInstallRecommendation(deferredPrompt);
+                installBannerShown = true;
+            }
+            
+            // Legacy install button support
             const installBtn = document.getElementById('installBtn');
             if (installBtn) {
                 installBtn.style.display = 'block';
                 installBtn.addEventListener('click', () => {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                    });
+                    this.triggerInstall(deferredPrompt);
                 });
             }
         });
         
         window.addEventListener('appinstalled', () => {
             console.log('PWA was installed');
+            this.hideInstallRecommendation();
+            
+            // Show success message
+            this.notifications.showToast('App installed successfully! You can now access it from your home screen.', 'success', 8000);
+            
             const installBtn = document.getElementById('installBtn');
             if (installBtn) {
                 installBtn.style.display = 'none';
             }
+        });
+        
+        // Show banner after some user interaction if not shown yet
+        setTimeout(() => {
+            if (!isInstalled && !isDismissed && !installBannerShown && deferredPrompt) {
+                this.showInstallRecommendation(deferredPrompt);
+                installBannerShown = true;
+            }
+        }, 30000); // Show after 30 seconds if not shown yet
+    }
+
+    showInstallRecommendation(deferredPrompt) {
+        const banner = document.getElementById('pwaInstallBanner');
+        const installBtn = document.getElementById('installAppBtn');
+        const dismissBtn = document.getElementById('dismissInstallBtn');
+        
+        if (!banner) return;
+        
+        // Show banner with animation
+        banner.style.display = 'block';
+        setTimeout(() => banner.classList.add('show'), 100);
+        
+        // Handle install button click
+        if (installBtn) {
+            installBtn.onclick = () => {
+                this.triggerInstall(deferredPrompt);
+            };
+        }
+        
+        // Handle dismiss button click
+        if (dismissBtn) {
+            dismissBtn.onclick = () => {
+                this.dismissInstallRecommendation();
+            };
+        }
+        
+        // Auto-hide after 60 seconds
+        setTimeout(() => {
+            if (banner.classList.contains('show')) {
+                this.dismissInstallRecommendation();
+            }
+        }, 60000);
+    }
+
+    hideInstallRecommendation() {
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) {
+            banner.classList.remove('show');
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    dismissInstallRecommendation() {
+        this.hideInstallRecommendation();
+        localStorage.setItem('pwa-install-dismissed', 'true');
+        localStorage.setItem('pwa-install-dismissed-date', new Date().toISOString());
+        
+        this.notifications.showToast('You can still install the app from your browser menu if needed.', 'info', 5000);
+    }
+
+    triggerInstall(deferredPrompt) {
+        if (!deferredPrompt) {
+            this.notifications.showToast('Install prompt not available. Try using your browser menu.', 'warning');
+            return;
+        }
+        
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+                this.hideInstallRecommendation();
+            } else {
+                console.log('User dismissed the install prompt');
+                this.dismissInstallRecommendation();
+            }
+            deferredPrompt = null;
         });
     }
 
@@ -2586,10 +2676,18 @@ class RServiceTracker {
                             if (canMarkDone) {
                                 console.log('[PWA] Executing mark as done from shortcut');
                                 await this.handleDoneClick();
-                                this.notifications.showToast('Work marked as done via PWA shortcut!', 'success');
+                                // Close the app after 3 seconds for PWA shortcuts
+                                this.notifications.showToast('Work marked as done! App will close automatically.', 'success', 3000);
+                                setTimeout(() => {
+                                    this.closePWAAfterAction();
+                                }, 3000);
                             } else {
                                 console.log('[PWA] Mark as done not available - work already completed today');
-                                this.notifications.showToast('Work already completed for today!', 'info');
+                                // For already completed work, close immediately with minimal notification
+                                this.notifications.showToast('Work already completed today', 'info', 2000);
+                                setTimeout(() => {
+                                    this.closePWAAfterAction();
+                                }, 2000);
                             }
                             this.clearURLParameters();
                             break;
@@ -2654,6 +2752,27 @@ class RServiceTracker {
         } catch (error) {
             console.error('[PWA] Error checking mark paid availability:', error);
             return false;
+        }
+    }
+
+    closePWAAfterAction() {
+        // Check if running in PWA mode
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                            window.navigator.standalone === true;
+        
+        if (isStandalone) {
+            console.log('[PWA] Closing PWA after action completion');
+            // For PWA, we can try to close the window or minimize it
+            if (window.close) {
+                window.close();
+            } else {
+                // If close doesn't work, redirect to a minimal page or hide content
+                document.body.style.display = 'none';
+                setTimeout(() => {
+                    // Restore after 1 second in case user needs to see the app
+                    document.body.style.display = 'block';
+                }, 1000);
+            }
         }
     }
 
