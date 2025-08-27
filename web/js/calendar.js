@@ -833,16 +833,17 @@ class CalendarManager {
                     try {
                         window.app.currentStats = await this.db.getEarningsStats();
                         window.app.updateDashboard();
+                        
+                        // Update today's status (done button state)
+                        if (typeof window.app.updateTodayStatus === 'function') {
+                            await window.app.updateTodayStatus();
+                        }
+                        
                         await window.app.updatePendingUnpaidDates();
                         await window.app.updatePaidButtonVisibility();
                         
                         if (typeof window.app.checkPendingPayments === 'function') {
                             await window.app.checkPendingPayments();
-                        }
-                        
-                        // Ensure paid button visibility is updated
-                        if (typeof window.app.updatePaidButtonVisibility === 'function') {
-                            await window.app.updatePaidButtonVisibility();
                         }
                         
                         console.log('App dashboard updated after marking as done');
