@@ -1102,8 +1102,6 @@ class RServiceTracker {
         if (earningsInsightBtn && earningsInsightTooltip) {
             earningsInsightBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                // Play click sound
-                this.playClickSound();
                 await this.toggleEarningsInsight(e.target);
             });
         }
@@ -1267,7 +1265,7 @@ class RServiceTracker {
         
         // New user - no work done
         if (totalWorked === 0) {
-            return `Welcome to R-Service Tracker!\nDaily Rate: ${this.utils.formatCurrency(dailyWage)}\nStart by clicking "Mark as Done" when you complete work.`;
+            return `Welcome to your professional earnings tracker! With a daily rate of ${this.utils.formatCurrency(dailyWage)}, you can begin tracking your work progress by clicking "Mark as Done" when you complete your first work session. Your journey to organized payment management starts here.`;
         }
         
         // Handle advance payment scenarios
@@ -1276,57 +1274,31 @@ class RServiceTracker {
             const advanceAmount = advanceStatus.totalAdvanceAmount;
             const completedDays = totalWorked - remainingDays;
             
-            return `Advance: ${this.utils.formatCurrency(advanceAmount)} received\nProgress: ${completedDays}/${totalWorked} days completed\nRemaining: ${remainingDays} days to fulfill obligation`;
+            return `You have received an advance payment of ${this.utils.formatCurrency(advanceAmount)} and are making excellent progress. Currently ${completedDays} out of ${totalWorked} required work days have been completed. ${remainingDays} more days needed to fulfill your advance payment obligation.`;
         }
         
         // Has worked but no payments made
         if (totalWorked > 0 && totalPaid === 0) {
-            return `Work Completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}\nPending Payment: ${this.utils.formatCurrency(currentBalance)}\nNo payments collected yet`;
+            return `Your work record shows ${totalWorked} completed work session${totalWorked !== 1 ? 's' : ''} with a pending payment of ${this.utils.formatCurrency(currentBalance)}. No payments have been collected yet, making this an ideal time to initiate your first payment collection process.`;
         }
         
         // Has worked and received some payments
         if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
             const pendingDays = Math.ceil(currentBalance / dailyWage);
             
-            return `Total Work: ${totalWorked} days | Collected: ${this.utils.formatCurrency(totalPaid)}\nPending: ${this.utils.formatCurrency(currentBalance)} (${pendingDays} day${pendingDays !== 1 ? 's' : ''})\nPayment efficiency looks good!`;
+            return `You have successfully completed ${totalWorked} work days and collected ${this.utils.formatCurrency(totalPaid)} in payments. Currently ${this.utils.formatCurrency(currentBalance)} (${pendingDays} day${pendingDays !== 1 ? 's' : ''}) remains pending. Your payment efficiency demonstrates consistent professional management.`;
         }
         
         // All payments up to date
         if (totalWorked > 0 && currentBalance === 0) {
-            return `Perfect! ${totalWorked} days completed\nTotal Earned: ${this.utils.formatCurrency(totalPaid)}\nAll payments are up-to-date`;
+            return `Outstanding achievement! You have completed ${totalWorked} work day${totalWorked !== 1 ? 's' : ''} and earned a total of ${this.utils.formatCurrency(totalPaid)}. All payments are current and up-to-date, reflecting excellent financial management and work discipline.`;
         }
         
         // Fallback message
-        return `R-Service Professional Tracker\nDaily Rate: ${this.utils.formatCurrency(dailyWage)}\nTrack work and manage payments efficiently`;
+        return `R-Service Professional Tracker provides comprehensive work logging and payment management. With your daily rate set at ${this.utils.formatCurrency(dailyWage)}, you can efficiently track earnings and maintain organized financial records for your professional services.`;
     }
 
-    playClickSound() {
-        try {
-            // Create a more pleasant pop/click sound
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            // Configure sound - pleasant pop sound
-            oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.05);
-            oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.15);
-            
-            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 0.05);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
-            
-            oscillator.type = 'triangle'; // Softer sound than sine
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.15);
-        } catch (error) {
-            // Fallback: no sound if Web Audio API is not available
-            console.debug('Click sound not available:', error);
-        }
-    }
+
 
     setupModalHandlers() {
         const aboutModal = document.getElementById('aboutModal');
