@@ -269,7 +269,7 @@ class Utils {
         // Subtitle with enhanced styling using Exo font
         doc.setExoFont('normal', 10);
         doc.setTextColor(...titleColor);
-        doc.text('Professional Work & Payment Management Report', 28, 31);
+        doc.text('Work & Payment Management Report', 28, 31);
         
         // Clean decorative elements (only gradient border, no corner lines)
         this.addThemeDecorativeElements(doc, colors, currentTheme);
@@ -467,7 +467,7 @@ class Utils {
         doc.setExoFont('normal', 7);
         doc.setTextColor(...colors.secondary);
         
-        doc.text('R-Service Tracker - Professional Work Management System', 15, footerY + 5);
+        doc.text('R-Service Tracker - Work Management System', 15, footerY + 5);
         doc.text('Generated automatically - All data remains private on your device', 15, footerY + 8);
         
         // Page number (for multi-page support) - right aligned
@@ -505,7 +505,7 @@ class Utils {
         doc.setExoFont('normal');
         doc.setFontSize(10);
         doc.text('Service: R-Service Work Tracking', 25, yPos + 13);
-        doc.text('Report Type: Professional Work Summary', 25, yPos + 18);
+        doc.text('Report Type: Work Summary', 25, yPos + 18);
         doc.text(`Daily Rate: ${this.formatCurrencyForPDF(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25)} per day`, 110, yPos + 13);
         doc.text('Currency: Indian Rupees (INR)', 110, yPos + 18);
         

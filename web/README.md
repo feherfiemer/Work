@@ -1,289 +1,128 @@
-# R-Service Tracker v1.0.0
-## Professional Work & Payment Management System
+# R-Service Tracker
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/feherfiemer/Work)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/feherfiemer/Work)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PWA](https://img.shields.io/badge/PWA-enabled-purple.svg)](manifest.json)
-[![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)](index.html)
-[![Release](https://img.shields.io/badge/status-stable-gold.svg)](index.html)
+[![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](index.html)
 
-A comprehensive, production-ready work tracking and payment management system designed for freelancers, contractors, and service providers. Features streamlined notification system, enhanced audio feedback, perfect dark theme support, and intuitive button interactions with premium polish.
+A streamlined work tracking and payment management system designed for efficient daily work logging and payment tracking.
 
-## 🚀 **Release Updates (v1.0.0)**
+## ✨ Features
 
-### 🎯 **Major Improvements**
-- **🔕 Streamlined Notifications**: Removed browser push notifications, kept clean toast notifications only
-- **⏰ Simplified Experience**: Removed reminder and schedule systems for cleaner workflow
-- **🔘 Perfect Button States**: Mark as done button maintains theme colors with proper disabled states
-- **🎵 Premium Audio**: Ultra-detailed payment and completion sounds with luxury effects
-- **🌙 Perfect Dark Theme**: Fixed monochrome dark theme with proper contrast and button colors
-- **🖼️ Complete Favicon Support**: Comprehensive favicon implementation for all platforms
-- **✨ Enhanced Interactions**: White outlines for selected buttons in dark mode
+### 📋 Work Management
+- **Daily Work Tracking**: Simple one-click work completion tracking
+- **Status Dashboard**: Real-time view of today's work status
+- **Work History**: Complete record of all work sessions
+- **Calendar View**: Visual monthly overview with work status indicators
 
-### 🔧 **Technical Excellence**
-- **Clean Codebase**: Removed 1000+ lines of unnecessary code while maintaining functionality
-- **Bug-Free Experience**: Fixed syntax errors and optimized all JavaScript files
-- **Consistent Styling**: Unified button behavior across all themes and states
-- **Professional Polish**: Enhanced audio sequences with achievement chimes and luxury confirmations
-- **Accessibility**: Proper focus states and keyboard navigation support
+### 💰 Payment System
+- **Payment Tracking**: Monitor earnings and pending payments
+- **Flexible Payment Options**: Multiple payment amounts with quick selection
+- **Balance Management**: Track current balance and payment history
+- **Progress Indicators**: Visual progress toward payment milestones
 
-## 🚀 **Key Features**
+### 📊 Analytics & Insights
+- **Earnings Overview**: Comprehensive view of earnings and work progress
+- **Work Statistics**: Track total days worked and earnings
+- **Progress Metrics**: Detailed insights into work patterns
+- **Data Export**: PDF report generation for record keeping
 
-### 💼 **Work Management**
-- **Daily Work Tracking**: Mark work completion with single-click interface
-- **Streak Tracking**: Monitor consecutive work days with motivational streaks
-- **Calendar View**: Visual monthly calendar with optimized compact icons and color-coded work status
-- **Status Management**: Track completed vs missed work days
-- **Quick Actions**: Mark work as done directly from notification messages
+### 🎨 User Experience
+- **Multiple Themes**: Choose from Blue, Orange, Green, Red, or Black & White
+- **Dark/Light Mode**: Toggle between light and dark themes
+- **Responsive Design**: Optimized for desktop and mobile devices
+- **PWA Support**: Install as a standalone app on any device
 
-### 💰 **Advanced Payment System**
-- **Regular Payment Cycles**: Configurable payment thresholds (default: 4 days)
-- **Intelligent Payment Classification**: 
-  - **Regular Payments**: For work already completed (regardless of timing)
-  - **Advance Payments**: Only when payment exceeds total work completed
-  - **Accurate Progress Tracking**: Real-time liability calculations
-- **Revolutionary Advance Tracking**: Shows work completed vs work paid for (e.g., "1/2 days")
-- **Multiple Payment Types**: Regular payments, advance payments, force payments
-- **Payment History**: Comprehensive transaction logging with detailed records
+## 🚀 Getting Started
 
-### 📊 **Analytics & Reporting**
-- **Real-time Dashboard**: Live earnings, progress, and statistics with responsive layout
-- **Interactive Charts**: Visual data representation with Chart.js integration and mobile optimization
-- **Balance Sheet**: Detailed work and payment history with filtering
-- **Performance Metrics**: Streaks, efficiency rates, and productivity insights
-
-### 📄 **Premium PDF Reports**
-- **Professional Layout**: Corporate-grade document design
-- **Theme-aware**: PDF colors automatically match current app theme
-- **Comprehensive Sections**:
-  - Executive Summary with KPIs
-  - Financial Analytics with performance indicators
-  - Detailed Work Records with status tracking
-  - Payment Transaction History with analysis
-  - Performance Insights and Recommendations
-- **Symbol-free**: Clean text output for maximum compatibility
-
-### 🔔 **Smart Notifications & Interactive Actions**
-- **Interactive Notifications**: "Mark as Done" and "Remind Later" buttons directly in notifications
-- **Customizable Reminder Times**: Set your preferred payment and work reminder times
-- **IST Timezone Support**: All notifications work with Indian Standard Time
-- **Enhanced Scheduler**: Robust reminder system with debugging and fallback configurations
-- **Enable/Disable Controls**: Full control over notification preferences
-- **Multi-channel Delivery**: Browser notifications + interactive in-app toasts
-- **Optimized Positioning**: Toast notifications positioned below header for better UX
-- **Intelligent Scheduling**: Respects user preferences and timezone settings with improved reliability
-- **Milestone Notifications**: Payday alerts, streak achievements with action buttons
-- **Advance Payment Alerts**: Smart notifications for advance obligations
-- **Fallback System**: Guaranteed notification delivery with multiple methods
-
-### 🎵 **Systematic Audio System**
-- **Musical Harmony Design**: Frequencies based on musical notes (C5, E5, F4, etc.) for pleasing audio experience
-- **Systematic Sound Categories**: 
-  - **Success**: Major triads for positive reinforcement
-  - **Payment**: Ascending note sequences for transaction completion
-  - **Warning**: Two-tone patterns for attention
-  - **Error**: Descending sequences for error indication
-  - **Info**: Single pleasant chimes for information
-- **Web Audio API**: High-quality programmatic sound generation (no static files needed)
-- **Consistent Volume Levels**: Configurable intensity (subtle, low, medium, high, attention)
-- **Professional Audio**: Clean, pleasant tones with harmonic design principles
-- **Fallback Support**: Robust error handling for all browser types
-- **Mobile Optimized**: Proper audio context handling for mobile devices
-
-### 📱 **Enhanced Progressive Web App (PWA)**
-- **Offline Capability**: Full functionality without internet
-- **Install Prompt**: Add to home screen on mobile devices
-- **Native Experience**: App-like interface with smooth animations
-- **Cross-platform**: Works on all devices and operating systems
-- **Responsive Design**: Optimized for all screen sizes with clamp-based typography
-- **Touch Optimization**: 44px minimum touch targets on mobile devices
-
-### 🎨 **Premium User Interface**
-- **Compact Calendar Design**: Smaller, more efficient icon display in calendar view
-- **Enhanced Save Buttons**: Beautiful green gradient effects with animated outlines
-- **Responsive Typography**: Viewport-based font sizing for optimal readability
-- **Touch-Friendly Interactions**: Improved button sizes and hover effects
-- **Consistent Visual Hierarchy**: Better spacing and alignment across all components
-- **Interactive Feedback**: Enhanced visual and audio feedback for all user actions
-
-## 🎯 **Advance Payment System - Revolutionary Feature**
-
-### How It Works
-The advance payment system tracks **liability** - showing how much of the paid work has actually been completed.
-
-**Example Scenario:**
-1. Worker completes 1 day of work (₹25 earned)
-2. Employer pays ₹50 advance (covers 2 days of work)
-3. System shows: **"₹50 paid, 1/2 days"**
-4. Meaning: 1 day completed out of 2 days paid for
-5. Worker owes 1 more day to clear the advance
-
-### Key Benefits
-- **Clear Liability Tracking**: Always know advance payment obligations
-- **Real-time Progress**: Visual progress bars show completion status
-- **Automatic Calculations**: System handles all advance payment math
-- **Seamless Integration**: Works with regular payment cycles
-
-## 🛠️ **Technical Architecture**
-
-### Frontend Technologies
-- **HTML5**: Semantic markup with accessibility features and responsive meta tags
-- **CSS3**: Advanced styling with CSS custom properties, clamp functions, and responsive design
-- **Vanilla JavaScript ES6+**: Modern JavaScript with classes, async/await, and systematic audio modules
-- **Progressive Enhancement**: Works without JavaScript for basic functionality
-
-### Enhanced Audio System
-- **Web Audio API**: Professional audio generation with musical frequency mapping
-- **Harmonic Design**: Sound patterns based on musical theory for pleasant user experience
-- **Systematic Categories**: Consistent audio feedback across all app interactions
-- **Performance Optimized**: Efficient audio context management and fallback handling
-
-### Data Management
-- **IndexedDB**: Client-side database for persistent data storage
-- **Local Storage**: Settings and preferences backup with robust fallback
-- **Import/Export**: JSON-based data backup and restore
-- **Progressive Enhancement**: Graceful degradation for older browsers
-
-### Notification System
-- **Service Worker Integration**: Background notification processing
-- **Interactive Actions**: Notification buttons for immediate user interaction
-- **Robust Scheduling**: Multi-source configuration with comprehensive fallbacks
-- **Cross-platform Support**: Consistent experience across all devices and browsers
-
-## 🔧 **Installation & Setup**
-
-### Quick Start
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/feherfiemer/Work.git
-   cd Work/web
-   ```
-
-2. **Open in browser**:
-   - Open `index.html` in any modern web browser
-   - Or serve via local server for full PWA features
-
-3. **Enable notifications** (optional but recommended):
-   - Click "Allow" when prompted for notifications
-   - Configure reminder times in Settings menu
-
-### Local Development
-```bash
-# For local development with live server
-python -m http.server 8000
-# or
-npx serve .
-# or
-php -S localhost:8000
-```
-
-### Production Deployment
-- Upload the `web` folder contents to your web server
-- Ensure HTTPS for full PWA functionality
-- Configure proper MIME types for manifest.json
-
-## 📱 **Usage Guide**
-
-### Daily Workflow
-1. **Track Work**: Click "Mark Work Done" or use notification action button
-2. **Monitor Progress**: View dashboard for real-time statistics
-3. **Payment Management**: Record payments and track advance obligations
-4. **Calendar Review**: Check monthly calendar for work patterns
+### Quick Setup
+1. Open `index.html` in your web browser
+2. Configure your daily rate in settings
+3. Start tracking work by clicking "Mark as Done"
+4. Manage payments when ready to collect earnings
 
 ### Settings Configuration
-1. **Theme Selection**: Choose from multiple color themes and dark/light modes
-2. **Notification Setup**: Configure reminder times and enable/disable notifications
-3. **Payment Settings**: Set daily wage, payment thresholds, and currency preferences
-4. **Audio Preferences**: Adjust notification sound levels and types
+- **Daily Rate**: Set your earnings per work day
+- **Payment Duration**: Configure days before payment collection
+- **Theme Preferences**: Choose your preferred color scheme
+- **App Customization**: Adjust increment values and maximum payments
 
-### Notification Interactions
-1. **Work Reminders**: Use "Mark as Done" button directly in notifications
-2. **Payment Alerts**: Get notified about pending payments with action options
-3. **Reminder Management**: Use "Remind Later" for flexible scheduling
+## 💻 Technical Details
 
-## 🧪 **Testing Features**
+### Architecture
+- **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Storage**: Local browser storage (IndexedDB)
+- **PWA**: Service worker for offline functionality
+- **Charts**: Chart.js for analytics visualization
 
-### Notification Testing
-- Use "Test Notifications" button in settings to verify all notification types
-- Test both browser notifications and in-app toast messages
-- Verify interactive action buttons functionality
+### Browser Support
+- Chrome/Chromium 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
 
-### Audio Testing
-- Test all systematic sound categories in settings
-- Verify audio works across different devices and browsers
-- Check volume levels and harmonic quality
+### Privacy & Security
+- **Local Storage Only**: All data stays on your device
+- **No Tracking**: No external analytics or data collection
+- **Offline Support**: Works without internet connection
+- **Data Control**: Full control over your work and payment data
 
-### Responsive Testing
-- Test on various screen sizes (320px to 1920px+)
-- Verify touch interactions on mobile devices
-- Check calendar icon sizing across different viewports
+## 📱 Installation
 
-## 📈 **Performance & Optimization**
+### As a Web App
+1. Visit the application URL
+2. Look for "Install App" option in your browser
+3. Follow browser-specific installation prompts
 
-### Loading Performance
-- **Optimized Assets**: Compressed images and efficient resource loading
-- **Lazy Loading**: Deferred loading of non-critical resources
-- **Progressive Enhancement**: Core functionality available immediately
+### Manual Setup
+1. Download or clone the repository
+2. Serve files through a local web server
+3. Access through `http://localhost:PORT`
 
-### Audio Performance
-- **Efficient Generation**: Web Audio API for dynamic sound creation
-- **Memory Management**: Proper audio context lifecycle management
-- **Fallback Handling**: Graceful degradation for older browsers
+## 🛠️ Development
 
-### Responsive Performance
-- **Clamp Functions**: CSS clamp() for efficient responsive typography
-- **Optimized Media Queries**: Targeted breakpoints for common devices
-- **Touch Optimization**: Hardware-accelerated animations and interactions
+### File Structure
+```
+web/
+├── index.html          # Main application file
+├── manifest.json       # PWA manifest
+├── sw.js              # Service worker
+├── css/
+│   └── style.css      # Application styles
+├── js/
+│   ├── app.js         # Main application logic
+│   ├── database.js    # Data management
+│   ├── utils.js       # Utility functions
+│   ├── calendar.js    # Calendar functionality
+│   ├── charts.js      # Analytics charts
+│   ├── constants.js   # Configuration constants
+│   └── notifications.js # Toast notifications
+└── assets/            # Icons and images
+```
 
-## 🔒 **Privacy & Security**
+### Key Components
+- **App Controller**: Main application state management
+- **Database Layer**: IndexedDB for persistent storage
+- **UI Components**: Modular interface elements
+- **Notification System**: Toast-based user feedback
+- **Theme System**: Dynamic color scheme management
 
-### Data Storage
-- **Local-Only**: All data stored locally in browser
-- **No Server Communication**: Completely offline functionality
-- **User Control**: Full data export/import capabilities
-
-### Notifications
-- **Permission-Based**: Notifications only with explicit user consent
-- **Configurable**: Full control over notification preferences
-- **Secure**: No external notification services used
-
-## 🤝 **Contributing**
-
-We welcome contributions! Please see our contribution guidelines:
-
-1. **Fork the repository**
-2. **Create feature branch**: `git checkout -b feature/enhancement-name`
-3. **Commit changes**: `git commit -m 'Add enhancement-name'`
-4. **Push to branch**: `git push origin feature/enhancement-name`
-5. **Submit pull request**
-
-### Development Guidelines
-- Follow existing code structure and naming conventions
-- Test across multiple browsers and devices
-- Ensure responsive design principles are maintained
-- Verify audio system compatibility
-- Test notification functionality thoroughly
-
-## 📝 **License**
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 **Acknowledgments**
+## 🤝 Contributing
 
-- **Chart.js**: For beautiful data visualization
-- **Font Awesome**: For consistent iconography
-- **Google Fonts**: For typography (Exo font family)
-- **Web Audio API**: For professional audio generation capabilities
-- **PWA Standards**: For offline-first architecture
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 📞 **Support**
+## 📞 Support
 
-For support, feature requests, or bug reports:
-- **GitHub Issues**: [Create an issue](https://github.com/feherfiemer/Work/issues)
-- **Discussions**: [Join discussions](https://github.com/feherfiemer/Work/discussions)
+For issues, feature requests, or questions, please open an issue in the repository.
 
 ---
 
-**R-Service Tracker v1.0.0** - *Professional Work & Payment Management with Enhanced User Experience*
-
-*Built with ❤️ for productivity and professional work tracking*
+**R-Service Tracker** - Efficient work tracking made simple.

@@ -1054,7 +1054,8 @@ body {
 }
 
 .card-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  margin-top: -0.5rem;
 }
 
 .card-header h3 {
@@ -1126,6 +1127,7 @@ body {
 .earnings-insight-btn {
   background: transparent;
   border: none;
+  outline: none;
   color: var(--primary);
   font-size: 1rem;
   cursor: pointer;
@@ -1138,6 +1140,14 @@ body {
   height: 2rem;
   transition: transform 0.1s ease;
   margin: 0;
+}
+
+.earnings-insight-btn:focus {
+  outline: none;
+}
+
+.earnings-insight-btn:focus-visible {
+  outline: none;
 }
 
 .earnings-insight-btn:active {
@@ -4620,35 +4630,27 @@ button.disabled:hover {
   transform: rotate(45deg);
 }
 
-/* Arrow positioning classes - will be added dynamically */
+/* Arrow positioning classes - dynamically positioned */
 .earnings-tooltip.top .tooltip-arrow {
   bottom: -5px;
-  left: 50%;
-  margin-left: -4px;
   border-top: none;
   border-left: none;
 }
 
 .earnings-tooltip.bottom .tooltip-arrow {
   top: -5px;
-  left: 50%;
-  margin-left: -4px;
   border-bottom: none;
   border-right: none;
 }
 
 .earnings-tooltip.left .tooltip-arrow {
   right: -5px;
-  top: 50%;
-  margin-top: -4px;
   border-left: none;
   border-bottom: none;
 }
 
 .earnings-tooltip.right .tooltip-arrow {
   left: -5px;
-  top: 50%;
-  margin-top: -4px;
   border-right: none;
   border-top: none;
 }

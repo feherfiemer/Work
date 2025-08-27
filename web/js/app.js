@@ -1171,9 +1171,11 @@ class RServiceTracker {
         // Get target button position
         const targetRect = targetElement.getBoundingClientRect();
         const tooltipContent = tooltip.querySelector('.tooltip-content');
+        const tooltipArrow = tooltip.querySelector('.tooltip-arrow');
         
-        // Reset classes
+        // Reset classes and styles
         tooltip.classList.remove('top', 'bottom', 'left', 'right');
+        tooltip.style.maxWidth = '';
         
         // Show tooltip temporarily to measure its size
         tooltip.style.visibility = 'hidden';
@@ -1185,15 +1187,16 @@ class RServiceTracker {
         tooltip.style.display = '';
         
         // Add padding for safe margins
-        const MARGIN = 15;
+        const MARGIN = 20;
+        const ARROW_SIZE = 8;
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         
         // Calculate available space with margins
-        const spaceAbove = targetRect.top - MARGIN;
-        const spaceBelow = viewportHeight - targetRect.bottom - MARGIN;
-        const spaceLeft = targetRect.left - MARGIN;
-        const spaceRight = viewportWidth - targetRect.right - MARGIN;
+        const spaceAbove = targetRect.top - MARGIN - ARROW_SIZE;
+        const spaceBelow = viewportHeight - targetRect.bottom - MARGIN - ARROW_SIZE;
+        const spaceLeft = targetRect.left - MARGIN - ARROW_SIZE;
+        const spaceRight = viewportWidth - targetRect.right - MARGIN - ARROW_SIZE;
         
         let position = 'bottom'; // default
         let left, top;
@@ -1224,29 +1227,61 @@ class RServiceTracker {
             const maxSpace = Math.max(spaceBelow, spaceAbove, spaceLeft, spaceRight);
             if (maxSpace === spaceBelow || maxSpace === spaceAbove) {
                 position = maxSpace === spaceBelow ? 'bottom' : 'top';
-                top = maxSpace === spaceBelow ? targetRect.bottom + 5 : targetRect.top - tooltipRect.height - 5;
+                top = maxSpace === spaceBelow ? targetRect.bottom + 8 : targetRect.top - tooltipRect.height - 8;
                 left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
             } else {
                 position = maxSpace === spaceRight ? 'right' : 'left';
-                left = maxSpace === spaceRight ? targetRect.right + 5 : targetRect.left - tooltipRect.width - 5;
+                left = maxSpace === spaceRight ? targetRect.right + 8 : targetRect.left - tooltipRect.width - 8;
                 top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
             }
         }
         
-        // Strict viewport boundaries enforcement
-        left = Math.max(MARGIN, Math.min(viewportWidth - tooltipRect.width - MARGIN, left));
-        top = Math.max(MARGIN, Math.min(viewportHeight - tooltipRect.height - MARGIN, top));
+        // Store original left position for arrow calculation
+        const originalLeft = left;
+        const originalTop = top;
+        
+        // Strict viewport boundaries enforcement - keep tooltip within view
+        const adjustedLeft = Math.max(MARGIN, Math.min(viewportWidth - tooltipRect.width - MARGIN, left));
+        const adjustedTop = Math.max(MARGIN, Math.min(viewportHeight - tooltipRect.height - MARGIN, top));
         
         // Special handling for very small screens
         if (viewportWidth < 400) {
-            left = MARGIN;
             tooltip.style.maxWidth = `${viewportWidth - (MARGIN * 2)}px`;
+            left = MARGIN;
+            top = adjustedTop;
+        } else {
+            left = adjustedLeft;
+            top = adjustedTop;
         }
         
         // Apply position
         tooltip.style.left = `${left}px`;
         tooltip.style.top = `${top}px`;
         tooltip.classList.add(position);
+        
+        // Dynamic arrow positioning - always point to the icon
+        if (tooltipArrow) {
+            const targetCenterX = targetRect.left + (targetRect.width / 2);
+            const targetCenterY = targetRect.top + (targetRect.height / 2);
+            const tooltipLeft = parseFloat(tooltip.style.left);
+            const tooltipTop = parseFloat(tooltip.style.top);
+            
+            if (position === 'bottom' || position === 'top') {
+                // Horizontal arrow positioning
+                const arrowLeft = Math.max(8, Math.min(tooltipRect.width - 16, targetCenterX - tooltipLeft));
+                tooltipArrow.style.left = `${arrowLeft}px`;
+                tooltipArrow.style.top = '';
+                tooltipArrow.style.right = '';
+                tooltipArrow.style.bottom = '';
+            } else if (position === 'left' || position === 'right') {
+                // Vertical arrow positioning
+                const arrowTop = Math.max(8, Math.min(tooltipRect.height - 16, targetCenterY - tooltipTop));
+                tooltipArrow.style.top = `${arrowTop}px`;
+                tooltipArrow.style.left = '';
+                tooltipArrow.style.right = '';
+                tooltipArrow.style.bottom = '';
+            }
+        }
     }
 
     hideEarningsInsight() {
@@ -1265,7 +1300,7 @@ class RServiceTracker {
         
         // New user - no work done
         if (totalWorked === 0) {
-            return `Welcome to your professional earnings tracker! With a daily rate of ${this.utils.formatCurrency(dailyWage)}, you can begin tracking your work progress by clicking "Mark as Done" when you complete your first work session. Your journey to organized payment management starts here.`;
+            return `Daily rate: ${this.utils.formatCurrency(dailyWage)}. Click "Mark as Done" to start tracking your work progress.`;
         }
         
         // Handle advance payment scenarios
@@ -1274,28 +1309,28 @@ class RServiceTracker {
             const advanceAmount = advanceStatus.totalAdvanceAmount;
             const completedDays = totalWorked - remainingDays;
             
-            return `You have received an advance payment of ${this.utils.formatCurrency(advanceAmount)} and are making excellent progress. Currently ${completedDays} out of ${totalWorked} required work days have been completed. ${remainingDays} more days needed to fulfill your advance payment obligation.`;
+            return `Advance payment: ${this.utils.formatCurrency(advanceAmount)}. Progress: ${completedDays}/${totalWorked} days completed. ${remainingDays} days remaining.`;
         }
         
         // Has worked but no payments made
         if (totalWorked > 0 && totalPaid === 0) {
-            return `Your work record shows ${totalWorked} completed work session${totalWorked !== 1 ? 's' : ''} with a pending payment of ${this.utils.formatCurrency(currentBalance)}. No payments have been collected yet, making this an ideal time to initiate your first payment collection process.`;
+            return `Work completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}. Pending payment: ${this.utils.formatCurrency(currentBalance)}. No payments collected yet.`;
         }
         
         // Has worked and received some payments
         if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
             const pendingDays = Math.ceil(currentBalance / dailyWage);
             
-            return `You have successfully completed ${totalWorked} work days and collected ${this.utils.formatCurrency(totalPaid)} in payments. Currently ${this.utils.formatCurrency(currentBalance)} (${pendingDays} day${pendingDays !== 1 ? 's' : ''}) remains pending. Your payment efficiency demonstrates consistent professional management.`;
+            return `Work completed: ${totalWorked} days. Collected: ${this.utils.formatCurrency(totalPaid)}. Pending: ${this.utils.formatCurrency(currentBalance)} (${pendingDays} day${pendingDays !== 1 ? 's' : ''}).`;
         }
         
         // All payments up to date
         if (totalWorked > 0 && currentBalance === 0) {
-            return `Outstanding achievement! You have completed ${totalWorked} work day${totalWorked !== 1 ? 's' : ''} and earned a total of ${this.utils.formatCurrency(totalPaid)}. All payments are current and up-to-date, reflecting excellent financial management and work discipline.`;
+            return `Work completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}. Total earned: ${this.utils.formatCurrency(totalPaid)}. All payments up-to-date.`;
         }
         
         // Fallback message
-        return `R-Service Professional Tracker provides comprehensive work logging and payment management. With your daily rate set at ${this.utils.formatCurrency(dailyWage)}, you can efficiently track earnings and maintain organized financial records for your professional services.`;
+        return `Daily rate: ${this.utils.formatCurrency(dailyWage)}. Track your work and manage payments efficiently.`;
     }
 
 
