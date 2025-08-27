@@ -1102,6 +1102,7 @@ class RServiceTracker {
         if (earningsInsightBtn && earningsInsightTooltip) {
             earningsInsightBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
+                this.createRippleEffect(e.currentTarget, e);
                 await this.toggleEarningsInsight(e.target);
             });
         }
@@ -1300,6 +1301,48 @@ class RServiceTracker {
         }
     }
 
+    createRippleEffect(button, event) {
+        // Remove any existing ripple
+        const existingRipple = button.querySelector('.ripple');
+        if (existingRipple) {
+            existingRipple.remove();
+        }
+
+        // Create ripple element
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple');
+        
+        // Get button dimensions and position
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+        
+        // Style the ripple
+        ripple.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            left: ${x}px;
+            top: ${y}px;
+            background: rgba(var(--primary-rgb), 0.3);
+            border-radius: var(--border-radius);
+            transform: scale(0);
+            animation: ripple-animation 0.6s ease-out;
+            pointer-events: none;
+            z-index: 0;
+        `;
+        
+        button.appendChild(ripple);
+        
+        // Remove ripple after animation
+        setTimeout(() => {
+            if (ripple && ripple.parentNode) {
+                ripple.remove();
+            }
+        }, 600);
+    }
+
     async generateEarningsStatusMessage(stats) {
         const { totalWorked, totalEarned, totalPaid, currentBalance } = stats;
         const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
@@ -1309,7 +1352,7 @@ class RServiceTracker {
         
         // New user - no work done
         if (totalWorked === 0) {
-            return `Welcome to your earnings tracker! Your daily rate is set to ${this.utils.formatCurrency(dailyWage)}. To begin tracking your work progress, simply click the "Mark as Done" button when you complete your first work session. This will start building your work history and earnings record.`;
+            return `Welcome to your earnings tracker! Your daily rate is set to ${this.utils.formatCurrency(dailyWage)}. To begin tracking your work progress, simply click the Mark as Done button when you complete your first work session. This will start building your work history and earnings record.`;
         }
         
         // Handle advance payment scenarios
@@ -1323,19 +1366,19 @@ class RServiceTracker {
         
         // Has worked but no payments made
         if (totalWorked > 0 && totalPaid === 0) {
-            return `Your work record shows ${totalWorked} completed work session${totalWorked !== 1 ? 's' : ''} with a total pending payment of ${this.utils.formatCurrency(currentBalance)}. You haven't collected any payments yet, which means this is a great time to initiate your first payment collection. Your consistent work is building up a solid earnings foundation.`;
+            return `Your work record shows ${totalWorked} completed work session${totalWorked !== 1 ? 's' : ''} with a total pending payment of ${this.utils.formatCurrency(currentBalance)}. You have not collected any payments yet, which means this is a great time to initiate your first payment collection. Your consistent work is building up a solid earnings foundation.`;
         }
         
         // Has worked and received some payments
         if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
             const pendingDays = Math.ceil(currentBalance / dailyWage);
             
-            return `You have successfully completed ${totalWorked} work days and collected ${this.utils.formatCurrency(totalPaid)} in payments so far. Currently, you have ${this.utils.formatCurrency(currentBalance)} pending (equivalent to ${pendingDays} work day${pendingDays !== 1 ? 's' : ''}). Your payment management is running smoothly, and you're maintaining a healthy work-to-payment ratio.`;
+            return `You have successfully completed ${totalWorked} work days and collected ${this.utils.formatCurrency(totalPaid)} in payments so far. Currently, you have ${this.utils.formatCurrency(currentBalance)} pending equivalent to ${pendingDays} work day${pendingDays !== 1 ? 's' : ''}. Your payment management is running smoothly, and you are maintaining a healthy work to payment ratio.`;
         }
         
         // All payments up to date
         if (totalWorked > 0 && currentBalance === 0) {
-            return `Excellent work! You have completed ${totalWorked} work day${totalWorked !== 1 ? 's' : ''} and earned a total of ${this.utils.formatCurrency(totalPaid)}. All your payments are current and up-to-date, which demonstrates excellent financial management and work discipline. Keep up the great work with your consistent earning schedule.`;
+            return `Excellent work! You have completed ${totalWorked} work day${totalWorked !== 1 ? 's' : ''} and earned a total of ${this.utils.formatCurrency(totalPaid)}. All your payments are current and up to date, which demonstrates excellent financial management and work discipline. Keep up the great work with your consistent earning schedule.`;
         }
         
         // Fallback message
