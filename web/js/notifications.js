@@ -2058,6 +2058,164 @@ class NotificationManager {
         this.db = db;
     }
 
+    scheduleReminders() {
+        // Clear any existing reminder intervals
+        if (this.reminderInterval) {
+            clearInterval(this.reminderInterval);
+        }
+        if (this.paymentReminderInterval) {
+            clearInterval(this.paymentReminderInterval);
+        }
+
+        try {
+            const config = window.NOTIFICATION_CONFIG || {
+                dailyReminder: { enabled: true, time: '18:00' },
+                paymentReminder: { enabled: true, time: '07:00' }
+            };
+
+            console.log('[REMINDERS] Scheduling reminders with config:', config);
+
+            // Schedule daily work reminder
+            if (config.dailyReminder && config.dailyReminder.enabled) {
+                this.scheduleDailyReminder(config.dailyReminder.time || '18:00');
+            }
+
+            // Schedule payment reminder
+            if (config.paymentReminder && config.paymentReminder.enabled) {
+                this.schedulePaymentReminder(config.paymentReminder.time || '07:00');
+            }
+
+            console.log('[REMINDERS] All reminders scheduled successfully');
+        } catch (error) {
+            console.error('[REMINDERS] Error scheduling reminders:', error);
+        }
+    }
+
+    scheduleDailyReminder(timeString) {
+        try {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            
+            const checkDaily = () => {
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                
+                // Check if it's time for the reminder (within 1 minute window)
+                if (currentHour === hours && currentMinute === minutes) {
+                    this.checkAndShowDailyReminder();
+                }
+            };
+
+            // Check every minute for the scheduled time
+            this.reminderInterval = setInterval(checkDaily, 60000);
+            console.log(`[REMINDERS] Daily reminder scheduled for ${timeString}`);
+        } catch (error) {
+            console.error('[REMINDERS] Error scheduling daily reminder:', error);
+        }
+    }
+
+    schedulePaymentReminder(timeString) {
+        try {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            
+            const checkPayment = () => {
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                
+                // Check if it's time for the reminder (within 1 minute window)
+                if (currentHour === hours && currentMinute === minutes) {
+                    this.checkAndShowPaymentReminder();
+                }
+            };
+
+            // Check every minute for the scheduled time
+            this.paymentReminderInterval = setInterval(checkPayment, 60000);
+            console.log(`[REMINDERS] Payment reminder scheduled for ${timeString}`);
+        } catch (error) {
+            console.error('[REMINDERS] Error scheduling payment reminder:', error);
+        }
+    }
+
+    async checkAndShowDailyReminder() {
+        try {
+            if (!this.db) return;
+
+            // Check if work is already done today
+            const today = new Date().toISOString().split('T')[0];
+            const workRecord = await this.db.getWorkRecord(today);
+            
+            if (!workRecord || workRecord.status !== 'completed') {
+                // Work not done yet, show reminder
+                this.showDailyReminder();
+                console.log('[REMINDERS] Daily work reminder shown');
+            } else {
+                console.log('[REMINDERS] Work already completed today, skipping reminder');
+            }
+        } catch (error) {
+            console.error('[REMINDERS] Error checking daily reminder:', error);
+        }
+    }
+
+    async checkAndShowPaymentReminder() {
+        try {
+            if (!this.db) return;
+
+            // Check if there are unpaid work days
+            const workRecords = await this.db.getAllWorkRecords();
+            const payments = await this.db.getAllPayments();
+            
+            const unpaidRecords = workRecords.filter(record => {
+                if (record.status !== 'completed') return false;
+                
+                // Check if this record has been paid
+                const recordDate = new Date(record.date);
+                const hasPayment = payments.some(payment => {
+                    const paymentStartDate = new Date(payment.startDate);
+                    const paymentEndDate = new Date(payment.endDate);
+                    return recordDate >= paymentStartDate && recordDate <= paymentEndDate;
+                });
+                
+                return !hasPayment;
+            });
+
+            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || 4;
+            
+            if (unpaidRecords.length >= paymentThreshold) {
+                // Eligible for payment, show reminder
+                this.showPaymentReminder();
+                console.log('[REMINDERS] Payment reminder shown for', unpaidRecords.length, 'unpaid days');
+            } else {
+                console.log('[REMINDERS] Not enough unpaid days for payment reminder');
+            }
+        } catch (error) {
+            console.error('[REMINDERS] Error checking payment reminder:', error);
+        }
+    }
+
+    showPaymentReminder() {
+        const title = 'Payment Available!';
+        const options = {
+            body: 'You have earned work days ready for payment collection. Collect your earnings now!',
+            icon: location.origin + '/assets/favicon.ico',
+            tag: 'payment-reminder',
+            requireInteraction: true,
+            actions: [
+                {
+                    action: 'collect-payment',
+                    title: 'Collect Payment'
+                },
+                {
+                    action: 'later',
+                    title: 'Later'
+                }
+            ]
+        };
+
+        this.showNotification(title, options);
+        this.showToast('💰 Payment Available! You can collect your earnings now.', 'success', 8000);
+    }
+
     // Ultra-premium payment sound sequence
     playUltraPremiumPaymentSound() {
         if (!this.audioContext) return;

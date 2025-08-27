@@ -1,6 +1,6 @@
 # 💼 R-Service Tracker
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/feherfiemer/Work)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/feherfiemer/Work)
 [![PWA](https://img.shields.io/badge/PWA-enabled-purple.svg)](manifest.json)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](index.html)
@@ -88,7 +88,7 @@ php -S localhost:8000
 ```
 Frontend Framework    │ Vanilla JavaScript ES6+
 Storage Engine        │ IndexedDB with custom abstraction layer
-PWA Framework         │ Service Worker v2.0.0 with advanced caching
+PWA Framework         │ Service Worker v1.0.0 with advanced caching
 UI Library           │ Custom CSS3 with CSS Grid & Flexbox
 Chart Engine         │ Chart.js with custom integrations
 Audio Engine         │ Web Audio API with premium sound design
@@ -145,7 +145,7 @@ app.updateSettings({
 web/
 ├── 📄 index.html              # Main application entry point
 ├── 📄 manifest.json           # PWA configuration
-├── 📄 sw.js                   # Service Worker v2.0.0
+├── 📄 sw.js                   # Service Worker v1.0.0
 ├── 📄 README.md               # This documentation
 ├── 📄 DEPLOYMENT.md           # Deployment instructions
 ├── 📄 SYSTEM_DOCUMENTATION.md # Technical documentation

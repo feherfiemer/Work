@@ -40,6 +40,13 @@ class RServiceTracker {
                 }
             this.notifications.setDatabase(this.db);
             
+            // Schedule reminders after initialization
+            setTimeout(() => {
+                if (this.notifications && this.notifications.scheduleReminders) {
+                    this.notifications.scheduleReminders();
+                }
+            }, 2000);
+            
             this.charts = new ChartsManager(this.db);
             
             this.calendar = new CalendarManager(this.db);
@@ -1698,10 +1705,16 @@ class RServiceTracker {
         const previousUnpaidCount = this.pendingUnpaidDates.length;
         this.pendingUnpaidDates = unpaidRecords.map(record => record.date);
         
-        if (this.pendingUnpaidDates.length > 0) {
+        // Check if we should show paid button based on threshold
+        const advanceStatus = await this.db.getAdvancePaymentStatus();
+        const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+        const shouldShowPaidBtn = this.pendingUnpaidDates.length >= paymentThreshold || 
+                                (this.pendingUnpaidDates.length > 0 && advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0);
+        
+        if (shouldShowPaidBtn) {
             this.showPaidButton();
             
-            if (this.pendingUnpaidDates.length % 4 === 0 && previousUnpaidCount % 4 !== 0) {
+            if (this.pendingUnpaidDates.length % paymentThreshold === 0 && previousUnpaidCount % paymentThreshold !== 0) {
                 console.log('Payday reached! Showing notification and playing sound');
                 this.notifications.showPaydayNotification();
                 this.notifications.playSound('paid');

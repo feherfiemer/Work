@@ -893,6 +893,7 @@ class Utils {
             'blue-light': {
                 primary: [33, 150, 243],      // Blue
                 secondary: [33, 37, 41],      // Dark gray
+                text: [33, 37, 41],           // Dark text for PDF readability
                 accent: [227, 242, 253],      // Light blue accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
@@ -902,17 +903,19 @@ class Utils {
             },
             'blue-dark': {
                 primary: [33, 150, 243],      // Blue
-                secondary: [248, 249, 250],   // Light gray for dark theme
+                secondary: [33, 37, 41],      // Always dark for PDF text readability
+                text: [33, 37, 41],           // Always dark text for PDF readability
                 accent: [227, 242, 253],      // Light blue accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
-                light: [33, 37, 41],          // Dark gray for dark theme
-                muted: [173, 181, 189]        // Light muted for dark theme
+                light: [248, 249, 250],       // Light background for PDF
+                muted: [117, 117, 117]        // Muted gray
             },
             'orange-light': {
                 primary: [255, 107, 53],      // Orange
                 secondary: [33, 37, 41],      // Dark gray
+                text: [33, 37, 41],           // Dark text for PDF readability
                 accent: [255, 224, 178],      // Light orange accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
@@ -922,17 +925,19 @@ class Utils {
             },
             'orange-dark': {
                 primary: [255, 107, 53],      // Orange
-                secondary: [248, 249, 250],   // Light gray for dark theme
+                secondary: [33, 37, 41],      // Always dark for PDF text readability
+                text: [33, 37, 41],           // Always dark text for PDF readability
                 accent: [255, 224, 178],      // Light orange accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
-                light: [33, 37, 41],          // Dark gray for dark theme
-                muted: [173, 181, 189]        // Light muted for dark theme
+                light: [248, 249, 250],       // Light background for PDF
+                muted: [117, 117, 117]        // Muted gray
             },
             'green-light': {
                 primary: [76, 175, 80],       // Green
                 secondary: [33, 37, 41],      // Dark gray
+                text: [33, 37, 41],           // Dark text for PDF readability
                 accent: [232, 245, 232],      // Light green accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
@@ -942,17 +947,19 @@ class Utils {
             },
             'green-dark': {
                 primary: [76, 175, 80],       // Green
-                secondary: [248, 249, 250],   // Light gray for dark theme
+                secondary: [33, 37, 41],      // Always dark for PDF text readability
+                text: [33, 37, 41],           // Always dark text for PDF readability
                 accent: [232, 245, 232],      // Light green accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
-                light: [33, 37, 41],          // Dark gray for dark theme
-                muted: [173, 181, 189]        // Light muted for dark theme
+                light: [248, 249, 250],       // Light background for PDF
+                muted: [117, 117, 117]        // Muted gray
             },
             'red-light': {
                 primary: [244, 67, 54],       // Red
                 secondary: [33, 37, 41],      // Dark gray
+                text: [33, 37, 41],           // Dark text for PDF readability
                 accent: [255, 235, 238],      // Light red accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
@@ -962,17 +969,19 @@ class Utils {
             },
             'red-dark': {
                 primary: [244, 67, 54],       // Red
-                secondary: [248, 249, 250],   // Light gray for dark theme
+                secondary: [33, 37, 41],      // Always dark for PDF text readability
+                text: [33, 37, 41],           // Always dark text for PDF readability
                 accent: [255, 235, 238],      // Light red accent
                 success: [40, 167, 69],       // Green
                 warning: [255, 193, 7],       // Yellow
                 danger: [220, 53, 69],        // Red
-                light: [33, 37, 41],          // Dark gray for dark theme
-                muted: [173, 181, 189]        // Light muted for dark theme
+                light: [248, 249, 250],       // Light background for PDF
+                muted: [117, 117, 117]        // Muted gray
             },
             'monochrome-light': {
                 primary: [44, 44, 44],        // Dark gray
                 secondary: [33, 37, 41],      // Dark gray
+                text: [33, 37, 41],           // Dark text for PDF readability
                 accent: [240, 240, 240],      // Light gray accent
                 success: [46, 125, 50],       // Green
                 warning: [245, 124, 0],       // Orange
@@ -981,14 +990,15 @@ class Utils {
                 muted: [117, 117, 117]        // Muted gray
             },
             'monochrome-dark': {
-                primary: [224, 224, 224],     // Light gray
-                secondary: [248, 249, 250],   // Light gray for dark theme
-                accent: [42, 42, 42],         // Dark gray accent
-                success: [102, 187, 106],     // Light green
-                warning: [255, 167, 38],      // Light orange
-                danger: [239, 83, 80],        // Light red
-                light: [33, 37, 41],          // Dark gray for dark theme
-                muted: [173, 181, 189]        // Light muted for dark theme
+                primary: [44, 44, 44],        // Always dark for PDF text readability
+                secondary: [33, 37, 41],      // Always dark for PDF text readability
+                text: [33, 37, 41],           // Always dark text for PDF readability
+                accent: [240, 240, 240],      // Light gray accent
+                success: [46, 125, 50],       // Green
+                warning: [245, 124, 0],       // Orange
+                danger: [198, 40, 40],        // Red
+                light: [248, 249, 250],       // Light background for PDF
+                muted: [117, 117, 117]        // Muted gray
             }
         };
         
