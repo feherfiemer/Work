@@ -4,12 +4,13 @@
   "description": "Professional work tracking and payment management system for freelancers and contractors",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1a1a",
+  "background_color": "#000000",
   "theme_color": "#2196F3",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "scope": "/",
   "lang": "en",
   "prefer_related_applications": false,
+  "capture_links": "existing-client-navigate",
   "display_override": ["window-controls-overlay", "standalone"],
   "edge_side_panel": {
     "preferred_width": 400
@@ -44,7 +45,17 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["productivity", "finance", "business"],
+  "categories": ["productivity", "finance", "business", "utilities"],
+  "protocol_handlers": [{
+    "protocol": "web+rservice",
+    "url": "/?action=%s"
+  }],
+  "file_handlers": [{
+    "action": "/",
+    "accept": {
+      "application/json": [".json"]
+    }
+  }],
   "shortcuts": [
     {
       "name": "Mark Work Done",

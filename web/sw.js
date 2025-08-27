@@ -1,5 +1,6 @@
-// Service Worker for R-Service Tracker PWA v1.1.0
-const CACHE_NAME = 'r-service-tracker-v1.1.0';
+// Service Worker for R-Service Tracker PWA v2.0.0
+const CACHE_NAME = 'r-service-tracker-v2.0.0';
+const DYNAMIC_CACHE = 'r-service-dynamic-v2.0.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -21,7 +22,7 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', event => {
-  console.log('[SW] Installing service worker v1.1.0...');
+  console.log('[SW] Installing service worker v2.0.0...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -37,12 +38,12 @@ self.addEventListener('install', event => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating service worker v1.1.0...');
+  console.log('[SW] Activating service worker v2.0.0...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== DYNAMIC_CACHE) {
             console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }

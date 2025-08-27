@@ -477,10 +477,12 @@ class NotificationManager {
             setTimeout(() => this.createAchievementBells(), 600);
             setTimeout(() => this.createSuccessHarmony(), 900);
         } else if (soundType === 'paid') {
-            // GPay-style realistic payment transaction sound
-            this.playGPayTransactionSound();
-            setTimeout(() => this.createPaymentSuccessChime(), 400);
-            setTimeout(() => this.createTransactionConfirmation(), 800);
+            // Enhanced ultra-premium payment transaction sound sequence
+            this.playUltraPremiumPaymentSound();
+            setTimeout(() => this.createLuxuryCashRegister(), 200);
+            setTimeout(() => this.createGoldenCoinDrop(), 500);
+            setTimeout(() => this.createPaymentSuccessChime(), 800);
+            setTimeout(() => this.createWealthyFinish(), 1200);
         }
     }
 
@@ -2054,6 +2056,201 @@ class NotificationManager {
 
     setDatabase(db) {
         this.db = db;
+    }
+
+    // Ultra-premium payment sound sequence
+    playUltraPremiumPaymentSound() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create a sophisticated payment notification sound
+            // Similar to premium banking apps
+            const masterGain = ctx.createGain();
+            const compressor = ctx.createDynamicsCompressor();
+            masterGain.connect(compressor);
+            compressor.connect(ctx.destination);
+            masterGain.gain.setValueAtTime(0.7, now);
+            
+            // Initial premium ding (like iPhone payment sound)
+            const initialOsc = ctx.createOscillator();
+            const initialGain = ctx.createGain();
+            const initialFilter = ctx.createBiquadFilter();
+            
+            initialOsc.connect(initialFilter);
+            initialFilter.connect(initialGain);
+            initialGain.connect(masterGain);
+            
+            initialOsc.type = 'triangle';
+            initialOsc.frequency.setValueAtTime(1760, now); // A6 - very bright
+            initialOsc.frequency.exponentialRampToValueAtTime(1397, now + 0.15); // F6
+            
+            initialFilter.type = 'lowpass';
+            initialFilter.frequency.setValueAtTime(3000, now);
+            initialFilter.Q.setValueAtTime(8, now);
+            
+            initialGain.gain.setValueAtTime(0.8, now);
+            initialGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            
+            initialOsc.start(now);
+            initialOsc.stop(now + 0.2);
+            
+            console.log('Ultra-premium payment sound initiated');
+        } catch (error) {
+            console.warn('Error playing ultra-premium payment sound:', error);
+        }
+    }
+
+    createLuxuryCashRegister() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Luxury cash register "ka-ching" sound
+            const frequencies = [
+                { freq: 1318.5, time: 0, duration: 0.1 },    // E6
+                { freq: 1174.7, time: 0.05, duration: 0.1 }, // D6
+                { freq: 987.8, time: 0.1, duration: 0.15 },  // B5
+                { freq: 880, time: 0.15, duration: 0.2 },    // A5
+                { freq: 659.3, time: 0.2, duration: 0.25 }   // E5
+            ];
+            
+            frequencies.forEach(note => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(note.freq, now + note.time);
+                
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(note.freq * 2, now + note.time);
+                filter.Q.setValueAtTime(5, now + note.time);
+                
+                gain.gain.setValueAtTime(0.6, now + note.time);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + note.time + note.duration);
+                
+                osc.start(now + note.time);
+                osc.stop(now + note.time + note.duration);
+            });
+            
+            console.log('Luxury cash register sound played');
+        } catch (error) {
+            console.warn('Error playing luxury cash register sound:', error);
+        }
+    }
+
+    createGoldenCoinDrop() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Golden coin drop effect with multiple bounces
+            const bounces = [
+                { freq: 880, time: 0, volume: 0.7 },     // Initial drop
+                { freq: 1100, time: 0.08, volume: 0.5 }, // First bounce
+                { freq: 932, time: 0.14, volume: 0.3 },  // Second bounce
+                { freq: 1047, time: 0.18, volume: 0.2 }, // Third bounce
+                { freq: 880, time: 0.21, volume: 0.1 }   // Final settle
+            ];
+            
+            bounces.forEach(bounce => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(bounce.freq, now + bounce.time);
+                osc.frequency.exponentialRampToValueAtTime(bounce.freq * 0.8, now + bounce.time + 0.06);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(bounce.freq * 3, now + bounce.time);
+                
+                gain.gain.setValueAtTime(bounce.volume, now + bounce.time);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + bounce.time + 0.06);
+                
+                osc.start(now + bounce.time);
+                osc.stop(now + bounce.time + 0.06);
+            });
+            
+            console.log('Golden coin drop effect played');
+        } catch (error) {
+            console.warn('Error playing golden coin drop sound:', error);
+        }
+    }
+
+    createWealthyFinish() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Wealthy finish chord (like a sophisticated bank notification)
+            const chordFreqs = [
+                { freq: 523.25, duration: 0.8 }, // C5
+                { freq: 659.25, duration: 0.8 }, // E5
+                { freq: 783.99, duration: 0.8 }, // G5
+                { freq: 1046.5, duration: 0.8 }  // C6
+            ];
+            
+            const masterGain = ctx.createGain();
+            const reverb = ctx.createConvolver();
+            const delayNode = ctx.createDelay();
+            const delayGain = ctx.createGain();
+            
+            masterGain.connect(reverb);
+            masterGain.connect(delayNode);
+            delayNode.connect(delayGain);
+            delayGain.connect(ctx.destination);
+            reverb.connect(ctx.destination);
+            
+            delayNode.delayTime.setValueAtTime(0.1, now);
+            delayGain.gain.setValueAtTime(0.3, now);
+            masterGain.gain.setValueAtTime(0.4, now);
+            masterGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+            
+            chordFreqs.forEach((note, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(masterGain);
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(note.freq, now);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(note.freq * 4, now);
+                filter.Q.setValueAtTime(2, now);
+                
+                gain.gain.setValueAtTime(0.25, now + index * 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + note.duration);
+                
+                osc.start(now + index * 0.02);
+                osc.stop(now + note.duration);
+            });
+            
+            console.log('Wealthy finish chord played');
+        } catch (error) {
+            console.warn('Error playing wealthy finish sound:', error);
+        }
     }
 }
 
