@@ -1150,8 +1150,21 @@ body {
   outline: none;
 }
 
+.earnings-insight-btn:hover {
+  outline: none;
+}
+
 .earnings-insight-btn:active {
   transform: translateY(1px);
+  outline: none;
+}
+
+.earnings-insight-btn:focus-within {
+  outline: none !important;
+}
+
+.earnings-insight-btn * {
+  outline: none !important;
 }
 
 .earnings-info {

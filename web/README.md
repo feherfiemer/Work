@@ -1,6 +1,6 @@
 # R-Service Tracker
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/feherfiemer/Work)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/feherfiemer/Work)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PWA](https://img.shields.io/badge/PWA-enabled-purple.svg)](manifest.json)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg)](index.html)

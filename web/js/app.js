@@ -1288,6 +1288,15 @@ class RServiceTracker {
         const tooltip = document.getElementById('earningsInsightTooltip');
         if (tooltip) {
             tooltip.classList.remove('show', 'top', 'bottom', 'left', 'right');
+            
+            // Reset arrow positioning styles
+            const tooltipArrow = tooltip.querySelector('.tooltip-arrow');
+            if (tooltipArrow) {
+                tooltipArrow.style.left = '';
+                tooltipArrow.style.top = '';
+                tooltipArrow.style.right = '';
+                tooltipArrow.style.bottom = '';
+            }
         }
     }
 
@@ -1300,7 +1309,7 @@ class RServiceTracker {
         
         // New user - no work done
         if (totalWorked === 0) {
-            return `Daily rate: ${this.utils.formatCurrency(dailyWage)}. Click "Mark as Done" to start tracking your work progress.`;
+            return `Welcome to your earnings tracker! Your daily rate is set to ${this.utils.formatCurrency(dailyWage)}. To begin tracking your work progress, simply click the "Mark as Done" button when you complete your first work session. This will start building your work history and earnings record.`;
         }
         
         // Handle advance payment scenarios
@@ -1309,28 +1318,28 @@ class RServiceTracker {
             const advanceAmount = advanceStatus.totalAdvanceAmount;
             const completedDays = totalWorked - remainingDays;
             
-            return `Advance payment: ${this.utils.formatCurrency(advanceAmount)}. Progress: ${completedDays}/${totalWorked} days completed. ${remainingDays} days remaining.`;
+            return `You have received an advance payment of ${this.utils.formatCurrency(advanceAmount)} and are making good progress on your work commitment. Currently, you have completed ${completedDays} out of ${totalWorked} required work days. You need to complete ${remainingDays} more days to fulfill your advance payment obligation and maintain your earning schedule.`;
         }
         
         // Has worked but no payments made
         if (totalWorked > 0 && totalPaid === 0) {
-            return `Work completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}. Pending payment: ${this.utils.formatCurrency(currentBalance)}. No payments collected yet.`;
+            return `Your work record shows ${totalWorked} completed work session${totalWorked !== 1 ? 's' : ''} with a total pending payment of ${this.utils.formatCurrency(currentBalance)}. You haven't collected any payments yet, which means this is a great time to initiate your first payment collection. Your consistent work is building up a solid earnings foundation.`;
         }
         
         // Has worked and received some payments
         if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
             const pendingDays = Math.ceil(currentBalance / dailyWage);
             
-            return `Work completed: ${totalWorked} days. Collected: ${this.utils.formatCurrency(totalPaid)}. Pending: ${this.utils.formatCurrency(currentBalance)} (${pendingDays} day${pendingDays !== 1 ? 's' : ''}).`;
+            return `You have successfully completed ${totalWorked} work days and collected ${this.utils.formatCurrency(totalPaid)} in payments so far. Currently, you have ${this.utils.formatCurrency(currentBalance)} pending (equivalent to ${pendingDays} work day${pendingDays !== 1 ? 's' : ''}). Your payment management is running smoothly, and you're maintaining a healthy work-to-payment ratio.`;
         }
         
         // All payments up to date
         if (totalWorked > 0 && currentBalance === 0) {
-            return `Work completed: ${totalWorked} day${totalWorked !== 1 ? 's' : ''}. Total earned: ${this.utils.formatCurrency(totalPaid)}. All payments up-to-date.`;
+            return `Excellent work! You have completed ${totalWorked} work day${totalWorked !== 1 ? 's' : ''} and earned a total of ${this.utils.formatCurrency(totalPaid)}. All your payments are current and up-to-date, which demonstrates excellent financial management and work discipline. Keep up the great work with your consistent earning schedule.`;
         }
         
         // Fallback message
-        return `Daily rate: ${this.utils.formatCurrency(dailyWage)}. Track your work and manage payments efficiently.`;
+        return `Your earnings tracker is ready to help you manage your work and payments efficiently. With your daily rate set at ${this.utils.formatCurrency(dailyWage)}, you can easily track your progress and maintain organized financial records. Start by marking your work as done when you complete each session.`;
     }
 
 
