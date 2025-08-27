@@ -258,12 +258,18 @@ class RServiceTracker {
     setupEventListeners() {
         const doneBtn = document.getElementById('doneBtn');
         if (doneBtn) {
-            doneBtn.addEventListener('click', () => this.handleDoneClick());
+            doneBtn.addEventListener('click', () => {
+                this.notifications.playSound('done');
+                this.handleDoneClick();
+            });
         }
 
         const paidBtn = document.getElementById('paidBtn');
         if (paidBtn) {
-            paidBtn.addEventListener('click', () => this.handlePaidClick());
+            paidBtn.addEventListener('click', () => {
+                this.notifications.playSound('paid');
+                this.handlePaidClick();
+            });
         }
 
         const menuToggle = document.getElementById('menuToggle');
@@ -272,12 +278,14 @@ class RServiceTracker {
         
         if (menuToggle && sideMenu) {
             menuToggle.addEventListener('click', () => {
+                this.notifications.playSound('click');
                 sideMenu.classList.add('open');
             });
         }
         
         if (closeMenu && sideMenu) {
             closeMenu.addEventListener('click', () => {
+                this.notifications.playSound('close');
                 sideMenu.classList.remove('open');
             });
         }
@@ -285,6 +293,7 @@ class RServiceTracker {
         const colorButtons = document.querySelectorAll('.color-btn');
         colorButtons.forEach(btn => {
             btn.addEventListener('click', () => {
+                this.notifications.playSound('click');
                 const color = btn.dataset.color;
                 this.updateColorSelection(color);
                 this.applyTheme();
@@ -294,6 +303,7 @@ class RServiceTracker {
         const modeButtons = document.querySelectorAll('.mode-btn');
         modeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
+                this.notifications.playSound('click');
                 const mode = btn.dataset.mode;
                 this.updateModeSelection(mode);
                 this.applyTheme();
@@ -327,12 +337,16 @@ class RServiceTracker {
     setupMenuOptions() {
         const clearDataBtn = document.getElementById('clearData');
         if (clearDataBtn) {
-            clearDataBtn.addEventListener('click', () => this.handleClearData());
+            clearDataBtn.addEventListener('click', () => {
+                this.notifications.playSound('warning');
+                this.handleClearData();
+            });
         }
 
         const exportPDFBtn = document.getElementById('exportPDF');
         if (exportPDFBtn) {
             exportPDFBtn.addEventListener('click', () => {
+                this.notifications.playSound('click');
                 this.closeMenu();
                 this.handleExportPDF();
             });
@@ -340,12 +354,16 @@ class RServiceTracker {
 
         const aboutBtn = document.getElementById('aboutApp');
         if (aboutBtn) {
-            aboutBtn.addEventListener('click', () => this.showAboutModal());
+            aboutBtn.addEventListener('click', () => {
+                this.notifications.playSound('click');
+                this.showAboutModal();
+            });
         }
 
         const viewHistoryBtn = document.getElementById('viewHistory');
         if (viewHistoryBtn) {
             viewHistoryBtn.addEventListener('click', () => {
+                this.notifications.playSound('click');
                 this.closeMenu();
                 this.showBalanceSheet();
             });
@@ -354,6 +372,7 @@ class RServiceTracker {
         const viewAnalyticsBtn = document.getElementById('viewAnalytics');
         if (viewAnalyticsBtn) {
             viewAnalyticsBtn.addEventListener('click', () => {
+                this.notifications.playSound('click');
                 this.closeMenu();
                 this.showAnalytics();
             });
@@ -383,13 +402,17 @@ class RServiceTracker {
                         e.stopPropagation();
                         return false;
                     }
+                    this.notifications.playSound('success');
                     this.saveSettings();
                 });
             }
 
             const resetSettingsBtn = document.getElementById('resetSettings');
             if (resetSettingsBtn) {
-                resetSettingsBtn.addEventListener('click', () => this.resetSettings());
+                resetSettingsBtn.addEventListener('click', () => {
+                    this.notifications.playSound('warning');
+                    this.resetSettings();
+                });
             }
 
             const incrementInput = document.getElementById('incrementValue');
@@ -1057,22 +1080,34 @@ class RServiceTracker {
     setupQuickActions() {
         const balanceSheetBtn = document.getElementById('viewBalanceSheet');
         if (balanceSheetBtn) {
-            balanceSheetBtn.addEventListener('click', () => this.showBalanceSheet());
+            balanceSheetBtn.addEventListener('click', () => {
+                this.notifications.playSound('click');
+                this.showBalanceSheet();
+            });
         }
 
         const calendarBtn = document.getElementById('viewCalendar');
         if (calendarBtn) {
-            calendarBtn.addEventListener('click', () => this.showCalendar());
+            calendarBtn.addEventListener('click', () => {
+                this.notifications.playSound('click');
+                this.showCalendar();
+            });
         }
 
         const chartsBtn = document.getElementById('viewCharts');
         if (chartsBtn) {
-            chartsBtn.addEventListener('click', () => this.showAnalytics());
+            chartsBtn.addEventListener('click', () => {
+                this.notifications.playSound('click');
+                this.showAnalytics();
+            });
         }
 
         const streakBtn = document.getElementById('dailyStreak');
         if (streakBtn) {
-            streakBtn.addEventListener('click', () => this.showStreakInfo());
+            streakBtn.addEventListener('click', () => {
+                this.notifications.playSound('click');
+                this.showStreakInfo();
+            });
         }
     }
 
@@ -1089,6 +1124,7 @@ class RServiceTracker {
             
             if (button && view) {
                 button.addEventListener('click', () => {
+                    this.notifications.playSound('close');
                     this.closeCurrentView(view);
                 });
             }
@@ -1294,16 +1330,16 @@ class RServiceTracker {
         if (tooltip) {
             tooltip.classList.remove('show', 'top', 'bottom', 'left', 'right');
             
-            // Reset arrow positioning styles - let CSS handle visibility
+            // Reset arrow positioning styles completely
             const tooltipArrow = tooltip.querySelector('.tooltip-arrow');
             if (tooltipArrow) {
-                tooltipArrow.style.left = '';
-                tooltipArrow.style.top = '';
-                tooltipArrow.style.right = '';
-                tooltipArrow.style.bottom = '';
-                tooltipArrow.style.opacity = '';
-                tooltipArrow.style.visibility = '';
+                tooltipArrow.style.cssText = ''; // Clear all inline styles
             }
+            
+            // Reset tooltip position as well
+            tooltip.style.left = '';
+            tooltip.style.top = '';
+            tooltip.style.maxWidth = '';
         }
     }
 
@@ -1399,6 +1435,7 @@ class RServiceTracker {
         
         closeModalBtns.forEach(btn => {
             btn.addEventListener('click', () => {
+                this.notifications.playSound('close');
                 if (aboutModal) aboutModal.classList.remove('show');
             });
         });

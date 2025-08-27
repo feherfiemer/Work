@@ -488,6 +488,18 @@ class NotificationManager {
             setTimeout(() => this.createCashRegisterFinale(), 1500);
             // Final premium flourish with cathedral reverb
             setTimeout(() => this.createPremiumFinish(), 1800);
+        } else if (soundType === 'click') {
+            // Pleasant UI click sound
+            this.playClickSound();
+        } else if (soundType === 'close') {
+            // Gentle close/dismiss sound
+            this.playCloseSound();
+        } else if (soundType === 'warning') {
+            // Warning tone for destructive actions
+            this.playWarningTone();
+        } else if (soundType === 'success') {
+            // Success confirmation sound
+            this.playSystematicSound('success', 'medium');
         }
     }
 
@@ -1010,6 +1022,39 @@ class NotificationManager {
 
         oscillator.start(this.audioContext.currentTime);
         oscillator.stop(this.audioContext.currentTime + 0.2);
+    }
+
+    playClickSound() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create a pleasant UI click sound
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            const filterNode = ctx.createBiquadFilter();
+            
+            oscillator.connect(filterNode);
+            filterNode.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            // Bright, crisp click
+            oscillator.frequency.setValueAtTime(800, now);
+            oscillator.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+            
+            filterNode.type = 'highpass';
+            filterNode.frequency.setValueAtTime(400, now);
+            
+            gainNode.gain.setValueAtTime(0.08, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            
+            oscillator.start(now);
+            oscillator.stop(now + 0.15);
+        } catch (error) {
+            console.warn('Error playing click sound:', error);
+        }
     }
 
     showDailyReminder() {
