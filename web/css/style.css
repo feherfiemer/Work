@@ -4429,25 +4429,49 @@ button.disabled:hover {
   left: 0;
   right: 0;
   background: linear-gradient(135deg, 
-    rgba(33, 150, 243, 0.95), 
-    rgba(33, 150, 243, 0.98)
+    rgba(33, 150, 243, 0.98), 
+    rgba(21, 101, 192, 0.98),
+    rgba(13, 71, 161, 0.99)
   );
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   color: white;
   z-index: var(--z-toast);
   box-shadow: 
-    0 8px 32px rgba(33, 150, 243, 0.3),
-    0 4px 16px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    0 12px 40px rgba(33, 150, 243, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   transform: translateY(-100%);
-  transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+  overflow: hidden;
+}
+
+.pwa-install-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 .pwa-install-banner.show {
   transform: translateY(0);
-  animation: slideInDown 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  animation: slideInDown 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 @keyframes slideInDown {
@@ -4574,6 +4598,94 @@ button.disabled:hover {
 
 .dismiss-btn:hover {
   background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.dismiss-btn:active {
+  transform: scale(1.05);
+}
+
+/* Premium Button Styles */
+.premium-install-btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95), 
+    rgba(255, 255, 255, 0.85)
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.premium-install-btn:hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 1), 
+    rgba(255, 255, 255, 0.95)
+  );
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.18),
+    inset 0 2px 0 rgba(255, 255, 255, 0.8),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.premium-install-btn:active {
+  transform: translateY(-1px) scale(1.01);
+}
+
+.premium-close-btn {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.premium-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.15) rotate(90deg);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.premium-close-btn:active {
+  transform: scale(1.1) rotate(90deg);
+}
+
+/* Ripple Effect */
+.btn-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+  pointer-events: none;
+}
+
+.premium-install-btn:active .btn-ripple,
+.premium-close-btn:active .btn-ripple {
+  width: 200px;
+  height: 200px;
+}
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -4884,6 +4996,9 @@ button.disabled:hover {
   pointer-events: none;
   transition: all var(--transition-fast);
   transform: scale(0.8);
+  /* Ensure tooltip stays fixed and doesn't move with scroll */
+  will-change: transform, opacity;
+  contain: layout style paint;
 }
 
 .earnings-tooltip.show {

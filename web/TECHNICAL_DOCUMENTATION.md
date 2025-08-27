@@ -1,98 +1,92 @@
 # 🔧 R-Service Tracker - Technical Documentation
 
-## 📋 Table of Contents
+## Table of Contents
 1. [System Architecture](#system-architecture)
 2. [Core Components](#core-components)
-3. [Database Schema](#database-schema)
-4. [API Reference](#api-reference)
-5. [Configuration System](#configuration-system)
-6. [Theme Engine](#theme-engine)
-7. [PWA Implementation](#pwa-implementation)
-8. [Audio System](#audio-system)
-9. [Chart Integration](#chart-integration)
-10. [Security & Data Management](#security--data-management)
-11. [Performance Optimizations](#performance-optimizations)
-12. [Error Handling](#error-handling)
-13. [Testing Guidelines](#testing-guidelines)
-14. [Deployment Guide](#deployment-guide)
+3. [Database Design](#database-design)
+4. [PWA Implementation](#pwa-implementation)
+5. [API Reference](#api-reference)
+6. [Data Flow](#data-flow)
+7. [State Management](#state-management)
+8. [Error Handling](#error-handling)
+9. [Performance Optimization](#performance-optimization)
+10. [Security Implementation](#security-implementation)
 
-## 🏗️ System Architecture
+## System Architecture
 
-### **Application Structure**
+### Overall Design Pattern
+R-Service Tracker follows a **modular component architecture** with clear separation of concerns:
+
 ```
-R-Service Tracker/
-├── 📄 index.html              # Main application entry point
-├── 📄 manifest.json           # PWA configuration
-├── 📄 sw.js                   # Service Worker v1.0.0
-├── 📁 js/                     # JavaScript modules
-│   ├── app.js                 # Main application controller (3,042 lines)
-│   ├── database.js            # IndexedDB operations (609 lines)
-│   ├── calendar.js            # Calendar management (995 lines)
-│   ├── notifications.js       # Push notifications & audio (2,460 lines)
-│   ├── charts.js              # Data visualization (573 lines)
-│   ├── utils.js               # Utility functions (1,355 lines)
-│   └── constants.js           # Configuration management (218 lines)
-├── 📁 css/
-│   └── style.css              # Comprehensive styling (4,900+ lines)
-└── 📁 assets/                 # Icons and static resources
-    ├── favicon.ico/svg
-    ├── icon-192.png/svg
-    └── icon-512.png/svg
+┌─────────────────────────────────────────────┐
+│                 UI Layer                    │
+│              (app.js + HTML)                │
+├─────────────────────────────────────────────┤
+│              Business Logic                 │
+│    (calendar.js, charts.js, utils.js)      │
+├─────────────────────────────────────────────┤
+│              Data Layer                     │
+│            (database.js)                    │
+├─────────────────────────────────────────────┤
+│            Browser Storage                  │
+│     (IndexedDB + localStorage)              │
+└─────────────────────────────────────────────┘
 ```
 
-### **Data Flow Architecture**
-```
-User Interface (index.html)
-        ↓
-Main Controller (app.js)
-        ↓
-Database Layer (database.js) ← → IndexedDB
-        ↓
-Component Controllers:
-├── Calendar (calendar.js)
-├── Charts (charts.js)
-├── Notifications (notifications.js)
-└── Utils (utils.js)
-```
+### Technology Stack
+- **Frontend**: Vanilla JavaScript ES6+, CSS3, HTML5
+- **Storage**: IndexedDB for structured data, localStorage for settings
+- **PWA**: Service Worker, Web App Manifest
+- **Visualization**: Chart.js for analytics
+- **Audio**: Web Audio API for premium sounds
+- **PDF**: jsPDF for data export
 
-## 🧩 Core Components
+## Core Components
 
-### **1. Main Application Controller (app.js)**
+### 1. RServiceTracker (app.js)
+**Main application controller responsible for:**
+- Application initialization and lifecycle management
+- UI state management and event handling
+- Coordination between different modules
+- Dashboard updates and data synchronization
+
 ```javascript
 class RServiceTracker {
     constructor() {
+        this.db = null;
+        this.notifications = null;
+        this.charts = null;
+        this.calendar = null;
+        this.utils = null;
+        this.currentStats = {};
+        this.isInitialized = false;
+    }
+    
+    async init() {
+        // Initialize all subsystems
         this.db = new DatabaseManager();
         this.notifications = new NotificationManager();
         this.charts = new ChartsManager(this.db);
         this.calendar = new CalendarManager(this.db);
         this.utils = new Utils();
-        this.currentStats = {};
-        this.pendingUnpaidDates = [];
     }
 }
 ```
 
-**Key Responsibilities:**
-- Application initialization and lifecycle management
-- UI event handling and state management
-- Component coordination and data flow
-- Theme management and user preferences
-- Payment processing and work tracking
-- PWA installation management
+**Key Methods:**
+- `init()` - Application bootstrap and component initialization
+- `setupEventListeners()` - UI event binding and delegation
+- `updateDashboard()` - Real-time dashboard data updates
+- `setupPWAInstall()` - PWA installation prompt management
 
-**Critical Methods:**
-- `init()`: Application bootstrap and component initialization
-- `handleDoneClick()`: Work completion processing
-- `handlePaidClick()`: Payment processing workflow
-- `updateDashboard()`: Real-time UI updates
-- `setupPWAInstall()`: PWA recommendation system
+### 2. DatabaseManager (database.js)
+**Data persistence and management layer:**
 
-### **2. Database Manager (database.js)**
 ```javascript
 class DatabaseManager {
     constructor() {
         this.dbName = 'RServiceTrackerDB';
-        this.dbVersion = 3;
+        this.version = 3;
         this.db = null;
         this.stores = {
             workRecords: 'workRecords',
@@ -103,900 +97,966 @@ class DatabaseManager {
 }
 ```
 
-**Features:**
-- IndexedDB abstraction layer
-- Transaction management
-- Data validation and integrity
-- Advance payment calculations
-- Earnings statistics computation
-- Data export/import functionality
+**Store Schemas:**
 
-**Core Operations:**
-- `addWorkRecord()`: Store completed work entries
-- `addPayment()`: Process and store payments
-- `getEarningsStats()`: Calculate comprehensive statistics
-- `getAdvancePaymentStatus()`: Advanced payment tracking
-- `clearAllData()`: Complete data removal with transaction IDs
+#### Work Records Store
+```javascript
+{
+    id: String,              // Auto-generated UUID
+    date: String,            // YYYY-MM-DD format
+    wage: Number,            // Daily earnings amount
+    status: String,          // 'completed' | 'pending'
+    timestamp: Number        // Creation timestamp
+}
+```
 
-### **3. Calendar Manager (calendar.js)**
+#### Payments Store
+```javascript
+{
+    id: String,              // Auto-generated UUID
+    amount: Number,          // Payment amount
+    paymentDate: String,     // YYYY-MM-DD format
+    workDates: Array,        // Array of work date strings
+    timestamp: Number,       // Creation timestamp
+    isAdvance: Boolean,      // Whether this is an advance payment
+    startDate: String,       // Payment period start
+    endDate: String         // Payment period end
+}
+```
+
+#### Settings Store
+```javascript
+{
+    key: String,            // Setting identifier
+    value: Any,             // Setting value
+    timestamp: Number       // Last modified timestamp
+}
+```
+
+### 3. CalendarManager (calendar.js)
+**Calendar interface and date management:**
+
 ```javascript
 class CalendarManager {
-    constructor(databaseManager) {
-        this.db = databaseManager;
+    constructor(database) {
+        this.db = database;
         this.currentDate = new Date();
         this.workRecords = [];
         this.payments = [];
+        this.container = null;
     }
 }
 ```
 
-**Capabilities:**
-- Visual calendar rendering with work status indicators
-- Date-based work marking and payment processing
-- Future date validation and security
-- Real-time updates and synchronization
-- Modal-based day detail views
-- Export functionality for calendar data
+**Key Features:**
+- Monthly calendar view with work status indicators
+- Interactive day selection with detailed modals
+- Work recording for past and current dates
+- Force payment options for completed work
+- Visual payment status indicators
 
-### **4. Notification Manager (notifications.js)**
+### 4. ChartsManager (charts.js)
+**Data visualization and analytics:**
+
+```javascript
+class ChartsManager {
+    constructor(database) {
+        this.db = database;
+        this.earningsChart = null;
+        this.paymentChart = null;
+        this.colors = {
+            primary: 'rgb(33, 150, 243)',
+            success: 'rgb(76, 175, 80)',
+            warning: 'rgb(255, 193, 7)'
+        };
+    }
+}
+```
+
+**Chart Types:**
+- **Earnings Chart**: Daily earnings trends over time
+- **Payment Chart**: Payment history and frequency analysis
+- **Progress Charts**: Work completion and payment progress
+
+### 5. NotificationManager (notifications.js)
+**Comprehensive notification and audio system:**
+
 ```javascript
 class NotificationManager {
     constructor() {
-        this.permission = 'default';
         this.audioContext = null;
-        this.soundEnabled = true;
-        this.volume = 0.7;
+        this.db = null;
+        this.notificationQueue = [];
+        this.sounds = {
+            done: { frequency: 800, duration: 0.2 },
+            paid: { frequency: 1000, duration: 0.3 }
+        };
     }
 }
 ```
 
-**Advanced Features:**
-- Push notification system with service worker integration
-- Premium audio engine with Web Audio API
-- Toast notification system with queue management
-- Reminder scheduling for work and payments
-- Milestone achievement notifications
-- Professional sound effects for user actions
+**Features:**
+- Toast notifications with customizable styling
+- Audio feedback using Web Audio API
+- Push notifications for PWA
+- Loading states and progress indicators
+- Confirmation dialogs with callbacks
 
-### **5. Charts Manager (charts.js)**
-```javascript
-class ChartsManager {
-    constructor(databaseManager) {
-        this.db = databaseManager;
-        this.charts = {};
-        this.chartInstances = new Map();
-    }
-}
-```
+### 6. Utils (utils.js)
+**Utility functions and helpers:**
 
-**Visualization Features:**
-- Chart.js integration with custom configurations
-- Real-time data updates and animations
-- Theme-aware color schemes
-- Responsive design for all devices
-- Performance optimization for large datasets
-
-### **6. Utilities Manager (utils.js)**
 ```javascript
 class Utils {
     constructor() {
-        this.initialized = false;
-    }
-}
-```
-
-**Utility Functions:**
-- PDF generation with professional templates
-- Data formatting and validation
-- Animation helpers and effects
-- Local storage management
-- Date manipulation and formatting
-- Currency formatting and calculations
-
-## 🗄️ Database Schema
-
-### **Work Records Store**
-```javascript
-{
-  id: Number,              // Auto-increment primary key
-  date: String,            // ISO date string (YYYY-MM-DD)
-  wage: Number,            // Daily wage amount
-  status: String,          // 'completed' | 'pending'
-  timestamp: String,       // ISO timestamp of creation
-  month: Number,           // Month number (1-12)
-  year: Number            // Full year number
-}
-```
-
-### **Payments Store**
-```javascript
-{
-  id: Number,              // Auto-increment primary key
-  amount: Number,          // Payment amount
-  workDates: Array,        // Array of date strings covered
-  paymentDate: String,     // ISO date string of payment
-  timestamp: String,       // ISO timestamp of creation
-  month: Number,           // Month of payment
-  year: Number,            // Year of payment
-  isAdvance: Boolean,      // Whether this is an advance payment
-  pendingDaysAtPayment: Number  // Days covered at payment time
-}
-```
-
-### **Settings Store**
-```javascript
-{
-  id: Number,              // Auto-increment primary key
-  key: String,             // Setting identifier
-  value: Any,              // Setting value
-  timestamp: String,       // Last modified timestamp
-  type: String            // Data type for validation
-}
-```
-
-### **Indexes and Performance**
-```javascript
-// Optimized indexes for query performance
-workRecords: ['date', 'status', 'month', 'year']
-payments: ['paymentDate', 'isAdvance', 'month', 'year']
-settings: ['key']
-```
-
-## 🔌 API Reference
-
-### **Core Application APIs**
-
-#### **Work Management**
-```javascript
-// Mark work as completed
-await app.handleDoneClick()
-
-// Check today's work status
-const isAvailable = await app.isMarkDoneAvailable()
-
-// Update work status across all components
-await app.updateTodayStatus()
-```
-
-#### **Payment Processing**
-```javascript
-// Process regular payment
-await app.processPayment(amount, closeModalCallback)
-
-// Check payment button visibility
-await app.updatePaidButtonVisibility()
-
-// Handle force payment for specific date
-await calendar.handleForcePaid(dateString)
-```
-
-#### **Data Operations**
-```javascript
-// Get comprehensive earnings statistics
-const stats = await db.getEarningsStats()
-
-// Export all data
-const exportData = await db.exportData()
-
-// Clear all application data
-await db.clearAllData()
-```
-
-### **Database APIs**
-
-#### **Work Records**
-```javascript
-// Add completed work record
-await db.addWorkRecord(date, wage, status)
-
-// Get specific work record
-const record = await db.getWorkRecord(date)
-
-// Get all work records
-const allRecords = await db.getAllWorkRecords()
-```
-
-#### **Payment Management**
-```javascript
-// Add payment record
-await db.addPayment(amount, workDates, paymentDate, isAdvance)
-
-// Get all payments
-const payments = await db.getAllPayments()
-
-// Check advance payment status
-const advanceStatus = await db.getAdvancePaymentStatus()
-```
-
-### **Notification APIs**
-```javascript
-// Show toast notification
-notifications.showToast(message, type, duration)
-
-// Show system notification
-notifications.showNotification(title, options)
-
-// Play audio feedback
-notifications.playSound(soundType)
-
-// Schedule reminders
-notifications.scheduleReminders()
-```
-
-### **Calendar APIs**
-```javascript
-// Navigate calendar
-calendar.previousMonth()
-calendar.nextMonth()
-calendar.goToToday()
-
-// Update calendar display
-await calendar.updateCalendar()
-
-// Show day details modal
-await calendar.showDayDetails(date, workRecord, isPaid)
-```
-
-## ⚙️ Configuration System
-
-### **Core Configuration (constants.js)**
-```javascript
-const CONFIG = {
-    DAILY_WAGE: 25,                    // Default daily wage
-    PAYMENT_THRESHOLD: 4,              // Days before payment collection
-    CURRENCY_SYMBOL: '₹',              // Display currency
-    TIMEZONE: 'Asia/Kolkata',          // Default timezone
-    
-    // Validation Limits
-    DAILY_WAGE_MIN: 1,
-    DAILY_WAGE_MAX: 50000,
-    PAYMENT_THRESHOLD_MIN: 1,
-    PAYMENT_THRESHOLD_MAX: 365,
-    
-    // UI Configuration
-    MAX_WORK_RECORDS_DISPLAY: 1000,
-    NOTIFICATION_DURATION_MIN: 1000,
-    NOTIFICATION_DURATION_MAX: 30000
-}
-```
-
-### **User Configuration Management**
-```javascript
-// Get current configuration
-const config = ConfigManager.getConfig()
-
-// Save user preferences
-ConfigManager.saveUserConfig(newConfig)
-
-// Reset to defaults
-ConfigManager.resetToDefaults()
-
-// Get validation limits
-const limits = ConfigManager.getLimits()
-```
-
-### **Theme Configuration**
-```javascript
-// Available themes
-const themes = [
-    'blue-light', 'blue-dark',
-    'orange-light', 'orange-dark', 
-    'green-light', 'green-dark',
-    'red-light', 'red-dark',
-    'monochrome-light', 'monochrome-dark'
-]
-```
-
-## 🎨 Theme Engine
-
-### **CSS Custom Properties System**
-```css
-:root {
-    /* Color Variables */
-    --primary: #2196F3;
-    --primary-light: #64B5F6;
-    --primary-dark: #1976D2;
-    --secondary: #212529;
-    --surface: #FFFFFF;
-    --text-primary: #212529;
-    
-    /* Spacing & Layout */
-    --border-radius: 8px;
-    --border-radius-small: 4px;
-    --shadow-light: 0 2px 8px rgba(0,0,0,0.1);
-    --shadow-medium: 0 4px 16px rgba(0,0,0,0.15);
-    --shadow-heavy: 0 8px 32px rgba(0,0,0,0.2);
-    
-    /* Animations */
-    --transition-fast: 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
-    --transition-medium: 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-    --transition-slow: 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-```
-
-### **Dynamic Theme Application**
-```javascript
-// Theme switching logic
-applyTheme() {
-    const theme = `${this.currentColor}-${this.currentMode}`;
-    document.documentElement.setAttribute('data-theme', theme);
-    
-    // Update charts with theme colors
-    if (this.charts) {
-        this.charts.updateThemeColors();
+        this.dateCache = new Map();
+        this.animationFrame = null;
     }
     
-    // Update PWA theme color
-    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeColorMeta) {
-        themeColorMeta.content = getComputedStyle(document.documentElement)
-            .getPropertyValue('--primary');
-    }
+    // Date formatting and manipulation
+    formatDate(date, options = {}) { /* ... */ }
+    formatCurrency(amount) { /* ... */ }
+    
+    // Animation utilities
+    animateValue(element, start, end, duration) { /* ... */ }
+    
+    // Data processing
+    calculateEarningsInsights(data) { /* ... */ }
+    generateSummaryReport(data) { /* ... */ }
 }
 ```
 
-## 📱 PWA Implementation
+## Database Design
 
-### **Service Worker (sw.js)**
+### IndexedDB Schema
 ```javascript
-const CACHE_NAME = 'r-service-tracker-v1.0.0';
-const DYNAMIC_CACHE = 'r-service-dynamic-v1.0.0';
-
-// Cache strategy: Cache First with Network Fallback
-self.addEventListener('fetch', event => {
-    if (event.request.destination === 'document' || 
-        event.request.url.includes('/api/')) {
-        // Network first for critical resources
-        event.respondWith(networkFirstStrategy(event.request));
-    } else {
-        // Cache first for static assets
-        event.respondWith(cacheFirstStrategy(event.request));
-    }
-});
+const DB_SCHEMA = {
+    name: 'RServiceTrackerDB',
+    version: 3,
+    stores: [
+        {
+            name: 'workRecords',
+            keyPath: 'id',
+            autoIncrement: false,
+            indices: [
+                { name: 'date', keyPath: 'date', unique: true },
+                { name: 'status', keyPath: 'status', unique: false },
+                { name: 'timestamp', keyPath: 'timestamp', unique: false }
+            ]
+        },
+        {
+            name: 'payments',
+            keyPath: 'id',
+            autoIncrement: false,
+            indices: [
+                { name: 'paymentDate', keyPath: 'paymentDate', unique: false },
+                { name: 'amount', keyPath: 'amount', unique: false },
+                { name: 'isAdvance', keyPath: 'isAdvance', unique: false }
+            ]
+        },
+        {
+            name: 'settings',
+            keyPath: 'key',
+            autoIncrement: false
+        }
+    ]
+};
 ```
 
-### **Manifest Configuration**
+### Data Operations
+
+#### Transaction Pattern
+```javascript
+async performTransaction(storeName, mode, operation) {
+    return new Promise((resolve, reject) => {
+        const transaction = this.db.transaction([storeName], mode);
+        const store = transaction.objectStore(storeName);
+        
+        transaction.oncomplete = () => resolve(result);
+        transaction.onerror = () => reject(transaction.error);
+        
+        const request = operation(store);
+        request.onsuccess = () => result = request.result;
+        request.onerror = () => reject(request.error);
+    });
+}
+```
+
+#### Key Operations
+```javascript
+// Work Record Operations
+await db.addWorkRecord(date, wage, status);
+await db.getWorkRecord(date);
+await db.getAllWorkRecords();
+await db.updateWorkRecord(id, updates);
+
+// Payment Operations
+await db.addPayment(amount, workDates, paymentDate, isAdvance);
+await db.getAllPayments();
+await db.getPaymentForDate(date);
+
+// Statistics and Analytics
+await db.getEarningsStats();
+await db.getAdvancePaymentStatus();
+```
+
+## PWA Implementation
+
+### Service Worker Strategy
+```javascript
+// sw.js - Comprehensive caching strategy
+const CACHE_NAME = 'rservice-tracker-v1.0.0';
+const STATIC_CACHE = 'static-v1';
+const DYNAMIC_CACHE = 'dynamic-v1';
+
+// Cache-first strategy for static assets
+// Network-first strategy for API calls
+// Stale-while-revalidate for images
+```
+
+### Manifest Configuration
 ```json
 {
   "name": "R-Service Tracker",
   "short_name": "R-Service",
-  "description": "Premium work tracking and payment management",
-  "start_url": "/",
   "display": "standalone",
-  "background_color": "#2196F3",
+  "background_color": "#000000",
   "theme_color": "#2196F3",
   "icons": [
     {
       "src": "assets/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "assets/icon-512.png", 
+      "src": "assets/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
     {
       "name": "Mark Work Done",
       "url": "/?action=mark-done",
-      "icons": [{"src": "assets/icon-192.png", "sizes": "192x192"}]
-    },
-    {
-      "name": "Collect Payment", 
-      "url": "/?action=mark-paid",
-      "icons": [{"src": "assets/icon-192.png", "sizes": "192x192"}]
+      "icons": [{ "src": "assets/favicon.svg", "sizes": "any" }]
     }
   ]
 }
 ```
 
-### **Installation Strategy**
+### Installation Handling
 ```javascript
-// Smart PWA recommendation system
-async shouldShowPWAOnPaymentDay() {
-    const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || 4;
-    const unpaidDays = await this.getUnpaidWorkDays();
-    return unpaidDays.length > 0 && unpaidDays.length % paymentThreshold === 0;
-}
+// Smart PWA installation prompts
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    this.deferredPrompt = e;
+    this.showInstallRecommendation();
+});
 
-// Payment day triggered recommendations
-async checkPWAOnPaymentDay() {
-    const isPaymentDay = await this.shouldShowPWAOnPaymentDay();
-    if (isPaymentDay && !this.isPWAInstalled()) {
-        this.showPremiumInstallRecommendation();
-    }
+// Handle PWA shortcuts
+const urlParams = new URLSearchParams(window.location.search);
+const action = urlParams.get('action');
+if (action) {
+    this.handleURLParameters(action);
 }
 ```
 
-## 🔊 Audio System
+## API Reference
 
-### **Web Audio API Implementation**
+### Core Application API
+
+#### RServiceTracker Class
 ```javascript
-class AudioEngine {
-    constructor() {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.masterGain = this.audioContext.createGain();
-        this.masterGain.connect(this.audioContext.destination);
-    }
+// Initialize application
+const app = new RServiceTracker();
+await app.init();
+
+// Dashboard management
+await app.updateDashboard();
+app.updateTodayStatus();
+
+// Work management
+await app.markWorkDone();
+app.showWorkModal();
+
+// Payment management
+app.showPaymentModal();
+await app.processPayment(amount, workDates);
+```
+
+#### DatabaseManager API
+```javascript
+// Work records
+await db.addWorkRecord(date, wage, status);
+const record = await db.getWorkRecord('2024-01-15');
+const allRecords = await db.getAllWorkRecords();
+
+// Payments
+await db.addPayment(100, ['2024-01-15', '2024-01-16'], '2024-01-17', false);
+const payments = await db.getAllPayments();
+
+// Statistics
+const stats = await db.getEarningsStats();
+// Returns: { totalWorked, totalEarned, totalPaid, currentBalance, currentStreak }
+
+// Advance payments
+const advanceStatus = await db.getAdvancePaymentStatus();
+// Returns: { hasAdvancePayments, totalAdvanceAmount, workRemainingForAdvance }
+
+// Data management
+await db.exportData();
+await db.clearAllData();
+```
+
+#### NotificationManager API
+```javascript
+// Toast notifications
+notifications.showToast(message, type, duration);
+// Types: 'success', 'error', 'warning', 'info'
+
+// Confirmation dialogs
+notifications.showConfirmation(message, onConfirm, onCancel);
+
+// Loading states
+const loadingToast = notifications.showLoadingToast(message);
+notifications.updateLoadingToast(loadingToast, newMessage, type);
+
+// Audio feedback
+notifications.playSound(type); // 'done' or 'paid'
+
+// Push notifications (PWA)
+await notifications.requestPermission();
+notifications.showNotification(title, options);
+```
+
+#### CalendarManager API
+```javascript
+// Calendar rendering
+calendar.render();
+calendar.navigateToMonth(year, month);
+
+// Work management
+await calendar.handleMarkAsDone(dateString);
+await calendar.handleForcePaid(dateString);
+
+// Data loading
+await calendar.loadData();
+calendar.updateWorkRecords(records);
+```
+
+### Event System
+
+#### Application Events
+```javascript
+// Work completion events
+document.addEventListener('work-completed', (event) => {
+    const { date, wage } = event.detail;
+    // Handle work completion
+});
+
+// Payment events
+document.addEventListener('payment-processed', (event) => {
+    const { amount, workDates } = event.detail;
+    // Handle payment processing
+});
+
+// Settings change events
+document.addEventListener('settings-changed', (event) => {
+    const { setting, oldValue, newValue } = event.detail;
+    // Handle settings update
+});
+```
+
+## Data Flow
+
+### Work Recording Flow
+```
+User Action (Mark as Done)
+    ↓
+Validation (Date, Status)
+    ↓
+Database Transaction
+    ↓
+Update UI State
+    ↓
+Refresh Dashboard
+    ↓
+Update Charts
+    ↓
+Check Payment Eligibility
+    ↓
+Show Notifications
+```
+
+### Payment Processing Flow
+```
+Payment Trigger (Button Click)
+    ↓
+Show Payment Modal
+    ↓
+User Selects Amount
+    ↓
+Validate Payment Data
+    ↓
+Process Payment Transaction
+    ↓
+Update Work Records
+    ↓
+Refresh All Components
+    ↓
+Show Success Notification
+    ↓
+Play Audio Feedback
+```
+
+### Data Synchronization
+```javascript
+// Centralized data update pattern
+async updateAllSystems() {
+    // 1. Update core statistics
+    this.currentStats = await this.db.getEarningsStats();
     
-    async createPremiumSound(frequency, duration, type = 'sine') {
-        const oscillator = this.audioContext.createOscillator();
-        const gainNode = this.audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(this.masterGain);
-        
-        oscillator.frequency.value = frequency;
-        oscillator.type = type;
-        
-        // Premium envelope with attack, decay, sustain, release
-        const now = this.audioContext.currentTime;
-        gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.3, now + 0.1);    // Attack
-        gainNode.gain.exponentialRampToValueAtTime(0.2, now + 0.3); // Decay
-        gainNode.gain.setValueAtTime(0.2, now + duration - 0.2);   // Sustain
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration); // Release
-        
-        oscillator.start(now);
-        oscillator.stop(now + duration);
-    }
+    // 2. Update dashboard
+    this.updateDashboard();
+    
+    // 3. Update calendar
+    await this.calendar.loadData();
+    this.calendar.render();
+    
+    // 4. Update charts
+    await this.charts.updateCharts();
+    
+    // 5. Update payment visibility
+    await this.updatePaidButtonVisibility();
 }
 ```
 
-### **Sound Effects Library**
+## State Management
+
+### Application State
 ```javascript
-const SOUND_LIBRARY = {
-    done: {
-        frequency: 880,    // A5 note
-        duration: 0.6,
-        type: 'triangle',
-        description: 'Work completion sound'
+// Global application state
+const AppState = {
+    currentStats: {
+        totalWorked: 0,
+        totalEarned: 0,
+        totalPaid: 0,
+        currentBalance: 0,
+        currentStreak: 0
     },
-    paid: {
-        sequence: [         // Multi-note sequence
-            { frequency: 523, duration: 0.2 }, // C5
-            { frequency: 659, duration: 0.2 }, // E5
-            { frequency: 784, duration: 0.4 }  // G5
-        ],
-        description: 'Payment success sound'
-    }
-}
-```
-
-## 📊 Chart Integration
-
-### **Chart.js Configuration**
-```javascript
-class ChartsManager {
-    createEarningsChart(data) {
-        return new Chart(canvas, {
-            type: 'line',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Daily Earnings',
-                    data: data.values,
-                    borderColor: 'var(--primary)',
-                    backgroundColor: 'rgba(var(--primary-rgb), 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'var(--surface)',
-                        titleColor: 'var(--text-primary)',
-                        bodyColor: 'var(--text-secondary)',
-                        borderColor: 'var(--primary)',
-                        borderWidth: 1
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'var(--border-light)' },
-                        ticks: { color: 'var(--text-secondary)' }
-                    },
-                    x: {
-                        grid: { color: 'var(--border-light)' },
-                        ticks: { color: 'var(--text-secondary)' }
-                    }
-                }
-            }
-        });
-    }
-}
-```
-
-### **Real-time Updates**
-```javascript
-async updateCharts() {
-    const stats = await this.db.getEarningsStats();
-    const chartData = this.processDataForCharts(stats);
     
-    // Update existing charts with animation
-    Object.entries(this.chartInstances).forEach(([key, chart]) => {
-        chart.data = chartData[key];
-        chart.update('active');
-    });
-}
+    ui: {
+        currentView: 'dashboard',
+        isModalOpen: false,
+        selectedDate: null
+    },
+    
+    settings: {
+        theme: 'blue-light',
+        dailyWage: 25,
+        paymentThreshold: 4
+    }
+};
 ```
 
-## 🔒 Security & Data Management
-
-### **Data Validation**
+### State Updates
 ```javascript
-validateWorkRecord(record) {
-    const errors = [];
+// Reactive state updates
+function updateState(path, value) {
+    const keys = path.split('.');
+    let current = AppState;
     
-    if (!record.date || !this.isValidDate(record.date)) {
-        errors.push('Invalid date format');
+    for (let i = 0; i < keys.length - 1; i++) {
+        current = current[keys[i]];
     }
     
-    if (!record.wage || record.wage < CONFIG.DAILY_WAGE_MIN || 
-        record.wage > CONFIG.DAILY_WAGE_MAX) {
-        errors.push('Invalid wage amount');
-    }
+    current[keys[keys.length - 1]] = value;
     
-    if (!['completed', 'pending'].includes(record.status)) {
-        errors.push('Invalid status');
-    }
-    
-    return { valid: errors.length === 0, errors };
+    // Trigger UI updates
+    this.renderComponents();
 }
 ```
 
-### **Data Sanitization**
+## Error Handling
+
+### Error Classification
 ```javascript
-sanitizeUserInput(input) {
-    if (typeof input === 'string') {
-        return input
-            .trim()
-            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-            .substring(0, CONFIG.MAX_STRING_LENGTH);
-    }
-    return input;
-}
+const ERROR_TYPES = {
+    DATABASE: 'Database operation failed',
+    VALIDATION: 'Input validation error',
+    NETWORK: 'Network connection error',
+    PWA: 'PWA feature unavailable',
+    AUDIO: 'Audio playback failed'
+};
 ```
 
-### **Secure Data Clearing**
+### Error Handler Implementation
 ```javascript
-async clearAllData() {
-    // Clear IndexedDB stores
-    await this.clearStore('workRecords');
-    await this.clearStore('payments');
-    await this.clearStore('settings');
-    
-    // Clear localStorage items
-    const appKeys = [
-        'r-service-user-config', 'selected-color', 'selected-mode',
-        'pwa-install-dismissed', 'transaction-ids', 'payment-transaction-ids'
-    ];
-    
-    appKeys.forEach(key => localStorage.removeItem(key));
-    
-    // Clear app-specific prefixed keys
-    const prefixes = ['r-service-', 'rservice-', 'work-tracker-', 'payment-'];
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-        const key = localStorage.key(i);
-        if (key && prefixes.some(prefix => key.startsWith(prefix))) {
-            localStorage.removeItem(key);
-        }
-    }
-}
-```
-
-## ⚡ Performance Optimizations
-
-### **Database Optimizations**
-```javascript
-// Efficient transaction management
-async performTransaction(storeName, mode, operation) {
-    return new Promise((resolve, reject) => {
-        const transaction = this.db.transaction([storeName], mode);
-        const store = transaction.objectStore(storeName);
-        
-        const request = operation(store);
-        
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-        
-        // Auto-cleanup
-        transaction.oncomplete = () => {
-            // Transaction completed successfully
-        };
-    });
-}
-```
-
-### **Lazy Loading Strategy**
-```javascript
-// Lazy load heavy components
-async loadChartsWhenNeeded() {
-    if (!this.chartsLoaded) {
-        await import('./charts.js');
-        this.charts = new ChartsManager(this.db);
-        this.chartsLoaded = true;
-    }
-    return this.charts;
-}
-```
-
-### **Animation Optimization**
-```javascript
-// Efficient number animation with RAF
-animateNumber(element, start, end, duration) {
-    const range = end - start;
-    const startTime = performance.now();
-    
-    const animate = (currentTime) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Easing function for smooth animation
-        const easedProgress = 1 - Math.pow(1 - progress, 3);
-        const current = start + (range * easedProgress);
-        
-        element.textContent = this.formatCurrency(Math.round(current));
-        
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        }
-    };
-    
-    requestAnimationFrame(animate);
-}
-```
-
-## 🚨 Error Handling
-
-### **Global Error Management**
-```javascript
-// Comprehensive error handling system
-class ErrorManager {
+class ErrorHandler {
     static handleError(error, context = 'Unknown') {
         console.error(`[${context}] Error:`, error);
         
-        // User-friendly error messages
-        const userMessage = this.getUserFriendlyMessage(error);
+        // Categorize error
+        const errorType = this.categorizeError(error);
         
-        // Show error notification
-        if (window.app && window.app.notifications) {
-            window.app.notifications.showToast(userMessage, 'error');
-        }
+        // Show user-friendly message
+        const message = this.getErrorMessage(errorType);
         
-        // Report critical errors
-        if (this.isCriticalError(error)) {
-            this.reportCriticalError(error, context);
+        // Log for debugging
+        this.logError(error, context, errorType);
+        
+        // Show notification
+        if (window.app?.notifications) {
+            window.app.notifications.showToast(message, 'error');
         }
     }
     
-    static getUserFriendlyMessage(error) {
-        const errorMappings = {
-            'QuotaExceededError': 'Storage space is full. Please clear some data.',
-            'DataError': 'Invalid data format. Please check your input.',
-            'NetworkError': 'Network connection issue. Please try again.',
-            'SecurityError': 'Security restriction. Please check permissions.'
-        };
-        
-        return errorMappings[error.name] || 'An unexpected error occurred. Please try again.';
+    static categorizeError(error) {
+        if (error.name === 'VersionError') return ERROR_TYPES.DATABASE;
+        if (error.name === 'ValidationError') return ERROR_TYPES.VALIDATION;
+        return 'Unknown';
     }
 }
-
-// Global error handlers
-window.addEventListener('error', (event) => {
-    ErrorManager.handleError(event.error, 'Global');
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-    ErrorManager.handleError(event.reason, 'Promise');
-});
 ```
 
-### **Database Error Recovery**
+### Recovery Strategies
 ```javascript
-async recoverFromDatabaseError(error) {
-    console.warn('Database error detected, attempting recovery:', error);
-    
+// Database recovery
+async recoverDatabase() {
     try {
-        // Attempt to reinitialize database
-        await this.initDatabase();
-        
-        // Verify data integrity
-        const isValid = await this.validateDataIntegrity();
-        
-        if (!isValid) {
-            // Offer user data recovery options
-            this.showDataRecoveryDialog();
-        }
-        
-        return true;
-    } catch (recoveryError) {
-        console.error('Database recovery failed:', recoveryError);
-        this.showCriticalErrorDialog();
-        return false;
+        // Attempt to repair
+        await this.db.init();
+    } catch (error) {
+        // Fallback to memory storage
+        this.initMemoryStorage();
+    }
+}
+
+// Graceful degradation
+function withFallback(primaryFunction, fallbackFunction) {
+    try {
+        return primaryFunction();
+    } catch (error) {
+        console.warn('Primary function failed, using fallback:', error);
+        return fallbackFunction();
     }
 }
 ```
 
-## 🧪 Testing Guidelines
+## Performance Optimization
 
-### **Unit Testing Structure**
+### Lazy Loading
 ```javascript
-// Example test structure for core functionality
-describe('RServiceTracker Core Functionality', () => {
-    let app, db;
+// Lazy load non-critical components
+async loadCharts() {
+    if (!this.chartsLoaded) {
+        const { ChartsManager } = await import('./charts.js');
+        this.charts = new ChartsManager(this.db);
+        this.chartsLoaded = true;
+    }
+}
+```
+
+### Debouncing and Throttling
+```javascript
+// Debounced search
+const debouncedSearch = debounce((query) => {
+    this.performSearch(query);
+}, 300);
+
+// Throttled scroll handler
+const throttledScroll = throttle(() => {
+    this.updateScrollPosition();
+}, 16); // 60fps
+```
+
+### Memory Management
+```javascript
+// Clean up resources
+cleanup() {
+    // Remove event listeners
+    this.removeEventListeners();
+    
+    // Clear timeouts and intervals
+    if (this.updateInterval) {
+        clearInterval(this.updateInterval);
+    }
+    
+    // Dispose of charts
+    if (this.charts) {
+        this.charts.destroy();
+    }
+}
+```
+
+### Caching Strategies
+```javascript
+// In-memory cache for frequent data
+class DataCache {
+    constructor(maxSize = 100) {
+        this.cache = new Map();
+        this.maxSize = maxSize;
+    }
+    
+    get(key) {
+        const item = this.cache.get(key);
+        if (item) {
+            // Move to end (LRU)
+            this.cache.delete(key);
+            this.cache.set(key, item);
+            return item;
+        }
+        return null;
+    }
+    
+    set(key, value) {
+        if (this.cache.size >= this.maxSize) {
+            // Remove oldest item
+            const firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey);
+        }
+        this.cache.set(key, value);
+    }
+}
+```
+
+## Security Implementation
+
+### Input Validation
+```javascript
+// Comprehensive input validation
+class Validator {
+    static validateDate(dateString) {
+        const date = new Date(dateString);
+        const today = new Date();
+        
+        if (isNaN(date.getTime())) {
+            throw new ValidationError('Invalid date format');
+        }
+        
+        if (date > today) {
+            throw new ValidationError('Cannot use future dates');
+        }
+        
+        return dateString;
+    }
+    
+    static validateAmount(amount) {
+        const num = parseFloat(amount);
+        
+        if (isNaN(num) || num <= 0) {
+            throw new ValidationError('Amount must be a positive number');
+        }
+        
+        if (num > 10000) {
+            throw new ValidationError('Amount exceeds maximum limit');
+        }
+        
+        return num;
+    }
+}
+```
+
+### Data Sanitization
+```javascript
+// XSS prevention
+function sanitizeHtml(input) {
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+}
+
+// SQL injection prevention (for potential future server integration)
+function sanitizeQuery(query) {
+    return query.replace(/['"\\]/g, '\\$&');
+}
+```
+
+### Secure Storage
+```javascript
+// Encrypt sensitive data before storing
+class SecureStorage {
+    static async setItem(key, value) {
+        const encrypted = await this.encrypt(JSON.stringify(value));
+        localStorage.setItem(key, encrypted);
+    }
+    
+    static async getItem(key) {
+        const encrypted = localStorage.getItem(key);
+        if (!encrypted) return null;
+        
+        const decrypted = await this.decrypt(encrypted);
+        return JSON.parse(decrypted);
+    }
+    
+    static async encrypt(data) {
+        // Simple encryption for demo (use proper crypto in production)
+        return btoa(data);
+    }
+    
+    static async decrypt(data) {
+        return atob(data);
+    }
+}
+```
+
+## Advanced Features
+
+### Responsive Design System
+```css
+/* CSS Custom Properties for theming */
+:root {
+    --primary: #2196F3;
+    --success: #4CAF50;
+    --warning: #FF9800;
+    --error: #F44336;
+    
+    --font-size-small: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-large: 1.25rem;
+    
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--spacing-sm);
+    }
+}
+```
+
+### Animation System
+```javascript
+// Custom animation utilities
+class AnimationUtils {
+    static fadeIn(element, duration = 300) {
+        element.style.opacity = '0';
+        element.style.transition = `opacity ${duration}ms ease`;
+        
+        requestAnimationFrame(() => {
+            element.style.opacity = '1';
+        });
+    }
+    
+    static slideUp(element, duration = 300) {
+        const height = element.scrollHeight;
+        element.style.maxHeight = '0';
+        element.style.overflow = 'hidden';
+        element.style.transition = `max-height ${duration}ms ease`;
+        
+        requestAnimationFrame(() => {
+            element.style.maxHeight = `${height}px`;
+        });
+    }
+}
+```
+
+### Internationalization Ready
+```javascript
+// i18n system structure (for future implementation)
+const i18n = {
+    en: {
+        dashboard: {
+            title: 'Dashboard',
+            todayStatus: 'Today\'s Status',
+            earnings: 'Earnings'
+        }
+    },
+    es: {
+        dashboard: {
+            title: 'Tablero',
+            todayStatus: 'Estado de Hoy',
+            earnings: 'Ganancias'
+        }
+    }
+};
+
+function t(key, params = {}) {
+    const lang = localStorage.getItem('language') || 'en';
+    const keys = key.split('.');
+    let value = i18n[lang];
+    
+    for (const k of keys) {
+        value = value?.[k];
+    }
+    
+    return value || key;
+}
+```
+
+## Testing Guidelines
+
+### Unit Testing Structure
+```javascript
+// Example test structure (for future implementation)
+describe('DatabaseManager', () => {
+    let db;
     
     beforeEach(async () => {
-        app = new RServiceTracker();
-        db = app.db;
-        await app.init();
-    });
-    
-    describe('Work Record Management', () => {
-        test('should create work record successfully', async () => {
-            const today = new Date().toISOString().split('T')[0];
-            const result = await db.addWorkRecord(today, 25, 'completed');
-            
-            expect(result).toBeTruthy();
-            
-            const record = await db.getWorkRecord(today);
-            expect(record.wage).toBe(25);
-            expect(record.status).toBe('completed');
-        });
-        
-        test('should prevent future date work records', async () => {
-            const futureDate = new Date();
-            futureDate.setDate(futureDate.getDate() + 1);
-            const futureDateStr = futureDate.toISOString().split('T')[0];
-            
-            // This should be handled at the UI level
-            expect(() => {
-                calendar.handleMarkAsDone(futureDateStr);
-            }).not.toThrow();
-        });
-    });
-    
-    describe('Payment Processing', () => {
-        test('should process payment correctly', async () => {
-            // Setup work records
-            const dates = [];
-            for (let i = 0; i < 4; i++) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
-                dates.push(dateStr);
-                await db.addWorkRecord(dateStr, 25, 'completed');
-            }
-            
-            // Process payment
-            const result = await db.addPayment(100, dates);
-            expect(result).toBeTruthy();
-            
-            // Verify payment recorded
-            const payments = await db.getAllPayments();
-            expect(payments.length).toBe(1);
-            expect(payments[0].amount).toBe(100);
-        });
+        db = new DatabaseManager();
+        await db.init();
     });
     
     afterEach(async () => {
         await db.clearAllData();
     });
-});
-```
-
-### **Integration Testing**
-```javascript
-describe('Component Integration', () => {
-    test('calendar actions should update dashboard', async () => {
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Mark work as done via calendar
-        await calendar.handleMarkAsDone(today);
-        
-        // Verify dashboard updates
-        await app.updateDashboard();
-        const stats = await db.getEarningsStats();
-        
-        expect(stats.totalWorked).toBe(1);
-        expect(stats.currentBalance).toBe(25);
+    
+    describe('addWorkRecord', () => {
+        it('should add a work record successfully', async () => {
+            const date = '2024-01-15';
+            const wage = 25;
+            const status = 'completed';
+            
+            await db.addWorkRecord(date, wage, status);
+            const record = await db.getWorkRecord(date);
+            
+            expect(record.date).toBe(date);
+            expect(record.wage).toBe(wage);
+            expect(record.status).toBe(status);
+        });
     });
 });
 ```
 
-## 🚀 Deployment Guide
-
-### **Pre-deployment Checklist**
-```bash
-# 1. Code Quality Checks
-- [ ] All console.errors resolved
-- [ ] Performance optimizations applied
-- [ ] Accessibility standards met
-- [ ] Cross-browser compatibility verified
-
-# 2. PWA Requirements
-- [ ] HTTPS enabled
-- [ ] Service worker registered
-- [ ] Manifest.json configured
-- [ ] Icons optimized (192px, 512px)
-
-# 3. Performance Metrics
-- [ ] Lighthouse score > 90
-- [ ] First Contentful Paint < 2s
-- [ ] Time to Interactive < 3s
-- [ ] Cumulative Layout Shift < 0.1
-```
-
-### **Deployment Configuration**
-```nginx
-# Nginx configuration for optimal performance
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com;
-    
-    # SSL Configuration
-    ssl_certificate /path/to/certificate.crt;
-    ssl_certificate_key /path/to/private.key;
-    
-    # Security Headers
-    add_header X-Frame-Options DENY;
-    add_header X-Content-Type-Options nosniff;
-    add_header X-XSS-Protection "1; mode=block";
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
-    
-    # PWA Headers
-    add_header Cache-Control "public, max-age=31536000" always;
-    
-    location / {
-        root /var/www/r-service-tracker;
-        index index.html;
-        try_files $uri $uri/ /index.html;
-        
-        # Service Worker
-        location = /sw.js {
-            add_header Cache-Control "no-cache, no-store, must-revalidate";
-            add_header Pragma "no-cache";
-            add_header Expires "0";
-        }
-        
-        # Manifest
-        location = /manifest.json {
-            add_header Content-Type "application/manifest+json";
-        }
+### Performance Testing
+```javascript
+// Performance monitoring
+class PerformanceMonitor {
+    static measureFunction(fn, name) {
+        return async function(...args) {
+            const start = performance.now();
+            const result = await fn.apply(this, args);
+            const end = performance.now();
+            
+            console.log(`${name} took ${end - start} milliseconds`);
+            return result;
+        };
     }
     
-    # Asset Optimization
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        gzip_static on;
+    static measurePageLoad() {
+        window.addEventListener('load', () => {
+            const loadTime = performance.timing.loadEventEnd - 
+                           performance.timing.navigationStart;
+            console.log(`Page load time: ${loadTime}ms`);
+        });
     }
 }
 ```
 
-### **Performance Monitoring**
+## Deployment Considerations
+
+### Build Process
+```bash
+# Minification and optimization
+npm install -g terser
+npm install -g clean-css-cli
+
+# Minify JavaScript
+terser js/app.js -o js/app.min.js --compress --mangle
+
+# Minify CSS
+cleancss css/style.css -o css/style.min.css
+```
+
+### Service Worker Updates
 ```javascript
-// Performance monitoring setup
-if ('performance' in window) {
-    window.addEventListener('load', () => {
-        const perfData = performance.getEntriesByType('navigation')[0];
+// Handle service worker updates
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+});
+
+// Check for updates
+async function checkForUpdates() {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (registration) {
+        registration.update();
+    }
+}
+```
+
+### Browser Compatibility
+```javascript
+// Feature detection and polyfills
+if (!window.indexedDB) {
+    // Fallback to localStorage
+    console.warn('IndexedDB not supported, using localStorage');
+}
+
+if (!('serviceWorker' in navigator)) {
+    console.warn('Service Worker not supported');
+}
+
+// Polyfill for older browsers
+if (!Array.prototype.includes) {
+    Array.prototype.includes = function(search) {
+        return this.indexOf(search) !== -1;
+    };
+}
+```
+
+## Maintenance and Monitoring
+
+### Error Logging
+```javascript
+// Centralized error logging
+class ErrorLogger {
+    static log(error, context, userAgent = navigator.userAgent) {
+        const logEntry = {
+            timestamp: new Date().toISOString(),
+            error: error.message,
+            stack: error.stack,
+            context,
+            userAgent,
+            url: window.location.href
+        };
         
-        console.log('Performance Metrics:', {
-            'DOM Content Loaded': perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart,
-            'Load Complete': perfData.loadEventEnd - perfData.loadEventStart,
-            'Total Load Time': perfData.loadEventEnd - perfData.fetchStart
-        });
-    });
+        // Store locally for debugging
+        const logs = JSON.parse(localStorage.getItem('error-logs') || '[]');
+        logs.push(logEntry);
+        
+        // Keep only last 50 logs
+        if (logs.length > 50) {
+            logs.shift();
+        }
+        
+        localStorage.setItem('error-logs', JSON.stringify(logs));
+    }
+}
+```
+
+### Health Checks
+```javascript
+// Application health monitoring
+class HealthMonitor {
+    static async checkHealth() {
+        const checks = {
+            database: await this.checkDatabase(),
+            localStorage: this.checkLocalStorage(),
+            serviceWorker: this.checkServiceWorker(),
+            audio: this.checkAudio()
+        };
+        
+        return checks;
+    }
+    
+    static async checkDatabase() {
+        try {
+            const db = new DatabaseManager();
+            await db.init();
+            return { status: 'healthy' };
+        } catch (error) {
+            return { status: 'unhealthy', error: error.message };
+        }
+    }
 }
 ```
 
 ---
 
-**This technical documentation provides comprehensive coverage of the R-Service Tracker system architecture, implementation details, and deployment guidelines. For additional technical support or questions, refer to the main README.md or open an issue on GitHub.**
+This technical documentation provides a comprehensive overview of the R-Service Tracker architecture, implementation details, and best practices. For specific implementation questions or advanced customization needs, refer to the inline code comments and this documentation.

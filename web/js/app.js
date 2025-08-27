@@ -1031,7 +1031,7 @@ class RServiceTracker {
 
     resetSettings() {
         this.notifications.showConfirmation(
-            'Are you sure you want to make the settings to default?',
+            'Are you sure you want to reset the settings to default?',
             () => {
                 try {
                     if (window.ConfigManager) {
@@ -1146,15 +1146,8 @@ class RServiceTracker {
             }
         });
 
-        // Update tooltip position on scroll instead of hiding
-        window.addEventListener('scroll', () => {
-            if (earningsInsightTooltip && earningsInsightTooltip.classList.contains('show')) {
-                const earningsInsightBtn = document.getElementById('earningsInsightBtn');
-                if (earningsInsightBtn) {
-                    this.positionTooltip(earningsInsightTooltip, earningsInsightBtn);
-                }
-            }
-        });
+        // Tooltip now uses fixed positioning, so no need to reposition on scroll
+        // It will automatically stay fixed relative to the viewport
     }
 
     async toggleEarningsInsight(targetElement) {

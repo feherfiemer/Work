@@ -332,31 +332,33 @@ class CalendarManager {
                     </div>
                 `;
                 
-                // Add Force Paid button for all completed work (regardless of payment day)
-                content += `
-                    <button class="force-paid-btn" data-date="${dateString}" style="
-                        margin-top: 1rem;
-                        width: 100%;
-                        padding: 0.75rem;
-                        background: linear-gradient(135deg, var(--success), #45a049);
-                        color: white;
-                        border: none;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-family: var(--font-family);
-                        font-weight: 600;
-                        font-size: 0.9rem;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        box-shadow: var(--shadow-light);
-                        transition: all var(--transition-fast);
-                    ">
-                        <i class="fas fa-hand-holding-usd"></i>
-                        Force Mark as Paid
-                    </button>
-                `;
+                // Add Force Paid button only for past or today dates (not future dates)
+                if (isPastOrTodayDate) {
+                    content += `
+                        <button class="force-paid-btn" data-date="${dateString}" style="
+                            margin-top: 1rem;
+                            width: 100%;
+                            padding: 0.75rem;
+                            background: linear-gradient(135deg, var(--success), #45a049);
+                            color: white;
+                            border: none;
+                            border-radius: var(--border-radius);
+                            cursor: pointer;
+                            font-family: var(--font-family);
+                            font-weight: 600;
+                            font-size: 0.9rem;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                            box-shadow: var(--shadow-light);
+                            transition: all var(--transition-fast);
+                        ">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            Force Mark as Paid
+                        </button>
+                    `;
+                }
             }
         } else {
             content += `
