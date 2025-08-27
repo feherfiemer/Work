@@ -1180,8 +1180,17 @@ class RServiceTracker {
             // Position and show tooltip
             const tooltip = document.getElementById('earningsInsightTooltip');
             if (tooltip && targetElement) {
+                // Ensure tooltip is properly initialized
+                tooltip.style.display = 'block';
+                tooltip.style.visibility = 'visible';
+                tooltip.style.opacity = '1';
+                
                 this.positionTooltip(tooltip, targetElement);
                 tooltip.classList.add('show');
+                
+                console.log('[Tooltip] Earnings insight tooltip shown');
+            } else {
+                console.error('[Tooltip] Tooltip element or target element not found');
             }
         } catch (error) {
             console.error('Error showing earnings insight:', error);
@@ -1200,25 +1209,23 @@ class RServiceTracker {
         tooltip.style.maxWidth = '';
         
         // Show tooltip temporarily to measure its size
+        tooltip.style.position = 'fixed';
         tooltip.style.visibility = 'hidden';
         tooltip.style.opacity = '1';
         tooltip.style.display = 'block';
-        tooltip.style.position = 'fixed';
         tooltip.style.top = '0px';
         tooltip.style.left = '0px';
+        tooltip.style.zIndex = '9999';
         
-        // Force layout calculation
+        // Force layout calculation and measurement
         tooltip.offsetHeight;
-        
         const tooltipRect = tooltipContent.getBoundingClientRect();
         
-        // Reset measurement styles
-        tooltip.style.visibility = '';
-        tooltip.style.opacity = '';
-        tooltip.style.display = '';
-        tooltip.style.position = '';
-        tooltip.style.top = '';
-        tooltip.style.left = '';
+        console.log('[Tooltip] Measured tooltip size:', tooltipRect.width, 'x', tooltipRect.height);
+        
+        // Reset measurement styles but keep position fixed
+        tooltip.style.visibility = 'visible';
+        tooltip.style.opacity = '0';
         
         // Add padding for safe margins
         const MARGIN = 20;
@@ -1291,7 +1298,12 @@ class RServiceTracker {
         // Apply position
         tooltip.style.left = `${left}px`;
         tooltip.style.top = `${top}px`;
+        tooltip.style.opacity = '1';
+        tooltip.style.visibility = 'visible';
+        tooltip.style.zIndex = '9999';
         tooltip.classList.add(position);
+        
+        console.log(`[Tooltip] Final position: ${left}px, ${top}px, class: ${position}`);
         
         // Enhanced arrow positioning - precisely point to the icon center
         if (tooltipArrow) {
@@ -2084,6 +2096,8 @@ class RServiceTracker {
             }
             
             const DAILY_WAGE = 25; // Should match database constant
+            let isAdvancePayment = false;
+            let workDatesToPay = [];
             
             // Handle force paid for specific date
             if (this.forcePaidDateString) {
@@ -2097,8 +2111,11 @@ class RServiceTracker {
                     console.log('Created work record for force payment date:', this.forcePaidDateString);
                 }
                 
+                workDatesToPay = [this.forcePaidDateString];
+                isAdvancePayment = false; // Force payments are not advance payments
+                
                 const paymentDate = this.utils.getTodayString();
-                await this.db.addPayment(amount, [this.forcePaidDateString], paymentDate, false);
+                await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
                 
                 // Clear the force paid date
                 this.forcePaidDateString = null;
@@ -2107,9 +2124,8 @@ class RServiceTracker {
             } else {
                 // Normal payment processing
                 const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
-                const isAdvancePayment = amount > totalWorkCompletedValue;
+                isAdvancePayment = amount > totalWorkCompletedValue;
                 
-                let workDatesToPay = [];
                 if (totalWorkCompletedValue > 0) {
                     const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
                     workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
@@ -2140,7 +2156,7 @@ class RServiceTracker {
             this.notifications.showPaymentNotification(amount);
             this.notifications.showToast(`${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)} of ₹${amount} recorded successfully!`, 'success');
             
-            if (workDatesToPay.length === this.pendingUnpaidDates.length && this.pendingUnpaidDates.length > 0) {
+            if (!this.forcePaidDateString && workDatesToPay.length === this.pendingUnpaidDates.length && this.pendingUnpaidDates.length > 0) {
                 setTimeout(() => {
                     this.notifications.showToast(`All ${workDatesToPay.length} pending work days have been paid!`, 'info');
                 }, 1000);
@@ -2512,11 +2528,44 @@ class RServiceTracker {
     }
 
     showStreakInfo() {
-        const message = this.currentStats.currentStreak > 0 
-            ? `Amazing! You have a ${this.currentStats.currentStreak} day work streak! Keep it up!`
-            : 'Start your work streak by completing tasks consistently!';
+        const currentStreak = this.currentStats.currentStreak || 0;
+        const longestStreak = this.currentStats.longestStreak || 0;
+        
+        let message = '';
+        let messageType = 'info';
+        
+        if (currentStreak > 0) {
+            if (currentStreak >= 30) {
+                message = `🔥 LEGENDARY! ${currentStreak} day streak! You're absolutely crushing it!`;
+                messageType = 'success';
+            } else if (currentStreak >= 14) {
+                message = `🚀 AMAZING! ${currentStreak} day streak! You're on fire!`;
+                messageType = 'success';
+            } else if (currentStreak >= 7) {
+                message = `⭐ EXCELLENT! ${currentStreak} day streak! One week strong!`;
+                messageType = 'success';
+            } else if (currentStreak >= 3) {
+                message = `💪 GREAT! ${currentStreak} day streak! Building momentum!`;
+                messageType = 'success';
+            } else {
+                message = `✨ Nice! ${currentStreak} day streak! Keep it up!`;
+                messageType = 'info';
+            }
             
-        this.notifications.showToast(message, 'info');
+            if (longestStreak > currentStreak) {
+                message += `\n(Your longest streak: ${longestStreak} days)`;
+            } else if (longestStreak === currentStreak && currentStreak > 1) {
+                message += `\n🏆 This is your longest streak yet!`;
+            }
+        } else {
+            if (longestStreak > 0) {
+                message = `Start a new streak! Your longest was ${longestStreak} days - you can beat that! 💪`;
+            } else {
+                message = 'Start your work streak by completing tasks consistently! 🚀';
+            }
+        }
+            
+        this.notifications.showToast(message, messageType, 6000);
     }
 
     handleClearData() {

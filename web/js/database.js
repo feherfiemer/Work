@@ -321,37 +321,87 @@ class DatabaseManager {
                 .filter(record => record.status === 'completed')
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
             
+            // Enhanced streak calculation
             let currentStreak = 0;
-            let expectedDate = new Date();
-            const today = expectedDate.toISOString().split('T')[0];
+            let longestStreak = 0;
+            let tempStreak = 0;
+            let lastWorkDate = null;
             
-            // Check if today has work completed
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            
+            // Sort records by date ascending for better streak calculation
+            const chronologicalRecords = [...sortedRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Calculate longest streak and current streak
+            for (let i = 0; i < chronologicalRecords.length; i++) {
+                const record = chronologicalRecords[i];
+                const recordDate = new Date(record.date);
+                const recordDateStr = record.date;
+                
+                if (lastWorkDate) {
+                    const expectedDate = new Date(lastWorkDate);
+                    expectedDate.setDate(expectedDate.getDate() + 1);
+                    const expectedDateStr = expectedDate.toISOString().split('T')[0];
+                    
+                    if (recordDateStr === expectedDateStr) {
+                        // Consecutive day
+                        tempStreak++;
+                    } else {
+                        // Streak broken
+                        longestStreak = Math.max(longestStreak, tempStreak);
+                        tempStreak = 1;
+                    }
+                } else {
+                    tempStreak = 1;
+                }
+                
+                lastWorkDate = recordDateStr;
+            }
+            longestStreak = Math.max(longestStreak, tempStreak);
+            
+            // Calculate current streak (working backwards from today)
             const todayRecord = sortedRecords.find(record => record.date === today);
+            const yesterdayRecord = sortedRecords.find(record => record.date === yesterdayStr);
+            
             if (todayRecord) {
                 currentStreak = 1;
-                expectedDate.setDate(expectedDate.getDate() - 1); // Move to yesterday
+                let checkDate = new Date();
+                checkDate.setDate(checkDate.getDate() - 1);
+                
+                // Count backwards
+                while (true) {
+                    const checkDateStr = checkDate.toISOString().split('T')[0];
+                    const dayRecord = sortedRecords.find(record => record.date === checkDateStr);
+                    
+                    if (dayRecord) {
+                        currentStreak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
+            } else if (yesterdayRecord) {
+                // If didn't work today but worked yesterday, streak continues until yesterday
+                currentStreak = 1;
+                let checkDate = new Date();
+                checkDate.setDate(checkDate.getDate() - 2); // Day before yesterday
+                
+                while (true) {
+                    const checkDateStr = checkDate.toISOString().split('T')[0];
+                    const dayRecord = sortedRecords.find(record => record.date === checkDateStr);
+                    
+                    if (dayRecord) {
+                        currentStreak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
             } else {
-                expectedDate.setDate(expectedDate.getDate() - 1); // Start from yesterday
-            }
-            
-            // Count consecutive days working backwards
-            for (const record of sortedRecords) {
-                const recordDate = new Date(record.date);
-                const expectedDateStr = expectedDate.toISOString().split('T')[0];
-                const recordDateStr = recordDate.toISOString().split('T')[0];
-                
-                // Skip today's record if we already counted it
-                if (recordDateStr === today && todayRecord) {
-                    continue;
-                }
-                
-                if (recordDateStr === expectedDateStr) {
-                    currentStreak++;
-                    expectedDate.setDate(expectedDate.getDate() - 1);
-                } else if (recordDateStr < expectedDateStr) {
-                    // There's a gap in the streak
-                    break;
-                }
+                currentStreak = 0;
             }
             
             const unpaidWork = workRecords.filter(record => 
@@ -367,6 +417,7 @@ class DatabaseManager {
                 totalPaid,
                 currentBalance,
                 currentStreak,
+                longestStreak,
                 progressToPayday,
                 unpaidWork,
                 canGetPaid: unpaidWork >= paymentThreshold
@@ -379,6 +430,7 @@ class DatabaseManager {
                 totalPaid: 0,
                 currentBalance: 0,
                 currentStreak: 0,
+                longestStreak: 0,
                 progressToPayday: 0,
                 unpaidWork: 0,
                 canGetPaid: false

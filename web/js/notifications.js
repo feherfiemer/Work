@@ -1059,10 +1059,46 @@ class NotificationManager {
     }
 
     checkMilestones(stats) {
-        if (stats.currentStreak > 0 && stats.currentStreak % 7 === 0) {
-            this.showStreakNotification(stats.currentStreak);
+        // Enhanced streak milestones
+        const currentStreak = stats.currentStreak || 0;
+        const longestStreak = stats.longestStreak || 0;
+        
+        // Celebrate weekly milestones
+        if (currentStreak > 0 && currentStreak % 7 === 0) {
+            this.showStreakNotification(currentStreak);
+        }
+        
+        // Celebrate personal best streaks
+        if (currentStreak === longestStreak && currentStreak > 1) {
+            const title = 'New Personal Best! 🏆';
+            const options = {
+                body: `Amazing! You've achieved your longest work streak of ${currentStreak} days!`,
+                icon: location.origin + '/assets/favicon.ico',
+                tag: 'personal-best-streak'
+            };
+            this.showNotification(title, options);
+        }
+        
+        // Celebrate major streak milestones
+        if (currentStreak === 30) {
+            const title = 'LEGENDARY ACHIEVEMENT! 🔥';
+            const options = {
+                body: `Incredible! You've worked 30 days in a row! You're absolutely unstoppable!`,
+                icon: location.origin + '/assets/favicon.ico',
+                tag: 'legendary-streak'
+            };
+            this.showNotification(title, options);
+        } else if (currentStreak === 14) {
+            const title = 'Two Week Champion! 🚀';
+            const options = {
+                body: `Outstanding! You've maintained a 14-day work streak! Keep the momentum going!`,
+                icon: location.origin + '/assets/favicon.ico',
+                tag: 'two-week-streak'
+            };
+            this.showNotification(title, options);
         }
 
+        // Earnings milestones
         if (stats.totalEarned > 0 && stats.totalEarned % 500 === 0) {
             const title = 'Milestone Achieved!';
             const options = {
