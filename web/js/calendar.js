@@ -175,8 +175,8 @@ class CalendarManager {
         const cellContent = this.createCellContent(day, workRecord, isPaid, isToday);
         cell.appendChild(cellContent);
 
-        cell.addEventListener('click', () => {
-            this.showDayDetails(cellDate, workRecord, isPaid);
+        cell.addEventListener('click', async () => {
+            await this.showDayDetails(cellDate, workRecord, isPaid);
         });
 
         cell.addEventListener('mouseenter', () => {
@@ -271,7 +271,7 @@ class CalendarManager {
         return content;
     }
 
-    showDayDetails(date, workRecord, isPaid) {
+    async showDayDetails(date, workRecord, isPaid) {
         const dateString = this.formatDate(date);
         const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
         const formattedDate = date.toLocaleDateString('en-US', { 
@@ -287,6 +287,8 @@ class CalendarManager {
         `;
 
         const today = new Date();
+        today.setHours(23, 59, 59, 999); // Set to end of today for comparison
+        const isPastOrTodayDate = date <= today;
         const isPastDate = date < today || this.isSameDate(date, today);
 
         if (workRecord && workRecord.status === 'completed') {
@@ -330,7 +332,7 @@ class CalendarManager {
                     </div>
                 `;
                 
-                // Add Force Paid button for all completed work (not just past dates)
+                // Add Force Paid button for all completed work (regardless of payment day)
                 content += `
                     <button class="force-paid-btn" data-date="${dateString}" style="
                         margin-top: 1rem;
@@ -364,31 +366,48 @@ class CalendarManager {
                 </div>
             `;
             
-            // Add Mark as Done button for any date
-            content += `
-                <button class="mark-done-btn" data-date="${dateString}" style="
-                    margin-top: 1rem;
-                    width: 100%;
-                    padding: 0.75rem;
-                    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                    color: white;
-                    border: none;
-                    border-radius: var(--border-radius);
-                    cursor: pointer;
-                    font-family: var(--font-family);
-                    font-weight: 600;
-                    font-size: 0.9rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 0.5rem;
-                    box-shadow: var(--shadow-light);
-                    transition: all var(--transition-fast);
-                ">
-                    <i class="fas fa-check"></i>
-                    Mark as Done
-                </button>
-            `;
+            // Add Mark as Done button only for past or today dates
+            if (isPastOrTodayDate) {
+                content += `
+                    <button class="mark-done-btn" data-date="${dateString}" style="
+                        margin-top: 1rem;
+                        width: 100%;
+                        padding: 0.75rem;
+                        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                        color: white;
+                        border: none;
+                        border-radius: var(--border-radius);
+                        cursor: pointer;
+                        font-family: var(--font-family);
+                        font-weight: 600;
+                        font-size: 0.9rem;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                        box-shadow: var(--shadow-light);
+                        transition: all var(--transition-fast);
+                    ">
+                        <i class="fas fa-check"></i>
+                        Mark as Done
+                    </button>
+                `;
+            } else {
+                content += `
+                    <div class="future-date-notice" style="
+                        margin-top: 1rem;
+                        padding: 0.75rem;
+                        background: var(--warning);
+                        color: white;
+                        border-radius: var(--border-radius);
+                        text-align: center;
+                        font-weight: 500;
+                    ">
+                        <i class="fas fa-calendar-times"></i>
+                        Cannot mark work for future dates
+                    </div>
+                `;
+            }
         }
 
         content += `</div>`;
@@ -584,6 +603,37 @@ class CalendarManager {
         return this.payments.find(payment => 
             payment.workDates.includes(dateString)
         );
+    }
+
+    async isPaymentDay() {
+        try {
+            if (!this.db) return false;
+            
+            // Get current unpaid work records
+            const workRecords = await this.db.getAllWorkRecords();
+            const payments = await this.db.getAllPayments();
+            
+            const unpaidRecords = workRecords.filter(record => {
+                if (record.status !== 'completed') return false;
+                
+                const recordDate = new Date(record.date);
+                const hasPayment = payments.some(payment => {
+                    const paymentStartDate = new Date(payment.startDate);
+                    const paymentEndDate = new Date(payment.endDate);
+                    return recordDate >= paymentStartDate && recordDate <= paymentEndDate;
+                });
+                
+                return !hasPayment;
+            });
+
+            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+            const isPaymentDay = unpaidRecords.length > 0 && unpaidRecords.length % paymentThreshold === 0;
+            
+            return isPaymentDay;
+        } catch (error) {
+            console.error('Error checking if payment day:', error);
+            return false;
+        }
     }
 
     getCalendarStats() {
@@ -791,6 +841,18 @@ class CalendarManager {
 
             if (!this.db) {
                 throw new Error('Database not available');
+            }
+            
+            // Check if the date is in the future
+            const targetDate = new Date(dateString);
+            const today = new Date();
+            today.setHours(23, 59, 59, 999); // Set to end of today for comparison
+            
+            if (targetDate > today) {
+                if (window.app && window.app.notifications) {
+                    window.app.notifications.showToast('Cannot mark work as done for future dates!', 'error');
+                }
+                return;
             }
             
             // Check if work is already recorded for this date

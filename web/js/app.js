@@ -1716,6 +1716,45 @@ class RServiceTracker {
             this.hidePaidButton();
         }
 
+        // Check if we should show PWA recommendation on payment days
+        await this.checkPWAOnPaymentDay();
+    }
+
+    async checkPWAOnPaymentDay() {
+        try {
+            // Check if PWA is already installed
+            const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
+                               window.navigator.standalone === true;
+            
+            if (isInstalled) return;
+
+            const isPaymentDay = await this.shouldShowPWAOnPaymentDay();
+            if (isPaymentDay) {
+                const banner = document.getElementById('pwaInstallBanner');
+                if (banner && !banner.classList.contains('show')) {
+                    // Show PWA recommendation on payment days even if previously dismissed
+                    console.log('[PWA] Showing PWA recommendation on payment day');
+                    
+                    // Clear previous dismissal for this payment day
+                    const lastDismissedDate = localStorage.getItem('pwa-install-dismissed-date');
+                    const today = new Date().toISOString().split('T')[0];
+                    const lastDismissed = lastDismissedDate ? lastDismissedDate.split('T')[0] : null;
+                    
+                    if (lastDismissed !== today) {
+                        // Different day, so show again
+                        setTimeout(() => {
+                            if (window.deferredPrompt) {
+                                this.showInstallRecommendation(window.deferredPrompt);
+                            } else {
+                                this.showInstallRecommendationGeneric();
+                            }
+                        }, 2000); // Show after 2 seconds
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('[PWA] Error checking PWA on payment day:', error);
+        }
     }
 
     async updatePaidButtonVisibility() {
@@ -2591,10 +2630,13 @@ class RServiceTracker {
         });
         
         // Show banner after some user interaction if not shown yet
-        setTimeout(() => {
-            if (!isInstalled && !isDismissed && !installBannerShown && deferredPrompt) {
-                this.showInstallRecommendation(deferredPrompt);
-                installBannerShown = true;
+        setTimeout(async () => {
+            if (!isInstalled && !installBannerShown) {
+                const shouldShowOnPaymentDay = await this.shouldShowPWAOnPaymentDay();
+                if ((!isDismissed || shouldShowOnPaymentDay) && deferredPrompt) {
+                    this.showInstallRecommendation(deferredPrompt);
+                    installBannerShown = true;
+                }
             }
         }, 30000); // Show after 30 seconds if not shown yet
     }
@@ -2667,6 +2709,37 @@ class RServiceTracker {
             }
             deferredPrompt = null;
         });
+    }
+
+    async shouldShowPWAOnPaymentDay() {
+        try {
+            // Get current unpaid work records
+            const workRecords = await this.db.getAllWorkRecords();
+            const payments = await this.db.getAllPayments();
+            
+            const unpaidRecords = workRecords.filter(record => {
+                if (record.status !== 'completed') return false;
+                
+                const recordDate = new Date(record.date);
+                const hasPayment = payments.some(payment => {
+                    const paymentStartDate = new Date(payment.startDate);
+                    const paymentEndDate = new Date(payment.endDate);
+                    return recordDate >= paymentStartDate && recordDate <= paymentEndDate;
+                });
+                
+                return !hasPayment;
+            });
+
+            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+            const isPaymentDay = unpaidRecords.length > 0 && unpaidRecords.length % paymentThreshold === 0;
+            
+            console.log(`[PWA] Payment day check: ${unpaidRecords.length} unpaid days, threshold: ${paymentThreshold}, is payment day: ${isPaymentDay}`);
+            
+            return isPaymentDay;
+        } catch (error) {
+            console.error('[PWA] Error checking payment day for PWA:', error);
+            return false;
+        }
     }
 
     showInstallRecommendationGeneric() {
