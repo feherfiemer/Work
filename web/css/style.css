@@ -4428,17 +4428,19 @@ button.disabled:hover {
   top: 0;
   left: 0;
   right: 0;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   z-index: var(--z-toast);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   transform: translateY(-100%);
   transition: transform 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .pwa-install-banner.simple {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
 }
 
 .pwa-install-banner.show {
@@ -4974,6 +4976,8 @@ button.disabled:hover {
   contain: layout style paint;
   top: auto !important;
   left: auto !important;
+  /* Ensure proper stacking and display */
+  display: none;
 }
 
 .earnings-tooltip.show {
@@ -4981,6 +4985,7 @@ button.disabled:hover {
   visibility: visible;
   pointer-events: auto;
   transform: scale(1);
+  display: block !important;
 }
 
 .tooltip-content {

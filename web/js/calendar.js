@@ -770,6 +770,16 @@ class CalendarManager {
             } else {
                 // Fallback to direct payment if payment modal is not available
                 console.warn('Payment modal not available, using direct payment');
+                
+                // Ensure there's a work record for the date being force paid
+                let workRecord = await this.db.getWorkRecord(dateString);
+                if (!workRecord) {
+                    // Create work record if it doesn't exist
+                    const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+                    await this.db.addWorkRecord(dateString, dailyWage, 'completed');
+                    console.log('Created work record for force payment date:', dateString);
+                }
+                
                 const paymentAmount = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
                 const today = new Date();
                 const paymentDate = today.getFullYear() + '-' + 
@@ -907,6 +917,19 @@ class CalendarManager {
                     window.app.notifications.playSound('done');
                 } catch (soundError) {
                     console.log('Sound playback failed (non-critical):', soundError);
+                }
+            }
+
+            // Ensure system amounts are properly updated for calendar marking
+            if (window.app && typeof window.app.updatePendingUnpaidDates === 'function') {
+                try {
+                    await window.app.updatePendingUnpaidDates();
+                    window.app.currentStats = await this.db.getEarningsStats();
+                    window.app.updateDashboard();
+                    await window.app.updatePaidButtonVisibility();
+                    console.log('System amounts updated after calendar marking');
+                } catch (updateError) {
+                    console.error('Error updating system amounts after calendar marking:', updateError);
                 }
             }
 

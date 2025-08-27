@@ -1203,10 +1203,22 @@ class RServiceTracker {
         tooltip.style.visibility = 'hidden';
         tooltip.style.opacity = '1';
         tooltip.style.display = 'block';
+        tooltip.style.position = 'fixed';
+        tooltip.style.top = '0px';
+        tooltip.style.left = '0px';
+        
+        // Force layout calculation
+        tooltip.offsetHeight;
+        
         const tooltipRect = tooltipContent.getBoundingClientRect();
+        
+        // Reset measurement styles
         tooltip.style.visibility = '';
         tooltip.style.opacity = '';
         tooltip.style.display = '';
+        tooltip.style.position = '';
+        tooltip.style.top = '';
+        tooltip.style.left = '';
         
         // Add padding for safe margins
         const MARGIN = 20;
@@ -2061,7 +2073,7 @@ class RServiceTracker {
 
     async processPayment(amount, closeModalCallback) {
         try {
-            console.log('Processing payment:', { amount, pendingDates: this.pendingUnpaidDates });
+            console.log('Processing payment:', { amount, pendingDates: this.pendingUnpaidDates, forcePaidDate: this.forcePaidDateString });
             
             if (!amount || amount <= 0) {
                 throw new Error('Invalid payment amount');
@@ -2072,21 +2084,46 @@ class RServiceTracker {
             }
             
             const DAILY_WAGE = 25; // Should match database constant
-            const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
             
-            const isAdvancePayment = amount > totalWorkCompletedValue;
-            
-            let workDatesToPay = [];
-            if (totalWorkCompletedValue > 0) {
-                const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
-                workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
-                console.log('Work dates to pay:', workDatesToPay);
+            // Handle force paid for specific date
+            if (this.forcePaidDateString) {
+                console.log('Processing force payment for specific date:', this.forcePaidDateString);
+                
+                // Ensure there's a work record for the date being force paid
+                let workRecord = await this.db.getWorkRecord(this.forcePaidDateString);
+                if (!workRecord) {
+                    // Create work record if it doesn't exist
+                    await this.db.addWorkRecord(this.forcePaidDateString, DAILY_WAGE, 'completed');
+                    console.log('Created work record for force payment date:', this.forcePaidDateString);
+                }
+                
+                const paymentDate = this.utils.getTodayString();
+                await this.db.addPayment(amount, [this.forcePaidDateString], paymentDate, false);
+                
+                // Clear the force paid date
+                this.forcePaidDateString = null;
+                
+                console.log('Force payment recorded successfully');
+            } else {
+                // Normal payment processing
+                const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
+                const isAdvancePayment = amount > totalWorkCompletedValue;
+                
+                let workDatesToPay = [];
+                if (totalWorkCompletedValue > 0) {
+                    const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
+                    workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
+                    console.log('Work dates to pay:', workDatesToPay);
+                }
+                
+                const paymentDate = this.utils.getTodayString();
+                console.log('Adding payment to database:', { amount, workDatesToPay, paymentDate, isAdvancePayment });
+                
+                await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
+                
+                // Update pending unpaid dates
+                this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
             }
-            
-            const paymentDate = this.utils.getTodayString();
-            console.log('Adding payment to database:', { amount, workDatesToPay, paymentDate, isAdvancePayment });
-            
-            await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
             
             closeModalCallback();
             
@@ -2113,7 +2150,8 @@ class RServiceTracker {
             this.currentStats = await this.db.getEarningsStats();
             this.updateDashboard();
             
-            this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
+            // Update system state after payment
+            await this.updatePendingUnpaidDates();
             await this.updatePaidButtonVisibility();
             
             try {
@@ -2596,13 +2634,14 @@ class RServiceTracker {
         const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
                            window.navigator.standalone === true;
         const isDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
+        const isClosed = localStorage.getItem('pwa-install-closed') === 'true';
         
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             
-            // Show install banner on every visit unless dismissed or installed
-            if (!isInstalled && !installBannerShown) {
+            // Show install banner if not installed and not permanently dismissed
+            if (!isInstalled && !isDismissed && !installBannerShown) {
                 this.showInstallRecommendation(deferredPrompt);
                 installBannerShown = true;
             }
@@ -2630,12 +2669,15 @@ class RServiceTracker {
             }
         });
         
-        // Show banner on first visit or payment days
+        // Show banner logic: first visit, every visit unless closed, or payment days
         setTimeout(async () => {
-            if (!isInstalled && !installBannerShown) {
+            if (!isInstalled && !installBannerShown && !isDismissed) {
                 const shouldShowOnPaymentDay = await this.shouldShowPWAOnPaymentDay();
-                // Show if not dismissed, or if dismissed but it's a payment day
-                if (!isDismissed || shouldShowOnPaymentDay) {
+                
+                // Show banner if:
+                // 1. Not closed at all (first time or subsequent visits)
+                // 2. Or it's a payment day (even if closed before)
+                if (!isClosed || shouldShowOnPaymentDay) {
                     // Only show if we have the prompt or it's a generic prompt
                     if (deferredPrompt) {
                         this.showInstallRecommendation(deferredPrompt);
@@ -2643,6 +2685,13 @@ class RServiceTracker {
                         this.showInstallRecommendationGeneric();
                     }
                     installBannerShown = true;
+                    
+                    // If showing on payment day, clear the closed status for next time
+                    if (shouldShowOnPaymentDay && isClosed) {
+                        localStorage.removeItem('pwa-install-closed');
+                        localStorage.removeItem('pwa-install-closed-date');
+                        console.log('[PWA] Showing PWA banner on payment day - cleared closed status');
+                    }
                 }
             }
         }, 3000); // Show after 3 seconds on first visit
@@ -2651,7 +2700,7 @@ class RServiceTracker {
     showInstallRecommendation(deferredPrompt) {
         const banner = document.getElementById('pwaInstallBanner');
         const installBtn = document.getElementById('installAppBtn');
-        const dismissBtn = document.getElementById('dismissInstallBtn');
+        const closeBtn = document.getElementById('closeInstallBtn');
         
         if (!banner) return;
         
@@ -2666,17 +2715,17 @@ class RServiceTracker {
             };
         }
         
-        // Handle dismiss button click
-        if (dismissBtn) {
-            dismissBtn.onclick = () => {
-                this.dismissInstallRecommendation();
+        // Handle close button click
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                this.closeInstallRecommendation();
             };
         }
         
         // Auto-hide after 60 seconds
         setTimeout(() => {
             if (banner.classList.contains('show')) {
-                this.dismissInstallRecommendation();
+                this.closeInstallRecommendation();
             }
         }, 60000);
     }
@@ -2689,6 +2738,14 @@ class RServiceTracker {
                 banner.style.display = 'none';
             }, 300);
         }
+    }
+
+    closeInstallRecommendation() {
+        this.hideInstallRecommendation();
+        localStorage.setItem('pwa-install-closed', 'true');
+        localStorage.setItem('pwa-install-closed-date', new Date().toISOString());
+        
+        this.notifications.showToast('PWA recommendation closed. It will reappear on payment days.', 'info', 5000);
     }
 
     dismissInstallRecommendation() {
@@ -2768,44 +2825,33 @@ class RServiceTracker {
             if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
                 // Safari instructions
                 instructions = `
-                    <div class="install-instructions">
-                        <h3><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h3>
-                        <p>Add this app to your home screen for easy access:</p>
-                        <ol>
-                            <li>Tap the Share button <i class="fas fa-share"></i></li>
-                            <li>Select "Add to Home Screen"</li>
-                            <li>Tap "Add" to confirm</li>
-                        </ol>
+                    <div class="install-banner-text">
+                        <h4><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h4>
+                        <p>Add to home screen: Share → Add to Home Screen</p>
                     </div>
                 `;
             } else if (userAgent.includes('Firefox')) {
                 // Firefox instructions
                 instructions = `
-                    <div class="install-instructions">
-                        <h3><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h3>
-                        <p>Add this app for a better experience:</p>
-                        <ol>
-                            <li>Tap the menu button <i class="fas fa-bars"></i></li>
-                            <li>Select "Install"</li>
-                            <li>Confirm installation</li>
-                        </ol>
+                    <div class="install-banner-text">
+                        <h4><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h4>
+                        <p>Install from menu: Menu → Install</p>
                     </div>
                 `;
             } else {
                 // Generic instructions
                 instructions = `
-                    <div class="install-instructions">
-                        <h3><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h3>
-                        <p>Get the best experience by installing this app on your device!</p>
-                        <p>Look for the install option in your browser menu.</p>
+                    <div class="install-banner-text">
+                        <h4><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h4>
+                        <p>Get quick access and offline functionality</p>
                     </div>
                 `;
             }
             
             bannerContent.innerHTML = instructions + `
                 <div class="install-banner-actions">
-                    <button id="dismissInstallBtn" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Maybe Later
+                    <button id="closeInstallBtn" class="close-btn">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
             `;
@@ -2815,18 +2861,18 @@ class RServiceTracker {
         banner.style.display = 'block';
         setTimeout(() => banner.classList.add('show'), 100);
         
-        // Handle dismiss button click
-        const dismissBtn = document.getElementById('dismissInstallBtn');
-        if (dismissBtn) {
-            dismissBtn.onclick = () => {
-                this.dismissInstallRecommendation();
+        // Handle close button click
+        const closeBtn = document.getElementById('closeInstallBtn');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                this.closeInstallRecommendation();
             };
         }
         
         // Auto-hide after 60 seconds
         setTimeout(() => {
             if (banner.classList.contains('show')) {
-                this.dismissInstallRecommendation();
+                this.closeInstallRecommendation();
             }
         }, 60000);
     }
