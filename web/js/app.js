@@ -62,6 +62,9 @@ class RServiceTracker {
             
             this.isInitialized = true;
             
+            // Handle PWA shortcuts and URL parameters
+            this.handleURLParameters();
+            
             this.verifyConfiguration();
             
             window.testNotifications = () => {
@@ -278,14 +281,12 @@ class RServiceTracker {
         
         if (menuToggle && sideMenu) {
             menuToggle.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 sideMenu.classList.add('open');
             });
         }
         
         if (closeMenu && sideMenu) {
             closeMenu.addEventListener('click', () => {
-                this.notifications.playSound('close');
                 sideMenu.classList.remove('open');
             });
         }
@@ -293,7 +294,6 @@ class RServiceTracker {
         const colorButtons = document.querySelectorAll('.color-btn');
         colorButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 const color = btn.dataset.color;
                 this.updateColorSelection(color);
                 this.applyTheme();
@@ -303,7 +303,6 @@ class RServiceTracker {
         const modeButtons = document.querySelectorAll('.mode-btn');
         modeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 const mode = btn.dataset.mode;
                 this.updateModeSelection(mode);
                 this.applyTheme();
@@ -338,7 +337,6 @@ class RServiceTracker {
         const clearDataBtn = document.getElementById('clearData');
         if (clearDataBtn) {
             clearDataBtn.addEventListener('click', () => {
-                this.notifications.playSound('warning');
                 this.handleClearData();
             });
         }
@@ -346,7 +344,6 @@ class RServiceTracker {
         const exportPDFBtn = document.getElementById('exportPDF');
         if (exportPDFBtn) {
             exportPDFBtn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 this.closeMenu();
                 this.handleExportPDF();
             });
@@ -355,7 +352,6 @@ class RServiceTracker {
         const aboutBtn = document.getElementById('aboutApp');
         if (aboutBtn) {
             aboutBtn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 this.showAboutModal();
             });
         }
@@ -363,7 +359,6 @@ class RServiceTracker {
         const viewHistoryBtn = document.getElementById('viewHistory');
         if (viewHistoryBtn) {
             viewHistoryBtn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 this.closeMenu();
                 this.showBalanceSheet();
             });
@@ -372,7 +367,6 @@ class RServiceTracker {
         const viewAnalyticsBtn = document.getElementById('viewAnalytics');
         if (viewAnalyticsBtn) {
             viewAnalyticsBtn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 this.closeMenu();
                 this.showAnalytics();
             });
@@ -402,7 +396,6 @@ class RServiceTracker {
                         e.stopPropagation();
                         return false;
                     }
-                    this.notifications.playSound('success');
                     this.saveSettings();
                 });
             }
@@ -410,7 +403,6 @@ class RServiceTracker {
             const resetSettingsBtn = document.getElementById('resetSettings');
             if (resetSettingsBtn) {
                 resetSettingsBtn.addEventListener('click', () => {
-                    this.notifications.playSound('warning');
                     this.resetSettings();
                 });
             }
@@ -1081,7 +1073,6 @@ class RServiceTracker {
         const balanceSheetBtn = document.getElementById('viewBalanceSheet');
         if (balanceSheetBtn) {
             balanceSheetBtn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 this.showBalanceSheet();
             });
         }
@@ -1089,7 +1080,6 @@ class RServiceTracker {
         const calendarBtn = document.getElementById('viewCalendar');
         if (calendarBtn) {
             calendarBtn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 this.showCalendar();
             });
         }
@@ -1097,7 +1087,6 @@ class RServiceTracker {
         const chartsBtn = document.getElementById('viewCharts');
         if (chartsBtn) {
             chartsBtn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 this.showAnalytics();
             });
         }
@@ -1105,7 +1094,6 @@ class RServiceTracker {
         const streakBtn = document.getElementById('dailyStreak');
         if (streakBtn) {
             streakBtn.addEventListener('click', () => {
-                this.notifications.playSound('click');
                 this.showStreakInfo();
             });
         }
@@ -1124,7 +1112,6 @@ class RServiceTracker {
             
             if (button && view) {
                 button.addEventListener('click', () => {
-                    this.notifications.playSound('close');
                     this.closeCurrentView(view);
                 });
             }
@@ -1435,7 +1422,6 @@ class RServiceTracker {
         
         closeModalBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                this.notifications.playSound('close');
                 if (aboutModal) aboutModal.classList.remove('show');
             });
         });
@@ -2561,6 +2547,53 @@ class RServiceTracker {
                 installBtn.style.display = 'none';
             }
         });
+    }
+
+    handleURLParameters() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            
+            if (action) {
+                console.log('[PWA] Processing action from URL:', action);
+                
+                // Wait a moment for the UI to be fully loaded
+                setTimeout(async () => {
+                    switch (action) {
+                        case 'mark-done':
+                            console.log('[PWA] Executing mark as done from shortcut');
+                            await this.handleDoneClick();
+                            // Clear the URL parameter after execution
+                            this.clearURLParameters();
+                            break;
+                            
+                        case 'mark-paid':
+                            console.log('[PWA] Executing mark as paid from shortcut');
+                            await this.handlePaidClick();
+                            this.clearURLParameters();
+                            break;
+                            
+                        case 'calendar':
+                            console.log('[PWA] Opening calendar from shortcut');
+                            this.showCalendar();
+                            this.clearURLParameters();
+                            break;
+                            
+                        default:
+                            console.log('[PWA] Unknown action:', action);
+                    }
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('[PWA] Error handling URL parameters:', error);
+        }
+    }
+
+    clearURLParameters() {
+        // Clear URL parameters without page reload
+        const url = new URL(window.location);
+        url.search = '';
+        window.history.replaceState({}, document.title, url);
     }
 
     verifyConfiguration() {

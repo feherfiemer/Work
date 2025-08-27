@@ -46,6 +46,13 @@
       "icons": [{ "src": "assets/favicon.svg", "sizes": "any" }]
     },
     {
+      "name": "Mark as Paid",
+      "short_name": "Mark Paid",
+      "description": "Mark work as paid and collect earnings",
+      "url": "/?action=mark-paid",
+      "icons": [{ "src": "assets/favicon.svg", "sizes": "any" }]
+    },
+    {
       "name": "View Calendar",
       "short_name": "Calendar",
       "description": "View work and payment calendar",
