@@ -477,12 +477,13 @@ class NotificationManager {
             setTimeout(() => this.createAchievementBells(), 600);
             setTimeout(() => this.createSuccessHarmony(), 900);
         } else if (soundType === 'paid') {
-            // Enhanced ultra-premium payment transaction sound sequence
-            this.playUltraPremiumPaymentSound();
-            setTimeout(() => this.createLuxuryCashRegister(), 200);
-            setTimeout(() => this.createGoldenCoinDrop(), 500);
-            setTimeout(() => this.createPaymentSuccessChime(), 800);
-            setTimeout(() => this.createWealthyFinish(), 1200);
+            // Enhanced ultra-realistic banking payment sound sequence
+            this.playBankingTransactionSound();
+            setTimeout(() => this.createCardProcessingSound(), 150);
+            setTimeout(() => this.createCashRegisterKaching(), 350);
+            setTimeout(() => this.createDigitalPaymentConfirmation(), 600);
+            setTimeout(() => this.createATMReceiptSound(), 900);
+            setTimeout(() => this.createWealthySuccessFinale(), 1200);
         }
     }
 
@@ -2058,331 +2059,192 @@ class NotificationManager {
         this.db = db;
     }
 
-    scheduleReminders() {
-        // Clear any existing reminder intervals
-        if (this.reminderInterval) {
-            clearInterval(this.reminderInterval);
-        }
-        if (this.paymentReminderInterval) {
-            clearInterval(this.paymentReminderInterval);
-        }
 
-        try {
-            const config = window.NOTIFICATION_CONFIG || {
-                dailyReminder: { enabled: true, time: '18:00' },
-                paymentReminder: { enabled: true, time: '07:00' }
-            };
 
-            console.log('[REMINDERS] Scheduling reminders with config:', config);
-
-            // Schedule daily work reminder
-            if (config.dailyReminder && config.dailyReminder.enabled) {
-                this.scheduleDailyReminder(config.dailyReminder.time || '18:00');
-            }
-
-            // Schedule payment reminder
-            if (config.paymentReminder && config.paymentReminder.enabled) {
-                this.schedulePaymentReminder(config.paymentReminder.time || '07:00');
-            }
-
-            console.log('[REMINDERS] All reminders scheduled successfully');
-        } catch (error) {
-            console.error('[REMINDERS] Error scheduling reminders:', error);
-        }
-    }
-
-    scheduleDailyReminder(timeString) {
-        try {
-            const [hours, minutes] = timeString.split(':').map(Number);
-            
-            const checkDaily = () => {
-                const now = new Date();
-                const currentHour = now.getHours();
-                const currentMinute = now.getMinutes();
-                
-                // Check if it's time for the reminder (within 1 minute window)
-                if (currentHour === hours && currentMinute === minutes) {
-                    this.checkAndShowDailyReminder();
-                }
-            };
-
-            // Check every minute for the scheduled time
-            this.reminderInterval = setInterval(checkDaily, 60000);
-            console.log(`[REMINDERS] Daily reminder scheduled for ${timeString}`);
-        } catch (error) {
-            console.error('[REMINDERS] Error scheduling daily reminder:', error);
-        }
-    }
-
-    schedulePaymentReminder(timeString) {
-        try {
-            const [hours, minutes] = timeString.split(':').map(Number);
-            
-            const checkPayment = () => {
-                const now = new Date();
-                const currentHour = now.getHours();
-                const currentMinute = now.getMinutes();
-                
-                // Check if it's time for the reminder (within 1 minute window)
-                if (currentHour === hours && currentMinute === minutes) {
-                    this.checkAndShowPaymentReminder();
-                }
-            };
-
-            // Check every minute for the scheduled time
-            this.paymentReminderInterval = setInterval(checkPayment, 60000);
-            console.log(`[REMINDERS] Payment reminder scheduled for ${timeString}`);
-        } catch (error) {
-            console.error('[REMINDERS] Error scheduling payment reminder:', error);
-        }
-    }
-
-    async checkAndShowDailyReminder() {
-        try {
-            if (!this.db) return;
-
-            // Check if work is already done today
-            const today = new Date().toISOString().split('T')[0];
-            const workRecord = await this.db.getWorkRecord(today);
-            
-            if (!workRecord || workRecord.status !== 'completed') {
-                // Work not done yet, show reminder
-                this.showDailyReminder();
-                console.log('[REMINDERS] Daily work reminder shown');
-            } else {
-                console.log('[REMINDERS] Work already completed today, skipping reminder');
-            }
-        } catch (error) {
-            console.error('[REMINDERS] Error checking daily reminder:', error);
-        }
-    }
-
-    async checkAndShowPaymentReminder() {
-        try {
-            if (!this.db) return;
-
-            // Check if there are unpaid work days
-            const workRecords = await this.db.getAllWorkRecords();
-            const payments = await this.db.getAllPayments();
-            
-            const unpaidRecords = workRecords.filter(record => {
-                if (record.status !== 'completed') return false;
-                
-                // Check if this record has been paid
-                const recordDate = new Date(record.date);
-                const hasPayment = payments.some(payment => {
-                    const paymentStartDate = new Date(payment.startDate);
-                    const paymentEndDate = new Date(payment.endDate);
-                    return recordDate >= paymentStartDate && recordDate <= paymentEndDate;
-                });
-                
-                return !hasPayment;
-            });
-
-            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || 4;
-            
-            if (unpaidRecords.length >= paymentThreshold) {
-                // Eligible for payment, show reminder
-                this.showPaymentReminder();
-                console.log('[REMINDERS] Payment reminder shown for', unpaidRecords.length, 'unpaid days');
-            } else {
-                console.log('[REMINDERS] Not enough unpaid days for payment reminder');
-            }
-        } catch (error) {
-            console.error('[REMINDERS] Error checking payment reminder:', error);
-        }
-    }
-
-    showPaymentReminder() {
-        const title = 'Payment Available!';
-        const options = {
-            body: 'You have earned work days ready for payment collection. Collect your earnings now!',
-            icon: location.origin + '/assets/favicon.ico',
-            tag: 'payment-reminder',
-            requireInteraction: true,
-            actions: [
-                {
-                    action: 'collect-payment',
-                    title: 'Collect Payment'
-                },
-                {
-                    action: 'later',
-                    title: 'Later'
-                }
-            ]
-        };
-
-        this.showNotification(title, options);
-        this.showToast('💰 Payment Available! You can collect your earnings now.', 'success', 8000);
-    }
-
-    // Ultra-premium payment sound sequence
-    playUltraPremiumPaymentSound() {
+    // Ultra-realistic banking transaction sound
+    playBankingTransactionSound() {
         if (!this.audioContext) return;
 
         try {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Create a sophisticated payment notification sound
-            // Similar to premium banking apps
+            // Create authentic banking transaction initiation sound
             const masterGain = ctx.createGain();
             const compressor = ctx.createDynamicsCompressor();
             masterGain.connect(compressor);
             compressor.connect(ctx.destination);
-            masterGain.gain.setValueAtTime(0.7, now);
+            masterGain.gain.setValueAtTime(0.6, now);
             
-            // Initial premium ding (like iPhone payment sound)
-            const initialOsc = ctx.createOscillator();
-            const initialGain = ctx.createGain();
-            const initialFilter = ctx.createBiquadFilter();
+            // Banking system "beep" - like card reader acknowledgment
+            const bankBeep = ctx.createOscillator();
+            const beepGain = ctx.createGain();
+            const beepFilter = ctx.createBiquadFilter();
             
-            initialOsc.connect(initialFilter);
-            initialFilter.connect(initialGain);
-            initialGain.connect(masterGain);
+            bankBeep.connect(beepFilter);
+            beepFilter.connect(beepGain);
+            beepGain.connect(masterGain);
             
-            initialOsc.type = 'triangle';
-            initialOsc.frequency.setValueAtTime(1760, now); // A6 - very bright
-            initialOsc.frequency.exponentialRampToValueAtTime(1397, now + 0.15); // F6
+            bankBeep.type = 'square';
+            bankBeep.frequency.setValueAtTime(880, now); // A5 - banking standard
             
-            initialFilter.type = 'lowpass';
-            initialFilter.frequency.setValueAtTime(3000, now);
-            initialFilter.Q.setValueAtTime(8, now);
+            beepFilter.type = 'lowpass';
+            beepFilter.frequency.setValueAtTime(2000, now);
+            beepFilter.Q.setValueAtTime(5, now);
             
-            initialGain.gain.setValueAtTime(0.8, now);
-            initialGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            beepGain.gain.setValueAtTime(0.8, now);
+            beepGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
             
-            initialOsc.start(now);
-            initialOsc.stop(now + 0.2);
+            bankBeep.start(now);
+            bankBeep.stop(now + 0.1);
             
-            console.log('Ultra-premium payment sound initiated');
+            console.log('Banking transaction sound initiated');
         } catch (error) {
-            console.warn('Error playing ultra-premium payment sound:', error);
+            console.warn('Error playing banking transaction sound:', error);
         }
     }
 
-    createLuxuryCashRegister() {
+    createCardProcessingSound() {
         if (!this.audioContext) return;
 
         try {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Luxury cash register "ka-ching" sound
-            const frequencies = [
-                { freq: 1318.5, time: 0, duration: 0.1 },    // E6
-                { freq: 1174.7, time: 0.05, duration: 0.1 }, // D6
-                { freq: 987.8, time: 0.1, duration: 0.15 },  // B5
-                { freq: 880, time: 0.15, duration: 0.2 },    // A5
-                { freq: 659.3, time: 0.2, duration: 0.25 }   // E5
+            // Card processing "swipe" sound with electronic processing noise
+            const processingFreqs = [
+                { freq: 1200, time: 0, duration: 0.05, volume: 0.3 },
+                { freq: 800, time: 0.02, duration: 0.08, volume: 0.4 },
+                { freq: 600, time: 0.06, duration: 0.06, volume: 0.3 },
             ];
             
-            frequencies.forEach(note => {
+            processingFreqs.forEach(sound => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 const filter = ctx.createBiquadFilter();
+                const noise = ctx.createBufferSource();
+                
+                // Create white noise for processing effect
+                const bufferSize = ctx.sampleRate * 0.1;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * 0.1;
+                }
+                noise.buffer = buffer;
                 
                 osc.connect(filter);
                 filter.connect(gain);
+                noise.connect(gain);
                 gain.connect(ctx.destination);
                 
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(note.freq, now + note.time);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(sound.freq, now + sound.time);
                 
                 filter.type = 'bandpass';
-                filter.frequency.setValueAtTime(note.freq * 2, now + note.time);
-                filter.Q.setValueAtTime(5, now + note.time);
+                filter.frequency.setValueAtTime(sound.freq, now + sound.time);
+                filter.Q.setValueAtTime(10, now + sound.time);
                 
-                gain.gain.setValueAtTime(0.6, now + note.time);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + note.time + note.duration);
+                gain.gain.setValueAtTime(sound.volume, now + sound.time);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + sound.time + sound.duration);
                 
-                osc.start(now + note.time);
-                osc.stop(now + note.time + note.duration);
+                osc.start(now + sound.time);
+                osc.stop(now + sound.time + sound.duration);
+                noise.start(now + sound.time);
+                noise.stop(now + sound.time + sound.duration);
             });
             
-            console.log('Luxury cash register sound played');
+            console.log('Card processing sound played');
         } catch (error) {
-            console.warn('Error playing luxury cash register sound:', error);
+            console.warn('Error playing card processing sound:', error);
         }
     }
 
-    createGoldenCoinDrop() {
+    createCashRegisterKaching() {
         if (!this.audioContext) return;
 
         try {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Golden coin drop effect with multiple bounces
-            const bounces = [
-                { freq: 880, time: 0, volume: 0.7 },     // Initial drop
-                { freq: 1100, time: 0.08, volume: 0.5 }, // First bounce
-                { freq: 932, time: 0.14, volume: 0.3 },  // Second bounce
-                { freq: 1047, time: 0.18, volume: 0.2 }, // Third bounce
-                { freq: 880, time: 0.21, volume: 0.1 }   // Final settle
-            ];
+            // Authentic cash register "ka-ching" sound with mechanical elements
+            const masterGain = ctx.createGain();
+            masterGain.connect(ctx.destination);
+            masterGain.gain.setValueAtTime(0.5, now);
             
-            bounces.forEach(bounce => {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                const filter = ctx.createBiquadFilter();
+            // Mechanical "ka" - drawer opening sound
+            const kaOsc = ctx.createOscillator();
+            const kaGain = ctx.createGain();
+            const kaFilter = ctx.createBiquadFilter();
+            
+            kaOsc.connect(kaFilter);
+            kaFilter.connect(kaGain);
+            kaGain.connect(masterGain);
+            
+            kaOsc.type = 'square';
+            kaOsc.frequency.setValueAtTime(200, now);
+            kaOsc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+            
+            kaFilter.type = 'highpass';
+            kaFilter.frequency.setValueAtTime(100, now);
+            
+            kaGain.gain.setValueAtTime(0.3, now);
+            kaGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            
+            kaOsc.start(now);
+            kaOsc.stop(now + 0.1);
+            
+            // Bell "ching" - classic cash register bell
+            const chingFreqs = [1047, 1319, 1568]; // C6, E6, G6 - major chord
+            chingFreqs.forEach((freq, index) => {
+                const bellOsc = ctx.createOscillator();
+                const bellGain = ctx.createGain();
+                const bellFilter = ctx.createBiquadFilter();
                 
-                osc.connect(filter);
-                filter.connect(gain);
-                gain.connect(ctx.destination);
+                bellOsc.connect(bellFilter);
+                bellFilter.connect(bellGain);
+                bellGain.connect(masterGain);
                 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(bounce.freq, now + bounce.time);
-                osc.frequency.exponentialRampToValueAtTime(bounce.freq * 0.8, now + bounce.time + 0.06);
+                bellOsc.type = 'sine';
+                bellOsc.frequency.setValueAtTime(freq, now + 0.1 + index * 0.02);
                 
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(bounce.freq * 3, now + bounce.time);
+                bellFilter.type = 'bandpass';
+                bellFilter.frequency.setValueAtTime(freq, now + 0.1 + index * 0.02);
+                bellFilter.Q.setValueAtTime(8, now + 0.1 + index * 0.02);
                 
-                gain.gain.setValueAtTime(bounce.volume, now + bounce.time);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + bounce.time + 0.06);
+                bellGain.gain.setValueAtTime(0.7, now + 0.1 + index * 0.02);
+                bellGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1 + index * 0.02 + 0.8);
                 
-                osc.start(now + bounce.time);
-                osc.stop(now + bounce.time + 0.06);
+                bellOsc.start(now + 0.1 + index * 0.02);
+                bellOsc.stop(now + 0.1 + index * 0.02 + 0.8);
             });
             
-            console.log('Golden coin drop effect played');
+            console.log('Cash register ka-ching sound played');
         } catch (error) {
-            console.warn('Error playing golden coin drop sound:', error);
+            console.warn('Error playing cash register ka-ching sound:', error);
         }
     }
 
-    createWealthyFinish() {
+    createDigitalPaymentConfirmation() {
         if (!this.audioContext) return;
 
         try {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Wealthy finish chord (like a sophisticated bank notification)
-            const chordFreqs = [
-                { freq: 523.25, duration: 0.8 }, // C5
-                { freq: 659.25, duration: 0.8 }, // E5
-                { freq: 783.99, duration: 0.8 }, // G5
-                { freq: 1046.5, duration: 0.8 }  // C6
+            // Digital payment confirmation - like UPI/online banking success
+            const confirmationChord = [
+                { freq: 523.25, time: 0, duration: 0.3 },     // C5
+                { freq: 659.25, time: 0.05, duration: 0.3 },  // E5
+                { freq: 783.99, time: 0.1, duration: 0.3 },   // G5
+                { freq: 1046.5, time: 0.15, duration: 0.4 }   // C6
             ];
             
             const masterGain = ctx.createGain();
-            const reverb = ctx.createConvolver();
-            const delayNode = ctx.createDelay();
-            const delayGain = ctx.createGain();
-            
-            masterGain.connect(reverb);
-            masterGain.connect(delayNode);
-            delayNode.connect(delayGain);
-            delayGain.connect(ctx.destination);
-            reverb.connect(ctx.destination);
-            
-            delayNode.delayTime.setValueAtTime(0.1, now);
-            delayGain.gain.setValueAtTime(0.3, now);
+            masterGain.connect(ctx.destination);
             masterGain.gain.setValueAtTime(0.4, now);
-            masterGain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
             
-            chordFreqs.forEach((note, index) => {
+            confirmationChord.forEach(note => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 const filter = ctx.createBiquadFilter();
@@ -2392,22 +2254,151 @@ class NotificationManager {
                 gain.connect(masterGain);
                 
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(note.freq, now);
+                osc.frequency.setValueAtTime(note.freq, now + note.time);
                 
                 filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(note.freq * 4, now);
-                filter.Q.setValueAtTime(2, now);
+                filter.frequency.setValueAtTime(note.freq * 2, now + note.time);
+                filter.Q.setValueAtTime(3, now + note.time);
                 
-                gain.gain.setValueAtTime(0.25, now + index * 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + note.duration);
+                gain.gain.setValueAtTime(0.6, now + note.time);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + note.time + note.duration);
                 
-                osc.start(now + index * 0.02);
-                osc.stop(now + note.duration);
+                osc.start(now + note.time);
+                osc.stop(now + note.time + note.duration);
             });
             
-            console.log('Wealthy finish chord played');
+            console.log('Digital payment confirmation sound played');
         } catch (error) {
-            console.warn('Error playing wealthy finish sound:', error);
+            console.warn('Error playing digital payment confirmation sound:', error);
+        }
+    }
+
+    createATMReceiptSound() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // ATM receipt printing sound - mechanical whirring
+            const receiptNoise = ctx.createBufferSource();
+            const receiptGain = ctx.createGain();
+            const receiptFilter = ctx.createBiquadFilter();
+            
+            // Create filtered white noise for receipt printing effect
+            const bufferSize = ctx.sampleRate * 0.3;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < bufferSize; i++) {
+                // Create rhythmic printing pattern
+                const pattern = Math.sin(i * 0.01) * 0.5 + 0.5;
+                data[i] = (Math.random() * 2 - 1) * 0.2 * pattern;
+            }
+            
+            receiptNoise.buffer = buffer;
+            receiptNoise.connect(receiptFilter);
+            receiptFilter.connect(receiptGain);
+            receiptGain.connect(ctx.destination);
+            
+            receiptFilter.type = 'bandpass';
+            receiptFilter.frequency.setValueAtTime(1500, now);
+            receiptFilter.Q.setValueAtTime(5, now);
+            
+            receiptGain.gain.setValueAtTime(0.15, now);
+            receiptGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            
+            receiptNoise.start(now);
+            receiptNoise.stop(now + 0.3);
+            
+            console.log('ATM receipt sound played');
+        } catch (error) {
+            console.warn('Error playing ATM receipt sound:', error);
+        }
+    }
+
+    createWealthySuccessFinale() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Ultimate banking success finale - sophisticated and triumphant
+            const masterGain = ctx.createGain();
+            const compressor = ctx.createDynamicsCompressor();
+            const delayNode = ctx.createDelay();
+            const delayGain = ctx.createGain();
+            
+            masterGain.connect(compressor);
+            masterGain.connect(delayNode);
+            delayNode.connect(delayGain);
+            delayGain.connect(ctx.destination);
+            compressor.connect(ctx.destination);
+            
+            delayNode.delayTime.setValueAtTime(0.15, now);
+            delayGain.gain.setValueAtTime(0.2, now);
+            masterGain.gain.setValueAtTime(0.3, now);
+            
+            // Banking success chord progression - C Major to F Major
+            const progression = [
+                // C Major chord
+                { freqs: [261.63, 329.63, 392.00], time: 0, duration: 0.6 },
+                // F Major chord  
+                { freqs: [349.23, 440.00, 523.25], time: 0.3, duration: 0.6 },
+                // Final triumph - high C major
+                { freqs: [523.25, 659.25, 783.99], time: 0.6, duration: 1.0 }
+            ];
+            
+            progression.forEach(chord => {
+                chord.freqs.forEach((freq, index) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    const filter = ctx.createBiquadFilter();
+                    
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(masterGain);
+                    
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + chord.time);
+                    
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(freq * 3, now + chord.time);
+                    filter.Q.setValueAtTime(2, now + chord.time);
+                    
+                    gain.gain.setValueAtTime(0.3, now + chord.time + index * 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + chord.time + chord.duration);
+                    
+                    osc.start(now + chord.time + index * 0.01);
+                    osc.stop(now + chord.time + chord.duration);
+                });
+            });
+            
+            // Add sparkle effect at the end
+            setTimeout(() => {
+                const sparkleFreqs = [1760, 2093, 2637]; // High frequency sparkles
+                sparkleFreqs.forEach((freq, index) => {
+                    const sparkle = ctx.createOscillator();
+                    const sparkleGain = ctx.createGain();
+                    
+                    sparkle.connect(sparkleGain);
+                    sparkleGain.connect(ctx.destination);
+                    
+                    sparkle.type = 'sine';
+                    sparkle.frequency.setValueAtTime(freq, now + 1.2 + index * 0.05);
+                    
+                    sparkleGain.gain.setValueAtTime(0.2, now + 1.2 + index * 0.05);
+                    sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + 1.2 + index * 0.05 + 0.3);
+                    
+                    sparkle.start(now + 1.2 + index * 0.05);
+                    sparkle.stop(now + 1.2 + index * 0.05 + 0.3);
+                });
+            }, 10);
+            
+            console.log('Wealthy success finale played');
+        } catch (error) {
+            console.warn('Error playing wealthy success finale:', error);
         }
     }
 }

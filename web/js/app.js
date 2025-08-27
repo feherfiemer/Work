@@ -40,12 +40,7 @@ class RServiceTracker {
                 }
             this.notifications.setDatabase(this.db);
             
-            // Schedule reminders after initialization
-            setTimeout(() => {
-                if (this.notifications && this.notifications.scheduleReminders) {
-                    this.notifications.scheduleReminders();
-                }
-            }, 2000);
+
             
             this.charts = new ChartsManager(this.db);
             
@@ -630,8 +625,6 @@ class RServiceTracker {
             if (saved) {
                 if (this.notifications) {
                     this.notifications.showToast('Notification settings saved successfully!', 'success');
-                    
-                    this.notifications.scheduleReminders();
                 }
                 
                 this.originalNotificationSettings = { ...newNotificationConfig };
@@ -2555,19 +2548,25 @@ class RServiceTracker {
         let deferredPrompt;
         let installBannerShown = false;
         
-        // Check if already installed or dismissed
+        // Check if already installed
         const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
                            window.navigator.standalone === true;
-        const isDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
+        
+        // Check if PWA is supported
+        const isPWASupported = 'serviceWorker' in navigator && 
+                              (window.matchMedia('(display-mode: standalone)').matches !== undefined || 
+                               window.navigator.standalone !== undefined);
         
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             
-            // Show install banner if conditions are met
-            if (!isInstalled && !isDismissed && !installBannerShown) {
-                this.showInstallRecommendation(deferredPrompt);
-                installBannerShown = true;
+            // Show install banner on every visit for supported browsers (removed dismissed check)
+            if (!isInstalled && !installBannerShown) {
+                setTimeout(() => {
+                    this.showInstallRecommendation(deferredPrompt);
+                    installBannerShown = true;
+                }, 3000); // Show after 3 seconds
             }
             
             // Legacy install button support
@@ -2593,13 +2592,19 @@ class RServiceTracker {
             }
         });
         
-        // Show banner after some user interaction if not shown yet
+        // Show PWA recommendation for all supported browsers on every visit
         setTimeout(() => {
-            if (!isInstalled && !isDismissed && !installBannerShown && deferredPrompt) {
-                this.showInstallRecommendation(deferredPrompt);
+            if (!installBannerShown && isPWASupported && !isInstalled) {
+                if (deferredPrompt) {
+                    // Chrome/Edge - with native install prompt
+                    this.showInstallRecommendation(deferredPrompt);
+                } else {
+                    // Safari/Firefox - show generic instructions
+                    this.showInstallRecommendationGeneric();
+                }
                 installBannerShown = true;
             }
-        }, 30000); // Show after 30 seconds if not shown yet
+        }, 5000); // Show after 5 seconds
     }
 
     showInstallRecommendation(deferredPrompt) {
@@ -2647,10 +2652,91 @@ class RServiceTracker {
 
     dismissInstallRecommendation() {
         this.hideInstallRecommendation();
-        localStorage.setItem('pwa-install-dismissed', 'true');
-        localStorage.setItem('pwa-install-dismissed-date', new Date().toISOString());
+        // Only dismiss for this session - show on every visit
+        sessionStorage.setItem('pwa-install-dismissed-session', 'true');
         
         this.notifications.showToast('You can still install the app from your browser menu if needed.', 'info', 5000);
+    }
+
+    showInstallRecommendationGeneric() {
+        // Check if already dismissed this session
+        if (sessionStorage.getItem('pwa-install-dismissed-session') === 'true') {
+            return;
+        }
+
+        const banner = document.getElementById('pwaInstallBanner');
+        if (!banner) return;
+        
+        // Update banner content for generic instructions
+        const bannerContent = banner.querySelector('.install-banner-content');
+        if (bannerContent) {
+            const userAgent = navigator.userAgent;
+            let instructions = '';
+            
+            if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+                // Safari instructions
+                instructions = `
+                    <div class="install-instructions">
+                        <h3><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h3>
+                        <p>Add this app to your home screen for easy access:</p>
+                        <ol>
+                            <li>Tap the Share button <i class="fas fa-share"></i></li>
+                            <li>Select "Add to Home Screen"</li>
+                            <li>Tap "Add" to confirm</li>
+                        </ol>
+                    </div>
+                `;
+            } else if (userAgent.includes('Firefox')) {
+                // Firefox instructions
+                instructions = `
+                    <div class="install-instructions">
+                        <h3><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h3>
+                        <p>Add this app for a better experience:</p>
+                        <ol>
+                            <li>Tap the menu button <i class="fas fa-bars"></i></li>
+                            <li>Select "Install"</li>
+                            <li>Confirm installation</li>
+                        </ol>
+                    </div>
+                `;
+            } else {
+                // Generic instructions
+                instructions = `
+                    <div class="install-instructions">
+                        <h3><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h3>
+                        <p>Get the best experience by installing this app on your device!</p>
+                        <p>Look for the install option in your browser menu.</p>
+                    </div>
+                `;
+            }
+            
+            bannerContent.innerHTML = instructions + `
+                <div class="install-banner-actions">
+                    <button id="dismissInstallBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Maybe Later
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Show banner with animation
+        banner.style.display = 'block';
+        setTimeout(() => banner.classList.add('show'), 100);
+        
+        // Handle dismiss button click
+        const dismissBtn = document.getElementById('dismissInstallBtn');
+        if (dismissBtn) {
+            dismissBtn.onclick = () => {
+                this.dismissInstallRecommendation();
+            };
+        }
+        
+        // Auto-hide after 60 seconds
+        setTimeout(() => {
+            if (banner.classList.contains('show')) {
+                this.dismissInstallRecommendation();
+            }
+        }, 60000);
     }
 
     triggerInstall(deferredPrompt) {

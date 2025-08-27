@@ -330,32 +330,31 @@ class CalendarManager {
                     </div>
                 `;
                 
-                if (isPastDate) {
-                    content += `
-                        <button class="force-paid-btn" data-date="${dateString}" style="
-                            margin-top: 1rem;
-                            width: 100%;
-                            padding: 0.75rem;
-                            background: linear-gradient(135deg, var(--success), #45a049);
-                            color: white;
-                            border: none;
-                            border-radius: var(--border-radius);
-                            cursor: pointer;
-                            font-family: var(--font-family);
-                            font-weight: 600;
-                            font-size: 0.9rem;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            gap: 0.5rem;
-                            box-shadow: var(--shadow-light);
-                            transition: all var(--transition-fast);
-                        ">
-                            <i class="fas fa-hand-holding-usd"></i>
-                            Force Mark as Paid
-                        </button>
-                    `;
-                }
+                // Add Force Paid button for all completed work (not just past dates)
+                content += `
+                    <button class="force-paid-btn" data-date="${dateString}" style="
+                        margin-top: 1rem;
+                        width: 100%;
+                        padding: 0.75rem;
+                        background: linear-gradient(135deg, var(--success), #45a049);
+                        color: white;
+                        border: none;
+                        border-radius: var(--border-radius);
+                        cursor: pointer;
+                        font-family: var(--font-family);
+                        font-weight: 600;
+                        font-size: 0.9rem;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                        box-shadow: var(--shadow-light);
+                        transition: all var(--transition-fast);
+                    ">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        Force Mark as Paid
+                    </button>
+                `;
             }
         } else {
             content += `
@@ -363,6 +362,32 @@ class CalendarManager {
                     <i class="fas fa-times-circle"></i>
                     <span>No Work Recorded</span>
                 </div>
+            `;
+            
+            // Add Mark as Done button for any date
+            content += `
+                <button class="mark-done-btn" data-date="${dateString}" style="
+                    margin-top: 1rem;
+                    width: 100%;
+                    padding: 0.75rem;
+                    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                    color: white;
+                    border: none;
+                    border-radius: var(--border-radius);
+                    cursor: pointer;
+                    font-family: var(--font-family);
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    box-shadow: var(--shadow-light);
+                    transition: all var(--transition-fast);
+                ">
+                    <i class="fas fa-check"></i>
+                    Mark as Done
+                </button>
             `;
         }
 
@@ -483,6 +508,51 @@ class CalendarManager {
             });
         }
 
+        // Add event listener for Mark as Done button
+        const markDoneBtn = modalContent.querySelector('.mark-done-btn');
+        if (markDoneBtn) {
+            markDoneBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                try {
+                    const targetDate = markDoneBtn.dataset.date || dateString;
+                    console.log('Mark as done button clicked for date:', targetDate);
+                    
+                    if (!targetDate) {
+                        console.error('No target date found');
+                        if (window.app && window.app.notifications) {
+                            window.app.notifications.showToast('Error: No date selected', 'error');
+                        }
+                        return;
+                    }
+                    
+                    markDoneBtn.disabled = true;
+                    markDoneBtn.style.background = 'linear-gradient(135deg, #ccc, #999)';
+                    markDoneBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    markDoneBtn.style.transform = 'scale(0.95)';
+                    
+                    closeModal();
+                    
+                    setTimeout(async () => {
+                        try {
+                            await this.handleMarkAsDone(targetDate);
+                        } catch (markDoneError) {
+                            console.error('Error marking work as done:', markDoneError);
+                            if (window.app && window.app.notifications) {
+                                window.app.notifications.showToast('Error marking work as done. Please try again.', 'error');
+                            }
+                        }
+                    }, 200);
+                    
+                } catch (error) {
+                    console.error('Error in mark as done button handler:', error);
+                    if (window.app && window.app.notifications) {
+                        window.app.notifications.showToast('Error marking work as done', 'error');
+                    }
+                }
+            });
+        }
 
         const handleEsc = (e) => {
             if (e.key === 'Escape') {
@@ -611,22 +681,36 @@ class CalendarManager {
                 return;
             }
 
-            const paymentAmount = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-            const today = new Date();
-            const paymentDate = today.getFullYear() + '-' + 
-                              String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-                              String(today.getDate()).padStart(2, '0');
-            
-            console.log('Adding payment:', { amount: paymentAmount, workDates: [dateString], paymentDate });
-            await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
-            console.log('Force payment added successfully');
+            // Store the date for use in payment processing
+            if (window.app) {
+                window.app.forcePaidDateString = dateString;
+            }
 
-            if (window.app && window.app.notifications) {
-                window.app.notifications.showToast(`Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
-                try {
-                    window.app.notifications.playSound('paid');
-                } catch (soundError) {
-                    console.log('Sound playback failed (non-critical):', soundError);
+            // Show the payment selector dialog instead of directly processing payment
+            if (window.app && typeof window.app.showPaymentModal === 'function') {
+                console.log('Opening payment selector dialog for force payment');
+                window.app.showPaymentModal();
+                return; // Exit early since payment will be handled by the modal
+            } else {
+                // Fallback to direct payment if payment modal is not available
+                console.warn('Payment modal not available, using direct payment');
+                const paymentAmount = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+                const today = new Date();
+                const paymentDate = today.getFullYear() + '-' + 
+                                  String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                                  String(today.getDate()).padStart(2, '0');
+                
+                console.log('Adding direct payment:', { amount: paymentAmount, workDates: [dateString], paymentDate });
+                await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
+                console.log('Force payment added successfully');
+
+                if (window.app && window.app.notifications) {
+                    window.app.notifications.showToast(`Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
+                    try {
+                        window.app.notifications.playSound('paid');
+                    } catch (soundError) {
+                        console.log('Sound playback failed (non-critical):', soundError);
+                    }
                 }
             }
 
@@ -690,6 +774,97 @@ class CalendarManager {
                 date.getFullYear() === this.currentDate.getFullYear()) {
             }
         });
+    }
+
+    async handleMarkAsDone(dateString) {
+        try {
+            console.log('Processing mark as done for date:', dateString);
+            
+            if (!dateString) {
+                throw new Error('No date provided for marking as done');
+            }
+
+            if (!this.db) {
+                throw new Error('Database not available');
+            }
+            
+            // Check if work is already recorded for this date
+            const existingRecord = await this.db.getWorkRecord(dateString);
+            if (existingRecord && existingRecord.status === 'completed') {
+                if (window.app && window.app.notifications) {
+                    window.app.notifications.showToast('Work already marked as done for this date!', 'warning');
+                }
+                return;
+            }
+            
+            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+            
+            // Add work record
+            await this.db.addWorkRecord(dateString, 'completed', dailyWage);
+            console.log('Work record added successfully');
+
+            if (window.app && window.app.notifications) {
+                window.app.notifications.showToast(`Work marked as done for ${new Date(dateString).toLocaleDateString()}! Earned ₹${dailyWage}`, 'success');
+                try {
+                    window.app.notifications.playSound('done');
+                } catch (soundError) {
+                    console.log('Sound playback failed (non-critical):', soundError);
+                }
+            }
+
+            // Refresh calendar and app state
+            try {
+                await this.loadData();
+                
+                const gridElement = document.getElementById('calendarGrid');
+                if (gridElement) {
+                    gridElement.innerHTML = '';
+                }
+                this.render();
+                
+                console.log('Calendar refreshed after marking as done');
+
+                if (window.app && typeof window.app.updateDashboard === 'function') {
+                    try {
+                        window.app.currentStats = await this.db.getEarningsStats();
+                        window.app.updateDashboard();
+                        await window.app.updatePendingUnpaidDates();
+                        await window.app.updatePaidButtonVisibility();
+                        
+                        if (typeof window.app.checkPendingPayments === 'function') {
+                            await window.app.checkPendingPayments();
+                        }
+                        
+                        console.log('App dashboard updated after marking as done');
+                    } catch (appError) {
+                        console.error('Error updating app after marking as done:', appError);
+                    }
+                }
+
+                // Update charts if available
+                if (window.app && window.app.charts && typeof window.app.charts.updateCharts === 'function') {
+                    try {
+                        await window.app.charts.updateCharts();
+                        console.log('Charts updated after marking as done');
+                    } catch (chartError) {
+                        console.error('Error updating charts:', chartError);
+                    }
+                }
+
+            } catch (refreshError) {
+                console.error('Error refreshing after marking as done:', refreshError);
+                if (window.app && window.app.notifications) {
+                    window.app.notifications.showToast('Work saved but display may need manual refresh', 'warning');
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error in handleMarkAsDone:', error);
+            if (window.app && window.app.notifications) {
+                window.app.notifications.showToast('Error marking work as done: ' + error.message, 'error');
+            }
+            throw error;
+        }
     }
 }
 
