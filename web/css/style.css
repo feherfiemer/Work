@@ -4422,37 +4422,71 @@ button.disabled:hover {
     margin-bottom: 0.5rem;
   }
 }
-/* ===== PWA INSTALL BANNER ===== */
+/* ===== PREMIUM PWA INSTALL BANNER ===== */
 .pwa-install-banner {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  background: linear-gradient(135deg, 
+    rgba(33, 150, 243, 0.95), 
+    rgba(33, 150, 243, 0.98)
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: white;
   z-index: var(--z-toast);
-  box-shadow: var(--shadow-medium);
+  box-shadow: 
+    0 8px 32px rgba(33, 150, 243, 0.3),
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   transform: translateY(-100%);
-  transition: transform var(--transition-medium);
+  transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .pwa-install-banner.show {
   transform: translateY(0);
+  animation: slideInDown 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+@keyframes slideInDown {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .install-banner-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .install-banner-icon {
-  font-size: 1.5rem;
-  opacity: 0.9;
+  font-size: 2rem;
+  opacity: 0.95;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .install-banner-text {
@@ -4461,15 +4495,19 @@ button.disabled:hover {
 }
 
 .install-banner-text h4 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: -0.02em;
 }
 
 .install-banner-text p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   opacity: 0.9;
+  font-weight: 400;
+  line-height: 1.4;
 }
 
 .install-banner-actions {
@@ -4479,34 +4517,70 @@ button.disabled:hover {
 }
 
 .install-btn {
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9), 
+    rgba(255, 255, 255, 0.8)
+  );
   border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  border-radius: var(--border-radius-small);
-  transition: all var(--transition-fast);
+  color: var(--primary);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .install-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 1), 
+    rgba(255, 255, 255, 0.95)
+  );
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.install-btn:active {
   transform: translateY(-1px);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .dismiss-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  padding: 0.5rem;
-  width: 36px;
-  height: 36px;
+  padding: 0.75rem;
+  font-size: 1rem;
   border-radius: 50%;
-  transition: all var(--transition-fast);
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .dismiss-btn:hover {
   background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dismiss-btn:active {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive install banner */

@@ -1031,7 +1031,7 @@ class RServiceTracker {
 
     resetSettings() {
         this.notifications.showConfirmation(
-            'Reset all settings to defaults?\n\n• Daily wage: ₹25\n• Payment period: 4 days\n• Max amount: ₹500',
+            'Are you sure you want to make the settings to default?',
             () => {
                 try {
                     if (window.ConfigManager) {
@@ -1146,10 +1146,13 @@ class RServiceTracker {
             }
         });
 
-        // Close tooltip on scroll
+        // Update tooltip position on scroll instead of hiding
         window.addEventListener('scroll', () => {
             if (earningsInsightTooltip && earningsInsightTooltip.classList.contains('show')) {
-                this.hideEarningsInsight();
+                const earningsInsightBtn = document.getElementById('earningsInsightBtn');
+                if (earningsInsightBtn) {
+                    this.positionTooltip(earningsInsightTooltip, earningsInsightBtn);
+                }
             }
         });
     }
@@ -1191,7 +1194,7 @@ class RServiceTracker {
     }
 
     positionTooltip(tooltip, targetElement) {
-        // Get target button position
+        // Get target button position relative to viewport
         const targetRect = targetElement.getBoundingClientRect();
         const tooltipContent = tooltip.querySelector('.tooltip-content');
         const tooltipArrow = tooltip.querySelector('.tooltip-arrow');
@@ -1295,13 +1298,14 @@ class RServiceTracker {
             
             // Calculate exact positioning based on tooltip position relative to target
             if (position === 'bottom' || position === 'top') {
-                // Horizontal arrow positioning - point exactly to icon center
-                let arrowLeft = targetCenterX - tooltipLeft;
+                // Horizontal arrow positioning - point exactly to button center
+                const targetCenterRelativeToTooltip = targetCenterX - tooltipLeft;
+                let arrowLeft = targetCenterRelativeToTooltip - 4; // Center arrow (arrow is 8px wide)
                 
                 // Ensure arrow stays within tooltip bounds with proper margins
-                const arrowWidth = 8; // Arrow width from CSS
-                const minMargin = arrowWidth + 2;
-                const maxMargin = tooltipRect.width - arrowWidth - 2;
+                const arrowWidth = 8;
+                const minMargin = 6;
+                const maxMargin = tooltipRect.width - arrowWidth - 6;
                 
                 arrowLeft = Math.max(minMargin, Math.min(maxMargin, arrowLeft));
                 
@@ -1310,15 +1314,16 @@ class RServiceTracker {
                 tooltipArrow.style.right = '';
                 tooltipArrow.style.bottom = '';
                 
-                console.log(`[Tooltip] Arrow positioned at ${arrowLeft}px (target center: ${targetCenterX}, tooltip left: ${tooltipLeft})`);
+                console.log(`[Tooltip] Arrow positioned at ${arrowLeft}px pointing to button center (${targetCenterX})`);
             } else if (position === 'left' || position === 'right') {
-                // Vertical arrow positioning - point exactly to icon center
-                let arrowTop = targetCenterY - tooltipTop;
+                // Vertical arrow positioning - point exactly to button center
+                const targetCenterRelativeToTooltip = targetCenterY - tooltipTop;
+                let arrowTop = targetCenterRelativeToTooltip - 4; // Center arrow (arrow is 8px tall)
                 
                 // Ensure arrow stays within tooltip bounds with proper margins
-                const arrowHeight = 8; // Arrow height from CSS
-                const minMargin = arrowHeight + 2;
-                const maxMargin = tooltipRect.height - arrowHeight - 2;
+                const arrowHeight = 8;
+                const minMargin = 6;
+                const maxMargin = tooltipRect.height - arrowHeight - 6;
                 
                 arrowTop = Math.max(minMargin, Math.min(maxMargin, arrowTop));
                 
@@ -1327,7 +1332,7 @@ class RServiceTracker {
                 tooltipArrow.style.right = '';
                 tooltipArrow.style.bottom = '';
                 
-                console.log(`[Tooltip] Arrow positioned at ${arrowTop}px (target center: ${targetCenterY}, tooltip top: ${tooltipTop})`);
+                console.log(`[Tooltip] Arrow positioned at ${arrowTop}px pointing to button center (${targetCenterY})`);
             }
         }
     }

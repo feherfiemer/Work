@@ -323,17 +323,33 @@ class DatabaseManager {
             
             let currentStreak = 0;
             let expectedDate = new Date();
-            expectedDate.setDate(expectedDate.getDate() - 1); // Start from yesterday
+            const today = expectedDate.toISOString().split('T')[0];
             
+            // Check if today has work completed
+            const todayRecord = sortedRecords.find(record => record.date === today);
+            if (todayRecord) {
+                currentStreak = 1;
+                expectedDate.setDate(expectedDate.getDate() - 1); // Move to yesterday
+            } else {
+                expectedDate.setDate(expectedDate.getDate() - 1); // Start from yesterday
+            }
+            
+            // Count consecutive days working backwards
             for (const record of sortedRecords) {
                 const recordDate = new Date(record.date);
                 const expectedDateStr = expectedDate.toISOString().split('T')[0];
                 const recordDateStr = recordDate.toISOString().split('T')[0];
                 
+                // Skip today's record if we already counted it
+                if (recordDateStr === today && todayRecord) {
+                    continue;
+                }
+                
                 if (recordDateStr === expectedDateStr) {
                     currentStreak++;
                     expectedDate.setDate(expectedDate.getDate() - 1);
-                } else {
+                } else if (recordDateStr < expectedDateStr) {
+                    // There's a gap in the streak
                     break;
                 }
             }
@@ -395,30 +411,32 @@ class DatabaseManager {
             let totalWorkCompletedForAdvance = 0;
             
             for (const payment of advancePayments) {
-                const daysCoveredByPayment = Math.ceil(payment.amount / amounts.dailyWage);
-                
-                const workDatesCoveredByPayment = payment.workDates || [];
-                
-                const completedWorkForThisPayment = workDatesCoveredByPayment.filter(workDate => {
-                    const workRecord = workRecords.find(record => record.date === workDate);
-                    return workRecord && workRecord.status === 'completed';
-                }).length;
-                
-                const workDoneBeforePayment = workRecords.filter(record => {
-                    return record.status === 'completed' && 
-                           new Date(record.date) <= new Date(payment.date) &&
-                           workDatesCoveredByPayment.includes(record.date);
-                }).length;
-                
-                const workValueAtPayment = workDoneBeforePayment * amounts.dailyWage;
-                const advanceForThisPayment = Math.max(0, payment.amount - workValueAtPayment);
-                
-                if (advanceForThisPayment > 0) {
-                    totalAdvanceAmount += advanceForThisPayment;
-                    totalWorkCoveredByAdvance += daysCoveredByPayment; // Total days paid for
-                    totalWorkCompletedForAdvance += completedWorkForThisPayment; // Work actually completed (including work done after payment)
-                }
+                // For advance payments, the entire amount is considered advance
+                totalAdvanceAmount += payment.amount;
+                const daysAdvancedFor = Math.ceil(payment.amount / amounts.dailyWage);
+                totalWorkCoveredByAdvance += daysAdvancedFor;
             }
+            
+            // Calculate how much work has been completed after receiving advance payments
+            // that counts towards paying off the advance
+            const allWorkAfterAdvance = workRecords.filter(record => {
+                if (record.status !== 'completed') return false;
+                
+                // Check if this work was done after any advance payment
+                const recordDate = new Date(record.date);
+                const hasAdvancePaymentBefore = advancePayments.some(payment => 
+                    new Date(payment.paymentDate) <= recordDate
+                );
+                
+                // Don't count work that's already been paid for in regular payments
+                const isAlreadyPaidInRegularPayment = payments.some(payment => 
+                    !payment.isAdvance && payment.workDates && payment.workDates.includes(record.date)
+                );
+                
+                return hasAdvancePaymentBefore && !isAlreadyPaidInRegularPayment;
+            });
+            
+            totalWorkCompletedForAdvance = allWorkAfterAdvance.length;
             
             const workRequiredForAdvance = totalWorkCoveredByAdvance; // Days paid for
             const workCompletedForAdvance = totalWorkCompletedForAdvance; // Days actually completed
@@ -490,6 +508,43 @@ class DatabaseManager {
             await this.performTransaction(this.stores.settings, 'readwrite', (store) => {
                 return store.clear();
             });
+            
+            console.log('Clearing localStorage data...');
+            // Clear all app-related localStorage items including transaction IDs
+            const localStorageKeys = [
+                'r-service-user-config',
+                'selected-color',
+                'selected-mode',
+                'pwa-install-dismissed',
+                'pwa-install-dismissed-date',
+                'welcomeNotificationShown',
+                'lastSessionDate',
+                'transaction-ids',
+                'payment-transaction-ids'
+            ];
+            
+            localStorageKeys.forEach(key => {
+                try {
+                    localStorage.removeItem(key);
+                    console.log(`Cleared localStorage key: ${key}`);
+                } catch (error) {
+                    console.warn(`Failed to clear localStorage key ${key}:`, error);
+                }
+            });
+            
+            // Clear any keys that start with app-specific prefixes
+            const appPrefixes = ['r-service-', 'rservice-', 'work-tracker-', 'payment-', 'transaction-'];
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && appPrefixes.some(prefix => key.startsWith(prefix))) {
+                    try {
+                        localStorage.removeItem(key);
+                        console.log(`Cleared app-specific localStorage key: ${key}`);
+                    } catch (error) {
+                        console.warn(`Failed to clear app-specific key ${key}:`, error);
+                    }
+                }
+            }
             
             console.log('All data cleared successfully');
             return true;
