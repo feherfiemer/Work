@@ -1267,9 +1267,9 @@ class RServiceTracker {
             const tooltipLeft = parseFloat(tooltip.style.left);
             const tooltipTop = parseFloat(tooltip.style.top);
             
-            // Make arrow visible when positioning
-            tooltipArrow.style.opacity = '1';
-            tooltipArrow.style.visibility = 'visible';
+            // Let CSS handle arrow visibility timing - remove inline styles
+            tooltipArrow.style.opacity = '';
+            tooltipArrow.style.visibility = '';
             
             if (position === 'bottom' || position === 'top') {
                 // Horizontal arrow positioning
@@ -1294,15 +1294,15 @@ class RServiceTracker {
         if (tooltip) {
             tooltip.classList.remove('show', 'top', 'bottom', 'left', 'right');
             
-            // Reset arrow positioning styles and hide it completely
+            // Reset arrow positioning styles - let CSS handle visibility
             const tooltipArrow = tooltip.querySelector('.tooltip-arrow');
             if (tooltipArrow) {
                 tooltipArrow.style.left = '';
                 tooltipArrow.style.top = '';
                 tooltipArrow.style.right = '';
                 tooltipArrow.style.bottom = '';
-                tooltipArrow.style.opacity = '0';
-                tooltipArrow.style.visibility = 'hidden';
+                tooltipArrow.style.opacity = '';
+                tooltipArrow.style.visibility = '';
             }
         }
     }
