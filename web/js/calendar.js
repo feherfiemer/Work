@@ -397,8 +397,8 @@ class CalendarManager {
             }
         }
         
-        // Add Force Paid button for any past or today date (regardless of work completion)
-        if (isPastOrTodayDate) {
+        // Add Force Paid button for any past or today date where no work record exists
+        if (isPastOrTodayDate && (!workRecord || workRecord.status !== 'completed')) {
             content += `
                 <button class="force-paid-btn" data-date="${dateString}" style="
                     margin-top: 0.5rem;
@@ -741,10 +741,7 @@ class CalendarManager {
                 throw new Error('Database not available');
             }
             
-            // Allow force payment for any date, not just completed work
-            const workRecord = await this.db.getWorkRecord(dateString);
-            console.log('Work record for force payment:', workRecord);
-
+            // Check if already paid first
             const payments = await this.db.getAllPayments();
             const isAlreadyPaid = payments.some(payment => 
                 payment.workDates && payment.workDates.includes(dateString)
@@ -755,6 +752,16 @@ class CalendarManager {
                     window.app.notifications.showToast('This work day is already paid!', 'warning');
                 }
                 return;
+            }
+
+            // ALWAYS ensure there's a work record before processing payment
+            let workRecord = await this.db.getWorkRecord(dateString);
+            if (!workRecord) {
+                // Create work record if it doesn't exist
+                const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+                await this.db.addWorkRecord(dateString, dailyWage, 'completed');
+                console.log('Created work record for force payment date:', dateString);
+                workRecord = { date: dateString, wage: dailyWage, status: 'completed' };
             }
 
             // Store the date for use in payment processing
@@ -770,15 +777,6 @@ class CalendarManager {
             } else {
                 // Fallback to direct payment if payment modal is not available
                 console.warn('Payment modal not available, using direct payment');
-                
-                // Ensure there's a work record for the date being force paid
-                let workRecord = await this.db.getWorkRecord(dateString);
-                if (!workRecord) {
-                    // Create work record if it doesn't exist
-                    const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-                    await this.db.addWorkRecord(dateString, dailyWage, 'completed');
-                    console.log('Created work record for force payment date:', dateString);
-                }
                 
                 const paymentAmount = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
                 const today = new Date();

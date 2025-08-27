@@ -1121,11 +1121,22 @@ class RServiceTracker {
         const earningsInsightBtn = document.getElementById('earningsInsightBtn');
         const earningsInsightTooltip = document.getElementById('earningsInsightTooltip');
 
+        console.log('[Tooltip] Setting up earnings insight:', {
+            earningsInsightBtn: !!earningsInsightBtn,
+            earningsInsightTooltip: !!earningsInsightTooltip
+        });
+
         if (earningsInsightBtn && earningsInsightTooltip) {
             earningsInsightBtn.addEventListener('click', async (e) => {
+                console.log('[Tooltip] Earnings insight button clicked');
                 e.stopPropagation();
                 this.createRippleEffect(e.currentTarget, e);
-                await this.toggleEarningsInsight(e.target);
+                await this.toggleEarningsInsight(e.currentTarget); // Use currentTarget instead of target
+            });
+        } else {
+            console.error('[Tooltip] Earnings insight elements not found!', {
+                earningsInsightBtn: !!earningsInsightBtn,
+                earningsInsightTooltip: !!earningsInsightTooltip
             });
         }
 
@@ -1166,31 +1177,55 @@ class RServiceTracker {
 
     async showEarningsInsight(targetElement) {
         try {
+            console.log('[Tooltip] showEarningsInsight called with target:', targetElement);
             const stats = await this.db.getEarningsStats();
             
             // Generate professional status message
             const statusMessage = await this.generateEarningsStatusMessage(stats);
+            console.log('[Tooltip] Generated status message:', statusMessage);
             
             // Update tooltip content
             const messageEl = document.getElementById('earningsStatusMessage');
             if (messageEl) {
                 messageEl.textContent = statusMessage;
+                console.log('[Tooltip] Updated message element');
+            } else {
+                console.error('[Tooltip] Message element not found');
             }
             
             // Position and show tooltip
             const tooltip = document.getElementById('earningsInsightTooltip');
+            console.log('[Tooltip] Tooltip element found:', !!tooltip);
+            console.log('[Tooltip] Target element provided:', !!targetElement);
+            
             if (tooltip && targetElement) {
                 // Ensure tooltip is properly initialized
                 tooltip.style.display = 'block';
                 tooltip.style.visibility = 'visible';
                 tooltip.style.opacity = '1';
+                tooltip.style.zIndex = '10000';
+                tooltip.style.position = 'fixed';
+                
+                console.log('[Tooltip] Pre-positioning tooltip styles applied');
                 
                 this.positionTooltip(tooltip, targetElement);
                 tooltip.classList.add('show');
                 
-                console.log('[Tooltip] Earnings insight tooltip shown');
+                console.log('[Tooltip] Earnings insight tooltip shown with class:', tooltip.className);
+                console.log('[Tooltip] Final tooltip styles:', {
+                    display: tooltip.style.display,
+                    visibility: tooltip.style.visibility,
+                    opacity: tooltip.style.opacity,
+                    position: tooltip.style.position,
+                    top: tooltip.style.top,
+                    left: tooltip.style.left,
+                    zIndex: tooltip.style.zIndex
+                });
             } else {
-                console.error('[Tooltip] Tooltip element or target element not found');
+                console.error('[Tooltip] Tooltip element or target element not found', {
+                    tooltip: !!tooltip,
+                    targetElement: !!targetElement
+                });
             }
         } catch (error) {
             console.error('Error showing earnings insight:', error);
@@ -2118,9 +2153,13 @@ class RServiceTracker {
                 await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
                 
                 // Clear the force paid date
+                const processedDate = this.forcePaidDateString;
                 this.forcePaidDateString = null;
                 
-                console.log('Force payment recorded successfully');
+                console.log('Force payment recorded successfully for date:', processedDate);
+                
+                // Trigger additional notifications for force payments
+                this.notifications.showToast(`Work marked as done and paid for ${new Date(processedDate).toLocaleDateString()}!`, 'success', 6000);
             } else {
                 // Normal payment processing
                 const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
@@ -2718,15 +2757,35 @@ class RServiceTracker {
             }
         });
         
+        // Development: Clear PWA states for testing (remove in production)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('[PWA] Development mode detected - clearing PWA states for testing');
+            localStorage.removeItem('pwa-install-closed');
+            localStorage.removeItem('pwa-install-dismissed');
+        }
+        
         // Show banner logic: first visit, every visit unless closed, or payment days
         setTimeout(async () => {
-            if (!isInstalled && !installBannerShown && !isDismissed) {
+            // Recalculate conditions after potential localStorage clear
+            const finalIsDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
+            const finalIsClosed = localStorage.getItem('pwa-install-closed') === 'true';
+            
+            console.log('[PWA] Checking banner display conditions:', {
+                isInstalled,
+                installBannerShown,
+                isDismissed: finalIsDismissed,
+                isClosed: finalIsClosed,
+                hasDeferredPrompt: !!deferredPrompt
+            });
+            
+            if (!isInstalled && !installBannerShown && !finalIsDismissed) {
                 const shouldShowOnPaymentDay = await this.shouldShowPWAOnPaymentDay();
                 
                 // Show banner if:
                 // 1. Not closed at all (first time or subsequent visits)
                 // 2. Or it's a payment day (even if closed before)
-                if (!isClosed || shouldShowOnPaymentDay) {
+                if (!finalIsClosed || shouldShowOnPaymentDay) {
+                    console.log('[PWA] Showing PWA banner');
                     // Only show if we have the prompt or it's a generic prompt
                     if (deferredPrompt) {
                         this.showInstallRecommendation(deferredPrompt);
@@ -2736,39 +2795,65 @@ class RServiceTracker {
                     installBannerShown = true;
                     
                     // If showing on payment day, clear the closed status for next time
-                    if (shouldShowOnPaymentDay && isClosed) {
+                    if (shouldShowOnPaymentDay && finalIsClosed) {
                         localStorage.removeItem('pwa-install-closed');
                         localStorage.removeItem('pwa-install-closed-date');
                         console.log('[PWA] Showing PWA banner on payment day - cleared closed status');
                     }
+                } else {
+                    console.log('[PWA] Banner not shown - closed or other conditions not met');
                 }
+            } else {
+                console.log('[PWA] Banner not shown - already installed, shown, or dismissed');
             }
-        }, 3000); // Show after 3 seconds on first visit
+        }, 1000); // Show after 1 second on first visit (reduced from 3 seconds)
     }
 
     showInstallRecommendation(deferredPrompt) {
+        console.log('[PWA] showInstallRecommendation called');
         const banner = document.getElementById('pwaInstallBanner');
         const installBtn = document.getElementById('installAppBtn');
         const closeBtn = document.getElementById('closeInstallBtn');
         
-        if (!banner) return;
+        console.log('[PWA] Elements found:', {
+            banner: !!banner,
+            installBtn: !!installBtn,
+            closeBtn: !!closeBtn
+        });
+        
+        if (!banner) {
+            console.error('[PWA] PWA install banner not found!');
+            return;
+        }
         
         // Show banner with animation
         banner.style.display = 'block';
+        banner.style.visibility = 'visible';
+        banner.style.opacity = '1';
         setTimeout(() => banner.classList.add('show'), 100);
+        
+        console.log('[PWA] Banner displayed with classes:', banner.className);
         
         // Handle install button click
         if (installBtn) {
+            console.log('[PWA] Setting up install button click handler');
             installBtn.onclick = () => {
+                console.log('[PWA] Install button clicked');
                 this.triggerInstall(deferredPrompt);
             };
+        } else {
+            console.error('[PWA] Install button not found!');
         }
         
         // Handle close button click
         if (closeBtn) {
+            console.log('[PWA] Setting up close button click handler');
             closeBtn.onclick = () => {
+                console.log('[PWA] Close button clicked');
                 this.closeInstallRecommendation();
             };
+        } else {
+            console.error('[PWA] Close button not found!');
         }
         
         // Auto-hide after 60 seconds
