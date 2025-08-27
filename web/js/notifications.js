@@ -477,12 +477,14 @@ class NotificationManager {
             setTimeout(() => this.createAchievementBells(), 600);
             setTimeout(() => this.createSuccessHarmony(), 900);
         } else if (soundType === 'paid') {
-            // Ultra-premium payment sound sequence with luxury elements
+            // Ultra-premium payment sound sequence with enhanced luxury elements
             this.playEnhancedPaymentSound();
-            setTimeout(() => this.createCashRegisterDeluxe(), 400);
-            setTimeout(() => this.createLuxuryConfirmation(), 800);
-            setTimeout(() => this.createPaymentFinale(), 1200);
-            setTimeout(() => this.createPremiumReverbTail(), 1600);
+            setTimeout(() => this.createCashRegisterDeluxe(), 300);
+            setTimeout(() => this.createLuxuryConfirmation(), 700);
+            setTimeout(() => this.createMoneyCountingEffect(), 1100);
+            setTimeout(() => this.createPaymentFinale(), 1500);
+            setTimeout(() => this.createPremiumReverbTail(), 1900);
+            setTimeout(() => this.createGoldenChime(), 2300);
         }
     }
 
@@ -1846,30 +1848,118 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Soft reverb tail
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            const filter = ctx.createBiquadFilter();
+            // Enhanced reverb tail with multiple layers
+            const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5
             
-            osc.connect(filter);
-            filter.connect(gain);
-            gain.connect(ctx.destination);
-            
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(523.25, now); // C5
-            osc.frequency.exponentialRampToValueAtTime(261.63, now + 1.5); // C4
-            
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(2000, now);
-            filter.frequency.exponentialRampToValueAtTime(500, now + 1.5);
-            
-            gain.gain.setValueAtTime(0.05, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-            
-            osc.start(now);
-            osc.stop(now + 1.5);
+            frequencies.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + index * 0.1);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.5, now + 2.0);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(3000, now + index * 0.1);
+                filter.frequency.exponentialRampToValueAtTime(800, now + 2.0);
+                filter.Q.setValueAtTime(2, now + index * 0.1);
+                
+                gain.gain.setValueAtTime(0.04, now + index * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+                
+                osc.start(now + index * 0.1);
+                osc.stop(now + 2.0);
+            });
         } catch (error) {
             console.warn('Error creating premium reverb tail:', error);
+        }
+    }
+
+    createMoneyCountingEffect() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Simulate money counting with rapid coin sounds
+            const coinFrequencies = [880, 1047, 1318, 1568, 1760]; // A5 to A6
+            
+            coinFrequencies.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + index * 0.08);
+                
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(freq * 1.5, now + index * 0.08);
+                filter.Q.setValueAtTime(3, now + index * 0.08);
+                
+                gain.gain.setValueAtTime(0.06, now + index * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 0.15);
+                
+                osc.start(now + index * 0.08);
+                osc.stop(now + index * 0.08 + 0.15);
+            });
+        } catch (error) {
+            console.warn('Error creating money counting effect:', error);
+        }
+    }
+
+    createGoldenChime() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Golden luxury chime with rich harmonics
+            const fundamentals = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+            
+            fundamentals.forEach((fundamental, index) => {
+                // Create multiple harmonics for each fundamental
+                for (let harmonic = 1; harmonic <= 3; harmonic++) {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    const filter = ctx.createBiquadFilter();
+                    
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.type = 'sine';
+                    const frequency = fundamental * harmonic;
+                    osc.frequency.setValueAtTime(frequency, now + index * 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(frequency * 0.99, now + index * 0.15 + 1.5);
+                    
+                    filter.type = 'peaking';
+                    filter.frequency.setValueAtTime(frequency * 2, now + index * 0.15);
+                    filter.Q.setValueAtTime(8, now + index * 0.15);
+                    filter.gain.setValueAtTime(6, now + index * 0.15);
+                    
+                    const volume = 0.03 / harmonic; // Decrease volume for higher harmonics
+                    gain.gain.setValueAtTime(volume, now + index * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.15 + 1.8);
+                    
+                    osc.start(now + index * 0.15);
+                    osc.stop(now + index * 0.15 + 1.8);
+                }
+            });
+            
+            console.log('Golden chime effect created');
+        } catch (error) {
+            console.warn('Error creating golden chime:', error);
         }
     }
 

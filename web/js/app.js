@@ -270,7 +270,6 @@ class RServiceTracker {
         const paidBtn = document.getElementById('paidBtn');
         if (paidBtn) {
             paidBtn.addEventListener('click', () => {
-                this.notifications.playSound('paid');
                 this.handlePaidClick();
             });
         }
@@ -1283,7 +1282,7 @@ class RServiceTracker {
         tooltip.style.top = `${top}px`;
         tooltip.classList.add(position);
         
-        // Dynamic arrow positioning - always point to the icon
+        // Enhanced arrow positioning - precisely point to the icon center
         if (tooltipArrow) {
             const targetCenterX = targetRect.left + (targetRect.width / 2);
             const targetCenterY = targetRect.top + (targetRect.height / 2);
@@ -1294,20 +1293,41 @@ class RServiceTracker {
             tooltipArrow.style.opacity = '';
             tooltipArrow.style.visibility = '';
             
+            // Calculate exact positioning based on tooltip position relative to target
             if (position === 'bottom' || position === 'top') {
-                // Horizontal arrow positioning
-                const arrowLeft = Math.max(8, Math.min(tooltipRect.width - 16, targetCenterX - tooltipLeft));
+                // Horizontal arrow positioning - point exactly to icon center
+                let arrowLeft = targetCenterX - tooltipLeft;
+                
+                // Ensure arrow stays within tooltip bounds with proper margins
+                const arrowWidth = 8; // Arrow width from CSS
+                const minMargin = arrowWidth + 2;
+                const maxMargin = tooltipRect.width - arrowWidth - 2;
+                
+                arrowLeft = Math.max(minMargin, Math.min(maxMargin, arrowLeft));
+                
                 tooltipArrow.style.left = `${arrowLeft}px`;
                 tooltipArrow.style.top = '';
                 tooltipArrow.style.right = '';
                 tooltipArrow.style.bottom = '';
+                
+                console.log(`[Tooltip] Arrow positioned at ${arrowLeft}px (target center: ${targetCenterX}, tooltip left: ${tooltipLeft})`);
             } else if (position === 'left' || position === 'right') {
-                // Vertical arrow positioning
-                const arrowTop = Math.max(8, Math.min(tooltipRect.height - 16, targetCenterY - tooltipTop));
+                // Vertical arrow positioning - point exactly to icon center
+                let arrowTop = targetCenterY - tooltipTop;
+                
+                // Ensure arrow stays within tooltip bounds with proper margins
+                const arrowHeight = 8; // Arrow height from CSS
+                const minMargin = arrowHeight + 2;
+                const maxMargin = tooltipRect.height - arrowHeight - 2;
+                
+                arrowTop = Math.max(minMargin, Math.min(maxMargin, arrowTop));
+                
                 tooltipArrow.style.top = `${arrowTop}px`;
                 tooltipArrow.style.left = '';
                 tooltipArrow.style.right = '';
                 tooltipArrow.style.bottom = '';
+                
+                console.log(`[Tooltip] Arrow positioned at ${arrowTop}px (target center: ${targetCenterY}, tooltip top: ${tooltipTop})`);
             }
         }
     }
@@ -2549,7 +2569,7 @@ class RServiceTracker {
         });
     }
 
-    handleURLParameters() {
+    async handleURLParameters() {
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const action = urlParams.get('action');
@@ -2557,35 +2577,83 @@ class RServiceTracker {
             if (action) {
                 console.log('[PWA] Processing action from URL:', action);
                 
-                // Wait a moment for the UI to be fully loaded
+                // Wait a moment for the UI to be fully loaded and data to be available
                 setTimeout(async () => {
                     switch (action) {
                         case 'mark-done':
-                            console.log('[PWA] Executing mark as done from shortcut');
-                            await this.handleDoneClick();
-                            // Clear the URL parameter after execution
+                            console.log('[PWA] Checking if mark as done is available...');
+                            const canMarkDone = await this.isMarkDoneAvailable();
+                            if (canMarkDone) {
+                                console.log('[PWA] Executing mark as done from shortcut');
+                                await this.handleDoneClick();
+                                this.notifications.showToast('Work marked as done via PWA shortcut!', 'success');
+                            } else {
+                                console.log('[PWA] Mark as done not available - work already completed today');
+                                this.notifications.showToast('Work already completed for today!', 'info');
+                            }
                             this.clearURLParameters();
                             break;
                             
                         case 'mark-paid':
-                            console.log('[PWA] Executing mark as paid from shortcut');
-                            await this.handlePaidClick();
+                            console.log('[PWA] Checking if mark as paid is available...');
+                            const canMarkPaid = await this.isMarkPaidAvailable();
+                            if (canMarkPaid) {
+                                console.log('[PWA] Executing mark as paid from shortcut');
+                                await this.handlePaidClick();
+                                this.notifications.showToast('Payment dialog opened via PWA shortcut!', 'success');
+                            } else {
+                                console.log('[PWA] Mark as paid not available - no unpaid work or advance payments');
+                                this.notifications.showToast('No unpaid work available for payment!', 'info');
+                            }
                             this.clearURLParameters();
                             break;
                             
                         case 'calendar':
                             console.log('[PWA] Opening calendar from shortcut');
                             this.showCalendar();
+                            this.notifications.showToast('Calendar opened via PWA shortcut!', 'success');
                             this.clearURLParameters();
                             break;
                             
                         default:
                             console.log('[PWA] Unknown action:', action);
                     }
-                }, 1000);
+                }, 1500); // Increased timeout to ensure data is loaded
             }
         } catch (error) {
             console.error('[PWA] Error handling URL parameters:', error);
+        }
+    }
+
+    async isMarkDoneAvailable() {
+        try {
+            const today = this.utils.getTodayString();
+            const todayRecord = await this.db.getWorkRecord(today);
+            
+            // Available if no record exists or record is not completed
+            return !todayRecord || todayRecord.status !== 'completed';
+        } catch (error) {
+            console.error('[PWA] Error checking mark done availability:', error);
+            return false;
+        }
+    }
+
+    async isMarkPaidAvailable() {
+        try {
+            // Update pending unpaid dates first
+            await this.updatePendingUnpaidDates();
+            
+            // Check if there are unpaid work dates
+            if (this.pendingUnpaidDates && this.pendingUnpaidDates.length > 0) {
+                return true;
+            }
+            
+            // Check for advance payment eligibility
+            const advanceStatus = await this.db.getAdvancePaymentStatus();
+            return advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0;
+        } catch (error) {
+            console.error('[PWA] Error checking mark paid availability:', error);
+            return false;
         }
     }
 
