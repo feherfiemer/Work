@@ -1072,6 +1072,13 @@ body {
   font-size: 0.9rem;
 }
 
+/* ===== CARD HEADER POSITIONING ===== */
+.status-card .card-header,
+.actions-card .card-header {
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
 /* ===== STATUS CARD ===== */
 .status-info {
   margin-bottom: 2rem;
@@ -1140,6 +1147,7 @@ body {
   height: 2rem;
   transition: transform 0.1s ease;
   margin: 0;
+  margin-right: 0.5rem;
 }
 
 .earnings-insight-btn:focus {
@@ -1165,6 +1173,18 @@ body {
 
 .earnings-insight-btn * {
   outline: none !important;
+}
+
+/* Ensure no outline/border in all themes and states */
+.earnings-insight-btn,
+.earnings-insight-btn:focus,
+.earnings-insight-btn:active,
+.earnings-insight-btn:hover,
+.earnings-insight-btn:focus-within,
+.earnings-insight-btn:focus-visible {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .earnings-info {
@@ -4512,6 +4532,14 @@ button.disabled:hover {
   outline: 2px solid #FFFFFF !important;
   outline-offset: 2px !important;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Exception for earnings insight button - no outline in any theme */
+[data-theme="monochrome-dark"] .earnings-insight-btn:focus,
+[data-theme="monochrome-dark"] .earnings-insight-btn:active,
+[data-theme="monochrome-dark"] .earnings-insight-btn:hover {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 [data-theme="monochrome-dark"] .btn.selected,
