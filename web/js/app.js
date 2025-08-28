@@ -2054,6 +2054,7 @@ class RServiceTracker {
                 const directSelectedAmountDisplay = document.getElementById('directSelectedAmountDisplay');
                 const directPaymentTypeDisplay = document.getElementById('directPaymentTypeDisplay');
                 const directWorkDaysCoveredDisplay = document.getElementById('directWorkDaysCoveredDisplay');
+                const directTotalPaymentDisplay = document.getElementById('directTotalPaymentDisplay');
                 
                 if (directSelectedAmountDisplay) {
                     directSelectedAmountDisplay.textContent = this.utils.formatCurrency(totalAmount);
@@ -2066,6 +2067,9 @@ class RServiceTracker {
                 }
                 if (directWorkDaysCoveredDisplay) {
                     directWorkDaysCoveredDisplay.textContent = selectedDates.length;
+                }
+                if (directTotalPaymentDisplay) {
+                    directTotalPaymentDisplay.textContent = this.utils.formatCurrency(totalAmount);
                 }
             }
             if (confirmBtn) {
@@ -2768,7 +2772,9 @@ class RServiceTracker {
             this.currentStats = await this.db.getEarningsStats();
             
             // 4. Recalculate advance payment status (critical for money flow)
+            console.log('[SYNC] Recalculating advance payment status...');
             const advanceStatus = await this.db.getAdvancePaymentStatus();
+            console.log('[SYNC] Advance payment status updated:', advanceStatus);
             
             // 5. Update pending unpaid dates (affects payment eligibility)
             await this.updatePendingUnpaidDates();

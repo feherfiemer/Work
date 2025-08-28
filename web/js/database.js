@@ -424,9 +424,11 @@ class DatabaseManager {
                 
                 // Check if this work was done after any advance payment
                 const recordDate = new Date(record.date);
-                const hasAdvancePaymentBefore = advancePayments.some(payment => 
-                    new Date(payment.paymentDate) <= recordDate
-                );
+                const hasAdvancePaymentBefore = advancePayments.some(payment => {
+                    const paymentDate = new Date(payment.paymentDate);
+                    // Work must be done AFTER the advance payment date
+                    return paymentDate < recordDate;
+                });
                 
                 // Don't count work that's already been paid for in regular payments
                 const isAlreadyPaidInRegularPayment = payments.some(payment => 
@@ -441,6 +443,18 @@ class DatabaseManager {
             const workRequiredForAdvance = totalWorkCoveredByAdvance; // Days paid for
             const workCompletedForAdvance = totalWorkCompletedForAdvance; // Days actually completed
             const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workCompletedForAdvance);
+            
+            // Enhanced logging for advance payment tracking
+            console.log('[ADVANCE PAYMENT] Calculation details:', {
+                totalAdvancePayments: advancePayments.length,
+                totalAdvanceAmount,
+                workCoveredByAdvance: totalWorkCoveredByAdvance,
+                workAfterAdvanceCount: allWorkAfterAdvance.length,
+                workAfterAdvanceDates: allWorkAfterAdvance.map(r => r.date),
+                workRequiredForAdvance,
+                workCompletedForAdvance,
+                workRemainingForAdvance
+            });
             
             
             return {

@@ -1478,7 +1478,7 @@ body {
   background: linear-gradient(135deg, #28a745, #34ce57, #28a745);
   background-size: 200% 100%;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  border-radius: 18px;
   font-weight: 700;
   letter-spacing: 0.8px;
   position: relative;
@@ -3774,45 +3774,160 @@ select:focus {
 /* Direct Payment Summary Styles */
 .direct-payment-summary {
   margin-top: 2rem;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, rgba(var(--success-rgb), 0.08), rgba(var(--primary-rgb), 0.05));
-  border: 1px solid rgba(var(--success-rgb), 0.2);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(var(--success-rgb), 0.1);
   animation: slideInUp 0.3s ease-out;
 }
 
-.direct-payment-summary h4 {
-  color: var(--success);
-  margin-bottom: 1.5rem;
+/* Payment Receipt Card Styling */
+.payment-receipt-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 249, 250, 0.95));
+  border: 1px solid rgba(var(--success-rgb), 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1), 
+              0 4px 12px rgba(var(--success-rgb), 0.15);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.payment-receipt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15), 
+              0 6px 18px rgba(var(--success-rgb), 0.2);
+}
+
+.receipt-header {
+  background: linear-gradient(135deg, var(--success), #20c997);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.receipt-header h5 {
+  margin: 0;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 1.1rem;
 }
 
-.direct-payment-summary .payment-summary {
+.receipt-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.receipt-body {
+  padding: 1.5rem;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(var(--border-rgb), 0.1);
+}
+
+.receipt-row:last-child {
+  border-bottom: none;
+}
+
+.receipt-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.receipt-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.receipt-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 1rem 0;
+}
+
+.receipt-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
   background: rgba(var(--success-rgb), 0.05);
-  border: 1px solid rgba(var(--success-rgb), 0.15);
-  margin-top: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--success-rgb), 0.1);
+}
+
+.total-label {
+  color: var(--success);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.total-amount {
+  color: var(--success);
+  font-weight: 800;
+  font-size: 1.3rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Enhanced spacing for modal elements */
 .calendar-selection-info {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(var(--primary-rgb), 0.05);
+  border-radius: 12px;
+  border-left: 4px solid var(--primary);
+}
+
+.calendar-selection-info p {
+  margin-bottom: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.payment-summary-preview {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(var(--success-rgb), 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(var(--success-rgb), 0.1);
+}
+
+.payment-summary-preview span {
+  font-weight: 600;
+  color: var(--success);
+  font-size: 1.05rem;
 }
 
 .unpaid-work-calendar {
-  margin-bottom: 1.5rem;
-  max-height: 400px;
+  margin-bottom: 2rem;
+  max-height: 450px;
   overflow-y: auto;
+  padding: 1rem;
+  background: rgba(var(--background-rgb), 0.5);
+  border-radius: 12px;
+  border: 1px solid var(--border);
 }
 
 .calendar-actions {
-  margin-top: 2rem;
+  margin-top: 2.5rem;
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   justify-content: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
 }
 
 .section-divider {
@@ -5375,57 +5490,107 @@ button.disabled:hover {
   font-weight: 500;
 }
 
+/* Enhanced Calendar Work Date Layout */
 .calendar-work-date {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px;
+  padding: 20px 24px;
   border: 2px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 15px;
+  border-radius: 16px;
+  margin-bottom: 18px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  background: var(--background);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, var(--background), rgba(var(--primary-rgb), 0.02));
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08),
+              0 1px 4px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-work-date::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent, rgba(var(--primary-rgb), 0.03));
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .calendar-work-date:hover {
   border-color: var(--primary);
-  background: var(--primary-bg);
+  background: linear-gradient(135deg, var(--primary-bg), rgba(var(--primary-rgb), 0.08));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.15),
+              0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-work-date:hover::before {
+  opacity: 1;
 }
 
 .calendar-work-date.selected {
   border-color: var(--success);
-  background: var(--success-bg);
+  background: linear-gradient(135deg, var(--success-bg), rgba(var(--success-rgb), 0.1));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(var(--success-rgb), 0.2),
+              0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .calendar-work-date .date-info {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
 }
 
 .calendar-work-date .date-text {
   font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin-bottom: 4px;
 }
 
 .calendar-work-date .amount-text {
   color: var(--success);
   font-weight: 700;
+  font-size: 1.1rem;
+  background: rgba(var(--success-rgb), 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(var(--success-rgb), 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Enhanced Checkbox Design */
 .calendar-work-date .checkbox {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border);
-  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border);
+  border-radius: 8px;
   position: relative;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--background);
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.calendar-work-date:hover .checkbox {
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.05);
+  transform: scale(1.05);
 }
 
 .calendar-work-date.selected .checkbox {
-  background: var(--success);
+  background: linear-gradient(135deg, var(--success), #20c997);
   border-color: var(--success);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(var(--success-rgb), 0.3);
 }
 
 .calendar-work-date.selected .checkbox::after {
@@ -5435,8 +5600,31 @@ button.disabled:hover {
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 16px;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .calendar-work-date {
+    padding: 16px 20px;
+    margin-bottom: 14px;
+  }
+  
+  .calendar-work-date .date-text {
+    font-size: 1rem;
+  }
+  
+  .calendar-work-date .amount-text {
+    font-size: 1rem;
+  }
+  
+  .calendar-work-date .checkbox {
+    width: 24px;
+    height: 24px;
+    margin-left: 12px;
+  }
 }
 
 .calendar-actions {

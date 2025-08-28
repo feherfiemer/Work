@@ -518,19 +518,29 @@
                 <div class="direct-payment-summary" id="directPaymentSummary" style="display: none;">
                     <div class="section-divider"></div>
                     
-                    <div class="payment-summary">
-                        <h5><i class="fas fa-receipt"></i> Payment Summary</h5>
-                        <div class="summary-item">
-                            <span>Selected Amount:</span>
-                            <span id="directSelectedAmountDisplay">₹0</span>
+                    <div class="payment-receipt-card">
+                        <div class="receipt-header">
+                            <h5><i class="fas fa-receipt"></i> Payment Receipt</h5>
+                            <div class="receipt-badge">Preview</div>
                         </div>
-                        <div class="summary-item">
-                            <span>Payment Type:</span>
-                            <span id="directPaymentTypeDisplay">Regular</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Work Days Covered:</span>
-                            <span id="directWorkDaysCoveredDisplay">0</span>
+                        <div class="receipt-body">
+                            <div class="receipt-row">
+                                <span class="receipt-label">Selected Amount:</span>
+                                <span class="receipt-value" id="directSelectedAmountDisplay">₹0</span>
+                            </div>
+                            <div class="receipt-row">
+                                <span class="receipt-label">Payment Type:</span>
+                                <span class="receipt-value" id="directPaymentTypeDisplay">Regular</span>
+                            </div>
+                            <div class="receipt-row">
+                                <span class="receipt-label">Work Days Covered:</span>
+                                <span class="receipt-value" id="directWorkDaysCoveredDisplay">0</span>
+                            </div>
+                            <div class="receipt-divider"></div>
+                            <div class="receipt-total">
+                                <span class="total-label">Total Payment:</span>
+                                <span class="total-amount" id="directTotalPaymentDisplay">₹0</span>
+                            </div>
                         </div>
                     </div>
                 </div>
