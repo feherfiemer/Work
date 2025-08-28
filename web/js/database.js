@@ -188,6 +188,25 @@ class DatabaseManager {
     }
 
     async addPayment(amount, workDates, paymentDate = new Date().toISOString().split('T')[0], isAdvance = false) {
+        // 🏦 AMOUNT FLOW INTEGRATION
+        // All payment amounts must flow through the central AmountFlow system
+        if (window.AmountFlow) {
+            try {
+                const amountFlowResult = await window.AmountFlow.processAmount('addPayment', amount, {
+                    workDates: workDates || [],
+                    paymentDate,
+                    isAdvance,
+                    db: null, // Prevent recursive call
+                    triggerReconciliation: false // We'll trigger it after DB operation
+                });
+                
+                console.log('[Database] Payment processed through AmountFlow:', amountFlowResult);
+            } catch (error) {
+                console.error('[Database] AmountFlow validation failed:', error);
+                throw new Error(`Payment validation failed: ${error.message}`);
+            }
+        }
+
         const payment = {
             amount: amount,
             workDates: workDates || [], // Can be empty for advance payments
@@ -199,9 +218,21 @@ class DatabaseManager {
             pendingDaysAtPayment: workDates ? workDates.length : 0
         };
 
-        return this.performTransaction(this.stores.payments, 'readwrite', (store) => {
+        const result = await this.performTransaction(this.stores.payments, 'readwrite', (store) => {
             return store.add(payment);
         });
+
+        // 🔄 Trigger AmountFlow reconciliation after successful DB operation
+        if (window.AmountFlow) {
+            try {
+                await window.AmountFlow.performReconciliation();
+                console.log('[Database] AmountFlow reconciliation completed after payment addition');
+            } catch (error) {
+                console.warn('[Database] AmountFlow reconciliation warning:', error);
+            }
+        }
+
+        return result;
     }
 
     async getAllPayments() {
@@ -309,7 +340,7 @@ class DatabaseManager {
         const totalAdvancePaid = advancePayments.reduce((sum, p) => sum + p.amount, 0);
         const totalRegularPaid = regularPayments.reduce((sum, p) => sum + p.amount, 0);
         
-        return {
+        const calculatedAmounts = {
             totalWorked,
             totalPaid,
             totalEarned, // Total theoretical earnings based on all work completed
@@ -323,6 +354,25 @@ class DatabaseManager {
             isAdvanced: currentBalance < 0, // True if user received advance payments
             pendingWorkValue: currentEarnings // Alias for backward compatibility
         };
+
+        // 🏦 AMOUNT FLOW INTEGRATION
+        // Process earnings calculation through AmountFlow for validation and consistency
+        if (window.AmountFlow) {
+            try {
+                window.AmountFlow.processAmount('calculateEarnings', totalWorked, {
+                    dailyWage: DAILY_WAGE,
+                    unpaidWorkDays: unpaidWork.length,
+                    totalPaid: totalPaid,
+                    triggerReconciliation: false // Prevent recursive reconciliation during calculation
+                }).catch(error => {
+                    console.warn('[Database] AmountFlow earnings calculation warning:', error);
+                });
+            } catch (error) {
+                console.warn('[Database] AmountFlow not available during calculation:', error);
+            }
+        }
+        
+        return calculatedAmounts;
     }
 
     async getEarningsStats() {

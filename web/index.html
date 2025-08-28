@@ -601,11 +601,14 @@
     <!-- Audio Elements (now handled by Web Audio API in notifications.js) -->
 
     <!-- Scripts (optimized loading order) -->
+    <script src="js/amountFlow.js" defer></script>
     <script src="js/database.js" defer></script>
     <script src="js/utils.js" defer></script>
     <script src="js/notifications.js" defer></script>
     <script src="js/charts.js" defer></script>
     <script src="js/calendar.js" defer></script>
     <script src="js/app.js" defer></script>
+    <!-- AmountFlow Test Script (remove in production) -->
+    <script src="test_amount_flow.js" defer></script>
 </body>
 </html>

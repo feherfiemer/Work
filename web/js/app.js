@@ -530,6 +530,47 @@ class RServiceTracker {
                 await this.updateProgressBar(progressTextEl, progressFillEl);
             }
             
+            // 🏦 AMOUNT FLOW INTEGRATION - Perform comprehensive amount reconciliation
+            console.log(`[SYNC-${syncId}] Performing AmountFlow reconciliation and validation...`);
+            if (window.AmountFlow) {
+                try {
+                    // First perform reconciliation
+                    const reconciliationResult = await window.AmountFlow.performReconciliation();
+                    console.log(`[SYNC-${syncId}] AmountFlow reconciliation completed:`, reconciliationResult);
+                    
+                    // Then perform comprehensive validation
+                    const validationResult = await window.AmountFlow.performComprehensiveValidation();
+                    console.log(`[SYNC-${syncId}] AmountFlow validation completed:`, {
+                        isValid: validationResult.isValid,
+                        totalChecks: validationResult.totalChecks,
+                        passedChecks: validationResult.passedChecks,
+                        errors: validationResult.errors.length,
+                        warnings: validationResult.warnings.length
+                    });
+                    
+                    // Verify amounts are perfectly tallied
+                    const amountFlowState = window.AmountFlow.getCurrentState();
+                    if (!amountFlowState.isReconciled || !validationResult.isValid) {
+                        console.warn(`[SYNC-${syncId}] ⚠️ AmountFlow reconciliation or validation incomplete`);
+                        if (validationResult.errors.length > 0) {
+                            console.error(`[SYNC-${syncId}] Validation errors:`, validationResult.errors);
+                        }
+                    } else {
+                        console.log(`[SYNC-${syncId}] ✅ All amounts perfectly reconciled and validated`);
+                    }
+                    
+                    // Generate and log amount tally for verification
+                    const amountTally = window.AmountFlow.generateAmountTally();
+                    console.log(`[SYNC-${syncId}] Current amount tally:`, amountTally);
+                    
+                } catch (error) {
+                    console.error(`[SYNC-${syncId}] AmountFlow reconciliation/validation failed:`, error);
+                    // Don't fail the entire sync for AmountFlow issues
+                }
+            } else {
+                console.warn(`[SYNC-${syncId}] AmountFlow not available for reconciliation`);
+            }
+            
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
             
@@ -2580,6 +2621,20 @@ class RServiceTracker {
             let isAdvancePayment = false;
             let workDatesToPay = [];
             
+            // 🏦 AMOUNT FLOW INTEGRATION - Pre-validate payment amount
+            if (window.AmountFlow) {
+                try {
+                    console.log('[App] Pre-validating payment amount through AmountFlow...');
+                    await window.AmountFlow.validateAmount('addPayment', amount, {
+                        minAmount: 1,
+                        maxAmount: window.R_SERVICE_CONFIG?.MAX_PAYMENT_AMOUNT || 100000
+                    });
+                } catch (error) {
+                    console.error('[App] AmountFlow pre-validation failed:', error);
+                    throw new Error(`Payment validation failed: ${error.message}`);
+                }
+            }
+            
             // Unified payment processing (works for both normal and force payments)
             if (this.forcePaidDateString) {
                 console.log('Processing force payment for specific date:', this.forcePaidDateString);
@@ -2595,7 +2650,23 @@ class RServiceTracker {
                 
                 // Now process like normal payment
                 const totalPendingValue = this.pendingUnpaidDates.length * DAILY_WAGE;
-                isAdvancePayment = amount > totalPendingValue;
+                
+                // 🏦 AMOUNT FLOW - Validate advance payment calculation
+                if (window.AmountFlow) {
+                    try {
+                        const advanceResult = await window.AmountFlow.processAmount('processAdvancePayment', amount, {
+                            workValue: totalPendingValue,
+                            triggerReconciliation: false
+                        });
+                        isAdvancePayment = advanceResult.isAdvance;
+                        console.log('[App] AmountFlow advance payment calculation:', advanceResult);
+                    } catch (error) {
+                        console.warn('[App] AmountFlow advance calculation warning:', error);
+                        isAdvancePayment = amount > totalPendingValue; // Fallback to original logic
+                    }
+                } else {
+                    isAdvancePayment = amount > totalPendingValue;
+                }
                 
                 if (totalPendingValue > 0) {
                     const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
@@ -2608,6 +2679,8 @@ class RServiceTracker {
                 }
                 
                 const paymentDate = this.utils.getTodayString();
+                
+                // 🏦 Database call will handle AmountFlow integration internally
                 await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
                 
                 // Update pending unpaid dates by removing paid ones
@@ -2621,7 +2694,23 @@ class RServiceTracker {
             } else {
                 // Normal payment processing
                 const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
-                isAdvancePayment = amount > totalWorkCompletedValue;
+                
+                // 🏦 AMOUNT FLOW - Validate advance payment calculation
+                if (window.AmountFlow) {
+                    try {
+                        const advanceResult = await window.AmountFlow.processAmount('processAdvancePayment', amount, {
+                            workValue: totalWorkCompletedValue,
+                            triggerReconciliation: false
+                        });
+                        isAdvancePayment = advanceResult.isAdvance;
+                        console.log('[App] AmountFlow advance payment calculation:', advanceResult);
+                    } catch (error) {
+                        console.warn('[App] AmountFlow advance calculation warning:', error);
+                        isAdvancePayment = amount > totalWorkCompletedValue; // Fallback to original logic
+                    }
+                } else {
+                    isAdvancePayment = amount > totalWorkCompletedValue;
+                }
                 
                 if (totalWorkCompletedValue > 0) {
                     const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
@@ -2632,6 +2721,7 @@ class RServiceTracker {
                 const paymentDate = this.utils.getTodayString();
                 console.log('Adding payment to database:', { amount, workDatesToPay, paymentDate, isAdvancePayment });
                 
+                // 🏦 Database call will handle AmountFlow integration internally
                 await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
                 
                 // Update pending unpaid dates

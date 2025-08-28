@@ -923,6 +923,23 @@ class CalendarManager {
                                   String(today.getDate()).padStart(2, '0');
                 
                 console.log('Adding direct payment:', { amount: paymentAmount, workDates: [dateString], paymentDate });
+                
+                // 🏦 AMOUNT FLOW INTEGRATION - Pre-validate payment amount
+                if (window.AmountFlow) {
+                    try {
+                        console.log('[Calendar] Pre-validating force payment through AmountFlow...');
+                        await window.AmountFlow.validateAmount('addPayment', paymentAmount, {
+                            minAmount: 1,
+                            maxAmount: window.R_SERVICE_CONFIG?.MAX_PAYMENT_AMOUNT || 100000
+                        });
+                        console.log('[Calendar] AmountFlow validation passed for force payment');
+                    } catch (error) {
+                        console.error('[Calendar] AmountFlow pre-validation failed:', error);
+                        window.app?.notifications?.showToast(`Payment validation failed: ${error.message}`, 'error');
+                        return;
+                    }
+                }
+                
                 await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
                 console.log('Force payment added successfully');
 
