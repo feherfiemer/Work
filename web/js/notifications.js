@@ -406,6 +406,7 @@ class NotificationManager {
         const messageEl = document.getElementById('confirmMessage');
         const yesBtn = document.getElementById('confirmYes');
         const noBtn = document.getElementById('confirmNo');
+        const closeBtn = document.getElementById('closeConfirmModal');
 
         if (modal && messageEl && yesBtn && noBtn) {
             messageEl.textContent = message;
@@ -432,11 +433,13 @@ class NotificationManager {
             const cleanup = () => {
                 yesBtn.removeEventListener('click', handleYes);
                 noBtn.removeEventListener('click', handleNo);
+                if (closeBtn) closeBtn.removeEventListener('click', handleNo);
                 document.removeEventListener('keydown', handleEscape);
             };
 
             yesBtn.addEventListener('click', handleYes);
             noBtn.addEventListener('click', handleNo);
+            if (closeBtn) closeBtn.addEventListener('click', handleNo);
             document.addEventListener('keydown', handleEscape);
 
             modal.addEventListener('click', (e) => {

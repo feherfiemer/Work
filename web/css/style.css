@@ -6822,6 +6822,51 @@ button.disabled:hover {
     rgba(18, 20, 25, 0.98) 100%);
 }
 
+/* Standard Header for Non-Payment Dialogs */
+.standard-header {
+  background: linear-gradient(135deg, var(--surface), var(--surface-alt));
+  color: var(--text-primary);
+  padding: 2rem 2rem 1.5rem;
+  text-align: center;
+  position: relative;
+  border-bottom: 3px solid var(--border);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.standard-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* Corner Close Button for Payment Dialogs */
+.corner-close {
+  position: absolute !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.1rem !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  z-index: 10 !important;
+}
+
+.corner-close:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
 /* Enhanced Dark Theme for Headers */
 [data-theme*="dark"] .payment-header,
 [data-theme*="dark"] .calendar-header {
@@ -6834,6 +6879,31 @@ button.disabled:hover {
   box-shadow: 
     0 4px 15px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Dark Theme for Standard Headers */
+[data-theme*="dark"] .standard-header {
+  background: linear-gradient(135deg, 
+    rgba(40, 44, 52, 0.95) 0%,
+    rgba(30, 34, 42, 0.98) 50%,
+    rgba(25, 29, 37, 0.95) 100%);
+  color: var(--text-primary);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Corner Close Button Dark Theme */
+[data-theme*="dark"] .corner-close {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme*="dark"] .corner-close:hover {
+  background: rgba(0, 0, 0, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
 }
 
 [data-theme*="dark"] .payment-summary-card {
