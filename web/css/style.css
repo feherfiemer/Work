@@ -2726,8 +2726,19 @@ body {
 }
 
 .calendar-cell.force-paid {
-  background: var(--info-alpha);
-  border-left: 4px solid var(--info);
+  background: rgba(255, 152, 0, 0.1);
+  border-left: 4px solid #ff9800;
+}
+
+.work-status.force-paid {
+  color: #ff9800 !important;
+  border-color: #ff9800 !important;
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.force-paid-indicator {
+  background: #ff9800 !important;
+  border-color: #f57c00 !important;
 }
 
 /* ===== ALIGNMENT AND LAYOUT FIXES ===== */

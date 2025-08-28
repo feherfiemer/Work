@@ -268,12 +268,12 @@ class CalendarManager {
                 indicators.appendChild(paidIndicator);
             }
         } else if (isPaid && !workRecord) {
-            // Force-paid date (payment without work record) - style like regular paid
+            // Force-paid date (payment without work record) - use orange styling to distinguish from regular payments
             const forcePaidIndicator = document.createElement('span');
-            forcePaidIndicator.className = 'paid-indicator';
-            forcePaidIndicator.innerHTML = '<i class="fas fa-money-bill-wave"></i>';
+            forcePaidIndicator.className = 'force-paid-indicator';
+            forcePaidIndicator.innerHTML = '<i class="fas fa-hand-holding-usd"></i>';
             forcePaidIndicator.style.cssText = `
-                background: var(--info);
+                background: #ff9800;
                 color: white;
                 border-radius: 50%;
                 width: 10px;
@@ -284,6 +284,7 @@ class CalendarManager {
                 font-size: 0.5rem;
                 flex-shrink: 0;
                 margin: 0 1px;
+                border: 1px solid #f57c00;
             `;
             indicators.appendChild(forcePaidIndicator);
         }
@@ -413,9 +414,9 @@ class CalendarManager {
             // Check if this date has a force payment (paid but no work record)
             if (isPaid) {
                 content += `
-                    <div class="work-status force-paid">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <span>Paid (No Work Recorded)</span>
+                    <div class="work-status force-paid" style="color: #ff9800; border-color: #ff9800;">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Force Paid (No Work Recorded)</span>
                     </div>
                 `;
                 

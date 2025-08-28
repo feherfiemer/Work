@@ -2639,27 +2639,37 @@ class RServiceTracker {
             if (this.forcePaidDateString) {
                 console.log('Processing force payment for specific date:', this.forcePaidDateString);
                 
-                // For force payment, treat it as payment for pending work + this specific date
-                // Get all current pending unpaid dates
+                // 🔧 FIXED FORCE PAYMENT LOGIC:
+                // Force payment should ONLY cover PREVIOUS unpaid work days
+                // The force paid date itself should NOT be included in payment coverage
+                // This allows the force paid date to be marked as done later and count as unpaid work
+                
+                // Get all current pending unpaid dates (excluding the force paid date)
                 await this.updatePendingUnpaidDates();
                 
-                // Add the force payment date to the pending list if not already there
-                if (!this.pendingUnpaidDates.includes(this.forcePaidDateString)) {
-                    this.pendingUnpaidDates.unshift(this.forcePaidDateString);
-                }
+                // Remove the force paid date from pending list if it's there (it shouldn't be covered by this payment)
+                const filteredPendingDates = this.pendingUnpaidDates.filter(date => date !== this.forcePaidDateString);
                 
-                // Now process like normal payment
-                const totalPendingValue = this.pendingUnpaidDates.length * DAILY_WAGE;
+                console.log('Force payment details:', {
+                    forcePaidDate: this.forcePaidDateString,
+                    originalPendingDates: this.pendingUnpaidDates,
+                    filteredPendingDates: filteredPendingDates,
+                    amount: amount
+                });
+                
+                // Calculate total value of PREVIOUS unpaid work (excluding force paid date)
+                const totalPendingValue = filteredPendingDates.length * DAILY_WAGE;
                 
                 // 🏦 AMOUNT FLOW - Validate advance payment calculation
                 if (window.AmountFlow) {
                     try {
                         const advanceResult = await window.AmountFlow.processAmount('processAdvancePayment', amount, {
                             workValue: totalPendingValue,
-                            triggerReconciliation: false
+                            triggerReconciliation: false,
+                            context: 'force_payment'
                         });
                         isAdvancePayment = advanceResult.isAdvance;
-                        console.log('[App] AmountFlow advance payment calculation:', advanceResult);
+                        console.log('[App] AmountFlow force payment calculation:', advanceResult);
                     } catch (error) {
                         console.warn('[App] AmountFlow advance calculation warning:', error);
                         isAdvancePayment = amount > totalPendingValue; // Fallback to original logic
@@ -2668,14 +2678,17 @@ class RServiceTracker {
                     isAdvancePayment = amount > totalPendingValue;
                 }
                 
-                if (totalPendingValue > 0) {
-                    const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
-                    workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
-                    console.log('Force payment - work dates to pay:', workDatesToPay);
+                if (totalPendingValue > 0 && filteredPendingDates.length > 0) {
+                    // Cover previous unpaid work days only
+                    const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), filteredPendingDates.length);
+                    workDatesToPay = filteredPendingDates.slice(0, daysCovered);
+                    console.log('Force payment - covering PREVIOUS work dates:', workDatesToPay);
                 } else {
-                    // If no pending work, this is definitely an advance
+                    // If no previous pending work, this is an advance payment
+                    // Associate it with the force paid date as a placeholder, but mark as advance
                     workDatesToPay = [this.forcePaidDateString];
                     isAdvancePayment = true;
+                    console.log('Force payment - no previous work to cover, treating as advance for date:', this.forcePaidDateString);
                 }
                 
                 const paymentDate = this.utils.getTodayString();
@@ -2683,14 +2696,22 @@ class RServiceTracker {
                 // 🏦 Database call will handle AmountFlow integration internally
                 await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
                 
-                // Update pending unpaid dates by removing paid ones
-                this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
+                // Update pending unpaid dates by removing only the PAID ones (not the force paid date)
+                if (!isAdvancePayment && workDatesToPay.length > 0) {
+                    // Remove only the dates that were actually paid
+                    this.pendingUnpaidDates = this.pendingUnpaidDates.filter(date => !workDatesToPay.includes(date));
+                    console.log('Updated pending dates after force payment:', this.pendingUnpaidDates);
+                }
                 
                 // Clear the force paid date
                 const processedDate = this.forcePaidDateString;
                 this.forcePaidDateString = null;
                 
-                console.log('Force payment recorded successfully for date:', processedDate);
+                console.log('Force payment recorded successfully for date:', processedDate, {
+                    coveredDates: workDatesToPay,
+                    isAdvance: isAdvancePayment,
+                    remainingPendingDates: this.pendingUnpaidDates
+                });
             } else {
                 // Normal payment processing
                 const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;

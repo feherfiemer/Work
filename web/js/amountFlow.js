@@ -478,6 +478,7 @@ class AmountFlow {
 
         try {
             const payments = await window.app.db.getAllPayments();
+            const workRecords = await window.app.db.getAllWorkRecords();
 
             // Validate advance payment logic
             for (const payment of payments) {
@@ -490,6 +491,30 @@ class AmountFlow {
                 } else {
                     report.warnings.push(`⚠️ Payment advance flag inconsistent: amount ₹${payment.amount}, work value ₹${workValue}, flagged as advance: ${payment.isAdvance}`);
                 }
+            }
+
+            // Validate force payment scenarios - check if force paid dates that are later marked as done are properly handled
+            report.totalChecks++;
+            let forcePaidLogicValid = true;
+            let forcePaidIssues = [];
+
+            for (const payment of payments) {
+                // Check if this payment covers dates that don't have work records (force payments)
+                for (const workDate of payment.workDates) {
+                    const workRecord = workRecords.find(r => r.date === workDate);
+                    if (!workRecord && !payment.isAdvance) {
+                        // This might be a force payment scenario - payment covers a date without work record
+                        forcePaidIssues.push(`Force paid date ${workDate} in payment but no work record exists`);
+                    }
+                }
+            }
+
+            if (forcePaidIssues.length === 0) {
+                report.passedChecks++;
+                report.validations.push('✅ Force payment logic consistent');
+            } else {
+                forcePaidLogicValid = false;
+                report.warnings.push(`⚠️ Force payment scenarios detected: ${forcePaidIssues.join(', ')}`);
             }
 
         } catch (error) {
@@ -729,16 +754,27 @@ class AmountFlow {
     }
 
     async processAdvancePaymentCalculation(amount, context) {
-        const { workValue = 0 } = context;
+        const { workValue = 0, context: paymentContext } = context;
         const isAdvance = amount > workValue;
         const advanceAmount = isAdvance ? amount - workValue : 0;
+        
+        // Special handling for force payments
+        if (paymentContext === 'force_payment') {
+            console.log('[AmountFlow] Processing force payment calculation:', {
+                amount,
+                workValue,
+                isAdvance,
+                note: 'Force payment covers previous unpaid work only'
+            });
+        }
         
         return {
             amount,
             workValue,
             isAdvance,
             advanceAmount,
-            regularAmount: amount - advanceAmount
+            regularAmount: amount - advanceAmount,
+            paymentContext
         };
     }
 
