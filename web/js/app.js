@@ -1705,9 +1705,6 @@ class RServiceTracker {
         const previousUnpaidCount = this.pendingUnpaidDates.length;
         this.pendingUnpaidDates = unpaidRecords.map(record => record.date);
         
-        // Always show the enhanced Mark as Paid button
-        this.showPaidButton();
-        
         // Check for payment day notifications
         const advanceStatus = await this.db.getAdvancePaymentStatus();
         const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
@@ -1768,14 +1765,14 @@ class RServiceTracker {
             
             const advanceStatus = await this.db.getAdvancePaymentStatus();
             
-            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
-            const shouldShowPaidBtn = (this.pendingUnpaidDates.length > 0 && this.pendingUnpaidDates.length % paymentThreshold === 0) || 
-                                    (this.pendingUnpaidDates.length > 0 && advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0);
+            // Show the button if there are any unpaid work days OR if there are advance payments
+            const shouldShowPaidBtn = this.pendingUnpaidDates.length > 0 || 
+                                    (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0);
             
             if (shouldShowPaidBtn) {
-                paidBtn.style.display = 'inline-flex';
+                this.showPaidButton();
             } else {
-                paidBtn.style.display = 'none';
+                this.hidePaidButton();
             }
         }
     }
@@ -1975,7 +1972,8 @@ class RServiceTracker {
                 const dateElement = document.createElement('div');
                 dateElement.className = 'calendar-work-date';
                 dateElement.dataset.date = record.date;
-                dateElement.dataset.amount = record.amount;
+                const amount = record.amount || (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+                dateElement.dataset.amount = amount;
 
                 const dateInfo = document.createElement('div');
                 dateInfo.className = 'date-info';
@@ -1991,7 +1989,7 @@ class RServiceTracker {
 
                 const amountText = document.createElement('div');
                 amountText.className = 'amount-text';
-                amountText.textContent = this.utils.formatCurrency(record.amount);
+                amountText.textContent = this.utils.formatCurrency(amount);
 
                 const checkbox = document.createElement('div');
                 checkbox.className = 'checkbox';

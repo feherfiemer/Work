@@ -29,7 +29,14 @@ class Utils {
     }
 
     formatCurrency(amount) {
-        return `₹${amount.toLocaleString('en-IN')}`;
+        if (amount === undefined || amount === null || isNaN(amount)) {
+            return '₹0';
+        }
+        const numAmount = parseFloat(amount);
+        if (isNaN(numAmount)) {
+            return '₹0';
+        }
+        return `₹${numAmount.toLocaleString('en-IN')}`;
     }
 
     formatCurrencyForPDF(amount) {
