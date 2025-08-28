@@ -513,10 +513,56 @@
                 <div class="unpaid-work-calendar" id="unpaidWorkCalendar">
                     <!-- Calendar with unpaid work dates will be generated here -->
                 </div>
+                
+                <!-- Payment Amount Selection Section -->
+                <div class="payment-amount-section" id="paymentAmountSection" style="display: none;">
+                    <div class="section-divider"></div>
+                    <h4><i class="fas fa-calculator"></i> Select Payment Amount</h4>
+                    
+                    <!-- Quick Amount Buttons -->
+                    <div class="payment-section">
+                        <h5>Quick Amounts:</h5>
+                        <div class="payment-buttons" id="calendarPaymentButtons">
+                            <!-- Buttons will be generated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Payment Summary for Calendar Selection -->
+                    <div class="payment-summary" id="calendarPaymentSummary" style="display: none;">
+                        <h5><i class="fas fa-receipt"></i> Payment Summary</h5>
+                        <div class="summary-item">
+                            <span>Selected Amount:</span>
+                            <span id="calendarSelectedAmountDisplay">₹0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Payment Type:</span>
+                            <span id="calendarPaymentTypeDisplay">Regular</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Work Days Covered:</span>
+                            <span id="calendarWorkDaysCoveredDisplay">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Selected Work Dates:</span>
+                            <span id="calendarSelectedDatesDisplay">0 days</span>
+                        </div>
+                        
+                        <!-- Confirmation Buttons -->
+                        <div class="payment-confirmation-buttons">
+                            <button id="confirmCalendarPaymentBtn" class="btn btn-primary">
+                                <i class="fas fa-check"></i> Confirm Payment
+                            </button>
+                            <button id="cancelCalendarPaymentBtn" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="calendar-actions">
                     <button id="proceedToPaymentBtn" class="btn btn-success" disabled>
                         <i class="fas fa-arrow-right"></i>
-                        Proceed to Payment
+                        Show Payment Options
                     </button>
                     <button id="cancelCalendarSelectionBtn" class="btn btn-secondary">
                         <i class="fas fa-times"></i>

@@ -477,13 +477,193 @@ class NotificationManager {
             setTimeout(() => this.createAchievementBells(), 600);
             setTimeout(() => this.createSuccessHarmony(), 900);
         } else if (soundType === 'paid') {
-            // Enhanced ultra-realistic banking payment sound sequence
+            // Enhanced ultra-realistic banking payment sound sequence with dynamic layers
+            this.playEnhancedPaymentSequence();
+        }
+    }
+
+    playEnhancedPaymentSequence() {
+        try {
+            // Multi-layered premium payment sound experience
+            console.log('Playing enhanced payment sequence...');
+            
+            // Layer 1: Initial banking transaction sound
             this.playBankingTransactionSound();
-            setTimeout(() => this.createCardProcessingSound(), 150);
-            setTimeout(() => this.createCashRegisterKaching(), 350);
-            setTimeout(() => this.createDigitalPaymentConfirmation(), 600);
-            setTimeout(() => this.createATMReceiptSound(), 900);
-            setTimeout(() => this.createWealthySuccessFinale(), 1200);
+            
+            // Layer 2: Card processing with realistic delay
+            setTimeout(() => this.createCardProcessingSound(), 120);
+            
+            // Layer 3: Digital authentication beeps
+            setTimeout(() => this.createAuthenticationBeeps(), 280);
+            
+            // Layer 4: Processing confirmation
+            setTimeout(() => this.createProcessingConfirmation(), 450);
+            
+            // Layer 5: Cash register kaching (classic satisfaction sound)
+            setTimeout(() => this.createCashRegisterKaching(), 650);
+            
+            // Layer 6: Digital payment confirmation
+            setTimeout(() => this.createDigitalPaymentConfirmation(), 800);
+            
+            // Layer 7: Success chime harmony
+            setTimeout(() => this.createPaymentSuccessHarmony(), 1000);
+            
+            // Layer 8: ATM receipt print sound
+            setTimeout(() => this.createATMReceiptSound(), 1200);
+            
+            // Layer 9: Wealthy success finale
+            setTimeout(() => this.createWealthySuccessFinale(), 1400);
+            
+            // Layer 10: Final confirmation ring
+            setTimeout(() => this.createFinalConfirmationRing(), 1700);
+            
+        } catch (error) {
+            console.warn('Error playing enhanced payment sequence:', error);
+            // Fallback to basic payment sound
+            this.playPaymentSound();
+        }
+    }
+
+    createAuthenticationBeeps() {
+        try {
+            if (!this.audioContext) return;
+            
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create three quick authentication beeps
+            for (let i = 0; i < 3; i++) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.frequency.setValueAtTime(800 + (i * 200), now + (i * 0.08));
+                osc.type = 'sine';
+                
+                gain.gain.setValueAtTime(0, now + (i * 0.08));
+                gain.gain.linearRampToValueAtTime(0.15, now + (i * 0.08) + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.08) + 0.06);
+                
+                osc.start(now + (i * 0.08));
+                osc.stop(now + (i * 0.08) + 0.06);
+            }
+            
+        } catch (error) {
+            console.warn('Error creating authentication beeps:', error);
+        }
+    }
+
+    createProcessingConfirmation() {
+        try {
+            if (!this.audioContext) return;
+            
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create a warm processing confirmation tone
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(660, now + 0.2);
+            osc.type = 'triangle';
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1200, now);
+            filter.Q.setValueAtTime(5, now);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.2, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+            
+            osc.start(now);
+            osc.stop(now + 0.25);
+            
+        } catch (error) {
+            console.warn('Error creating processing confirmation:', error);
+        }
+    }
+
+    createPaymentSuccessHarmony() {
+        try {
+            if (!this.audioContext) return;
+            
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create a beautiful harmony of success tones
+            const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 major chord
+            
+            frequencies.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.frequency.setValueAtTime(freq, now);
+                osc.type = 'sine';
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(3000, now);
+                filter.Q.setValueAtTime(1, now);
+                
+                gain.gain.setValueAtTime(0, now + (index * 0.05));
+                gain.gain.linearRampToValueAtTime(0.12, now + (index * 0.05) + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                
+                osc.start(now + (index * 0.05));
+                osc.stop(now + 0.6);
+            });
+            
+        } catch (error) {
+            console.warn('Error creating payment success harmony:', error);
+        }
+    }
+
+    createFinalConfirmationRing() {
+        try {
+            if (!this.audioContext) return;
+            
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Create a beautiful final confirmation ring
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            const reverb = ctx.createConvolver();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(reverb);
+            reverb.connect(ctx.destination);
+            
+            osc.frequency.setValueAtTime(1047, now); // C6
+            osc.type = 'sine';
+            
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1047, now);
+            filter.Q.setValueAtTime(10, now);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.3, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+            
+            osc.start(now);
+            osc.stop(now + 1.5);
+            
+        } catch (error) {
+            console.warn('Error creating final confirmation ring:', error);
         }
     }
 

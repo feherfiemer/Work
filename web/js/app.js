@@ -2074,14 +2074,273 @@ class RServiceTracker {
             }
         };
 
-        // Proceed to payment
+        // Proceed to payment - show payment section within calendar modal
         if (proceedBtn) {
             proceedBtn.onclick = () => {
                 if (this.selectedCalendarDates && this.selectedCalendarDates.length > 0) {
-                    closeModal();
-                    this.showCustomPaymentModal();
+                    this.showCalendarPaymentSection();
+                } else {
+                    this.notifications.showToast('Please select at least one work date', 'warning');
                 }
             };
+        }
+    }
+
+    showCalendarPaymentSection() {
+        const paymentSection = document.getElementById('paymentAmountSection');
+        const proceedBtn = document.getElementById('proceedToPaymentBtn');
+        
+        if (paymentSection) {
+            paymentSection.style.display = 'block';
+            this.generateCalendarPaymentButtons();
+            this.setupCalendarPaymentHandlers();
+            
+            // Hide proceed button since payment options are now shown
+            if (proceedBtn) {
+                proceedBtn.style.display = 'none';
+            }
+            
+            // Scroll to payment section
+            paymentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    generateCalendarPaymentButtons() {
+        const container = document.getElementById('calendarPaymentButtons');
+        if (!container) return;
+
+        container.innerHTML = '';
+        
+        try {
+            const config = window.R_SERVICE_CONFIG || {};
+            const dailyWage = config.DAILY_WAGE || 25;
+            const incrementValue = config.INCREMENT_VALUE || 25;
+            const maxPaymentAmount = config.MAX_PAYMENT_AMOUNT || 500;
+            
+            // Generate amounts based on selected total and increments
+            const selectedAmount = this.selectedCalendarAmount;
+            const amounts = new Set();
+            
+            // Add exact selected amount
+            amounts.add(selectedAmount);
+            
+            // Add increment-based amounts
+            for (let multiplier = 1; multiplier <= 20; multiplier++) {
+                const amount = incrementValue * multiplier;
+                if (amount <= maxPaymentAmount) {
+                    amounts.add(amount);
+                }
+            }
+            
+            // Add common payment amounts
+            [50, 100, 150, 200, 250, 300, 400, 500].forEach(amount => {
+                if (amount <= maxPaymentAmount) {
+                    amounts.add(amount);
+                }
+            });
+            
+            // Convert to sorted array
+            const sortedAmounts = Array.from(amounts).sort((a, b) => a - b);
+            
+            sortedAmounts.forEach(amount => {
+                const button = document.createElement('button');
+                button.className = 'payment-btn';
+                button.dataset.amount = amount;
+                
+                // Highlight if it matches selected amount
+                if (amount === selectedAmount) {
+                    button.classList.add('exact-match');
+                }
+                
+                button.innerHTML = `₹${amount}`;
+                container.appendChild(button);
+            });
+            
+        } catch (error) {
+            console.error('Error generating calendar payment buttons:', error);
+            // Fallback buttons
+            const fallbackAmounts = [25, 50, 100, 200, 500];
+            fallbackAmounts.forEach(amount => {
+                const button = document.createElement('button');
+                button.className = 'payment-btn';
+                button.dataset.amount = amount;
+                button.textContent = `₹${amount}`;
+                container.appendChild(button);
+            });
+        }
+    }
+
+    setupCalendarPaymentHandlers() {
+        const container = document.getElementById('calendarPaymentButtons');
+        const confirmBtn = document.getElementById('confirmCalendarPaymentBtn');
+        const cancelBtn = document.getElementById('cancelCalendarPaymentBtn');
+        const modal = document.getElementById('calendarSelectionModal');
+        
+        // Payment button selection
+        if (container) {
+            container.addEventListener('click', (e) => {
+                if (e.target.classList.contains('payment-btn')) {
+                    // Remove selection from other buttons
+                    container.querySelectorAll('.payment-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    
+                    // Select clicked button
+                    e.target.classList.add('selected');
+                    
+                    const amount = parseFloat(e.target.dataset.amount);
+                    this.selectedCalendarPaymentAmount = amount;
+                    
+                    // Add animation
+                    e.target.style.animation = 'bounceIn 0.6s ease-out';
+                    setTimeout(() => e.target.style.animation = '', 600);
+                    
+                    this.updateCalendarPaymentSummary(amount);
+                }
+            });
+        }
+        
+        // Confirm payment
+        if (confirmBtn) {
+            confirmBtn.onclick = () => {
+                if (this.selectedCalendarPaymentAmount && this.selectedCalendarPaymentAmount > 0) {
+                    this.processCalendarPayment(this.selectedCalendarPaymentAmount, () => {
+                        modal.classList.remove('show');
+                        this.resetCalendarSelection();
+                    });
+                } else {
+                    this.notifications.showToast('Please select a payment amount first', 'warning');
+                }
+            };
+        }
+        
+        // Cancel payment
+        if (cancelBtn) {
+            cancelBtn.onclick = () => {
+                this.hideCalendarPaymentSection();
+            };
+        }
+    }
+
+    updateCalendarPaymentSummary(amount) {
+        const summaryEl = document.getElementById('calendarPaymentSummary');
+        const selectedAmountEl = document.getElementById('calendarSelectedAmountDisplay');
+        const paymentTypeEl = document.getElementById('calendarPaymentTypeDisplay');
+        const workDaysCoveredEl = document.getElementById('calendarWorkDaysCoveredDisplay');
+        const selectedDatesEl = document.getElementById('calendarSelectedDatesDisplay');
+        
+        if (summaryEl && selectedAmountEl && paymentTypeEl && workDaysCoveredEl && selectedDatesEl) {
+            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+            const selectedTotal = this.selectedCalendarAmount;
+            const isAdvancePayment = amount > selectedTotal;
+            const workDaysCovered = this.selectedCalendarDates.length;
+            
+            selectedAmountEl.textContent = this.utils.formatCurrency(amount);
+            paymentTypeEl.textContent = isAdvancePayment ? 'Advance' : 'Regular';
+            workDaysCoveredEl.textContent = `${workDaysCovered} days`;
+            selectedDatesEl.textContent = `${workDaysCovered} days selected`;
+            
+            summaryEl.style.display = 'block';
+        }
+    }
+
+    hideCalendarPaymentSection() {
+        const paymentSection = document.getElementById('paymentAmountSection');
+        const proceedBtn = document.getElementById('proceedToPaymentBtn');
+        const summaryEl = document.getElementById('calendarPaymentSummary');
+        
+        if (paymentSection) {
+            paymentSection.style.display = 'none';
+        }
+        
+        if (proceedBtn) {
+            proceedBtn.style.display = 'inline-flex';
+        }
+        
+        if (summaryEl) {
+            summaryEl.style.display = 'none';
+        }
+        
+        // Clear selection
+        this.selectedCalendarPaymentAmount = null;
+        const container = document.getElementById('calendarPaymentButtons');
+        if (container) {
+            container.querySelectorAll('.payment-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+        }
+    }
+
+    resetCalendarSelection() {
+        this.selectedCalendarDates = [];
+        this.selectedCalendarAmount = 0;
+        this.selectedCalendarPaymentAmount = null;
+        this.hideCalendarPaymentSection();
+    }
+
+    async processCalendarPayment(amount, closeModalCallback) {
+        try {
+            console.log('Processing calendar payment:', { 
+                amount, 
+                selectedDates: this.selectedCalendarDates,
+                selectedAmount: this.selectedCalendarAmount
+            });
+            
+            if (!amount || amount <= 0) {
+                throw new Error('Invalid payment amount');
+            }
+            
+            if (!this.db) {
+                throw new Error('Database not available');
+            }
+            
+            if (!this.selectedCalendarDates || this.selectedCalendarDates.length === 0) {
+                throw new Error('No work dates selected');
+            }
+            
+            const workDatesToPay = [...this.selectedCalendarDates];
+            const expectedAmount = this.selectedCalendarAmount;
+            const isAdvancePayment = amount > expectedAmount;
+            
+            const paymentDate = this.utils.getTodayString();
+            console.log('Adding calendar payment to database:', { amount, workDatesToPay, paymentDate, isAdvancePayment });
+            
+            await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
+            
+            closeModalCallback();
+            
+            const paidBtn = document.getElementById('paidBtn');
+            if (paidBtn) {
+                paidBtn.style.animation = 'bounceIn 0.6s ease-out';
+                paidBtn.classList.remove('payday-ready');
+                setTimeout(() => paidBtn.style.animation = '', 600);
+            }
+            
+            this.notifications.playSound('paid');
+            
+            const paymentType = isAdvancePayment ? 'advance payment' : 'regular payment';
+            this.notifications.showPaymentNotification(amount);
+            this.notifications.showToast(`${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)} of ₹${amount} recorded for ${workDatesToPay.length} selected work days!`, 'success');
+            
+            console.log('Syncing amount flow across all components...');
+            await this.syncAmountFlow();
+            
+            // Clear selection
+            this.resetCalendarSelection();
+            
+        } catch (error) {
+            console.error('Error recording calendar payment:', error);
+            
+            let errorMessage = 'Error recording payment. Please try again.';
+            if (error.message.includes('Database not available')) {
+                errorMessage = 'Database connection error. Please refresh the page and try again.';
+            } else if (error.message.includes('Invalid payment amount')) {
+                errorMessage = 'Please enter a valid payment amount.';
+            } else if (error.message.includes('No work dates selected')) {
+                errorMessage = 'Please select work dates to pay for.';
+            }
+            
+            this.notifications.showToast(errorMessage, 'error');
         }
     }
 
