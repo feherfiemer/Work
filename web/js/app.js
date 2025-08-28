@@ -1234,8 +1234,9 @@ class RServiceTracker {
     }
 
     positionTooltip(tooltip, targetElement) {
-        // Get target button position relative to viewport
-        const targetRect = targetElement.getBoundingClientRect();
+        // Get target button position relative to viewport (use the icon inside the button for precision)
+        const targetIcon = targetElement.querySelector('i') || targetElement;
+        const targetRect = targetIcon.getBoundingClientRect();
         const tooltipContent = tooltip.querySelector('.tooltip-content');
         const tooltipArrow = tooltip.querySelector('.tooltip-arrow');
         
@@ -1347,9 +1348,10 @@ class RServiceTracker {
             const tooltipLeft = parseFloat(tooltip.style.left);
             const tooltipTop = parseFloat(tooltip.style.top);
             
-            // Let CSS handle arrow visibility timing - remove inline styles
-            tooltipArrow.style.opacity = '';
-            tooltipArrow.style.visibility = '';
+            // Ensure arrow is always visible
+            tooltipArrow.style.opacity = '1';
+            tooltipArrow.style.visibility = 'visible';
+            tooltipArrow.style.display = 'block';
             
             // Calculate exact positioning based on tooltip position relative to target
             if (position === 'bottom' || position === 'top') {
@@ -2137,31 +2139,44 @@ class RServiceTracker {
             let isAdvancePayment = false;
             let workDatesToPay = [];
             
-            // Handle force paid for specific date
+            // Unified payment processing (works for both normal and force payments)
             if (this.forcePaidDateString) {
                 console.log('Processing force payment for specific date:', this.forcePaidDateString);
                 
-                // For force payment, we only record the payment, not mark work as done
-                // Check if work record exists but don't create one if it doesn't
-                let workRecord = await this.db.getWorkRecord(this.forcePaidDateString);
-                if (!workRecord) {
-                    console.log('No work record exists for force payment - payment only');
+                // For force payment, treat it as payment for pending work + this specific date
+                // Get all current pending unpaid dates
+                await this.updatePendingUnpaidDates();
+                
+                // Add the force payment date to the pending list if not already there
+                if (!this.pendingUnpaidDates.includes(this.forcePaidDateString)) {
+                    this.pendingUnpaidDates.unshift(this.forcePaidDateString);
                 }
                 
-                workDatesToPay = [this.forcePaidDateString];
-                isAdvancePayment = false; // Force payments are not advance payments
+                // Now process like normal payment
+                const totalPendingValue = this.pendingUnpaidDates.length * DAILY_WAGE;
+                isAdvancePayment = amount > totalPendingValue;
+                
+                if (totalPendingValue > 0) {
+                    const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
+                    workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
+                    console.log('Force payment - work dates to pay:', workDatesToPay);
+                } else {
+                    // If no pending work, this is definitely an advance
+                    workDatesToPay = [this.forcePaidDateString];
+                    isAdvancePayment = true;
+                }
                 
                 const paymentDate = this.utils.getTodayString();
                 await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
+                
+                // Update pending unpaid dates by removing paid ones
+                this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
                 
                 // Clear the force paid date
                 const processedDate = this.forcePaidDateString;
                 this.forcePaidDateString = null;
                 
                 console.log('Force payment recorded successfully for date:', processedDate);
-                
-                // Trigger additional notifications for force payments - only mention payment, not work completion
-                this.notifications.showToast(`Force payment of ₹${amount} recorded for ${new Date(processedDate).toLocaleDateString()}!`, 'success', 6000);
             } else {
                 // Normal payment processing
                 const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
@@ -2170,7 +2185,7 @@ class RServiceTracker {
                 if (totalWorkCompletedValue > 0) {
                     const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
                     workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
-                    console.log('Work dates to pay:', workDatesToPay);
+                    console.log('Normal payment - work dates to pay:', workDatesToPay);
                 }
                 
                 const paymentDate = this.utils.getTodayString();
@@ -2717,8 +2732,10 @@ class RServiceTracker {
             console.log('Service Worker not supported');
         }
 
-        let deferredPrompt;
         let installBannerShown = false;
+        
+        // Make deferredPrompt accessible globally
+        window.deferredPrompt = null;
         
         // Check if already installed
         const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
@@ -2728,11 +2745,11 @@ class RServiceTracker {
         
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            deferredPrompt = e;
+            window.deferredPrompt = e;
             
             // Show install banner if not installed and not permanently dismissed
             if (!isInstalled && !isDismissed && !installBannerShown) {
-                this.showInstallRecommendation(deferredPrompt);
+                this.showInstallRecommendation(window.deferredPrompt);
                 installBannerShown = true;
             }
             
@@ -2789,8 +2806,8 @@ class RServiceTracker {
                 if (!finalIsClosed || shouldShowOnPaymentDay) {
                     console.log('[PWA] Showing PWA banner');
                     // Only show if we have the prompt or it's a generic prompt
-                    if (deferredPrompt) {
-                        this.showInstallRecommendation(deferredPrompt);
+                    if (window.deferredPrompt) {
+                        this.showInstallRecommendation(window.deferredPrompt);
                     } else {
                         this.showInstallRecommendationGeneric();
                     }
@@ -3000,12 +3017,17 @@ class RServiceTracker {
         banner.style.display = 'block';
         setTimeout(() => banner.classList.add('show'), 100);
         
-        // Handle install button click (generic fallback)
+        // Handle install button click (try native install first, then fallback)
         const installBtn = document.getElementById('installAppBtn');
         if (installBtn) {
             installBtn.onclick = () => {
-                // For generic install, provide instructions
-                this.notifications.showToast('Please use your browser menu to install: Menu → Add to Home Screen or Install App', 'info', 8000);
+                // Try native install first if available
+                if (window.deferredPrompt) {
+                    this.triggerInstall(window.deferredPrompt);
+                } else {
+                    // Fallback to manual instructions
+                    this.notifications.showToast('Please use your browser menu to install: Menu → Add to Home Screen or Install App', 'info', 8000);
+                }
             };
         }
         

@@ -4523,9 +4523,9 @@ button.disabled:hover {
 }
 
 .install-btn {
-  background: var(--surface);
-  color: var(--primary);
-  border: 1px solid rgba(var(--primary-rgb), 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 0.75rem 1rem;
   font-size: 0.9rem;
   font-weight: 600;
@@ -4562,7 +4562,7 @@ button.disabled:hover {
 }
 
 .install-btn:hover {
-  background: white;
+  background: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
@@ -4986,9 +4986,9 @@ button.disabled:hover {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: all var(--transition-fast);
-  transform: scale(0.8);
-  /* Ensure tooltip stays completely fixed */
+  transform: scale(0);
+  transform-origin: center;
+  /* Ensure tooltip stays completely fixed during scroll */
   will-change: transform, opacity;
   contain: layout style paint;
   /* Ensure proper stacking and display */
@@ -5001,6 +5001,8 @@ button.disabled:hover {
   pointer-events: auto;
   transform: scale(1);
   display: block !important;
+  /* No transition for instant appearance */
+  transition: none;
 }
 
 .tooltip-content {

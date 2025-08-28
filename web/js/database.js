@@ -294,31 +294,23 @@ class DatabaseManager {
         );
         const pendingWorkValue = unpaidWork.length * DAILY_WAGE;
         
-        // Calculate total earned as work value + any force payments (payments without work records)
-        const workBasedPayments = payments.filter(payment => 
-            payment.workDates && payment.workDates.some(date => 
-                workRecords.some(record => record.date === date && record.status === 'completed')
-            )
-        );
-        const forcePayments = payments.filter(payment => 
-            payment.workDates && payment.workDates.every(date => 
-                !workRecords.some(record => record.date === date && record.status === 'completed')
-            )
-        );
+        // Total earned is based on completed work only
+        // Force payments and advance payments are handled through the payment system
+        const totalEarned = totalWorked * DAILY_WAGE;
         
-        const totalEarned = (totalWorked * DAILY_WAGE) + forcePayments.reduce((sum, payment) => sum + payment.amount, 0);
-        
-        // Current balance is earned amount minus paid amount
-        const currentBalance = totalEarned - totalPaid;
+        // Current balance is pending work value (what's owed for completed work)
+        // This will be negative if advance payments exceed completed work value
+        const currentBalance = pendingWorkValue - (totalPaid - totalEarned);
         
         return {
             totalWorked,
             totalPaid,
             totalEarned,
-            currentBalance,
+            currentBalance: Math.max(0, pendingWorkValue), // Show pending work value for current balance
             pendingWorkValue,
             unpaidWorkDays: unpaidWork.length,
-            dailyWage: DAILY_WAGE
+            dailyWage: DAILY_WAGE,
+            actualBalance: currentBalance // Keep track of actual balance including advances
         };
     }
 
