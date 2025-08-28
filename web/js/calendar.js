@@ -894,6 +894,9 @@ class CalendarManager {
 
                 if (window.app && typeof window.app.updateDashboard === 'function') {
                     try {
+                        // Force reload fresh stats before updating dashboard
+                        window.app.currentStats = await window.app.db.getEarningsStats();
+                        
                         await window.app.updateDashboard();
                         await window.app.updatePendingUnpaidDates();
                         await window.app.updatePaidButtonVisibility();
@@ -911,8 +914,25 @@ class CalendarManager {
                         if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
                             await window.app.charts.updateCharts();
                         }
+                        
+                        // Force refresh all UI elements
+                        const event = new CustomEvent('forceSystemSync', {
+                            detail: { source: 'calendar_force_payment' }
+                        });
+                        window.dispatchEvent(event);
+                        
+                        console.log('Full system sync completed after calendar force payment');
                     } catch (appUpdateError) {
                         console.error('Error updating app components:', appUpdateError);
+                        // Retry mechanism for critical updates
+                        setTimeout(async () => {
+                            try {
+                                window.app.currentStats = await window.app.db.getEarningsStats();
+                                await window.app.updateDashboard();
+                            } catch (retryError) {
+                                console.error('Retry update failed:', retryError);
+                            }
+                        }, 1000);
                     }
                 }
             } catch (renderError) {
@@ -1026,6 +1046,9 @@ class CalendarManager {
 
                 if (window.app && typeof window.app.updateDashboard === 'function') {
                     try {
+                        // Force reload fresh stats before updating dashboard
+                        window.app.currentStats = await window.app.db.getEarningsStats();
+                        
                         await window.app.updateDashboard();
                         
                         // Update today's status (done button state)
@@ -1045,9 +1068,29 @@ class CalendarManager {
                             await window.app.checkPendingPayments();
                         }
                         
-                        console.log('App dashboard updated after marking as done');
+                        // Update charts immediately
+                        if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
+                            await window.app.charts.updateCharts();
+                        }
+                        
+                        // Force refresh all UI elements
+                        const event = new CustomEvent('forceSystemSync', {
+                            detail: { source: 'calendar_mark_done' }
+                        });
+                        window.dispatchEvent(event);
+                        
+                        console.log('Full system sync completed after marking as done');
                     } catch (appError) {
                         console.error('Error updating app after marking as done:', appError);
+                        // Retry mechanism for critical updates
+                        setTimeout(async () => {
+                            try {
+                                window.app.currentStats = await window.app.db.getEarningsStats();
+                                await window.app.updateDashboard();
+                            } catch (retryError) {
+                                console.error('Retry update failed:', retryError);
+                            }
+                        }, 1000);
                     }
                 }
 

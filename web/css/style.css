@@ -5048,12 +5048,13 @@ button.disabled:hover {
   width: 12px;
   height: 12px;
   transform: rotate(45deg);
-  z-index: 1;
-  background: rgba(var(--primary-rgb), 0.95);
-  border: 1px solid rgba(var(--primary-rgb), 0.8);
+  z-index: 1000;
+  background: rgba(var(--primary-rgb), 0.95) !important;
+  border: 1px solid rgba(var(--primary-rgb), 0.8) !important;
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+  pointer-events: none;
 }
 
 .earnings-tooltip.show .tooltip-arrow {

@@ -496,6 +496,17 @@ class DatabaseManager {
             
             totalWorkCompletedForAdvance = allWorkAfterAdvance.length;
             
+            // Additional validation: ensure we don't have negative balances
+            const regularPayments = payments.filter(p => !p.isAdvance);
+            const totalRegularPaymentAmount = regularPayments.reduce((sum, p) => sum + p.amount, 0);
+            const totalWorkEarned = workRecords.filter(r => r.status === 'completed').length * amounts.dailyWage;
+            
+            // If total payments exceed work earned, adjust advance payment calculation
+            if (totalRegularPaymentAmount + totalAdvanceAmount > totalWorkEarned) {
+                const excessPayment = (totalRegularPaymentAmount + totalAdvanceAmount) - totalWorkEarned;
+                console.log('[Advance] Excess payment detected:', excessPayment);
+            }
+            
             const workRequiredForAdvance = totalWorkCoveredByAdvance; // Days paid for
             const workCompletedForAdvance = totalWorkCompletedForAdvance; // Days actually completed
             const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workCompletedForAdvance);

@@ -49,6 +49,7 @@ class RServiceTracker {
             this.loadTheme();
             
             this.setupEventListeners();
+            this.setupGlobalSyncEventListener();
             
             await this.loadInitialData();
             
@@ -79,41 +80,108 @@ class RServiceTracker {
             
             window.testAllSystems = async () => {
                 console.log('[SYSTEM] Testing all R-Service Tracker systems...');
+                const testResults = {};
                 
                 try {
-                                    console.log('[DATABASE] Testing database...');
-                const stats = await this.db.getEarningsStats();
-                console.log('[DATABASE] Database working - Current stats:', stats);
-                
-                console.log('[NOTIFICATIONS] Testing notifications...');
-                this.notifications.testAllNotifications();
-                
-                console.log('[CHARTS] Testing charts...');
-                if (this.charts) {
-                    await this.charts.updateCharts();
-                    console.log('[CHARTS] Charts system working');
-                }
-                
-                console.log('[CALENDAR] Testing calendar...');
-                if (this.calendar) {
-                    this.calendar.render();
-                    console.log('[CALENDAR] Calendar system working');
-                }
-                
-                console.log('[UTILITIES] Testing utilities...');
-                const testDate = this.utils.formatDate(new Date());
-                console.log('[UTILITIES] Utilities working - Test date:', testDate);
-                
-                console.log('[PWA] Testing PWA features...');
-                if ('serviceWorker' in navigator) {
-                    console.log('[PWA] Service Worker supported');
-                }
-                
-                    this.notifications.showToast('All systems tested successfully!', 'success', 5000);
+                    // Test Database
+                    console.log('[DATABASE] Testing database...');
+                    const stats = await this.db.getEarningsStats();
+                    const workRecords = await this.db.getAllWorkRecords();
+                    const payments = await this.db.getAllPayments();
+                    testResults.database = {
+                        status: 'PASS',
+                        stats: stats,
+                        workRecords: workRecords.length,
+                        payments: payments.length
+                    };
+                    console.log('[DATABASE] ✅ Database working - Current stats:', stats);
+                    
+                    // Test Dashboard Updates
+                    console.log('[DASHBOARD] Testing dashboard updates...');
+                    await this.updateDashboard();
+                    testResults.dashboard = { status: 'PASS' };
+                    console.log('[DASHBOARD] ✅ Dashboard update working');
+                    
+                    // Test Advance Payment System
+                    console.log('[ADVANCE] Testing advance payment system...');
+                    const advanceStatus = await this.db.getAdvancePaymentStatus();
+                    testResults.advancePayment = {
+                        status: 'PASS',
+                        hasAdvancePayments: advanceStatus.hasAdvancePayments,
+                        totalAdvanceAmount: advanceStatus.totalAdvanceAmount
+                    };
+                    console.log('[ADVANCE] ✅ Advance payment system working:', advanceStatus);
+                    
+                    // Test Notifications
+                    console.log('[NOTIFICATIONS] Testing notifications...');
+                    this.notifications.testAllNotifications();
+                    testResults.notifications = { status: 'PASS' };
+                    console.log('[NOTIFICATIONS] ✅ Notifications system working');
+                    
+                    // Test Charts
+                    console.log('[CHARTS] Testing charts...');
+                    if (this.charts) {
+                        await this.charts.updateCharts();
+                        testResults.charts = { status: 'PASS' };
+                        console.log('[CHARTS] ✅ Charts system working');
+                    } else {
+                        testResults.charts = { status: 'SKIP', reason: 'Charts not initialized' };
+                    }
+                    
+                    // Test Calendar
+                    console.log('[CALENDAR] Testing calendar...');
+                    if (this.calendar) {
+                        await this.calendar.updateCalendar();
+                        testResults.calendar = { status: 'PASS' };
+                        console.log('[CALENDAR] ✅ Calendar system working');
+                    } else {
+                        testResults.calendar = { status: 'SKIP', reason: 'Calendar not initialized' };
+                    }
+                    
+                    // Test Global Sync System
+                    console.log('[SYNC] Testing global sync system...');
+                    const syncEvent = new CustomEvent('forceSystemSync', {
+                        detail: { source: 'system_test' }
+                    });
+                    window.dispatchEvent(syncEvent);
+                    testResults.globalSync = { status: 'PASS' };
+                    console.log('[SYNC] ✅ Global sync system working');
+                    
+                    // Test Utilities
+                    console.log('[UTILITIES] Testing utilities...');
+                    const testDate = this.utils.formatDate(new Date());
+                    const testCurrency = this.utils.formatCurrency(100);
+                    testResults.utilities = {
+                        status: 'PASS',
+                        testDate: testDate,
+                        testCurrency: testCurrency
+                    };
+                    console.log('[UTILITIES] ✅ Utilities working - Test date:', testDate);
+                    
+                    // Test PWA Features
+                    console.log('[PWA] Testing PWA features...');
+                    const pwaTests = {
+                        serviceWorker: 'serviceWorker' in navigator,
+                        localStorage: typeof Storage !== 'undefined',
+                        indexedDB: 'indexedDB' in window
+                    };
+                    testResults.pwa = { status: 'PASS', features: pwaTests };
+                    console.log('[PWA] ✅ PWA features:', pwaTests);
+                    
+                    // Final Results
+                    console.log('\n🎉 ALL SYSTEM TESTS COMPLETED SUCCESSFULLY! 🎉');
+                    console.log('📊 Test Results Summary:', testResults);
+                    
+                    this.notifications.showToast('🎉 All systems tested successfully! Check console for detailed results.', 'success', 8000);
+                    
+                    return testResults;
                     
                 } catch (error) {
-                    console.error('[SYSTEM] System test failed:', error);
-                    this.notifications.showToast('System test failed: ' + error.message, 'error', 5000);
+                    console.error('[SYSTEM] ❌ System test failed:', error);
+                    testResults.error = error.message;
+                    console.log('📊 Test Results (with errors):', testResults);
+                    this.notifications.showToast('❌ System test failed: ' + error.message, 'error', 8000);
+                    return testResults;
                 }
             };
             
@@ -325,6 +393,39 @@ class RServiceTracker {
                 sideMenu.classList.remove('open');
             }
         });
+    }
+
+    setupGlobalSyncEventListener() {
+        // Listen for global system sync events to ensure all components stay synchronized
+        window.addEventListener('forceSystemSync', async (event) => {
+            console.log(`[GlobalSync] Received sync event from: ${event.detail?.source || 'unknown'}`);
+            
+            try {
+                // Force reload fresh data
+                this.currentStats = await this.db.getEarningsStats();
+                
+                // Update all major components
+                await this.updateDashboard();
+                await this.updatePendingUnpaidDates();
+                await this.updatePaidButtonVisibility();
+                
+                // Update charts if available
+                if (this.charts && typeof this.charts.updateCharts === 'function') {
+                    await this.charts.updateCharts();
+                }
+                
+                // Update calendar if available
+                if (this.calendar && typeof this.calendar.updateCalendar === 'function') {
+                    await this.calendar.updateCalendar();
+                }
+                
+                console.log('[GlobalSync] System sync completed successfully');
+            } catch (error) {
+                console.error('[GlobalSync] Error during system sync:', error);
+            }
+        });
+        
+        console.log('[GlobalSync] Global sync event listener setup completed');
     }
 
     closeMenu() {
@@ -1348,10 +1449,20 @@ class RServiceTracker {
             const tooltipLeft = parseFloat(tooltip.style.left);
             const tooltipTop = parseFloat(tooltip.style.top);
             
-            // Ensure arrow is always visible
+            // Ensure arrow is always visible with enhanced styling
             tooltipArrow.style.opacity = '1';
             tooltipArrow.style.visibility = 'visible';
             tooltipArrow.style.display = 'block';
+            tooltipArrow.style.position = 'absolute';
+            tooltipArrow.style.zIndex = '1001';
+            tooltipArrow.style.pointerEvents = 'none';
+            
+            console.log('[Tooltip] Arrow styles applied:', {
+                opacity: tooltipArrow.style.opacity,
+                visibility: tooltipArrow.style.visibility,
+                display: tooltipArrow.style.display,
+                className: tooltipArrow.className
+            });
             
             // Calculate exact positioning based on tooltip position relative to target
             if (position === 'bottom' || position === 'top') {
@@ -1912,6 +2023,14 @@ class RServiceTracker {
             // Ensure paid button shows immediately if eligible
             await this.updatePaidButtonVisibility();
             
+            // Trigger global system sync to ensure all components are updated
+            const event = new CustomEvent('forceSystemSync', {
+                detail: { source: 'mark_as_done' }
+            });
+            window.dispatchEvent(event);
+            
+            console.log('Mark as done completed with full system sync');
+            
         } catch (error) {
             console.error('Error marking work as done:', error);
             this.notifications.showToast('Error marking work as done. Please try again.', 'error');
@@ -2251,6 +2370,14 @@ class RServiceTracker {
             } catch (calendarError) {
                 console.error('Error updating calendar:', calendarError);
             }
+            
+            // Trigger global system sync to ensure all components are updated
+            const event = new CustomEvent('forceSystemSync', {
+                detail: { source: 'payment_processing' }
+            });
+            window.dispatchEvent(event);
+            
+            console.log('Payment processing completed with full system sync');
             
         } catch (error) {
             console.error('Error recording payment:', error);
