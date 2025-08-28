@@ -276,13 +276,7 @@ class RServiceTracker {
             });
         }
 
-        const forcePaidBtn = document.getElementById('forcePaidBtn');
-        if (forcePaidBtn) {
-            forcePaidBtn.addEventListener('click', () => {
-                this.notifications.playSound('payment');
-                this.handleForcePaidClick();
-            });
-        }
+
 
         const menuToggle = document.getElementById('menuToggle');
         const sideMenu = document.getElementById('sideMenu');
@@ -1711,35 +1705,19 @@ class RServiceTracker {
         const previousUnpaidCount = this.pendingUnpaidDates.length;
         this.pendingUnpaidDates = unpaidRecords.map(record => record.date);
         
-        // Check if we should show paid button based on threshold (only on payment days)
+        // Always show the enhanced Mark as Paid button
+        this.showPaidButton();
+        
+        // Check for payment day notifications
         const advanceStatus = await this.db.getAdvancePaymentStatus();
         const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
-        const shouldShowPaidBtn = (this.pendingUnpaidDates.length > 0 && this.pendingUnpaidDates.length % paymentThreshold === 0) || 
-                                (this.pendingUnpaidDates.length > 0 && advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0);
+        const isPaymentDay = (this.pendingUnpaidDates.length > 0 && this.pendingUnpaidDates.length % paymentThreshold === 0) || 
+                            (this.pendingUnpaidDates.length > 0 && advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0);
         
-        if (shouldShowPaidBtn) {
-            this.showPaidButton();
-            
-            if (this.pendingUnpaidDates.length % paymentThreshold === 0 && previousUnpaidCount % paymentThreshold !== 0) {
-                console.log('Payday reached! Showing notification and playing sound');
-                this.notifications.showPaydayNotification();
-                this.notifications.playSound('paid');
-            }
-        } else {
-            this.hidePaidButton();
-        }
-
-        // Force Paid button logic - show if today's work is completed but not paid
-        const today = this.utils.getTodayString();
-        const todayWorkRecord = await this.db.getWorkRecord(today);
-        const shouldShowForcePaidBtn = todayWorkRecord && 
-                                     todayWorkRecord.status === 'completed' && 
-                                     this.pendingUnpaidDates.includes(today);
-
-        if (shouldShowForcePaidBtn) {
-            this.showForcePaidButton();
-        } else {
-            this.hideForcePaidButton();
+        if (isPaymentDay && this.pendingUnpaidDates.length % paymentThreshold === 0 && previousUnpaidCount % paymentThreshold !== 0) {
+            console.log('Payday reached! Showing notification and playing sound');
+            this.notifications.showPaydayNotification();
+            this.notifications.playSound('paid');
         }
 
         // Check if we should show PWA recommendation on payment days
@@ -1820,20 +1798,7 @@ class RServiceTracker {
         }
     }
 
-    showForcePaidButton() {
-        const forcePaidBtn = document.getElementById('forcePaidBtn');
-        if (forcePaidBtn) {
-            forcePaidBtn.style.display = 'inline-flex';
-            forcePaidBtn.style.animation = 'payoutButtonAppear 0.8s ease-in-out';
-        }
-    }
 
-    hideForcePaidButton() {
-        const forcePaidBtn = document.getElementById('forcePaidBtn');
-        if (forcePaidBtn) {
-            forcePaidBtn.style.display = 'none';
-        }
-    }
 
     async handleDoneClick() {
         try {
@@ -1889,40 +1854,7 @@ class RServiceTracker {
         }
     }
 
-    async handleForcePaidClick() {
-        try {
-            const today = new Date();
-            const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            
-            // Check if work is completed today
-            const workRecord = await this.db.getWorkRecord(todayString);
-            if (!workRecord || workRecord.status !== 'completed') {
-                this.notifications.showToast('Work must be completed before force payment!', 'warning');
-                return;
-            }
 
-            // Check if already paid
-            const payments = await this.db.getAllPayments();
-            const isAlreadyPaid = payments.some(payment => 
-                payment.workDates && payment.workDates.includes(todayString)
-            );
-            
-            if (isAlreadyPaid) {
-                this.notifications.showToast('Today\'s work is already paid!', 'warning');
-                return;
-            }
-
-            // Store the date for use in payment processing
-            this.forcePaidDateString = todayString;
-
-            // Show the payment selector dialog
-            this.showPaymentModal();
-            
-        } catch (error) {
-            console.error('Error in force paid click:', error);
-            this.notifications.showToast('Error processing force payment', 'error');
-        }
-    }
 
     async updatePendingUnpaidDates() {
         try {
@@ -2145,13 +2077,7 @@ class RServiceTracker {
             
             let workDatesToPay = [];
             
-            // Handle force payment for specific date
-            if (this.forcePaidDateString) {
-                console.log('Processing force payment for date:', this.forcePaidDateString);
-                workDatesToPay = [this.forcePaidDateString];
-                // Clear the force paid date after use
-                this.forcePaidDateString = null;
-            } else if (totalWorkCompletedValue > 0) {
+            if (totalWorkCompletedValue > 0) {
                 const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
                 workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
                 console.log('Work dates to pay:', workDatesToPay);
@@ -2208,59 +2134,151 @@ class RServiceTracker {
 
     async syncAmountFlow() {
         /**
-         * Central function to sync all amount flow and updates across the entire application.
+         * Enhanced central function to sync all amount flow and updates across the entire application.
          * This ensures unified state management for work completion, payments, and earnings.
          * Called after every action that affects amounts, work status, or payments.
+         * 
+         * Enhanced with:
+         * - Improved error handling and recovery
+         * - Performance monitoring
+         * - Data validation
+         * - Cache optimization
+         * - User experience improvements
          */
+        const syncStartTime = performance.now();
         try {
-            console.log('[SYNC] Starting amount flow synchronization...');
+            console.log('[SYNC] Starting enhanced amount flow synchronization...');
             
-            // 1. Refresh core data from database
-            const workRecords = await this.db.getAllWorkRecords();
-            const payments = await this.db.getAllPayments();
+            // 1. Data integrity validation
+            if (!this.db) {
+                throw new Error('Database not available');
+            }
             
-            // 2. Recalculate all earnings statistics
+            // 2. Refresh core data from database with error handling
+            let workRecords, payments;
+            try {
+                [workRecords, payments] = await Promise.all([
+                    this.db.getAllWorkRecords(),
+                    this.db.getAllPayments()
+                ]);
+                console.log(`[SYNC] Loaded ${workRecords.length} work records and ${payments.length} payments`);
+            } catch (dataError) {
+                console.error('[SYNC] Error loading core data:', dataError);
+                throw new Error('Failed to load core data from database');
+            }
+            
+            // 3. Recalculate all earnings statistics with validation
+            const previousStats = { ...this.currentStats };
             this.currentStats = await this.db.getEarningsStats();
+            
+            // Validate stats changes
+            if (this.currentStats && previousStats) {
+                const balanceChange = this.currentStats.currentBalance - (previousStats.currentBalance || 0);
+                const totalEarnedChange = this.currentStats.totalEarned - (previousStats.totalEarned || 0);
+                if (Math.abs(balanceChange) > 0 || Math.abs(totalEarnedChange) > 0) {
+                    console.log('[SYNC] Detected changes - Balance:', balanceChange, 'Total Earned:', totalEarnedChange);
+                }
+            }
+            
             console.log('[SYNC] Updated earnings stats:', this.currentStats);
             
-            // 3. Update pending unpaid dates
-            await this.updatePendingUnpaidDates();
+            // 4. Update pending unpaid dates with error recovery
+            try {
+                await this.updatePendingUnpaidDates();
+            } catch (pendingError) {
+                console.error('[SYNC] Error updating pending dates:', pendingError);
+                // Continue sync but log the error
+            }
             
-            // 4. Update main dashboard
-            this.updateDashboard();
+            // 5. Update main dashboard with enhanced feedback
+            try {
+                this.updateDashboard();
+                console.log('[SYNC] Dashboard updated successfully');
+            } catch (dashboardError) {
+                console.error('[SYNC] Error updating dashboard:', dashboardError);
+                // Try a delayed retry
+                setTimeout(() => {
+                    try {
+                        this.updateDashboard();
+                        console.log('[SYNC] Dashboard updated on retry');
+                    } catch (retryError) {
+                        console.error('[SYNC] Dashboard retry failed:', retryError);
+                    }
+                }, 500);
+            }
             
-            // 5. Update button visibility based on current state
-            await this.updatePaidButtonVisibility();
+            // 6. Update button visibility with enhanced logic
+            try {
+                await this.updatePaidButtonVisibility();
+                console.log('[SYNC] Button visibility updated');
+            } catch (buttonError) {
+                console.error('[SYNC] Error updating button visibility:', buttonError);
+            }
             
-            // 6. Update calendar if it exists
+            // 7. Update calendar with improved error handling
             if (this.calendar) {
                 try {
                     await this.calendar.loadData();
                     this.calendar.render();
-                    console.log('[SYNC] Calendar updated');
+                    console.log('[SYNC] Calendar updated successfully');
                 } catch (calendarError) {
                     console.error('[SYNC] Error updating calendar:', calendarError);
+                    // Try to recover with a simplified update
+                    setTimeout(() => {
+                        try {
+                            this.calendar.render();
+                            console.log('[SYNC] Calendar recovered on retry');
+                        } catch (retryError) {
+                            console.error('[SYNC] Calendar retry failed:', retryError);
+                        }
+                    }, 1000);
                 }
             }
             
-            // 7. Update charts if they exist
+            // 8. Update charts with performance monitoring
             if (this.charts) {
                 try {
+                    const chartStartTime = performance.now();
                     await this.charts.updateCharts();
-                    console.log('[SYNC] Charts updated');
+                    const chartDuration = performance.now() - chartStartTime;
+                    console.log(`[SYNC] Charts updated successfully in ${chartDuration.toFixed(2)}ms`);
                 } catch (chartError) {
                     console.error('[SYNC] Error updating charts:', chartError);
+                    // Charts are non-critical, continue without retry
                 }
             }
             
-            // 8. Check for milestone notifications
-            await this.checkAdvancePaymentNotification();
+            // 9. Check for milestone notifications and advance payments
+            try {
+                await this.checkAdvancePaymentNotification();
+            } catch (notificationError) {
+                console.error('[SYNC] Error checking notifications:', notificationError);
+            }
             
-            console.log('[SYNC] Amount flow synchronization completed successfully');
+            // 10. Performance monitoring and logging
+            const syncDuration = performance.now() - syncStartTime;
+            console.log(`[SYNC] Enhanced amount flow synchronization completed successfully in ${syncDuration.toFixed(2)}ms`);
+            
+            // 11. User feedback for significant sync operations
+            if (syncDuration > 1000) {
+                this.notifications.showToast('Data synchronized successfully', 'info', 2000);
+            }
             
         } catch (error) {
-            console.error('[SYNC] Error in amount flow synchronization:', error);
-            this.notifications.showToast('Error syncing data. Please refresh if issues persist.', 'warning');
+            const syncDuration = performance.now() - syncStartTime;
+            console.error(`[SYNC] Critical error in amount flow synchronization after ${syncDuration.toFixed(2)}ms:`, error);
+            
+            // Enhanced error recovery
+            try {
+                // Try basic recovery
+                this.currentStats = await this.db.getEarningsStats();
+                this.updateDashboard();
+                console.log('[SYNC] Basic recovery completed');
+                this.notifications.showToast('Data sync recovered. Some features may need refresh.', 'warning', 4000);
+            } catch (recoveryError) {
+                console.error('[SYNC] Recovery failed:', recoveryError);
+                this.notifications.showToast('Sync error detected. Please refresh the page.', 'error', 6000);
+            }
         }
     }
 
@@ -2609,8 +2627,6 @@ class RServiceTracker {
                     // Sync all components after data clear
                     await this.syncAmountFlow();
                     await this.updateTodayStatus();
-                    this.hidePaidButton();
-                    this.hideForcePaidButton();
                     
                 } catch (error) {
                     console.error('Error clearing data:', error);

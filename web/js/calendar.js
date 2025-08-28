@@ -384,31 +384,7 @@ class CalendarManager {
             }
         }
 
-        // Add Force Paid button for ALL dates (below Mark as Done button)
-        content += `
-            <button class="force-paid-btn" data-date="${dateString}" style="
-                margin-top: 1rem;
-                width: 100%;
-                padding: 0.75rem;
-                background: linear-gradient(135deg, #FF6B35, #E55A2B);
-                color: white;
-                border: none;
-                border-radius: var(--border-radius);
-                cursor: pointer;
-                font-family: var(--font-family);
-                font-weight: 600;
-                font-size: 0.9rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.5rem;
-                box-shadow: var(--shadow-light);
-                transition: all var(--transition-fast);
-            ">
-                <i class="fas fa-hand-holding-usd" style="color: #FFB366;"></i>
-                Force Paid
-            </button>
-        `;
+
 
         content += `</div>`;
 
@@ -478,54 +454,7 @@ class CalendarManager {
             }
         });
 
-        const forcePaidBtn = modalContent.querySelector('.force-paid-btn');
-        if (forcePaidBtn) {
-            forcePaidBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                try {
-                    const targetDate = forcePaidBtn.dataset.date || dateString;
-                    console.log('Force paid button clicked for date:', targetDate);
-                    
-                    if (!targetDate) {
-                        console.error('No target date found');
-                        if (window.app && window.app.notifications) {
-                            window.app.notifications.showToast('Error: No date selected', 'error');
-                        }
-                        return;
-                    }
-                    
-                    forcePaidBtn.disabled = true;
-                    forcePaidBtn.style.background = 'linear-gradient(135deg, #ccc, #999)';
-                    forcePaidBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-                    forcePaidBtn.style.transform = 'scale(0.95)';
-                    
-                    closeModal();
-                    
-                    setTimeout(async () => {
-                        try {
-                            await this.handleForcePaid(targetDate);
-                        } catch (paymentError) {
-                            console.error('Error processing force payment:', paymentError);
-                            if (window.app && window.app.notifications) {
-                                window.app.notifications.showToast('Error processing force payment. Please try again.', 'error');
-                            }
-                        }
-                    }, 200);
-                    
-                } catch (error) {
-                    console.error('Error in force paid button handler:', error);
-                    if (window.app && window.app.notifications) {
-                        window.app.notifications.showToast('Error processing force payment', 'error');
-                    }
-                    if (forcePaidBtn) {
-                        forcePaidBtn.disabled = false;
-                        forcePaidBtn.innerHTML = '<i class="fas fa-hand-holding-usd"></i> Force Mark as Paid';
-                    }
-                }
-            });
-        }
+
 
         // Add event listener for Mark as Done button
         const markDoneBtn = modalContent.querySelector('.mark-done-btn');
@@ -699,121 +628,7 @@ class CalendarManager {
         return exportData;
     }
 
-    async handleForcePaid(dateString) {
-        try {
-            console.log('Processing force paid for date:', dateString);
-            
-            if (!dateString) {
-                throw new Error('No date provided for force payment');
-            }
 
-            if (!this.db) {
-                throw new Error('Database not available');
-            }
-            
-            // Check if already paid (but allow force payment even without work record)
-            const payments = await this.db.getAllPayments();
-            const isAlreadyPaid = payments.some(payment => 
-                payment.workDates && payment.workDates.includes(dateString)
-            );
-            
-            if (isAlreadyPaid) {
-                if (window.app && window.app.notifications) {
-                    window.app.notifications.showToast('This date is already paid!', 'warning');
-                }
-                return;
-            }
-
-            // If no work record exists, create one for the force payment
-            const workRecord = await this.db.getWorkRecord(dateString);
-            if (!workRecord || workRecord.status !== 'completed') {
-                console.log('Creating work record for force payment on date:', dateString);
-                const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-                await this.db.addWorkRecord(dateString, dailyWage, 'completed');
-            }
-
-            // Store the date for use in payment processing
-            if (window.app) {
-                window.app.forcePaidDateString = dateString;
-            }
-
-            // Show the payment selector dialog instead of directly processing payment
-            if (window.app && typeof window.app.showPaymentModal === 'function') {
-                console.log('Opening payment selector dialog for force payment');
-                window.app.showPaymentModal();
-                return; // Exit early since payment will be handled by the modal
-            } else {
-                // Fallback to direct payment if payment modal is not available
-                console.warn('Payment modal not available, using direct payment');
-                const paymentAmount = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-                const today = new Date();
-                const paymentDate = today.getFullYear() + '-' + 
-                                  String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-                                  String(today.getDate()).padStart(2, '0');
-                
-                console.log('Adding direct payment:', { amount: paymentAmount, workDates: [dateString], paymentDate });
-                await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
-                console.log('Force payment added successfully');
-
-                if (window.app && window.app.notifications) {
-                    window.app.notifications.showToast(`Force payment of ₹${paymentAmount} recorded for ${new Date(dateString).toLocaleDateString()}`, 'success');
-                    try {
-                        window.app.notifications.playSound('paid');
-                    } catch (soundError) {
-                        console.log('Sound playback failed (non-critical):', soundError);
-                    }
-                }
-            }
-
-            try {
-                await this.loadData();
-                
-                const gridElement = document.getElementById('calendarGrid');
-                if (gridElement) {
-                    gridElement.innerHTML = '';
-                }
-                this.render();
-                
-                console.log('Calendar refreshed after force payment');
-
-                // Sync all amount flow and updates across components
-                if (window.app && typeof window.app.syncAmountFlow === 'function') {
-                    try {
-                        await window.app.syncAmountFlow();
-                        
-                        // Trigger payment check after sync
-                        if (typeof window.app.checkPendingPayments === 'function') {
-                            await window.app.checkPendingPayments();
-                        }
-                    } catch (syncError) {
-                        console.error('Error syncing app components:', syncError);
-                    }
-                }
-            } catch (renderError) {
-                console.error('Error updating calendar after force payment:', renderError);
-                setTimeout(async () => {
-                    try {
-                        await this.loadData();
-                        const gridElement = document.getElementById('calendarGrid');
-                        if (gridElement) {
-                            gridElement.innerHTML = '';
-                        }
-                        this.render();
-                        console.log('Calendar force refreshed after error');
-                    } catch (retryError) {
-                        console.error('Retry render failed:', retryError);
-                    }
-                }, 500);
-            }
-
-        } catch (error) {
-            console.error('Error processing force payment:', error);
-            if (window.app && window.app.notifications) {
-                window.app.notifications.showToast('Error processing force payment. Please try again.', 'error');
-            }
-            throw error; // Re-throw to be handled by the caller
-        }
-    }
 
 
 
