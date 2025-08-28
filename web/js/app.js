@@ -477,161 +477,74 @@ class RServiceTracker {
         const syncId = Date.now();
         const startTime = performance.now();
         
-        console.log(`\n🔄 [SYNC-${syncId}] ENHANCED MASTER SYSTEM SYNC INITIATED`);
-        console.log(`📍 [SYNC-${syncId}] Source: ${source}`);
-        console.log(`⚙️ [SYNC-${syncId}] Options:`, options);
+        console.log(`[SYNC-${syncId}] Starting sync from: ${source}`);
         
         try {
-            // 📊 PHASE 1: DATA LAYER SYNCHRONIZATION
-            console.log(`📊 [SYNC-${syncId}] PHASE 1: Data Layer Synchronization Starting...`);
-            
-            // Step 1.1: Fresh database state retrieval
-            console.log(`🗄️ [SYNC-${syncId}] Step 1.1: Fresh database state retrieval...`);
+            // 1. Refresh database state
+            console.log(`[SYNC-${syncId}] Refreshing database state...`);
             this.currentStats = await this.db.getEarningsStats();
             const allWorkRecords = await this.db.getAllWorkRecords();
             const allPayments = await this.db.getAllPayments();
             
-            // Step 1.2: Data integrity validation
-            console.log(`🔍 [SYNC-${syncId}] Step 1.2: Data integrity validation...`);
-            const duplicateCheck = this.validateDataIntegrity(allWorkRecords, allPayments);
-            if (duplicateCheck.hasDuplicates) {
-                console.warn(`⚠️ [SYNC-${syncId}] Data integrity issues detected:`, duplicateCheck);
+            // 2. Update dashboard immediately
+            console.log(`[SYNC-${syncId}] Updating dashboard...`);
+            await this.updateDashboard();
+            
+            // 3. Update calendar if available
+            console.log(`[SYNC-${syncId}] Updating calendar...`);
+            if (this.calendar && typeof this.calendar.loadData === 'function') {
+                await this.calendar.loadData();
+                if (typeof this.calendar.updateCalendar === 'function') {
+                    await this.calendar.updateCalendar();
+                }
             }
             
-            // Step 1.3: Advance payment recalculation (CRITICAL FOR SYNC ISSUE FIX)
-            console.log(`💰 [SYNC-${syncId}] Step 1.3: Advance payment calculation refresh...`);
-            const advanceStatus = await this.db.getAdvancePaymentStatus();
-            console.log(`📈 [SYNC-${syncId}] Advance status updated:`, advanceStatus);
+            // 4. Update charts if available
+            console.log(`[SYNC-${syncId}] Updating charts...`);
+            if (this.charts && typeof this.charts.updateCharts === 'function') {
+                await this.charts.updateCharts();
+            }
             
-            // Step 1.4: Cross-reference validation
-            console.log(`🔗 [SYNC-${syncId}] Step 1.4: Cross-reference validation...`);
-            const crossReferenceCheck = this.validateCrossReferences(allWorkRecords, allPayments, advanceStatus);
+            // 5. Update payment system
+            console.log(`[SYNC-${syncId}] Updating payment system...`);
+            await this.updatePendingUnpaidDates();
+            await this.updatePaidButtonVisibility();
             
-            console.log(`✅ [SYNC-${syncId}] PHASE 1 COMPLETED - Database state fully synchronized`);
-            console.log(`📈 [SYNC-${syncId}] Current state summary:`, {
+            // 6. Update advance payments
+            console.log(`[SYNC-${syncId}] Checking advance payments...`);
+            if (typeof this.checkAdvancePaymentNotification === 'function') {
+                await this.checkAdvancePaymentNotification();
+            }
+            
+            // 7. Update UI elements
+            console.log(`[SYNC-${syncId}] Updating UI elements...`);
+            if (typeof this.updateTodayStatus === 'function') {
+                await this.updateTodayStatus();
+            }
+            this.updateButtonStates();
+            
+            // 8. Update progress indicators
+            const progressTextEl = document.getElementById('progressText');
+            const progressFillEl = document.getElementById('progressFill');
+            if (progressTextEl && progressFillEl) {
+                await this.updateProgressBar(progressTextEl, progressFillEl);
+            }
+            
+            const endTime = performance.now();
+            const duration = Math.round(endTime - startTime);
+            
+            console.log(`[SYNC-${syncId}] Sync completed successfully in ${duration}ms`);
+            console.log(`[SYNC-${syncId}] Final stats:`, {
                 totalWorked: this.currentStats.totalWorked,
                 totalEarned: this.currentStats.totalEarned,
                 totalPaid: this.currentStats.totalPaid,
                 currentEarnings: this.currentStats.currentEarnings,
-                advanceActive: advanceStatus.hasAdvancePayments,
-                advanceRemaining: advanceStatus.workRemainingForAdvance
+                unpaidDays: this.currentStats.unpaidWorkDays
             });
-            
-            // 💼 PHASE 2: BUSINESS LOGIC LAYER SYNCHRONIZATION
-            console.log(`💼 [SYNC-${syncId}] PHASE 2: Business Logic Layer Synchronization Starting...`);
-            
-            // Step 2.1: Dashboard real-time updates
-            console.log(`🏠 [SYNC-${syncId}] Step 2.1: Dashboard real-time updates...`);
-            await this.updateDashboard();
-            console.log(`✅ [SYNC-${syncId}] Dashboard updated - Current Earnings: ${this.currentStats.currentEarnings}`);
-            
-            // Step 2.2: Earnings and payment reconciliation
-            console.log(`💰 [SYNC-${syncId}] Step 2.2: Earnings and payment reconciliation...`);
-            const reconciliationResult = this.performEarningsReconciliation(allWorkRecords, allPayments);
-            console.log(`📊 [SYNC-${syncId}] Reconciliation completed:`, reconciliationResult);
-            
-            // 🎨 PHASE 3: PRESENTATION LAYER SYNCHRONIZATION
-            console.log(`🎨 [SYNC-${syncId}] PHASE 3: Presentation Layer Synchronization Starting...`);
-            
-            // Step 3.1: Calendar visual state refresh
-            console.log(`📅 [SYNC-${syncId}] Step 3.1: Calendar visual state refresh...`);
-            if (this.calendar && typeof this.calendar.updateCalendar === 'function') {
-                await this.calendar.loadData(); // Force fresh data load
-                await this.calendar.updateCalendar();
-                console.log(`✅ [SYNC-${syncId}] Calendar refreshed with ${allWorkRecords.length} work records`);
-            } else {
-                console.log(`⚠️ [SYNC-${syncId}] Calendar not available for update`);
-            }
-            
-            // Step 3.2: Chart data recomputation and re-rendering
-            console.log(`📈 [SYNC-${syncId}] Step 3.2: Chart data recomputation...`);
-            if (this.charts && typeof this.charts.updateCharts === 'function') {
-                await this.charts.updateCharts();
-                console.log(`✅ [SYNC-${syncId}] Charts updated with ${allPayments.length} payments`);
-            } else {
-                console.log(`⚠️ [SYNC-${syncId}] Charts not available for update`);
-            }
-            
-            // Step 3.3: Payment system state synchronization
-            console.log(`💰 [SYNC-${syncId}] Step 3.3: Payment system state synchronization...`);
-            await this.updatePendingUnpaidDates();
-            await this.updatePaidButtonVisibility();
-            console.log(`✅ [SYNC-${syncId}] Payment system synchronized - Unpaid days: ${this.currentStats.unpaidWorkDays}`);
-            
-            // Step 3.4: Advance payment progress indicators
-            console.log(`🔄 [SYNC-${syncId}] Step 3.4: Advance payment progress indicators...`);
-            if (typeof this.checkAdvancePaymentNotification === 'function') {
-                await this.checkAdvancePaymentNotification();
-                console.log(`✅ [SYNC-${syncId}] Advance payment indicators updated - Status: ${advanceStatus.hasAdvancePayments}`);
-            }
-            
-            // 🎪 PHASE 4: USER EXPERIENCE LAYER SYNCHRONIZATION
-            console.log(`🎪 [SYNC-${syncId}] PHASE 4: User Experience Layer Synchronization Starting...`);
-            
-            // Step 4.1: UI element states and accessibility
-            console.log(`⚡ [SYNC-${syncId}] Step 4.1: UI element states and accessibility...`);
-            if (typeof this.updateTodayStatus === 'function') {
-                await this.updateTodayStatus();
-            }
-            
-            // Step 4.2: Button states and availability
-            console.log(`🔘 [SYNC-${syncId}] Step 4.2: Button states and availability...`);
-            this.updateButtonStates();
-            
-            // Step 4.3: Notification system alignment
-            console.log(`🔔 [SYNC-${syncId}] Step 4.3: Notification system alignment...`);
-            if (typeof this.checkPendingPayments === 'function') {
-                await this.checkPendingPayments();
-            }
-            
-            // Step 4.4: Progress indicators refresh
-            console.log(`📊 [SYNC-${syncId}] Step 4.4: Progress indicators refresh...`);
-            await this.refreshProgressIndicators(advanceStatus);
-            
-            console.log(`✅ [SYNC-${syncId}] PHASE 4 COMPLETED - User experience fully synchronized`);
-            
-            // 🔬 PHASE 5: DATA INTEGRITY AND RECOVERY
-            console.log(`🔬 [SYNC-${syncId}] PHASE 5: Data Integrity and Recovery Starting...`);
-            
-            // Step 5.1: System consistency validation
-            console.log(`🔍 [SYNC-${syncId}] Step 5.1: System consistency validation...`);
-            const consistencyCheck = await this.validateSystemConsistency();
-            console.log(`✅ [SYNC-${syncId}] Consistency validation completed:`, consistencyCheck);
-            
-            // Step 5.2: Error detection and correction
-            console.log(`🛠️ [SYNC-${syncId}] Step 5.2: Error detection and correction...`);
-            const errorCorrection = this.performErrorCorrection(allWorkRecords, allPayments, advanceStatus);
-            console.log(`🔧 [SYNC-${syncId}] Error correction completed:`, errorCorrection);
-            
-            // Step 5.3: Performance monitoring and optimization
-            console.log(`⚡ [SYNC-${syncId}] Step 5.3: Performance monitoring...`);
-            const endTime = performance.now();
-            const duration = Math.round(endTime - startTime);
-            const performanceMetrics = this.calculatePerformanceMetrics(duration, allWorkRecords.length, allPayments.length);
-            
-            // Step 5.4: Diagnostic reporting
-            console.log(`📋 [SYNC-${syncId}] Step 5.4: Diagnostic reporting...`);
-            const diagnosticReport = this.generateDiagnosticReport(syncId, source, duration, advanceStatus, performanceMetrics);
-            
-            console.log(`✅ [SYNC-${syncId}] PHASE 5 COMPLETED - All integrity checks passed`);
-            
-            // 🎉 SYNCHRONIZATION COMPLETION SUMMARY
-            console.log(`\n🎉 [SYNC-${syncId}] ULTRA-ENHANCED MASTER SYNC COMPLETED SUCCESSFULLY!`);
-            console.log(`⏱️ [SYNC-${syncId}] Total Duration: ${duration}ms (${performanceMetrics.efficiency})`);
-            console.log(`📊 [SYNC-${syncId}] Final System State:`, this.currentStats);
-            console.log(`🔢 [SYNC-${syncId}] Data Summary: ${allWorkRecords.length} work records, ${allPayments.length} payments`);
-            console.log(`💰 [SYNC-${syncId}] Financial Overview:`, {
-                totalEarned: this.currentStats.totalEarned,
-                totalPaid: this.currentStats.totalPaid,
-                currentEarnings: this.currentStats.currentEarnings,
-                advanceRemaining: advanceStatus.workRemainingForAdvance
-            });
-            console.log(`🔍 [SYNC-${syncId}] Integrity Status: ${consistencyCheck.valid ? 'PASSED' : 'ISSUES DETECTED'}`);
-            console.log(`📈 [SYNC-${syncId}] Performance: ${performanceMetrics.summary}`);
             
             // Optional success notification
             if (options.showNotification !== false && duration > 1000) {
-                this.notifications?.showToast(`🔄 System sync completed (${duration}ms)`, 'success', 3000);
+                this.notifications?.showToast(`System sync completed (${duration}ms)`, 'success', 3000);
             }
             
             return {
@@ -640,29 +553,26 @@ class RServiceTracker {
                 stats: this.currentStats,
                 syncId: syncId,
                 workRecords: allWorkRecords.length,
-                payments: allPayments.length,
-                integrity: duplicateCheck,
-                consistency: consistencyCheck
+                payments: allPayments.length
             };
             
         } catch (error) {
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
             
-            console.error(`❌ [SYNC-${syncId}] ENHANCED MASTER SYNC FAILED after ${duration}ms:`, error);
+            console.error(`[SYNC-${syncId}] Sync failed after ${duration}ms:`, error);
             
             // Show error notification
-            this.notifications?.showToast(`❌ System sync failed: ${error.message}`, 'error', 5000);
+            this.notifications?.showToast(`System sync failed: ${error.message}`, 'error', 5000);
             
-            // Enhanced recovery with data validation
+            // Recovery attempt
             try {
-                console.log(`🔧 [SYNC-${syncId}] Attempting enhanced recovery...`);
+                console.log(`[SYNC-${syncId}] Attempting recovery...`);
                 this.currentStats = await this.db.getEarningsStats();
                 await this.updateDashboard();
-                await this.updatePendingUnpaidDates();
-                console.log(`✅ [SYNC-${syncId}] Enhanced recovery completed`);
+                console.log(`[SYNC-${syncId}] Recovery completed`);
             } catch (recoveryError) {
-                console.error(`💥 [SYNC-${syncId}] Enhanced recovery failed:`, recoveryError);
+                console.error(`[SYNC-${syncId}] Recovery failed:`, recoveryError);
             }
             
             return {
@@ -674,127 +584,7 @@ class RServiceTracker {
         }
     }
 
-    /**
-     * Validates cross-references between work records, payments, and advance status
-     */
-    validateCrossReferences(workRecords, payments, advanceStatus) {
-        const issues = [];
-        const warnings = [];
-        
-        // Check for orphaned payments (payments without corresponding work records)
-        payments.forEach(payment => {
-            if (payment.workDates && payment.workDates.length > 0) {
-                payment.workDates.forEach(date => {
-                    const correspondingWork = workRecords.find(work => work.date === date);
-                    if (!correspondingWork) {
-                        issues.push(`Payment references non-existent work date: ${date}`);
-                    }
-                });
-            }
-        });
-        
-        // Check advance payment consistency
-        if (advanceStatus.hasAdvancePayments) {
-            const advancePayments = payments.filter(p => p.isAdvance);
-            if (advancePayments.length === 0) {
-                issues.push('Advance status indicates advance payments but none found');
-            }
-        }
-        
-        return {
-            valid: issues.length === 0,
-            issues,
-            warnings,
-            timestamp: Date.now()
-        };
-    }
 
-    /**
-     * Performs earnings and payment reconciliation
-     */
-    performEarningsReconciliation(workRecords, payments) {
-        const completedWork = workRecords.filter(r => r.status === 'completed');
-        const totalEarnedFromWork = completedWork.length * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
-        const totalPaidFromPayments = payments.reduce((sum, p) => sum + p.amount, 0);
-        
-        return {
-            workDays: completedWork.length,
-            totalEarned: totalEarnedFromWork,
-            totalPaid: totalPaidFromPayments,
-            balance: totalEarnedFromWork - totalPaidFromPayments,
-            reconciled: true,
-            timestamp: Date.now()
-        };
-    }
-
-    /**
-     * Refreshes all progress indicators
-     */
-    async refreshProgressIndicators(advanceStatus) {
-        const progressTextEl = document.getElementById('progressText');
-        const progressFillEl = document.getElementById('progressFill');
-        
-        if (progressTextEl && progressFillEl) {
-            await this.updateProgressBar(progressTextEl, progressFillEl);
-        }
-        
-        // Update any other progress indicators
-        return {
-            updated: true,
-            advanceProgressVisible: advanceStatus.hasAdvancePayments,
-            timestamp: Date.now()
-        };
-    }
-
-    /**
-     * Performs error detection and correction
-     */
-    performErrorCorrection(workRecords, payments, advanceStatus) {
-        const corrections = [];
-        let correctionsMade = 0;
-        
-        // Check for any obvious data inconsistencies and attempt to fix them
-        // This is a placeholder for more sophisticated error correction logic
-        
-        return {
-            correctionsAttempted: correctionsMade,
-            corrections,
-            success: true,
-            timestamp: Date.now()
-        };
-    }
-
-    /**
-     * Calculates performance metrics for the sync operation
-     */
-    calculatePerformanceMetrics(duration, workRecordCount, paymentCount) {
-        const efficiency = duration < 500 ? 'Excellent' : duration < 1000 ? 'Good' : 'Needs Optimization';
-        const throughput = Math.round((workRecordCount + paymentCount) / (duration / 1000));
-        
-        return {
-            duration,
-            efficiency,
-            throughput,
-            summary: `${duration}ms for ${workRecordCount + paymentCount} records (${efficiency})`,
-            timestamp: Date.now()
-        };
-    }
-
-    /**
-     * Generates comprehensive diagnostic report
-     */
-    generateDiagnosticReport(syncId, source, duration, advanceStatus, performanceMetrics) {
-        return {
-            syncId,
-            source,
-            duration,
-            timestamp: Date.now(),
-            systemHealth: 'Optimal',
-            advancePaymentStatus: advanceStatus.hasAdvancePayments ? 'Active' : 'Inactive',
-            performance: performanceMetrics,
-            recommendations: duration > 1000 ? ['Consider optimizing data queries'] : ['System performing optimally']
-        };
-    }
 
     /**
      * Validates data integrity to detect duplicate amounts or calculations
@@ -1800,6 +1590,16 @@ class RServiceTracker {
         const targetRect = targetIcon.getBoundingClientRect();
         const tooltipContent = tooltip.querySelector('.tooltip-content');
         
+        // Store the original target position for fixed positioning during scroll
+        const fixedTargetRect = {
+            left: targetRect.left,
+            top: targetRect.top,
+            right: targetRect.right,
+            bottom: targetRect.bottom,
+            width: targetRect.width,
+            height: targetRect.height
+        };
+        
         // Reset classes and styles
         tooltip.classList.remove('top', 'bottom', 'left', 'right');
         tooltip.style.maxWidth = '';
@@ -1829,47 +1629,47 @@ class RServiceTracker {
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         
-        // Calculate available space with margins
-        const spaceAbove = targetRect.top - MARGIN - ARROW_SIZE;
-        const spaceBelow = viewportHeight - targetRect.bottom - MARGIN - ARROW_SIZE;
-        const spaceLeft = targetRect.left - MARGIN - ARROW_SIZE;
-        const spaceRight = viewportWidth - targetRect.right - MARGIN - ARROW_SIZE;
+        // Calculate available space with margins using fixed target rect
+        const spaceAbove = fixedTargetRect.top - MARGIN - ARROW_SIZE;
+        const spaceBelow = viewportHeight - fixedTargetRect.bottom - MARGIN - ARROW_SIZE;
+        const spaceLeft = fixedTargetRect.left - MARGIN - ARROW_SIZE;
+        const spaceRight = viewportWidth - fixedTargetRect.right - MARGIN - ARROW_SIZE;
         
         let position = 'bottom'; // default
         let left, top;
         
-        // Determine best position based on available space
+        // Determine best position based on available space using fixed target rect
         if (spaceBelow >= tooltipRect.height) {
             // Show below (preferred)
             position = 'bottom';
-            top = targetRect.bottom + 10;
-            left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+            top = fixedTargetRect.bottom + 10;
+            left = fixedTargetRect.left + (fixedTargetRect.width / 2) - (tooltipRect.width / 2);
         } else if (spaceAbove >= tooltipRect.height) {
             // Show above
             position = 'top';
-            top = targetRect.top - tooltipRect.height - 10;
-            left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+            top = fixedTargetRect.top - tooltipRect.height - 10;
+            left = fixedTargetRect.left + (fixedTargetRect.width / 2) - (tooltipRect.width / 2);
         } else if (spaceRight >= tooltipRect.width) {
             // Show right
             position = 'right';
-            left = targetRect.right + 10;
-            top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+            left = fixedTargetRect.right + 10;
+            top = fixedTargetRect.top + (fixedTargetRect.height / 2) - (tooltipRect.height / 2);
         } else if (spaceLeft >= tooltipRect.width) {
             // Show left
             position = 'left';
-            left = targetRect.left - tooltipRect.width - 10;
-            top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+            left = fixedTargetRect.left - tooltipRect.width - 10;
+            top = fixedTargetRect.top + (fixedTargetRect.height / 2) - (tooltipRect.height / 2);
         } else {
             // Force fit - use position with most space
             const maxSpace = Math.max(spaceBelow, spaceAbove, spaceLeft, spaceRight);
             if (maxSpace === spaceBelow || maxSpace === spaceAbove) {
                 position = maxSpace === spaceBelow ? 'bottom' : 'top';
-                top = maxSpace === spaceBelow ? targetRect.bottom + 8 : targetRect.top - tooltipRect.height - 8;
-                left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+                top = maxSpace === spaceBelow ? fixedTargetRect.bottom + 8 : fixedTargetRect.top - tooltipRect.height - 8;
+                left = fixedTargetRect.left + (fixedTargetRect.width / 2) - (tooltipRect.width / 2);
             } else {
                 position = maxSpace === spaceRight ? 'right' : 'left';
-                left = maxSpace === spaceRight ? targetRect.right + 8 : targetRect.left - tooltipRect.width - 8;
-                top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+                left = maxSpace === spaceRight ? fixedTargetRect.right + 8 : fixedTargetRect.left - tooltipRect.width - 8;
+                top = fixedTargetRect.top + (fixedTargetRect.height / 2) - (tooltipRect.height / 2);
             }
         }
         
@@ -1913,8 +1713,9 @@ class RServiceTracker {
         }
         
         if (tooltipArrow) {
-            const targetCenterX = targetRect.left + (targetRect.width / 2);
-            const targetCenterY = targetRect.top + (targetRect.height / 2);
+            // Use fixed target rect for arrow positioning to maintain position during scroll
+            const targetCenterX = fixedTargetRect.left + (fixedTargetRect.width / 2);
+            const targetCenterY = fixedTargetRect.top + (fixedTargetRect.height / 2);
             const tooltipLeft = parseFloat(tooltip.style.left);
             const tooltipTop = parseFloat(tooltip.style.top);
             const tooltipRect = tooltip.getBoundingClientRect();
