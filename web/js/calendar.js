@@ -754,14 +754,15 @@ class CalendarManager {
                 return;
             }
 
-            // ALWAYS ensure there's a work record before processing payment
+            // For force payment, we only need to record the payment, not mark work as done
+            // Check if work record exists, if not, we'll just process payment without creating work record
             let workRecord = await this.db.getWorkRecord(dateString);
+            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+            
             if (!workRecord) {
-                // Create work record if it doesn't exist
-                const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-                await this.db.addWorkRecord(dateString, dailyWage, 'completed');
-                console.log('Created work record for force payment date:', dateString);
-                workRecord = { date: dateString, wage: dailyWage, status: 'completed' };
+                console.log('No work record exists for force payment date:', dateString);
+                // Don't create work record - force payment means payment without work completion
+                workRecord = { date: dateString, wage: dailyWage, status: 'pending' };
             }
 
             // Store the date for use in payment processing

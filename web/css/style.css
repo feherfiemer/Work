@@ -4429,10 +4429,10 @@ button.disabled:hover {
   left: 0;
   right: 0;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
+  color: var(--surface);
   z-index: var(--z-toast);
   box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(var(--primary-rgb), 0.2);
   transform: translateY(-100%);
   transition: transform 0.3s ease;
   backdrop-filter: blur(10px);
@@ -4440,7 +4440,11 @@ button.disabled:hover {
 }
 
 .pwa-install-banner.simple {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-rgb), 0.95), 
+    rgba(var(--primary-rgb), 0.85)
+  );
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
 }
 
 .pwa-install-banner.show {
@@ -4514,9 +4518,9 @@ button.disabled:hover {
 }
 
 .install-btn {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface);
   color: var(--primary);
-  border: none;
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
   padding: 0.75rem 1rem;
   font-size: 0.9rem;
   font-weight: 600;

@@ -1403,10 +1403,13 @@ class RServiceTracker {
                 tooltipArrow.style.cssText = ''; // Clear all inline styles
             }
             
-            // Reset tooltip position as well
+            // Reset tooltip position and display
             tooltip.style.left = '';
             tooltip.style.top = '';
             tooltip.style.maxWidth = '';
+            tooltip.style.display = 'none';
+            tooltip.style.opacity = '';
+            tooltip.style.visibility = '';
         }
     }
 
@@ -2138,12 +2141,11 @@ class RServiceTracker {
             if (this.forcePaidDateString) {
                 console.log('Processing force payment for specific date:', this.forcePaidDateString);
                 
-                // Ensure there's a work record for the date being force paid
+                // For force payment, we only record the payment, not mark work as done
+                // Check if work record exists but don't create one if it doesn't
                 let workRecord = await this.db.getWorkRecord(this.forcePaidDateString);
                 if (!workRecord) {
-                    // Create work record if it doesn't exist
-                    await this.db.addWorkRecord(this.forcePaidDateString, DAILY_WAGE, 'completed');
-                    console.log('Created work record for force payment date:', this.forcePaidDateString);
+                    console.log('No work record exists for force payment - payment only');
                 }
                 
                 workDatesToPay = [this.forcePaidDateString];
@@ -2158,8 +2160,8 @@ class RServiceTracker {
                 
                 console.log('Force payment recorded successfully for date:', processedDate);
                 
-                // Trigger additional notifications for force payments
-                this.notifications.showToast(`Work marked as done and paid for ${new Date(processedDate).toLocaleDateString()}!`, 'success', 6000);
+                // Trigger additional notifications for force payments - only mention payment, not work completion
+                this.notifications.showToast(`Force payment of ₹${amount} recorded for ${new Date(processedDate).toLocaleDateString()}!`, 'success', 6000);
             } else {
                 // Normal payment processing
                 const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
