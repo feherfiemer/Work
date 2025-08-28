@@ -2059,8 +2059,8 @@ class RServiceTracker {
             calendarDailyWageDisplay.textContent = this.utils.formatCurrency(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
         }
 
-        // Update detailed calendar summary
-        await this.updateDetailedCalendarSummary(selectedDatesList, totalAmount);
+        // Update simple calendar summary
+        this.updateSimpleCalendarSummary();
 
         // Show/hide payment summary and enable/disable confirm button
         if (selectedDates.length > 0) {
@@ -2472,8 +2472,8 @@ class RServiceTracker {
                 dailyWageDisplay.textContent = this.utils.formatCurrency(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
             }
             
-            // Update detailed payment summary fields
-            await this.updateDetailedPaymentSummary();
+            // Update simple payment summary
+            this.updateSimplePaymentSummary();
             
             console.log('Payment modal - Unpaid days:', this.pendingUnpaidDates.length, 'Pending amount:', pendingAmount);
             
@@ -2504,8 +2504,8 @@ class RServiceTracker {
                 dailyWageDisplay.textContent = this.utils.formatCurrency(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
             }
             
-            // Update detailed payment summary fields for custom selection
-            await this.updateDetailedPaymentSummary(selectedDaysCount, selectedAmount);
+            // Update simple payment summary for custom selection
+            this.updateSimplePaymentSummary();
             
             console.log('Custom payment modal - Selected days:', selectedDaysCount, 'Selected amount:', selectedAmount);
             
@@ -2696,193 +2696,16 @@ class RServiceTracker {
         }
     }
 
-    async updateDetailedPaymentSummary(customDays = null, customAmount = null) {
-        try {
-            // Get data
-            const workData = await this.database.getAllWork();
-            const paymentData = await this.database.getAllPayments();
-            
-            // Calculate statistics
-            const totalWorked = workData.length;
-            const totalPaid = paymentData.reduce((sum, payment) => sum + payment.amount, 0);
-            const currentStreak = await this.calculateWorkStreak();
-            const lastPayment = paymentData.length > 0 ? paymentData[paymentData.length - 1] : null;
-            
-            // Use custom values if provided, otherwise use pending data
-            const unpaidDays = customDays !== null ? customDays : this.pendingUnpaidDates.length;
-            const pendingAmount = customAmount !== null ? customAmount : unpaidDays * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
-            
-            // Calculate payment efficiency
-            const totalEarned = totalWorked * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
-            const paymentEfficiency = totalEarned > 0 ? Math.round((totalPaid / totalEarned) * 100) : 0;
-            
-            // Update detailed fields
-            const paymentEfficiencyDisplay = document.getElementById('paymentEfficiencyDisplay');
-            const workStreakDisplay = document.getElementById('workStreakDisplay');
-            const lastPaymentDisplay = document.getElementById('lastPaymentDisplay');
-            const workDaysCoveredDisplay = document.getElementById('workDaysCoveredDisplay');
-            const baseAmountDisplay = document.getElementById('baseAmountDisplay');
-            const paymentTypeDetailDisplay = document.getElementById('paymentTypeDetailDisplay');
-            const remainingBalanceDisplay = document.getElementById('remainingBalanceDisplay');
-            
-            if (paymentEfficiencyDisplay) {
-                paymentEfficiencyDisplay.textContent = `${paymentEfficiency}%`;
-            }
-            
-            if (workStreakDisplay) {
-                workStreakDisplay.textContent = currentStreak.toString();
-            }
-            
-            if (lastPaymentDisplay) {
-                if (lastPayment) {
-                    const lastDate = new Date(lastPayment.date);
-                    lastPaymentDisplay.textContent = lastDate.toLocaleDateString();
-                } else {
-                    lastPaymentDisplay.textContent = 'N/A';
-                }
-            }
-            
-            if (workDaysCoveredDisplay) {
-                workDaysCoveredDisplay.textContent = `${unpaidDays} days`;
-            }
-            
-            if (baseAmountDisplay) {
-                baseAmountDisplay.textContent = this.utils.formatCurrency(pendingAmount);
-            }
-            
-            if (paymentTypeDetailDisplay) {
-                paymentTypeDetailDisplay.textContent = 'Regular';
-            }
-            
-            if (remainingBalanceDisplay) {
-                const totalUnpaid = await this.updatePendingUnpaidDates();
-                const remaining = (this.pendingUnpaidDates.length - unpaidDays) * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
-                remainingBalanceDisplay.textContent = this.utils.formatCurrency(Math.max(0, remaining));
-            }
-            
-        } catch (error) {
-            console.error('Error updating detailed payment summary:', error);
-        }
+    updateSimplePaymentSummary() {
+        // Simple payment summary only updates the basic fields that are already handled
+        // by the existing showPaymentModal and showCustomPaymentModal functions
+        // No additional processing needed
     }
 
-    async calculateWorkStreak() {
-        try {
-            const workData = await this.database.getAllWork();
-            if (workData.length === 0) return 0;
-            
-            // Sort by date descending
-            workData.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            let streak = 0;
-            let currentDate = new Date();
-            currentDate.setHours(0, 0, 0, 0);
-            
-            for (const work of workData) {
-                const workDate = new Date(work.date);
-                workDate.setHours(0, 0, 0, 0);
-                
-                const daysDiff = Math.floor((currentDate - workDate) / (1000 * 60 * 60 * 24));
-                
-                if (daysDiff === streak) {
-                    streak++;
-                    currentDate.setDate(currentDate.getDate() - 1);
-                } else {
-                    break;
-                }
-            }
-            
-            return streak;
-        } catch (error) {
-            console.error('Error calculating work streak:', error);
-            return 0;
-        }
-    }
-
-    async updateDetailedCalendarSummary(selectedDates, totalAmount) {
-        try {
-            // Update detailed calendar fields
-            const calendarTotalUnpaidDisplay = document.getElementById('calendarTotalUnpaidDisplay');
-            const calendarSelectionRatioDisplay = document.getElementById('calendarSelectionRatioDisplay');
-            const calendarDateRangeDisplay = document.getElementById('calendarDateRangeDisplay');
-            const earliestDateDisplay = document.getElementById('earliestDateDisplay');
-            const latestDateDisplay = document.getElementById('latestDateDisplay');
-            const averageDailyDisplay = document.getElementById('averageDailyDisplay');
-            const calendarRemainingDisplay = document.getElementById('calendarRemainingDisplay');
-            
-            // Get total unpaid work
-            await this.updatePendingUnpaidDates();
-            const totalUnpaid = this.pendingUnpaidDates.length;
-            
-            if (calendarTotalUnpaidDisplay) {
-                calendarTotalUnpaidDisplay.textContent = totalUnpaid.toString();
-            }
-            
-            // Calculate selection ratio
-            const selectionRatio = totalUnpaid > 0 ? Math.round((selectedDates.length / totalUnpaid) * 100) : 0;
-            if (calendarSelectionRatioDisplay) {
-                calendarSelectionRatioDisplay.textContent = `${selectionRatio}%`;
-            }
-            
-            // Handle date calculations
-            if (selectedDates.length > 0) {
-                const dates = selectedDates.map(date => new Date(date)).sort((a, b) => a - b);
-                const earliestDate = dates[0];
-                const latestDate = dates[dates.length - 1];
-                
-                if (calendarDateRangeDisplay) {
-                    if (selectedDates.length === 1) {
-                        calendarDateRangeDisplay.textContent = earliestDate.toLocaleDateString();
-                    } else {
-                        calendarDateRangeDisplay.textContent = `${earliestDate.toLocaleDateString()} - ${latestDate.toLocaleDateString()}`;
-                    }
-                }
-                
-                if (earliestDateDisplay) {
-                    earliestDateDisplay.textContent = earliestDate.toLocaleDateString();
-                }
-                
-                if (latestDateDisplay) {
-                    latestDateDisplay.textContent = latestDate.toLocaleDateString();
-                }
-                
-                // Calculate average daily
-                const averageDaily = selectedDates.length > 0 ? totalAmount / selectedDates.length : 0;
-                if (averageDailyDisplay) {
-                    averageDailyDisplay.textContent = this.utils.formatCurrency(averageDaily);
-                }
-                
-                // Calculate remaining after payment
-                const remaining = (totalUnpaid - selectedDates.length) * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
-                if (calendarRemainingDisplay) {
-                    calendarRemainingDisplay.textContent = this.utils.formatCurrency(Math.max(0, remaining));
-                }
-            } else {
-                // No selection - show N/A or default values
-                if (calendarDateRangeDisplay) {
-                    calendarDateRangeDisplay.textContent = 'N/A';
-                }
-                
-                if (earliestDateDisplay) {
-                    earliestDateDisplay.textContent = 'N/A';
-                }
-                
-                if (latestDateDisplay) {
-                    latestDateDisplay.textContent = 'N/A';
-                }
-                
-                if (averageDailyDisplay) {
-                    averageDailyDisplay.textContent = this.utils.formatCurrency(0);
-                }
-                
-                if (calendarRemainingDisplay) {
-                    const remaining = totalUnpaid * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
-                    calendarRemainingDisplay.textContent = this.utils.formatCurrency(remaining);
-                }
-            }
-            
-        } catch (error) {
-            console.error('Error updating detailed calendar summary:', error);
-        }
+    updateSimpleCalendarSummary() {
+        // Simple calendar summary only updates the basic fields that are already handled
+        // by the existing updateCalendarSelection function
+        // No additional processing needed
     }
 
     showPaymentConfirmation(amount, closeModalCallback) {

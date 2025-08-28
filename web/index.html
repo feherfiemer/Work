@@ -463,7 +463,7 @@
     <!-- Date Selection Modal -->
     <div id="dateSelectionModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header payment-header">
                 <h3><i class="fas fa-calendar-check"></i>Select Payment Date</h3>
                 <button class="close-modal" id="closeDateSelectionModal">
                     <i class="fas fa-times"></i>
@@ -548,63 +548,29 @@
                     </button>
                 </div>
 
-                <!-- Enhanced Calendar Payment Summary (moved below actions) -->
-                <div class="payment-summary-card detailed" id="calendarPaymentSummaryCard">
-                    <div class="payment-summary-header">
-                        <i class="fas fa-calendar-week"></i>
-                        <span>Selection Details</span>
+                <!-- Simple Calendar Summary -->
+                <div class="payment-summary-simple" id="calendarPaymentSummaryCard">
+                    <div class="summary-header">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Selection Summary</span>
                     </div>
-                    <div class="payment-summary-grid">
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="selectedDatesCount">0</span>
-                            <span class="payment-summary-label">Days Selected</span>
+                    <div class="summary-info">
+                        <div class="summary-item">
+                            <span class="summary-label">Days Selected:</span>
+                            <span class="summary-value" id="selectedDatesCount">0</span>
                         </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="selectedAmountPreview">₹0</span>
-                            <span class="payment-summary-label">Total Value</span>
+                        <div class="summary-item">
+                            <span class="summary-label">Total Amount:</span>
+                            <span class="summary-value" id="selectedAmountPreview">₹0</span>
                         </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="calendarDailyWageDisplay">₹25</span>
-                            <span class="payment-summary-label">Daily Rate</span>
+                        <div class="summary-item">
+                            <span class="summary-label">Daily Rate:</span>
+                            <span class="summary-value" id="calendarDailyWageDisplay">₹25</span>
                         </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="calendarTotalUnpaidDisplay">0</span>
-                            <span class="payment-summary-label">Total Unpaid</span>
+                        <div class="summary-selected" id="calendarPaymentSummaryTotal" style="display: none;">
+                            <span class="selected-label">Payment Amount:</span>
+                            <span class="selected-amount" id="calendarSelectedPaymentAmount">₹0</span>
                         </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="calendarSelectionRatioDisplay">0%</span>
-                            <span class="payment-summary-label">Selection Ratio</span>
-                        </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="calendarDateRangeDisplay">N/A</span>
-                            <span class="payment-summary-label">Date Range</span>
-                        </div>
-                    </div>
-                    <div class="payment-summary-breakdown" id="calendarPaymentBreakdown">
-                        <div class="breakdown-header">
-                            <i class="fas fa-list-ul"></i>
-                            <span>Selection Breakdown</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Earliest Date:</span>
-                            <span class="breakdown-value" id="earliestDateDisplay">N/A</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Latest Date:</span>
-                            <span class="breakdown-value" id="latestDateDisplay">N/A</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Average Daily:</span>
-                            <span class="breakdown-value" id="averageDailyDisplay">₹0</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Remaining After Payment:</span>
-                            <span class="breakdown-value" id="calendarRemainingDisplay">₹0</span>
-                        </div>
-                    </div>
-                    <div class="payment-summary-total" id="calendarPaymentSummaryTotal" style="display: none;">
-                        <span class="payment-summary-total-label">Payment Amount:</span>
-                        <span class="payment-summary-total-value" id="calendarSelectedPaymentAmount">₹0</span>
                     </div>
                 </div>
                 
@@ -648,63 +614,29 @@
                     </div>
                 </div>
 
-                <!-- Enhanced Payment Summary (moved below buttons) -->
-                <div class="payment-summary-card detailed" id="paymentSummaryCard">
-                    <div class="payment-summary-header">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        <span>Payment Details</span>
+                <!-- Simple Payment Summary -->
+                <div class="payment-summary-simple" id="paymentSummaryCard">
+                    <div class="summary-header">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Payment Summary</span>
                     </div>
-                    <div class="payment-summary-grid">
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="unpaidDaysCount">0</span>
-                            <span class="payment-summary-label">Unpaid Days</span>
+                    <div class="summary-info">
+                        <div class="summary-item">
+                            <span class="summary-label">Unpaid Days:</span>
+                            <span class="summary-value" id="unpaidDaysCount">0</span>
                         </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="pendingAmount">₹0</span>
-                            <span class="payment-summary-label">Total Pending</span>
+                        <div class="summary-item">
+                            <span class="summary-label">Total Pending:</span>
+                            <span class="summary-value" id="pendingAmount">₹0</span>
                         </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="dailyWageDisplay">₹25</span>
-                            <span class="payment-summary-label">Daily Rate</span>
+                        <div class="summary-item">
+                            <span class="summary-label">Daily Rate:</span>
+                            <span class="summary-value" id="dailyWageDisplay">₹25</span>
                         </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="paymentEfficiencyDisplay">0%</span>
-                            <span class="payment-summary-label">Payment Ratio</span>
+                        <div class="summary-selected" id="paymentSummaryTotal" style="display: none;">
+                            <span class="selected-label">Selected Payment:</span>
+                            <span class="selected-amount" id="selectedPaymentAmount">₹0</span>
                         </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="workStreakDisplay">0</span>
-                            <span class="payment-summary-label">Work Streak</span>
-                        </div>
-                        <div class="payment-summary-item">
-                            <span class="payment-summary-value" id="lastPaymentDisplay">N/A</span>
-                            <span class="payment-summary-label">Last Payment</span>
-                        </div>
-                    </div>
-                    <div class="payment-summary-breakdown" id="paymentBreakdown">
-                        <div class="breakdown-header">
-                            <i class="fas fa-calculator"></i>
-                            <span>Payment Breakdown</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Work Days Covered:</span>
-                            <span class="breakdown-value" id="workDaysCoveredDisplay">0 days</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Base Amount:</span>
-                            <span class="breakdown-value" id="baseAmountDisplay">₹0</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Payment Type:</span>
-                            <span class="breakdown-value" id="paymentTypeDetailDisplay">Regular</span>
-                        </div>
-                        <div class="breakdown-item">
-                            <span class="breakdown-label">Remaining Balance:</span>
-                            <span class="breakdown-value" id="remainingBalanceDisplay">₹0</span>
-                        </div>
-                    </div>
-                    <div class="payment-summary-total" id="paymentSummaryTotal" style="display: none;">
-                        <span class="payment-summary-total-label">Selected Payment:</span>
-                        <span class="payment-summary-total-value" id="selectedPaymentAmount">₹0</span>
                     </div>
                 </div>
                 

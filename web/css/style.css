@@ -6271,7 +6271,7 @@ button.disabled:hover {
 
 .payment-header {
   background: linear-gradient(135deg, var(--surface), var(--surface-alt));
-  color: var(--text-primary);
+  color: var(--primary);
   padding: 2rem 2rem 1.5rem;
   text-align: center;
   position: relative;
@@ -6693,75 +6693,112 @@ button.disabled:hover {
   font-size: 1.4rem;
 }
 
-/* Enhanced Payment Summary for Detailed View */
-.payment-summary-card.detailed {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.payment-summary-card.detailed .payment-summary-grid {
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 0.75rem;
-}
-
-.payment-summary-breakdown {
+/* Simple Payment Summary Styles */
+.payment-summary-simple {
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-rgb), 0.06) 0%,
+    rgba(var(--primary-rgb), 0.03) 100%);
+  border: 2px solid rgba(var(--primary-rgb), 0.12);
+  border-radius: 12px;
+  padding: 1.25rem;
   margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 2px solid rgba(var(--border-rgb), 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
-.breakdown-header {
+.payment-summary-simple::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+}
+
+.summary-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
   font-weight: 700;
-  color: var(--text-primary);
-  font-size: 1rem;
-}
-
-.breakdown-header i {
   color: var(--primary);
   font-size: 1.1rem;
 }
 
-.breakdown-item {
+.summary-header i {
+  font-size: 1.2rem;
+}
+
+.summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.summary-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid rgba(var(--border-rgb), 0.1);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(var(--border-rgb), 0.15);
 }
 
-.breakdown-item:last-child {
+.summary-item:last-child {
   border-bottom: none;
 }
 
-.breakdown-label {
+.summary-label {
   font-weight: 500;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
-.breakdown-value {
+.summary-value {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.summary-selected {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(var(--success-rgb), 0.1);
+  border-radius: 8px;
+  border: 2px solid rgba(var(--success-rgb), 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selected-label {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 1.05rem;
 }
 
-/* Dark theme adjustments for breakdown */
-[data-theme*="dark"] .payment-summary-breakdown {
-  border-top-color: rgba(255, 255, 255, 0.1);
+.selected-amount {
+  font-weight: 800;
+  color: var(--success);
+  font-size: 1.3rem;
 }
 
-[data-theme*="dark"] .breakdown-item {
-  border-bottom-color: rgba(255, 255, 255, 0.05);
+/* Dark theme adjustments for simple summary */
+[data-theme*="dark"] .payment-summary-simple {
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-rgb), 0.12) 0%,
+    rgba(var(--primary-rgb), 0.06) 100%);
+  border-color: rgba(var(--primary-rgb), 0.2);
+}
+
+[data-theme*="dark"] .summary-item {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Calendar Header Enhancement */
 .calendar-header {
   background: linear-gradient(135deg, var(--surface), var(--surface-alt));
-  color: var(--text-primary);
+  color: var(--primary);
   padding: 2rem 2rem 1.5rem;
   text-align: center;
   position: relative;
@@ -6792,7 +6829,7 @@ button.disabled:hover {
     rgba(40, 44, 52, 0.95) 0%,
     rgba(30, 34, 42, 0.98) 50%,
     rgba(25, 29, 37, 0.95) 100%);
-  color: var(--text-primary);
+  color: var(--primary);
   border-bottom: 3px solid rgba(255, 255, 255, 0.15);
   box-shadow: 
     0 4px 15px rgba(0, 0, 0, 0.4),
