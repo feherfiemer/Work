@@ -157,16 +157,9 @@ class AmountFlow {
             await db.addPayment(amount, workDates, paymentDate, isAdvancePayment);
         }
         
-        // Update internal state
-        this.currentState.totalPaid += amount;
-        if (isAdvancePayment) {
-            this.currentState.totalAdvancePaid += amount;
-        } else {
-            this.currentState.totalRegularPaid += amount;
-        }
-        
-        // Recalculate balance
-        this.currentState.currentBalance = this.currentState.totalEarned - this.currentState.totalPaid;
+        // 🔧 FIX: Don't update internal state incrementally here
+        // Let reconciliation handle state updates from fresh database data
+        console.log('[AmountFlow] Payment validation completed, state will be updated during reconciliation');
         
         return {
             amount,
@@ -174,8 +167,7 @@ class AmountFlow {
             paymentDate,
             isAdvance: isAdvancePayment,
             workValue,
-            newBalance: this.currentState.currentBalance,
-            totalPaid: this.currentState.totalPaid
+            validated: true
         };
     }
 
@@ -186,24 +178,20 @@ class AmountFlow {
         const { dailyWage = this.currentState.dailyWage } = context;
         
         const totalEarned = totalWorkDays * dailyWage;
-        this.currentState.totalWorked = totalWorkDays;
-        this.currentState.totalEarned = totalEarned;
-        this.currentState.dailyWage = dailyWage;
         
-        // Calculate current earnings (unpaid work)
-        const unpaidDays = context.unpaidWorkDays || 0;
-        this.currentState.currentEarnings = unpaidDays * dailyWage;
-        this.currentState.unpaidWorkDays = unpaidDays;
-        
-        // Recalculate balance
-        this.currentState.currentBalance = totalEarned - this.currentState.totalPaid;
+        // 🔧 FIX: Don't update internal state here either
+        // This is just for validation - reconciliation will update state from DB
+        console.log('[AmountFlow] Earnings calculation validated:', {
+            totalWorkDays,
+            totalEarned,
+            dailyWage
+        });
         
         return {
             totalWorked: totalWorkDays,
             totalEarned,
-            currentEarnings: this.currentState.currentEarnings,
-            currentBalance: this.currentState.currentBalance,
-            dailyWage
+            dailyWage,
+            validated: true
         };
     }
 

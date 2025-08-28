@@ -355,22 +355,15 @@ class DatabaseManager {
             pendingWorkValue: currentEarnings // Alias for backward compatibility
         };
 
-        // 🏦 AMOUNT FLOW INTEGRATION
-        // Process earnings calculation through AmountFlow for validation and consistency
-        if (window.AmountFlow) {
-            try {
-                window.AmountFlow.processAmount('calculateEarnings', totalWorked, {
-                    dailyWage: DAILY_WAGE,
-                    unpaidWorkDays: unpaidWork.length,
-                    totalPaid: totalPaid,
-                    triggerReconciliation: false // Prevent recursive reconciliation during calculation
-                }).catch(error => {
-                    console.warn('[Database] AmountFlow earnings calculation warning:', error);
-                });
-            } catch (error) {
-                console.warn('[Database] AmountFlow not available during calculation:', error);
-            }
-        }
+        // 🔧 FIX: Remove AmountFlow call from calculateAmounts to prevent circular dependency
+        // calculateAmounts should be a pure calculation function
+        // AmountFlow reconciliation will call this function and compare results
+        console.log('[Database] Calculating amounts from raw data:', {
+            totalWorked,
+            totalPaid,
+            totalEarned,
+            unpaidWorkDays: unpaidWork.length
+        });
         
         return calculatedAmounts;
     }

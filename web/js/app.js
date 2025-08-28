@@ -480,29 +480,81 @@ class RServiceTracker {
         console.log(`[SYNC-${syncId}] Starting sync from: ${source}`);
         
         try {
-            // 1. Refresh database state
+            // 1. Refresh database state FIRST
             console.log(`[SYNC-${syncId}] Refreshing database state...`);
-            this.currentStats = await this.db.getEarningsStats();
             const allWorkRecords = await this.db.getAllWorkRecords();
             const allPayments = await this.db.getAllPayments();
+            this.currentStats = await this.db.getEarningsStats();
             
-            // 2. Update dashboard immediately
+            console.log(`[SYNC-${syncId}] Fresh database state:`, {
+                workRecords: allWorkRecords.length,
+                payments: allPayments.length,
+                stats: this.currentStats
+            });
+            
+            // 1.5. 🏦 AMOUNT FLOW RECONCILIATION - Do this BEFORE UI updates
+            console.log(`[SYNC-${syncId}] Performing AmountFlow reconciliation with fresh data...`);
+            if (window.AmountFlow) {
+                try {
+                    const reconciliationResult = await window.AmountFlow.performReconciliation();
+                    console.log(`[SYNC-${syncId}] AmountFlow reconciliation completed:`, reconciliationResult);
+                    
+                    const validationResult = await window.AmountFlow.performComprehensiveValidation();
+                    console.log(`[SYNC-${syncId}] AmountFlow validation completed:`, {
+                        isValid: validationResult.isValid,
+                        totalChecks: validationResult.totalChecks,
+                        passedChecks: validationResult.passedChecks,
+                        errors: validationResult.errors.length,
+                        warnings: validationResult.warnings.length
+                    });
+                    
+                    if (validationResult.errors.length > 0) {
+                        console.error(`[SYNC-${syncId}] AmountFlow validation errors:`, validationResult.errors);
+                    }
+                    
+                    const amountTally = window.AmountFlow.generateAmountTally();
+                    console.log(`[SYNC-${syncId}] Amount tally before UI updates:`, amountTally);
+                    
+                } catch (error) {
+                    console.error(`[SYNC-${syncId}] AmountFlow reconciliation failed:`, error);
+                }
+            } else {
+                console.warn(`[SYNC-${syncId}] AmountFlow not available for reconciliation`);
+            }
+            
+            // 2. Update dashboard with reconciled data
             console.log(`[SYNC-${syncId}] Updating dashboard...`);
             await this.updateDashboard();
             
-            // 3. Update calendar if available
+            // 3. Update calendar if available - FORCE FRESH DATA LOAD
             console.log(`[SYNC-${syncId}] Updating calendar...`);
-            if (this.calendar && typeof this.calendar.loadData === 'function') {
-                await this.calendar.loadData();
-                if (typeof this.calendar.updateCalendar === 'function') {
-                    await this.calendar.updateCalendar();
+            if (this.calendar) {
+                if (typeof this.calendar.loadData === 'function') {
+                    console.log(`[SYNC-${syncId}] Loading fresh calendar data...`);
+                    await this.calendar.loadData();
                 }
+                if (typeof this.calendar.updateCalendar === 'function') {
+                    console.log(`[SYNC-${syncId}] Rendering calendar with fresh data...`);
+                    await this.calendar.updateCalendar();
+                } else if (typeof this.calendar.render === 'function') {
+                    console.log(`[SYNC-${syncId}] Rendering calendar...`);
+                    this.calendar.render();
+                }
+            } else {
+                console.warn(`[SYNC-${syncId}] Calendar not available for update`);
             }
             
-            // 4. Update charts if available
+            // 4. Update charts if available - FORCE FRESH DATA
             console.log(`[SYNC-${syncId}] Updating charts...`);
-            if (this.charts && typeof this.charts.updateCharts === 'function') {
-                await this.charts.updateCharts();
+            if (this.charts) {
+                if (typeof this.charts.updateCharts === 'function') {
+                    console.log(`[SYNC-${syncId}] Updating charts with fresh data...`);
+                    await this.charts.updateCharts();
+                } else {
+                    console.warn(`[SYNC-${syncId}] Charts updateCharts function not available`);
+                }
+            } else {
+                console.warn(`[SYNC-${syncId}] Charts system not available for update`);
             }
             
             // 5. Update payment system
@@ -530,45 +582,19 @@ class RServiceTracker {
                 await this.updateProgressBar(progressTextEl, progressFillEl);
             }
             
-            // 🏦 AMOUNT FLOW INTEGRATION - Perform comprehensive amount reconciliation
-            console.log(`[SYNC-${syncId}] Performing AmountFlow reconciliation and validation...`);
+            // 🏦 FINAL VERIFICATION - Verify that all systems are reconciled
+            console.log(`[SYNC-${syncId}] Final system verification...`);
             if (window.AmountFlow) {
-                try {
-                    // First perform reconciliation
-                    const reconciliationResult = await window.AmountFlow.performReconciliation();
-                    console.log(`[SYNC-${syncId}] AmountFlow reconciliation completed:`, reconciliationResult);
-                    
-                    // Then perform comprehensive validation
-                    const validationResult = await window.AmountFlow.performComprehensiveValidation();
-                    console.log(`[SYNC-${syncId}] AmountFlow validation completed:`, {
-                        isValid: validationResult.isValid,
-                        totalChecks: validationResult.totalChecks,
-                        passedChecks: validationResult.passedChecks,
-                        errors: validationResult.errors.length,
-                        warnings: validationResult.warnings.length
-                    });
-                    
-                    // Verify amounts are perfectly tallied
-                    const amountFlowState = window.AmountFlow.getCurrentState();
-                    if (!amountFlowState.isReconciled || !validationResult.isValid) {
-                        console.warn(`[SYNC-${syncId}] ⚠️ AmountFlow reconciliation or validation incomplete`);
-                        if (validationResult.errors.length > 0) {
-                            console.error(`[SYNC-${syncId}] Validation errors:`, validationResult.errors);
-                        }
-                    } else {
-                        console.log(`[SYNC-${syncId}] ✅ All amounts perfectly reconciled and validated`);
-                    }
-                    
-                    // Generate and log amount tally for verification
-                    const amountTally = window.AmountFlow.generateAmountTally();
-                    console.log(`[SYNC-${syncId}] Current amount tally:`, amountTally);
-                    
-                } catch (error) {
-                    console.error(`[SYNC-${syncId}] AmountFlow reconciliation/validation failed:`, error);
-                    // Don't fail the entire sync for AmountFlow issues
+                const finalAmountFlowState = window.AmountFlow.getCurrentState();
+                const finalTally = window.AmountFlow.generateAmountTally();
+                
+                if (finalAmountFlowState.isReconciled && finalTally.summary.reconciliationStatus === 'RECONCILED') {
+                    console.log(`[SYNC-${syncId}] ✅ All systems perfectly reconciled and synced`);
+                } else {
+                    console.warn(`[SYNC-${syncId}] ⚠️ System reconciliation may be incomplete`);
                 }
-            } else {
-                console.warn(`[SYNC-${syncId}] AmountFlow not available for reconciliation`);
+                
+                console.log(`[SYNC-${syncId}] Final amount tally:`, finalTally);
             }
             
             const endTime = performance.now();

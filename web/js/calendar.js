@@ -161,7 +161,7 @@ class CalendarManager {
         const isWorked = workRecord && workRecord.status === 'completed';
         
         const isPaid = this.isDatePaid(dateString);
-        const isForcePaid = isPaid && !isWorked; // Force paid means paid but no work record
+        const isForcePaid = this.isForcePaidDate(dateString); // Use dedicated force paid detection
         
         if (isToday) {
             cell.classList.add('today');
@@ -267,7 +267,7 @@ class CalendarManager {
                 `;
                 indicators.appendChild(paidIndicator);
             }
-        } else if (isPaid && !workRecord) {
+        } else if (isForcePaid) {
             // Force-paid date (payment without work record) - use orange styling to distinguish from regular payments
             const forcePaidIndicator = document.createElement('span');
             forcePaidIndicator.className = 'force-paid-indicator';
@@ -389,7 +389,7 @@ class CalendarManager {
                             margin-top: 1rem;
                             width: 100%;
                             padding: 0.75rem;
-                            background: linear-gradient(135deg, var(--success), #45a049);
+                            background: linear-gradient(135deg, #ff9800, #f57c00);
                             color: white;
                             border: none;
                             border-radius: var(--border-radius);
@@ -412,7 +412,7 @@ class CalendarManager {
             }
         } else {
             // Check if this date has a force payment (paid but no work record)
-            if (isPaid) {
+            if (this.isForcePaidDate(dateString)) {
                 content += `
                     <div class="work-status force-paid" style="color: #ff9800; border-color: #ff9800;">
                         <i class="fas fa-hand-holding-usd"></i>
@@ -539,7 +539,7 @@ class CalendarManager {
                     margin-top: 0.5rem;
                     width: 100%;
                     padding: 0.75rem;
-                    background: linear-gradient(135deg, var(--success), #45a049);
+                    background: linear-gradient(135deg, #ff9800, #f57c00);
                     color: white;
                     border: none;
                     border-radius: var(--border-radius);
@@ -767,6 +767,38 @@ class CalendarManager {
         );
     }
 
+    isForcePaidDate(dateString) {
+        // A date is force paid if:
+        // 1. It has a payment associated with it, OR
+        // 2. It's an advance payment made on that date (even if not in workDates due to bug fix)
+        
+        // Check if directly paid
+        const directlyPaid = this.payments.some(payment => 
+            payment.workDates.includes(dateString)
+        );
+        
+        if (directlyPaid) {
+            // If directly paid, check if there's no work record (force paid scenario)
+            const workRecord = this.workRecords.find(record => record.date === dateString);
+            return !workRecord || workRecord.status !== 'completed';
+        }
+        
+        // Check if this date had an advance payment made on it (force payment scenario)
+        const advancePaymentOnDate = this.payments.find(payment => 
+            payment.isAdvance && 
+            payment.paymentDate === dateString &&
+            payment.workDates.length === 1 &&
+            payment.workDates[0] === dateString
+        );
+        
+        if (advancePaymentOnDate) {
+            const workRecord = this.workRecords.find(record => record.date === dateString);
+            return !workRecord || workRecord.status !== 'completed';
+        }
+        
+        return false;
+    }
+
     getPaymentForDate(dateString) {
         return this.payments.find(payment => 
             payment.workDates.includes(dateString)
@@ -923,25 +955,23 @@ class CalendarManager {
                                   String(today.getMonth() + 1).padStart(2, '0') + '-' + 
                                   String(today.getDate()).padStart(2, '0');
                 
-                console.log('Adding direct payment:', { amount: paymentAmount, workDates: [dateString], paymentDate });
+                console.log('Processing force payment through main app logic for consistency...');
                 
-                // 🏦 AMOUNT FLOW INTEGRATION - Pre-validate payment amount
-                if (window.AmountFlow) {
-                    try {
-                        console.log('[Calendar] Pre-validating force payment through AmountFlow...');
-                        await window.AmountFlow.validateAmount('addPayment', paymentAmount, {
-                            minAmount: 1,
-                            maxAmount: window.R_SERVICE_CONFIG?.MAX_PAYMENT_AMOUNT || 100000
-                        });
-                        console.log('[Calendar] AmountFlow validation passed for force payment');
-                    } catch (error) {
-                        console.error('[Calendar] AmountFlow pre-validation failed:', error);
-                        window.app?.notifications?.showToast(`Payment validation failed: ${error.message}`, 'error');
-                        return;
-                    }
+                // 🔧 FIX: Use the main app's payment processing logic to ensure consistency
+                // This ensures the force payment goes through the same logic as other payments
+                if (window.app && typeof window.app.processPayment === 'function') {
+                    // Set the force paid date in the app
+                    window.app.forcePaidDateString = dateString;
+                    
+                    // Process through main payment logic (this will handle the bug fix properly)
+                    await window.app.processPayment(paymentAmount, () => {
+                        console.log('Force payment processed through main app logic');
+                    });
+                } else {
+                    // Fallback to direct database call if app not available
+                    console.log('App not available, using direct database call');
+                    await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
                 }
-                
-                await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
                 console.log('Force payment added successfully');
 
                 if (window.app && window.app.notifications) {

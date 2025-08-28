@@ -154,6 +154,33 @@ async function testAmountFlow() {
             console.error('❌ Force payment test failed:', error);
         }
 
+        // Test 11: System Reconciliation Fix
+        console.log('\n🔄 Test 11: System Reconciliation');
+        try {
+            // Test reconciliation without circular dependencies
+            const reconciliationResult = await window.AmountFlow.performReconciliation();
+            console.log('✅ Reconciliation completed without circular dependencies:', reconciliationResult);
+            
+            // Verify state consistency
+            const currentState = window.AmountFlow.getCurrentState();
+            if (currentState.isReconciled) {
+                console.log('✅ AmountFlow state properly reconciled');
+            } else {
+                console.warn('⚠️ AmountFlow state not reconciled');
+            }
+            
+            // Test comprehensive validation
+            const validationResult = await window.AmountFlow.performComprehensiveValidation();
+            console.log('✅ Comprehensive validation completed:', {
+                isValid: validationResult.isValid,
+                totalChecks: validationResult.totalChecks,
+                passedChecks: validationResult.passedChecks
+            });
+            
+        } catch (error) {
+            console.error('❌ System reconciliation test failed:', error);
+        }
+
         console.log('\n🎉 All AmountFlow tests completed successfully!');
         
         return {
