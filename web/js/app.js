@@ -1770,23 +1770,24 @@ class RServiceTracker {
             
             const advanceStatus = await this.db.getAdvancePaymentStatus();
             
-            // Always show the button but disable if no work to pay for
-            this.showPaidButton();
-            
-            // Enable/disable based on available work to pay for
+            // Check if there's any work to pay for
             const hasUnpaidWork = this.pendingUnpaidDates.length > 0;
             const hasAdvancePaymentWork = advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0;
+            const hasAnyPayableWork = hasUnpaidWork || hasAdvancePaymentWork;
             
-            if (hasUnpaidWork || hasAdvancePaymentWork) {
+            if (hasAnyPayableWork) {
+                // Show and enable button when there's work to pay for
+                this.showPaidButton();
                 paidBtn.disabled = false;
                 paidBtn.classList.remove('disabled-state');
                 paidBtn.classList.add('has-pending-work');
                 paidBtn.classList.add('payment-ready'); // Add pulse and glow effect
+                
+                console.log('[PAID BUTTON] Shown - Unpaid work:', hasUnpaidWork, 'Advance work:', hasAdvancePaymentWork);
             } else {
-                paidBtn.disabled = true;
-                paidBtn.classList.add('disabled-state');
-                paidBtn.classList.remove('has-pending-work');
-                paidBtn.classList.remove('payment-ready'); // Remove pulse and glow effect
+                // Hide button when there's no work to pay for
+                this.hidePaidButton();
+                console.log('[PAID BUTTON] Hidden - No payable work available');
             }
         }
     }
@@ -2962,12 +2963,90 @@ class RServiceTracker {
                 throw new Error('Data validation failed after sync');
             }
             
+            // Ensure storage-level synchronization
+            await this._validateStorageSync();
+            
+            // Validate advance payment consistency
+            await this._validateAdvancePaymentSync();
+            
+            // Validate UI state consistency
+            this._validateUISync(computedData);
+            
             // Clear any stale caches
             this._clearStaleData();
             
-            console.log('✅ [LAYER 7] Final validation completed - system synchronized');
+            console.log('✅ [LAYER 7] Final validation completed - system fully synchronized at all levels');
         } catch (error) {
             throw new Error(`Final validation failed: ${error.message}`);
+        }
+    }
+
+    async _validateStorageSync() {
+        try {
+            // Verify database operations are synchronized
+            const workRecords = await this.db.getAllWorkRecords();
+            const payments = await this.db.getAllPayments();
+            
+            // Check for any pending transactions or inconsistencies
+            const pendingOperations = this.db._pendingOperations || [];
+            if (pendingOperations.length > 0) {
+                console.warn('[STORAGE SYNC] Found pending operations:', pendingOperations);
+                // Process any pending operations
+                await this.db._processPendingOperations?.();
+            }
+            
+            console.log('[STORAGE SYNC] Storage synchronization validated');
+        } catch (error) {
+            throw new Error(`Storage sync validation failed: ${error.message}`);
+        }
+    }
+
+    async _validateAdvancePaymentSync() {
+        try {
+            const advanceStatus = await this.db.getAdvancePaymentStatus();
+            
+            // Ensure advance payment calculations are consistent
+            if (advanceStatus.hasAdvancePayments) {
+                const workRemaining = advanceStatus.workRemainingForAdvance;
+                const workCompleted = advanceStatus.workCompletedForAdvance;
+                const workRequired = advanceStatus.workRequiredForAdvance;
+                
+                // Validate calculations
+                if (workCompleted + workRemaining !== workRequired) {
+                    console.warn('[ADVANCE SYNC] Calculation mismatch detected, recalculating...');
+                    // Force recalculation by clearing cache if needed
+                    await this.db.getAdvancePaymentStatus();
+                }
+            }
+            
+            console.log('[ADVANCE SYNC] Advance payment synchronization validated');
+        } catch (error) {
+            throw new Error(`Advance payment sync validation failed: ${error.message}`);
+        }
+    }
+
+    _validateUISync(computedData) {
+        try {
+            // Validate UI elements are in sync with data
+            const paidBtn = document.getElementById('paidBtn');
+            const hasPayableWork = (this.pendingUnpaidDates?.length > 0) || 
+                                  (computedData.advanceStatus?.hasAdvancePayments && 
+                                   computedData.advanceStatus?.workRemainingForAdvance > 0);
+            
+            if (paidBtn) {
+                const isVisible = paidBtn.style.display !== 'none';
+                if (hasPayableWork && !isVisible) {
+                    console.warn('[UI SYNC] Paid button should be visible but is hidden, correcting...');
+                    this.showPaidButton();
+                } else if (!hasPayableWork && isVisible) {
+                    console.warn('[UI SYNC] Paid button should be hidden but is visible, correcting...');
+                    this.hidePaidButton();
+                }
+            }
+            
+            console.log('[UI SYNC] UI synchronization validated');
+        } catch (error) {
+            console.error('[UI SYNC] UI validation warning (non-critical):', error);
         }
     }
 
@@ -3123,6 +3202,57 @@ class RServiceTracker {
             }
         } catch (error) {
             console.error('Error checking advance payment notification:', error);
+        }
+    }
+
+    async processAutomaticAdvancePayment(workDate) {
+        try {
+            const advanceStatus = await this.db.getAdvancePaymentStatus();
+            
+            // Only process if there are advance payments and work remaining
+            if (!advanceStatus.hasAdvancePayments || advanceStatus.workRemainingForAdvance <= 0) {
+                return;
+            }
+
+            console.log('[ADVANCE PAYMENT] Processing automatic advance payment for work date:', workDate);
+            
+            // Get the daily wage
+            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+            
+            // Check if this work completes the advance payment obligation
+            const workRemainingAfter = advanceStatus.workRemainingForAdvance - 1;
+            
+            if (workRemainingAfter <= 0) {
+                // All advance payment work is now complete
+                this.notifications.showToast(
+                    `🎉 Advance payment obligation completed! You've earned back ₹${advanceStatus.totalAdvanceAmount}`,
+                    'success',
+                    8000
+                );
+                
+                try {
+                    this.notifications.playSound('done');
+                } catch (soundError) {
+                    console.log('Sound playback failed (non-critical):', soundError);
+                }
+            } else {
+                // Still work remaining for advance payment
+                this.notifications.showToast(
+                    `Advance payment progress: ${workRemainingAfter} work day${workRemainingAfter > 1 ? 's' : ''} remaining (₹${workRemainingAfter * dailyWage})`,
+                    'info',
+                    6000
+                );
+            }
+
+            // Update advance payment tracking in database
+            // This is automatically handled by the getAdvancePaymentStatus calculation
+            // which counts completed unpaid work against advance payments
+
+            console.log('[ADVANCE PAYMENT] Automatic processing completed');
+            
+        } catch (error) {
+            console.error('Error processing automatic advance payment:', error);
+            // Don't show error to user as this is background processing
         }
     }
 

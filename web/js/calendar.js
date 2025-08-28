@@ -706,6 +706,11 @@ class CalendarManager {
                     try {
                         await window.app.syncAmountFlow();
                         
+                        // Check and process automatic advance payment if applicable
+                        if (typeof window.app.processAutomaticAdvancePayment === 'function') {
+                            await window.app.processAutomaticAdvancePayment(dateString);
+                        }
+                        
                         // Update today's status (done button state)
                         if (typeof window.app.updateTodayStatus === 'function') {
                             await window.app.updateTodayStatus();
