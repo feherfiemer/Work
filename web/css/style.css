@@ -5008,7 +5008,6 @@ button.disabled:hover {
   min-width: 260px;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--text-primary);
   word-wrap: break-word;
   white-space: normal;
   text-align: left;
@@ -5018,10 +5017,7 @@ button.disabled:hover {
   border-radius: var(--border-radius-small);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-}
-
-/* Main color theme-based tooltip styling */
-.tooltip-content {
+  /* Main color theme-based styling */
   background: rgba(var(--primary-rgb), 0.95);
   border: 1px solid rgba(var(--primary-rgb), 0.8);
   color: white;
@@ -5052,7 +5048,7 @@ button.disabled:hover {
   width: 12px;
   height: 12px;
   transform: rotate(45deg);
-  z-index: -1;
+  z-index: 1;
   background: rgba(var(--primary-rgb), 0.95);
   border: 1px solid rgba(var(--primary-rgb), 0.8);
   display: block !important;

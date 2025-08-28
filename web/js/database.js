@@ -294,19 +294,19 @@ class DatabaseManager {
         );
         const pendingWorkValue = unpaidWork.length * DAILY_WAGE;
         
-        // Total earned is based on completed work only
-        // Force payments and advance payments are handled through the payment system
-        const totalEarned = totalWorked * DAILY_WAGE;
+        // Total earned is based on completed payments (actual money received)
+        // This shows the real payment amounts, not theoretical work value
+        const totalEarned = totalPaid;
         
         // Current balance is pending work value (what's owed for completed work)
-        // This will be negative if advance payments exceed completed work value
-        const currentBalance = pendingWorkValue - (totalPaid - totalEarned);
+        // This shows unpaid work value
+        const currentBalance = pendingWorkValue;
         
         return {
             totalWorked,
             totalPaid,
             totalEarned,
-            currentBalance: Math.max(0, pendingWorkValue), // Show pending work value for current balance
+            currentBalance: currentBalance, // Show pending work value for current balance
             pendingWorkValue,
             unpaidWorkDays: unpaidWork.length,
             dailyWage: DAILY_WAGE,
@@ -449,6 +449,7 @@ class DatabaseManager {
             const payments = await this.getAllPayments();
             
             const advancePayments = payments.filter(payment => payment.isAdvance);
+            console.log('[Advance] Found advance payments:', advancePayments.length);
             
             if (advancePayments.length === 0) {
                 return {
@@ -499,6 +500,12 @@ class DatabaseManager {
             const workCompletedForAdvance = totalWorkCompletedForAdvance; // Days actually completed
             const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workCompletedForAdvance);
             
+            console.log('[Advance] Status calculated:', {
+                totalAdvanceAmount,
+                workRequiredForAdvance,
+                workCompletedForAdvance,
+                workRemainingForAdvance
+            });
             
             return {
                 hasAdvancePayments: true,

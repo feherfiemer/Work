@@ -2820,7 +2820,7 @@ class RServiceTracker {
                     // Only show if we have the prompt or it's a generic prompt
                     if (window.deferredPrompt) {
                         this.showInstallRecommendation(window.deferredPrompt);
-                    } else {
+                    } else if (this.checkPWASupport()) {
                         this.showInstallRecommendationGeneric();
                     }
                     installBannerShown = true;
@@ -2982,7 +2982,38 @@ class RServiceTracker {
         }
     }
 
+    checkPWASupport() {
+        // Check for essential PWA features
+        const hasServiceWorker = 'serviceWorker' in navigator;
+        const hasManifest = document.querySelector('link[rel="manifest"]');
+        const supportsStandalone = 'standalone' in navigator || window.matchMedia('(display-mode: standalone)').matches !== undefined;
+        
+        // Additional browser-specific checks
+        const userAgent = navigator.userAgent;
+        const isSupported = (
+            // Chrome/Chromium based browsers
+            (userAgent.includes('Chrome') && !userAgent.includes('Edg')) ||
+            // Firefox with PWA support
+            (userAgent.includes('Firefox') && parseInt(userAgent.match(/Firefox\/(\d+)/)?.[1] || '0') >= 85) ||
+            // Safari with PWA support (iOS 11.3+ and macOS Safari 11.1+)
+            (userAgent.includes('Safari') && !userAgent.includes('Chrome')) ||
+            // Samsung Internet
+            userAgent.includes('SamsungBrowser') ||
+            // Edge
+            userAgent.includes('Edg')
+        );
+
+        return hasServiceWorker && hasManifest && supportsStandalone && isSupported;
+    }
+
     showInstallRecommendationGeneric() {
+        // Check if browser supports PWA features
+        const supportsPWA = this.checkPWASupport();
+        if (!supportsPWA) {
+            console.log('[PWA] Browser does not support PWA features, skipping banner');
+            return;
+        }
+
         // Check if already dismissed
         const isDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
         if (isDismissed) {
