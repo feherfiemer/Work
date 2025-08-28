@@ -4986,9 +4986,8 @@ button.disabled:hover {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: scale(0.8) translateY(-10px);
-  transform-origin: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
   will-change: transform, opacity;
   contain: layout style paint;
   display: none;
@@ -4998,19 +4997,12 @@ button.disabled:hover {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: scale(1) translateY(0);
+  transform: translateY(0);
   display: block !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
 }
 
 .tooltip-content {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius-small);
-  box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.15),
-    0 4px 20px rgba(0, 0, 0, 0.1),
-    0 2px 8px rgba(var(--primary-rgb), 0.1);
   padding: 1rem 1.25rem;
   max-width: 320px;
   min-width: 260px;
@@ -5020,47 +5012,52 @@ button.disabled:hover {
   word-wrap: break-word;
   white-space: normal;
   text-align: left;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   font-family: var(--font-family);
   font-weight: 400;
   position: relative;
+  border-radius: var(--border-radius-small);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-/* Theme-based tooltip content backgrounds */
+/* Enhanced theme-based tooltip styling */
 [data-theme*="light"] .tooltip-content {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(var(--primary-rgb), 0.15);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(var(--primary-rgb), 0.15);
+  color: var(--text-primary);
 }
 
 [data-theme*="dark"] .tooltip-content {
-  background: rgba(var(--surface-alt), 0.95);
-  border-color: rgba(var(--primary-rgb), 0.25);
+  background: rgba(var(--surface-alt), 0.98);
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
   box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.3),
-    0 4px 20px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(var(--primary-rgb), 0.2);
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(var(--primary-rgb), 0.25);
+  color: var(--text-primary);
 }
 
 .tooltip-arrow {
   position: absolute;
   width: 12px;
   height: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
   transform: rotate(45deg);
   z-index: -1;
 }
 
-/* Theme-based arrow backgrounds */
+/* Enhanced theme-based arrow styling */
 [data-theme*="light"] .tooltip-arrow {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(var(--primary-rgb), 0.15);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
 }
 
 [data-theme*="dark"] .tooltip-arrow {
-  background: rgba(var(--surface-alt), 0.95);
-  border-color: rgba(var(--primary-rgb), 0.25);
+  background: rgba(var(--surface-alt), 0.98);
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
 }
 
 .earnings-tooltip.show .tooltip-arrow {
@@ -5068,29 +5065,29 @@ button.disabled:hover {
   visibility: visible !important;
 }
 
-/* Modern arrow positioning - cleaner look */
+/* Precise arrow positioning - points exactly to icon center */
 .earnings-tooltip.top .tooltip-arrow {
   bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
+  /* Left position is set dynamically by JavaScript */
+  transform: rotate(45deg);
 }
 
 .earnings-tooltip.bottom .tooltip-arrow {
   top: -6px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
+  /* Left position is set dynamically by JavaScript */
+  transform: rotate(45deg);
 }
 
 .earnings-tooltip.left .tooltip-arrow {
   right: -6px;
-  top: 50%;
-  transform: translateY(-50%) rotate(45deg);
+  /* Top position is set dynamically by JavaScript */
+  transform: rotate(45deg);
 }
 
 .earnings-tooltip.right .tooltip-arrow {
   left: -6px;
-  top: 50%;
-  transform: translateY(-50%) rotate(45deg);
+  /* Top position is set dynamically by JavaScript */
+  transform: rotate(45deg);
 }
 
 /* Mobile responsive */
