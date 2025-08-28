@@ -5044,17 +5044,29 @@ button.disabled:hover {
 }
 
 .tooltip-arrow {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  transform: rotate(45deg);
-  z-index: 1000;
-  background: rgba(var(--primary-rgb), 0.95) !important;
-  border: 1px solid rgba(var(--primary-rgb), 0.8) !important;
+  position: absolute !important;
+  width: 16px !important;
+  height: 16px !important;
+  transform: rotate(45deg) !important;
+  z-index: 1001 !important;
+  background: rgba(var(--primary-rgb), 0.98) !important;
+  border: 2px solid rgba(var(--primary-rgb), 0.9) !important;
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
-  pointer-events: none;
+  pointer-events: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Force arrow visibility in all states */
+.tooltip-arrow::before {
+  content: '' !important;
+  position: absolute !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: inherit !important;
+  border: inherit !important;
+  z-index: -1 !important;
 }
 
 .earnings-tooltip.show .tooltip-arrow {
@@ -5064,27 +5076,27 @@ button.disabled:hover {
 
 /* Precise arrow positioning - points exactly to icon center */
 .earnings-tooltip.top .tooltip-arrow {
-  bottom: -6px;
+  bottom: -8px !important;
   /* Left position is set dynamically by JavaScript */
-  transform: rotate(45deg);
+  transform: rotate(45deg) !important;
 }
 
 .earnings-tooltip.bottom .tooltip-arrow {
-  top: -6px;
+  top: -8px !important;
   /* Left position is set dynamically by JavaScript */
-  transform: rotate(45deg);
+  transform: rotate(45deg) !important;
 }
 
 .earnings-tooltip.left .tooltip-arrow {
-  right: -6px;
+  right: -8px !important;
   /* Top position is set dynamically by JavaScript */
-  transform: rotate(45deg);
+  transform: rotate(45deg) !important;
 }
 
 .earnings-tooltip.right .tooltip-arrow {
-  left: -6px;
+  left: -8px !important;
   /* Top position is set dynamically by JavaScript */
-  transform: rotate(45deg);
+  transform: rotate(45deg) !important;
 }
 
 /* Mobile responsive */

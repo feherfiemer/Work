@@ -78,6 +78,16 @@ class RServiceTracker {
                 }
             };
             
+            // 🔄 Expose the master sync function globally for easy access
+            window.syncAllSystems = async (source = 'manual', options = {}) => {
+                if (this.syncAllSystems) {
+                    return await this.syncAllSystems(source, options);
+                } else {
+                    console.error('syncAllSystems not available');
+                    return { success: false, error: 'Function not available' };
+                }
+            };
+            
             window.testAllSystems = async () => {
                 console.log('[SYSTEM] Testing all R-Service Tracker systems...');
                 const testResults = {};
@@ -138,14 +148,26 @@ class RServiceTracker {
                         testResults.calendar = { status: 'SKIP', reason: 'Calendar not initialized' };
                     }
                     
-                    // Test Global Sync System
-                    console.log('[SYNC] Testing global sync system...');
+                    // Test Master Sync Function
+                    console.log('[SYNC] Testing master sync function...');
+                    const syncResult = await this.syncAllSystems('system_test', {
+                        showNotification: false
+                    });
+                    testResults.masterSync = {
+                        status: syncResult.success ? 'PASS' : 'FAIL',
+                        duration: syncResult.duration,
+                        syncId: syncResult.syncId
+                    };
+                    console.log('[SYNC] ✅ Master sync function working:', syncResult);
+                    
+                    // Test Global Sync Event System
+                    console.log('[SYNC] Testing global sync event system...');
                     const syncEvent = new CustomEvent('forceSystemSync', {
                         detail: { source: 'system_test' }
                     });
                     window.dispatchEvent(syncEvent);
                     testResults.globalSync = { status: 'PASS' };
-                    console.log('[SYNC] ✅ Global sync system working');
+                    console.log('[SYNC] ✅ Global sync event system working');
                     
                     // Test Utilities
                     console.log('[UTILITIES] Testing utilities...');
@@ -398,34 +420,146 @@ class RServiceTracker {
     setupGlobalSyncEventListener() {
         // Listen for global system sync events to ensure all components stay synchronized
         window.addEventListener('forceSystemSync', async (event) => {
-            console.log(`[GlobalSync] Received sync event from: ${event.detail?.source || 'unknown'}`);
+            const source = event.detail?.source || 'unknown';
+            console.log(`[GlobalSync] Received sync event from: ${source}`);
             
-            try {
-                // Force reload fresh data
-                this.currentStats = await this.db.getEarningsStats();
-                
-                // Update all major components
-                await this.updateDashboard();
-                await this.updatePendingUnpaidDates();
-                await this.updatePaidButtonVisibility();
-                
-                // Update charts if available
-                if (this.charts && typeof this.charts.updateCharts === 'function') {
-                    await this.charts.updateCharts();
-                }
-                
-                // Update calendar if available
-                if (this.calendar && typeof this.calendar.updateCalendar === 'function') {
-                    await this.calendar.updateCalendar();
-                }
-                
-                console.log('[GlobalSync] System sync completed successfully');
-            } catch (error) {
-                console.error('[GlobalSync] Error during system sync:', error);
-            }
+            // Use the master sync function for all synchronization
+            await this.syncAllSystems(`event_${source}`, { 
+                showNotification: false // Don't show notification for event-triggered syncs
+            });
         });
         
         console.log('[GlobalSync] Global sync event listener setup completed');
+    }
+
+    /**
+     * 🔄 MASTER SYNCHRONIZATION FUNCTION
+     * This function ensures ALL systems are up-to-date and synchronized
+     * Called by all major operations to maintain system consistency
+     * 
+     * Synchronizes:
+     * - Database state (fresh data)
+     * - Dashboard display
+     * - Calendar view
+     * - Charts and analytics
+     * - Payment system state
+     * - Advance payment tracking
+     * - UI element states
+     */
+    async syncAllSystems(source = 'unknown', options = {}) {
+        const syncId = Date.now();
+        const startTime = performance.now();
+        
+        console.log(`\n🔄 [SYNC-${syncId}] MASTER SYSTEM SYNC INITIATED`);
+        console.log(`📍 [SYNC-${syncId}] Source: ${source}`);
+        console.log(`⚙️ [SYNC-${syncId}] Options:`, options);
+        
+        try {
+            // 🗄️ STEP 1: Force fresh database state
+            console.log(`📊 [SYNC-${syncId}] Step 1: Refreshing database state...`);
+            this.currentStats = await this.db.getEarningsStats();
+            const allWorkRecords = await this.db.getAllWorkRecords();
+            const allPayments = await this.db.getAllPayments();
+            console.log(`✅ [SYNC-${syncId}] Database refreshed - Stats:`, this.currentStats);
+            
+            // 🏠 STEP 2: Update Dashboard with fresh data
+            console.log(`🏠 [SYNC-${syncId}] Step 2: Updating dashboard...`);
+            await this.updateDashboard();
+            console.log(`✅ [SYNC-${syncId}] Dashboard updated`);
+            
+            // 📅 STEP 3: Refresh Calendar view
+            console.log(`📅 [SYNC-${syncId}] Step 3: Refreshing calendar...`);
+            if (this.calendar && typeof this.calendar.updateCalendar === 'function') {
+                await this.calendar.loadData(); // Force fresh data load
+                await this.calendar.updateCalendar();
+                console.log(`✅ [SYNC-${syncId}] Calendar refreshed`);
+            } else {
+                console.log(`⚠️ [SYNC-${syncId}] Calendar not available for update`);
+            }
+            
+            // 📈 STEP 4: Update Charts and Analytics
+            console.log(`📈 [SYNC-${syncId}] Step 4: Updating charts...`);
+            if (this.charts && typeof this.charts.updateCharts === 'function') {
+                await this.charts.updateCharts();
+                console.log(`✅ [SYNC-${syncId}] Charts updated`);
+            } else {
+                console.log(`⚠️ [SYNC-${syncId}] Charts not available for update`);
+            }
+            
+            // 💰 STEP 5: Update Payment System State
+            console.log(`💰 [SYNC-${syncId}] Step 5: Updating payment system...`);
+            await this.updatePendingUnpaidDates();
+            await this.updatePaidButtonVisibility();
+            console.log(`✅ [SYNC-${syncId}] Payment system updated`);
+            
+            // 🔄 STEP 6: Update Advance Payment Status
+            console.log(`🔄 [SYNC-${syncId}] Step 6: Checking advance payments...`);
+            if (typeof this.checkAdvancePaymentNotification === 'function') {
+                await this.checkAdvancePaymentNotification();
+                console.log(`✅ [SYNC-${syncId}] Advance payment status checked`);
+            }
+            
+            // ⚡ STEP 7: Update Today's Status and UI Elements
+            console.log(`⚡ [SYNC-${syncId}] Step 7: Updating UI elements...`);
+            if (typeof this.updateTodayStatus === 'function') {
+                await this.updateTodayStatus();
+            }
+            
+            // Check for pending payments
+            if (typeof this.checkPendingPayments === 'function') {
+                await this.checkPendingPayments();
+            }
+            console.log(`✅ [SYNC-${syncId}] UI elements updated`);
+            
+            // 🎯 STEP 8: Final validation and logging
+            const endTime = performance.now();
+            const duration = Math.round(endTime - startTime);
+            
+            console.log(`\n🎉 [SYNC-${syncId}] MASTER SYNC COMPLETED SUCCESSFULLY!`);
+            console.log(`⏱️ [SYNC-${syncId}] Duration: ${duration}ms`);
+            console.log(`📊 [SYNC-${syncId}] Final stats:`, this.currentStats);
+            console.log(`🔢 [SYNC-${syncId}] Work records: ${allWorkRecords.length}, Payments: ${allPayments.length}`);
+            
+            // Optional success notification
+            if (options.showNotification !== false && duration > 1000) {
+                this.notifications?.showToast(`🔄 System sync completed (${duration}ms)`, 'success', 3000);
+            }
+            
+            return {
+                success: true,
+                duration: duration,
+                stats: this.currentStats,
+                syncId: syncId,
+                workRecords: allWorkRecords.length,
+                payments: allPayments.length
+            };
+            
+        } catch (error) {
+            const endTime = performance.now();
+            const duration = Math.round(endTime - startTime);
+            
+            console.error(`❌ [SYNC-${syncId}] MASTER SYNC FAILED after ${duration}ms:`, error);
+            
+            // Show error notification
+            this.notifications?.showToast(`❌ System sync failed: ${error.message}`, 'error', 5000);
+            
+            // Attempt basic recovery
+            try {
+                console.log(`🔧 [SYNC-${syncId}] Attempting basic recovery...`);
+                this.currentStats = await this.db.getEarningsStats();
+                await this.updateDashboard();
+                console.log(`✅ [SYNC-${syncId}] Basic recovery completed`);
+            } catch (recoveryError) {
+                console.error(`💥 [SYNC-${syncId}] Recovery failed:`, recoveryError);
+            }
+            
+            return {
+                success: false,
+                error: error.message,
+                duration: duration,
+                syncId: syncId
+            };
+        }
     }
 
     closeMenu() {
@@ -1443,65 +1577,103 @@ class RServiceTracker {
         console.log(`[Tooltip] Final position: ${left}px, ${top}px, class: ${position}`);
         
         // Enhanced arrow positioning - precisely point to the icon center
+        let tooltipArrow = tooltip.querySelector('.tooltip-arrow');
+        
+        // Ensure arrow element exists
+        if (!tooltipArrow) {
+            console.log('[Tooltip] Creating missing arrow element');
+            tooltipArrow = document.createElement('div');
+            tooltipArrow.className = 'tooltip-arrow';
+            tooltip.appendChild(tooltipArrow);
+        }
+        
         if (tooltipArrow) {
             const targetCenterX = targetRect.left + (targetRect.width / 2);
             const targetCenterY = targetRect.top + (targetRect.height / 2);
             const tooltipLeft = parseFloat(tooltip.style.left);
             const tooltipTop = parseFloat(tooltip.style.top);
             
-            // Ensure arrow is always visible with enhanced styling
-            tooltipArrow.style.opacity = '1';
-            tooltipArrow.style.visibility = 'visible';
-            tooltipArrow.style.display = 'block';
-            tooltipArrow.style.position = 'absolute';
-            tooltipArrow.style.zIndex = '1001';
-            tooltipArrow.style.pointerEvents = 'none';
+            // Force arrow visibility with comprehensive styling
+            tooltipArrow.style.cssText = `
+                position: absolute !important;
+                width: 16px !important;
+                height: 16px !important;
+                transform: rotate(45deg) !important;
+                z-index: 1001 !important;
+                background: rgba(var(--primary-rgb), 0.98) !important;
+                border: 2px solid rgba(var(--primary-rgb), 0.9) !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: none !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+            `;
             
-            console.log('[Tooltip] Arrow styles applied:', {
+            console.log('[Tooltip] Arrow styles force-applied:', {
+                element: tooltipArrow,
                 opacity: tooltipArrow.style.opacity,
                 visibility: tooltipArrow.style.visibility,
                 display: tooltipArrow.style.display,
-                className: tooltipArrow.className
+                className: tooltipArrow.className,
+                cssText: tooltipArrow.style.cssText
             });
             
             // Calculate exact positioning based on tooltip position relative to target
             if (position === 'bottom' || position === 'top') {
                 // Horizontal arrow positioning - point exactly to button center
                 const targetCenterRelativeToTooltip = targetCenterX - tooltipLeft;
-                let arrowLeft = targetCenterRelativeToTooltip - 4; // Center arrow (arrow is 8px wide)
+                let arrowLeft = targetCenterRelativeToTooltip - 8; // Center arrow (arrow is 16px wide)
                 
                 // Ensure arrow stays within tooltip bounds with proper margins
-                const arrowWidth = 8;
-                const minMargin = 6;
-                const maxMargin = tooltipRect.width - arrowWidth - 6;
+                const arrowWidth = 16;
+                const minMargin = 8;
+                const maxMargin = tooltipRect.width - arrowWidth - 8;
                 
                 arrowLeft = Math.max(minMargin, Math.min(maxMargin, arrowLeft));
                 
-                tooltipArrow.style.left = `${arrowLeft}px`;
+                // Apply positioning with inline styles to override any conflicts
+                tooltipArrow.style.left = `${arrowLeft}px !important`;
                 tooltipArrow.style.top = '';
                 tooltipArrow.style.right = '';
                 tooltipArrow.style.bottom = '';
                 
-                console.log(`[Tooltip] Arrow positioned at ${arrowLeft}px pointing to button center (${targetCenterX})`);
+                console.log(`[Tooltip] Arrow positioned horizontally at ${arrowLeft}px pointing to button center (${targetCenterX})`);
             } else if (position === 'left' || position === 'right') {
                 // Vertical arrow positioning - point exactly to button center
                 const targetCenterRelativeToTooltip = targetCenterY - tooltipTop;
-                let arrowTop = targetCenterRelativeToTooltip - 4; // Center arrow (arrow is 8px tall)
+                let arrowTop = targetCenterRelativeToTooltip - 8; // Center arrow (arrow is 16px tall)
                 
                 // Ensure arrow stays within tooltip bounds with proper margins
-                const arrowHeight = 8;
-                const minMargin = 6;
-                const maxMargin = tooltipRect.height - arrowHeight - 6;
+                const arrowHeight = 16;
+                const minMargin = 8;
+                const maxMargin = tooltipRect.height - arrowHeight - 8;
                 
                 arrowTop = Math.max(minMargin, Math.min(maxMargin, arrowTop));
                 
-                tooltipArrow.style.top = `${arrowTop}px`;
+                // Apply positioning with inline styles to override any conflicts
+                tooltipArrow.style.top = `${arrowTop}px !important`;
                 tooltipArrow.style.left = '';
                 tooltipArrow.style.right = '';
                 tooltipArrow.style.bottom = '';
                 
-                console.log(`[Tooltip] Arrow positioned at ${arrowTop}px pointing to button center (${targetCenterY})`);
+                console.log(`[Tooltip] Arrow positioned vertically at ${arrowTop}px pointing to button center (${targetCenterY})`);
             }
+            
+            // Final verification that arrow is visible
+            setTimeout(() => {
+                const computedStyle = window.getComputedStyle(tooltipArrow);
+                console.log('[Tooltip] Final arrow computed styles:', {
+                    display: computedStyle.display,
+                    visibility: computedStyle.visibility,
+                    opacity: computedStyle.opacity,
+                    position: computedStyle.position,
+                    zIndex: computedStyle.zIndex,
+                    left: computedStyle.left,
+                    top: computedStyle.top,
+                    width: computedStyle.width,
+                    height: computedStyle.height
+                });
+            }, 100);
         }
     }
 
@@ -2007,27 +2179,13 @@ class RServiceTracker {
             this.notifications.showWorkCompletedNotification();
             this.notifications.showToast(`Great job! You earned ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} today`, 'success');
             
-            this.currentStats = await this.db.getEarningsStats();
-            this.updateDashboard();
-            this.updateTodayStatus();
-            
+            // Check milestones before system sync
             this.notifications.checkMilestones(this.currentStats);
             
-            await this.charts.updateCharts();
-            if (this.calendar) {
-                await this.calendar.updateCalendar();
-            }
-            
-            await this.checkPendingPayments();
-            
-            // Ensure paid button shows immediately if eligible
-            await this.updatePaidButtonVisibility();
-            
-            // Trigger global system sync to ensure all components are updated
-            const event = new CustomEvent('forceSystemSync', {
-                detail: { source: 'mark_as_done' }
+            // Use the master sync function to ensure everything is updated
+            await this.syncAllSystems('mark_as_done', {
+                showNotification: true
             });
-            window.dispatchEvent(event);
             
             console.log('Mark as done completed with full system sync');
             
@@ -2349,33 +2507,12 @@ class RServiceTracker {
                 }, 1000);
             }
             
-            console.log('Updating stats and UI...');
-            this.currentStats = await this.db.getEarningsStats();
-            this.updateDashboard();
+            console.log('Updating all systems after payment...');
             
-            // Update system state after payment
-            await this.updatePendingUnpaidDates();
-            await this.updatePaidButtonVisibility();
-            
-            try {
-                await this.charts.updateCharts();
-            } catch (chartError) {
-                console.error('Error updating charts:', chartError);
-            }
-            
-            try {
-                if (this.calendar) {
-                    await this.calendar.updateCalendar();
-                }
-            } catch (calendarError) {
-                console.error('Error updating calendar:', calendarError);
-            }
-            
-            // Trigger global system sync to ensure all components are updated
-            const event = new CustomEvent('forceSystemSync', {
-                detail: { source: 'payment_processing' }
+            // Use the master sync function to ensure everything is updated
+            await this.syncAllSystems('payment_processing', {
+                showNotification: true
             });
-            window.dispatchEvent(event);
             
             console.log('Payment processing completed with full system sync');
             

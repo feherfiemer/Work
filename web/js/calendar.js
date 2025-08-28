@@ -892,47 +892,26 @@ class CalendarManager {
                 
                 console.log('Calendar refreshed after force payment');
 
-                if (window.app && typeof window.app.updateDashboard === 'function') {
+                if (window.app && typeof window.app.syncAllSystems === 'function') {
                     try {
-                        // Force reload fresh stats before updating dashboard
-                        window.app.currentStats = await window.app.db.getEarningsStats();
+                        console.log('Triggering master sync after calendar force payment...');
                         
-                        await window.app.updateDashboard();
-                        await window.app.updatePendingUnpaidDates();
-                        await window.app.updatePaidButtonVisibility();
-                        
-                        // Explicitly update advance payment system
-                        if (typeof window.app.checkAdvancePaymentNotification === 'function') {
-                            await window.app.checkAdvancePaymentNotification();
-                        }
-                        
-                        // Trigger payment check to potentially hide paid button
-                        if (typeof window.app.checkPendingPayments === 'function') {
-                            await window.app.checkPendingPayments();
-                        }
-                        
-                        if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
-                            await window.app.charts.updateCharts();
-                        }
-                        
-                        // Force refresh all UI elements
-                        const event = new CustomEvent('forceSystemSync', {
-                            detail: { source: 'calendar_force_payment' }
+                        // Use the master sync function for complete system synchronization
+                        await window.app.syncAllSystems('calendar_force_payment', {
+                            showNotification: true
                         });
-                        window.dispatchEvent(event);
                         
-                        console.log('Full system sync completed after calendar force payment');
+                        console.log('Master sync completed after calendar force payment');
                     } catch (appUpdateError) {
-                        console.error('Error updating app components:', appUpdateError);
-                        // Retry mechanism for critical updates
-                        setTimeout(async () => {
-                            try {
-                                window.app.currentStats = await window.app.db.getEarningsStats();
-                                await window.app.updateDashboard();
-                            } catch (retryError) {
-                                console.error('Retry update failed:', retryError);
-                            }
-                        }, 1000);
+                        console.error('Error during master sync after force payment:', appUpdateError);
+                        
+                        // Fallback to basic updates
+                        try {
+                            window.app.currentStats = await window.app.db.getEarningsStats();
+                            await window.app.updateDashboard();
+                        } catch (retryError) {
+                            console.error('Fallback update failed:', retryError);
+                        }
                     }
                 }
             } catch (renderError) {
@@ -1044,53 +1023,26 @@ class CalendarManager {
                 
                 console.log('Calendar refreshed after marking as done');
 
-                if (window.app && typeof window.app.updateDashboard === 'function') {
+                if (window.app && typeof window.app.syncAllSystems === 'function') {
                     try {
-                        // Force reload fresh stats before updating dashboard
-                        window.app.currentStats = await window.app.db.getEarningsStats();
+                        console.log('Triggering master sync after calendar mark as done...');
                         
-                        await window.app.updateDashboard();
-                        
-                        // Update today's status (done button state)
-                        if (typeof window.app.updateTodayStatus === 'function') {
-                            await window.app.updateTodayStatus();
-                        }
-                        
-                        await window.app.updatePendingUnpaidDates();
-                        await window.app.updatePaidButtonVisibility();
-                        
-                        // Explicitly update advance payment system
-                        if (typeof window.app.checkAdvancePaymentNotification === 'function') {
-                            await window.app.checkAdvancePaymentNotification();
-                        }
-                        
-                        if (typeof window.app.checkPendingPayments === 'function') {
-                            await window.app.checkPendingPayments();
-                        }
-                        
-                        // Update charts immediately
-                        if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
-                            await window.app.charts.updateCharts();
-                        }
-                        
-                        // Force refresh all UI elements
-                        const event = new CustomEvent('forceSystemSync', {
-                            detail: { source: 'calendar_mark_done' }
+                        // Use the master sync function for complete system synchronization
+                        await window.app.syncAllSystems('calendar_mark_done', {
+                            showNotification: true
                         });
-                        window.dispatchEvent(event);
                         
-                        console.log('Full system sync completed after marking as done');
+                        console.log('Master sync completed after calendar mark as done');
                     } catch (appError) {
-                        console.error('Error updating app after marking as done:', appError);
-                        // Retry mechanism for critical updates
-                        setTimeout(async () => {
-                            try {
-                                window.app.currentStats = await window.app.db.getEarningsStats();
-                                await window.app.updateDashboard();
-                            } catch (retryError) {
-                                console.error('Retry update failed:', retryError);
-                            }
-                        }, 1000);
+                        console.error('Error during master sync after mark as done:', appError);
+                        
+                        // Fallback to basic updates
+                        try {
+                            window.app.currentStats = await window.app.db.getEarningsStats();
+                            await window.app.updateDashboard();
+                        } catch (retryError) {
+                            console.error('Fallback update failed:', retryError);
+                        }
                     }
                 }
 
