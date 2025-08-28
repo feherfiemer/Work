@@ -2726,8 +2726,8 @@ body {
 }
 
 .calendar-cell.force-paid {
-  background: var(--warning-alpha);
-  border-left: 4px solid var(--warning);
+  background: var(--info-alpha);
+  border-left: 4px solid var(--info);
 }
 
 /* ===== ALIGNMENT AND LAYOUT FIXES ===== */
@@ -4979,19 +4979,18 @@ button.disabled:hover {
   box-shadow: none !important;
 }
 
-/* ===== EARNINGS TOOLTIP ===== */
+/* ===== MODERN THEME-BASED TOOLTIP ===== */
 .earnings-tooltip {
   position: fixed !important;
   z-index: var(--z-toast);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: scale(0);
+  transform: scale(0.8) translateY(-10px);
   transform-origin: center;
-  /* Ensure tooltip stays completely fixed during scroll */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, opacity;
   contain: layout style paint;
-  /* Ensure proper stacking and display */
   display: none;
 }
 
@@ -4999,44 +4998,69 @@ button.disabled:hover {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: scale(1);
+  transform: scale(1) translateY(0);
   display: block !important;
-  /* No transition for instant appearance */
-  transition: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tooltip-content {
-  background: rgba(var(--primary-rgb), 0.95);
-  border: 1px solid rgba(var(--primary-rgb), 0.3);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius-small);
-  box-shadow: var(--shadow-medium);
-  padding: 0.75rem 1rem;
-  max-width: 300px;
-  min-width: 240px;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: var(--surface);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.15),
+    0 4px 20px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(var(--primary-rgb), 0.1);
+  padding: 1rem 1.25rem;
+  max-width: 320px;
+  min-width: 260px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-primary);
   word-wrap: break-word;
   white-space: normal;
   text-align: left;
-  backdrop-filter: var(--blur-light);
-  -webkit-backdrop-filter: var(--blur-light);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   font-family: var(--font-family);
   font-weight: 400;
+  position: relative;
+}
+
+/* Theme-based tooltip content backgrounds */
+[data-theme*="light"] .tooltip-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(var(--primary-rgb), 0.15);
+}
+
+[data-theme*="dark"] .tooltip-content {
+  background: rgba(var(--surface-alt), 0.95);
+  border-color: rgba(var(--primary-rgb), 0.25);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.3),
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(var(--primary-rgb), 0.2);
 }
 
 .tooltip-arrow {
   position: absolute;
-  width: 10px;
-  height: 10px;
-  background: rgba(var(--primary-rgb), 0.95);
-  border: 1px solid rgba(var(--primary-rgb), 0.5);
+  width: 12px;
+  height: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
   transform: rotate(45deg);
-  opacity: 1 !important;
-  visibility: visible !important;
-  z-index: 1;
-  /* Ensure arrow is always visible */
-  display: block !important;
+  z-index: -1;
+}
+
+/* Theme-based arrow backgrounds */
+[data-theme*="light"] .tooltip-arrow {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(var(--primary-rgb), 0.15);
+}
+
+[data-theme*="dark"] .tooltip-arrow {
+  background: rgba(var(--surface-alt), 0.95);
+  border-color: rgba(var(--primary-rgb), 0.25);
 }
 
 .earnings-tooltip.show .tooltip-arrow {
@@ -5044,29 +5068,29 @@ button.disabled:hover {
   visibility: visible !important;
 }
 
-/* Arrow positioning classes - dynamically positioned */
+/* Modern arrow positioning - cleaner look */
 .earnings-tooltip.top .tooltip-arrow {
-  bottom: -5px;
-  border-top: none;
-  border-left: none;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
 }
 
 .earnings-tooltip.bottom .tooltip-arrow {
-  top: -5px;
-  border-bottom: none;
-  border-right: none;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
 }
 
 .earnings-tooltip.left .tooltip-arrow {
-  right: -5px;
-  border-left: none;
-  border-bottom: none;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
 }
 
 .earnings-tooltip.right .tooltip-arrow {
-  left: -5px;
-  border-right: none;
-  border-top: none;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
 }
 
 /* Mobile responsive */

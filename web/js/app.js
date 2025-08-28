@@ -2858,7 +2858,7 @@ class RServiceTracker {
             console.log('[PWA] Setting up install button click handler');
             installBtn.onclick = () => {
                 console.log('[PWA] Install button clicked');
-                this.triggerInstall(deferredPrompt);
+                this.triggerInstall(window.deferredPrompt);
             };
         } else {
             console.error('[PWA] Install button not found!');
@@ -2910,21 +2910,32 @@ class RServiceTracker {
     }
 
     triggerInstall(deferredPrompt) {
+        console.log('[PWA] triggerInstall called with prompt:', !!deferredPrompt);
+        
         if (!deferredPrompt) {
-            this.notifications.showToast('Install prompt not available. Try using your browser menu.', 'warning');
+            console.log('[PWA] No deferred prompt available, showing manual instructions');
+            this.notifications.showToast('Please use your browser menu to install: Menu → Add to Home Screen or Install App', 'info', 8000);
             return;
         }
         
+        console.log('[PWA] Showing install prompt');
         deferredPrompt.prompt();
+        
         deferredPrompt.userChoice.then((choiceResult) => {
+            console.log('[PWA] User choice result:', choiceResult.outcome);
             if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
+                console.log('[PWA] User accepted the install prompt');
                 this.hideInstallRecommendation();
+                this.notifications.showToast('App is being installed...', 'success', 3000);
             } else {
-                console.log('User dismissed the install prompt');
+                console.log('[PWA] User dismissed the install prompt');
                 this.dismissInstallRecommendation();
             }
-            deferredPrompt = null;
+            // Clear the deferred prompt
+            window.deferredPrompt = null;
+        }).catch((error) => {
+            console.error('[PWA] Error with install prompt:', error);
+            this.notifications.showToast('Error showing install prompt. Try using your browser menu.', 'warning', 5000);
         });
     }
 
@@ -3025,8 +3036,12 @@ class RServiceTracker {
                 if (window.deferredPrompt) {
                     this.triggerInstall(window.deferredPrompt);
                 } else {
-                    // Fallback to manual instructions
-                    this.notifications.showToast('Please use your browser menu to install: Menu → Add to Home Screen or Install App', 'info', 8000);
+                    // Show the browser's native install prompt if available
+                    if ('BeforeInstallPromptEvent' in window || window.navigator.standalone !== undefined) {
+                        this.notifications.showToast('Please use your browser menu to install: Menu → Add to Home Screen or Install App', 'info', 8000);
+                    } else {
+                        this.notifications.showToast('PWA installation not supported on this browser', 'warning', 5000);
+                    }
                 }
             };
         }
@@ -3045,25 +3060,6 @@ class RServiceTracker {
                 this.closeInstallRecommendation();
             }
         }, 60000);
-    }
-
-    triggerInstall(deferredPrompt) {
-        if (!deferredPrompt) {
-            this.notifications.showToast('Install prompt not available. Try using your browser menu.', 'warning');
-            return;
-        }
-        
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-                this.hideInstallRecommendation();
-            } else {
-                console.log('User dismissed the install prompt');
-                this.dismissInstallRecommendation();
-            }
-            deferredPrompt = null;
-        });
     }
 
     async handleURLParameters() {

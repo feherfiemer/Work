@@ -268,12 +268,12 @@ class CalendarManager {
                 indicators.appendChild(paidIndicator);
             }
         } else if (isPaid && !workRecord) {
-            // Force-paid date (payment without work record)
+            // Force-paid date (payment without work record) - style like regular paid
             const forcePaidIndicator = document.createElement('span');
-            forcePaidIndicator.className = 'force-paid-indicator';
-            forcePaidIndicator.innerHTML = '<i class="fas fa-coins"></i>';
+            forcePaidIndicator.className = 'paid-indicator';
+            forcePaidIndicator.innerHTML = '<i class="fas fa-money-bill-wave"></i>';
             forcePaidIndicator.style.cssText = `
-                background: var(--warning);
+                background: var(--info);
                 color: white;
                 border-radius: 50%;
                 width: 10px;
@@ -387,11 +387,39 @@ class CalendarManager {
             // Check if this date has a force payment (paid but no work record)
             if (isPaid) {
                 content += `
-                    <div class="work-status not-worked">
-                        <i class="fas fa-coins"></i>
-                        <span>Force Payment (No Work Recorded)</span>
+                    <div class="work-status force-paid">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Paid (No Work Recorded)</span>
                     </div>
                 `;
+                
+                // Allow marking work as done even for force paid dates
+                if (isPastOrTodayDate) {
+                    content += `
+                        <button class="mark-done-btn" data-date="${dateString}" style="
+                            margin-top: 1rem;
+                            width: 100%;
+                            padding: 0.75rem;
+                            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                            color: white;
+                            border: none;
+                            border-radius: var(--border-radius-small);
+                            cursor: pointer;
+                            font-size: 0.875rem;
+                            font-weight: 500;
+                            text-transform: none;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                            box-shadow: var(--shadow-light);
+                            transition: all var(--transition-fast);
+                        ">
+                            <i class="fas fa-check"></i>
+                            Mark Work as Done
+                        </button>
+                    `;
+                }
                 
                 const payment = this.getPaymentForDate(dateString);
                 const paidAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
