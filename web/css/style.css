@@ -1494,6 +1494,31 @@ body {
   box-shadow: var(--shadow-medium);
 }
 
+.btn-orange {
+  background: #FF6B35;
+  color: white;
+  border: none;
+}
+
+.btn-orange:hover {
+  background: #E55A2B;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+  filter: brightness(1.1);
+}
+
+/* Fix button text color for monochrome dark theme */
+[data-theme="monochrome-dark"] .btn-orange {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="monochrome-dark"] .btn-orange:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+}
+
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;

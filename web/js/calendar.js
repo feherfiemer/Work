@@ -338,7 +338,7 @@ class CalendarManager {
                         margin-top: 1rem;
                         width: 100%;
                         padding: 0.75rem;
-                        background: linear-gradient(135deg, var(--success), #45a049);
+                        background: linear-gradient(135deg, #FF6B35, #E55A2B);
                         color: white;
                         border: none;
                         border-radius: var(--border-radius);
@@ -353,8 +353,8 @@ class CalendarManager {
                         box-shadow: var(--shadow-light);
                         transition: all var(--transition-fast);
                     ">
-                        <i class="fas fa-hand-holding-usd"></i>
-                        Force Mark as Paid
+                        <i class="fas fa-hand-holding-usd" style="color: #FFB366;"></i>
+                        Force Paid
                     </button>
                 `;
             }
@@ -775,23 +775,17 @@ class CalendarManager {
                 
                 console.log('Calendar refreshed after force payment');
 
-                if (window.app && typeof window.app.updateDashboard === 'function') {
+                // Sync all amount flow and updates across components
+                if (window.app && typeof window.app.syncAmountFlow === 'function') {
                     try {
-                        window.app.currentStats = await this.db.getEarningsStats();
-                        window.app.updateDashboard();
-                        await window.app.updatePendingUnpaidDates();
-                        await window.app.updatePaidButtonVisibility();
+                        await window.app.syncAmountFlow();
                         
-                        // Trigger payment check to potentially hide paid button
+                        // Trigger payment check after sync
                         if (typeof window.app.checkPendingPayments === 'function') {
                             await window.app.checkPendingPayments();
                         }
-                        
-                        if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
-                            await window.app.charts.updateCharts();
-                        }
-                    } catch (appUpdateError) {
-                        console.error('Error updating app components:', appUpdateError);
+                    } catch (syncError) {
+                        console.error('Error syncing app components:', syncError);
                     }
                 }
             } catch (renderError) {
@@ -891,36 +885,23 @@ class CalendarManager {
                 
                 console.log('Calendar refreshed after marking as done');
 
-                if (window.app && typeof window.app.updateDashboard === 'function') {
+                // Sync all amount flow and updates across components
+                if (window.app && typeof window.app.syncAmountFlow === 'function') {
                     try {
-                        window.app.currentStats = await this.db.getEarningsStats();
-                        window.app.updateDashboard();
+                        await window.app.syncAmountFlow();
                         
                         // Update today's status (done button state)
                         if (typeof window.app.updateTodayStatus === 'function') {
                             await window.app.updateTodayStatus();
                         }
                         
-                        await window.app.updatePendingUnpaidDates();
-                        await window.app.updatePaidButtonVisibility();
-                        
                         if (typeof window.app.checkPendingPayments === 'function') {
                             await window.app.checkPendingPayments();
                         }
                         
-                        console.log('App dashboard updated after marking as done');
-                    } catch (appError) {
-                        console.error('Error updating app after marking as done:', appError);
-                    }
-                }
-
-                // Update charts if available
-                if (window.app && window.app.charts && typeof window.app.charts.updateCharts === 'function') {
-                    try {
-                        await window.app.charts.updateCharts();
-                        console.log('Charts updated after marking as done');
-                    } catch (chartError) {
-                        console.error('Error updating charts:', chartError);
+                        console.log('App synced after marking as done');
+                    } catch (syncError) {
+                        console.error('Error syncing app after marking as done:', syncError);
                     }
                 }
 

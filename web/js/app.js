@@ -276,6 +276,14 @@ class RServiceTracker {
             });
         }
 
+        const forcePaidBtn = document.getElementById('forcePaidBtn');
+        if (forcePaidBtn) {
+            forcePaidBtn.addEventListener('click', () => {
+                this.notifications.playSound('payment');
+                this.handleForcePaidClick();
+            });
+        }
+
         const menuToggle = document.getElementById('menuToggle');
         const sideMenu = document.getElementById('sideMenu');
         const closeMenu = document.getElementById('closeMenu');
@@ -1721,6 +1729,19 @@ class RServiceTracker {
             this.hidePaidButton();
         }
 
+        // Force Paid button logic - show if today's work is completed but not paid
+        const today = this.utils.getTodayString();
+        const todayWorkRecord = await this.db.getWorkRecord(today);
+        const shouldShowForcePaidBtn = todayWorkRecord && 
+                                     todayWorkRecord.status === 'completed' && 
+                                     this.pendingUnpaidDates.includes(today);
+
+        if (shouldShowForcePaidBtn) {
+            this.showForcePaidButton();
+        } else {
+            this.hideForcePaidButton();
+        }
+
         // Check if we should show PWA recommendation on payment days
         await this.checkPWAOnPaymentDay();
     }
@@ -1799,6 +1820,21 @@ class RServiceTracker {
         }
     }
 
+    showForcePaidButton() {
+        const forcePaidBtn = document.getElementById('forcePaidBtn');
+        if (forcePaidBtn) {
+            forcePaidBtn.style.display = 'inline-flex';
+            forcePaidBtn.style.animation = 'payoutButtonAppear 0.8s ease-in-out';
+        }
+    }
+
+    hideForcePaidButton() {
+        const forcePaidBtn = document.getElementById('forcePaidBtn');
+        if (forcePaidBtn) {
+            forcePaidBtn.style.display = 'none';
+        }
+    }
+
     async handleDoneClick() {
         try {
             const today = this.utils.getTodayString();
@@ -1824,21 +1860,13 @@ class RServiceTracker {
             this.notifications.showWorkCompletedNotification();
             this.notifications.showToast(`Great job! You earned ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} today`, 'success');
             
-            this.currentStats = await this.db.getEarningsStats();
-            this.updateDashboard();
             this.updateTodayStatus();
             
+            // Sync all amount flow and updates across components
+            await this.syncAmountFlow();
+            
             this.notifications.checkMilestones(this.currentStats);
-            
-            await this.charts.updateCharts();
-            if (this.calendar) {
-                await this.calendar.updateCalendar();
-            }
-            
             await this.checkPendingPayments();
-            
-            // Ensure paid button shows immediately if eligible
-            await this.updatePaidButtonVisibility();
             
         } catch (error) {
             console.error('Error marking work as done:', error);
@@ -1858,6 +1886,41 @@ class RServiceTracker {
         } catch (error) {
             console.error('Error opening payment modal:', error);
             this.notifications.showToast('Error opening payment selection', 'error');
+        }
+    }
+
+    async handleForcePaidClick() {
+        try {
+            const today = new Date();
+            const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            // Check if work is completed today
+            const workRecord = await this.db.getWorkRecord(todayString);
+            if (!workRecord || workRecord.status !== 'completed') {
+                this.notifications.showToast('Work must be completed before force payment!', 'warning');
+                return;
+            }
+
+            // Check if already paid
+            const payments = await this.db.getAllPayments();
+            const isAlreadyPaid = payments.some(payment => 
+                payment.workDates && payment.workDates.includes(todayString)
+            );
+            
+            if (isAlreadyPaid) {
+                this.notifications.showToast('Today\'s work is already paid!', 'warning');
+                return;
+            }
+
+            // Store the date for use in payment processing
+            this.forcePaidDateString = todayString;
+
+            // Show the payment selector dialog
+            this.showPaymentModal();
+            
+        } catch (error) {
+            console.error('Error in force paid click:', error);
+            this.notifications.showToast('Error processing force payment', 'error');
         }
     }
 
@@ -2081,7 +2144,14 @@ class RServiceTracker {
             const isAdvancePayment = amount > totalWorkCompletedValue;
             
             let workDatesToPay = [];
-            if (totalWorkCompletedValue > 0) {
+            
+            // Handle force payment for specific date
+            if (this.forcePaidDateString) {
+                console.log('Processing force payment for date:', this.forcePaidDateString);
+                workDatesToPay = [this.forcePaidDateString];
+                // Clear the force paid date after use
+                this.forcePaidDateString = null;
+            } else if (totalWorkCompletedValue > 0) {
                 const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
                 workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
                 console.log('Work dates to pay:', workDatesToPay);
@@ -2113,26 +2183,8 @@ class RServiceTracker {
                 }, 1000);
             }
             
-            console.log('Updating stats and UI...');
-            this.currentStats = await this.db.getEarningsStats();
-            this.updateDashboard();
-            
-            this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
-            await this.updatePaidButtonVisibility();
-            
-            try {
-                await this.charts.updateCharts();
-            } catch (chartError) {
-                console.error('Error updating charts:', chartError);
-            }
-            
-            try {
-                if (this.calendar) {
-                    await this.calendar.updateCalendar();
-                }
-            } catch (calendarError) {
-                console.error('Error updating calendar:', calendarError);
-            }
+            console.log('Syncing amount flow across all components...');
+            await this.syncAmountFlow();
             
         } catch (error) {
             console.error('Error recording payment:', error);
@@ -2151,6 +2203,64 @@ class RServiceTracker {
             } catch (closeError) {
                 console.error('Error closing modal:', closeError);
             }
+        }
+    }
+
+    async syncAmountFlow() {
+        /**
+         * Central function to sync all amount flow and updates across the entire application.
+         * This ensures unified state management for work completion, payments, and earnings.
+         * Called after every action that affects amounts, work status, or payments.
+         */
+        try {
+            console.log('[SYNC] Starting amount flow synchronization...');
+            
+            // 1. Refresh core data from database
+            const workRecords = await this.db.getAllWorkRecords();
+            const payments = await this.db.getAllPayments();
+            
+            // 2. Recalculate all earnings statistics
+            this.currentStats = await this.db.getEarningsStats();
+            console.log('[SYNC] Updated earnings stats:', this.currentStats);
+            
+            // 3. Update pending unpaid dates
+            await this.updatePendingUnpaidDates();
+            
+            // 4. Update main dashboard
+            this.updateDashboard();
+            
+            // 5. Update button visibility based on current state
+            await this.updatePaidButtonVisibility();
+            
+            // 6. Update calendar if it exists
+            if (this.calendar) {
+                try {
+                    await this.calendar.loadData();
+                    this.calendar.render();
+                    console.log('[SYNC] Calendar updated');
+                } catch (calendarError) {
+                    console.error('[SYNC] Error updating calendar:', calendarError);
+                }
+            }
+            
+            // 7. Update charts if they exist
+            if (this.charts) {
+                try {
+                    await this.charts.updateCharts();
+                    console.log('[SYNC] Charts updated');
+                } catch (chartError) {
+                    console.error('[SYNC] Error updating charts:', chartError);
+                }
+            }
+            
+            // 8. Check for milestone notifications
+            await this.checkAdvancePaymentNotification();
+            
+            console.log('[SYNC] Amount flow synchronization completed successfully');
+            
+        } catch (error) {
+            console.error('[SYNC] Error in amount flow synchronization:', error);
+            this.notifications.showToast('Error syncing data. Please refresh if issues persist.', 'warning');
         }
     }
 
@@ -2496,15 +2606,11 @@ class RServiceTracker {
                     
                     this.notifications.showToast('All data cleared successfully', 'success');
                     
-                    this.currentStats = await this.db.getEarningsStats();
-                    this.updateDashboard();
+                    // Sync all components after data clear
+                    await this.syncAmountFlow();
                     await this.updateTodayStatus();
                     this.hidePaidButton();
-                    
-                    await this.charts.updateCharts();
-                    if (this.calendar) {
-                        await this.calendar.updateCalendar();
-                    }
+                    this.hideForcePaidButton();
                     
                 } catch (error) {
                     console.error('Error clearing data:', error);
