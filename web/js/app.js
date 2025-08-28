@@ -2053,6 +2053,12 @@ class RServiceTracker {
             selectedAmountPreview.textContent = this.utils.formatCurrency(totalAmount);
         }
 
+        // Update daily wage display in calendar summary
+        const calendarDailyWageDisplay = document.getElementById('calendarDailyWageDisplay');
+        if (calendarDailyWageDisplay) {
+            calendarDailyWageDisplay.textContent = this.utils.formatCurrency(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+        }
+
         // Show/hide payment summary and enable/disable confirm button
         if (selectedDates.length > 0) {
             if (directPaymentSummary) {
@@ -2299,6 +2305,10 @@ class RServiceTracker {
         const workDaysCoveredEl = document.getElementById('calendarWorkDaysCoveredDisplay');
         const selectedDatesEl = document.getElementById('calendarSelectedDatesDisplay');
         
+        // Update the new calendar payment summary total section
+        const calendarPaymentSummaryTotal = document.getElementById('calendarPaymentSummaryTotal');
+        const calendarSelectedPaymentAmount = document.getElementById('calendarSelectedPaymentAmount');
+        
         if (summaryEl && selectedAmountEl && paymentTypeEl && workDaysCoveredEl && selectedDatesEl) {
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             const selectedTotal = this.selectedCalendarAmount;
@@ -2312,12 +2322,23 @@ class RServiceTracker {
             
             summaryEl.style.display = 'block';
         }
+        
+        // Update the new calendar payment summary total section
+        if (calendarPaymentSummaryTotal && calendarSelectedPaymentAmount) {
+            calendarSelectedPaymentAmount.textContent = this.utils.formatCurrency(amount);
+            calendarPaymentSummaryTotal.style.display = 'block';
+            
+            // Add animation
+            calendarPaymentSummaryTotal.style.animation = 'slideInUp 0.3s ease-out';
+            setTimeout(() => calendarPaymentSummaryTotal.style.animation = '', 300);
+        }
     }
 
     hideCalendarPaymentSection() {
         const paymentSection = document.getElementById('paymentAmountSection');
         const proceedBtn = document.getElementById('proceedToPaymentBtn');
         const summaryEl = document.getElementById('calendarPaymentSummary');
+        const calendarPaymentSummaryTotal = document.getElementById('calendarPaymentSummaryTotal');
         
         if (paymentSection) {
             paymentSection.style.display = 'none';
@@ -2329,6 +2350,11 @@ class RServiceTracker {
         
         if (summaryEl) {
             summaryEl.style.display = 'none';
+        }
+        
+        // Hide the new calendar payment summary total section
+        if (calendarPaymentSummaryTotal) {
+            calendarPaymentSummaryTotal.style.display = 'none';
         }
         
         // Clear selection
@@ -2437,6 +2463,12 @@ class RServiceTracker {
             unpaidDaysEl.textContent = this.pendingUnpaidDates.length;
             pendingAmountEl.textContent = this.utils.formatCurrency(pendingAmount);
             
+            // Update daily wage display in payment summary
+            const dailyWageDisplay = document.getElementById('dailyWageDisplay');
+            if (dailyWageDisplay) {
+                dailyWageDisplay.textContent = this.utils.formatCurrency(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+            }
+            
             console.log('Payment modal - Unpaid days:', this.pendingUnpaidDates.length, 'Pending amount:', pendingAmount);
             
             // Clear any previous custom selection
@@ -2459,6 +2491,12 @@ class RServiceTracker {
             
             unpaidDaysEl.textContent = selectedDaysCount;
             pendingAmountEl.textContent = this.utils.formatCurrency(selectedAmount);
+            
+            // Update daily wage display in payment summary
+            const dailyWageDisplay = document.getElementById('dailyWageDisplay');
+            if (dailyWageDisplay) {
+                dailyWageDisplay.textContent = this.utils.formatCurrency(window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+            }
             
             console.log('Custom payment modal - Selected days:', selectedDaysCount, 'Selected amount:', selectedAmount);
             
@@ -2527,6 +2565,10 @@ class RServiceTracker {
             this.selectedPaymentAmount = null;
             const confirmationEl = document.getElementById('paymentConfirmation');
             if (confirmationEl) confirmationEl.style.display = 'none';
+            
+            // Hide the new payment summary total section
+            const paymentSummaryTotal = document.getElementById('paymentSummaryTotal');
+            if (paymentSummaryTotal) paymentSummaryTotal.style.display = 'none';
         };
 
         if (closeBtn) {
@@ -2600,6 +2642,10 @@ class RServiceTracker {
                 this.selectedPaymentAmount = null;
                 const confirmationEl = document.getElementById('paymentConfirmation');
                 if (confirmationEl) confirmationEl.style.display = 'none';
+                
+                // Hide the new payment summary total section
+                const paymentSummaryTotal = document.getElementById('paymentSummaryTotal');
+                if (paymentSummaryTotal) paymentSummaryTotal.style.display = 'none';
             });
         }
     }
@@ -2609,6 +2655,10 @@ class RServiceTracker {
         const confirmationEl = document.getElementById('paymentConfirmation');
         const confirmAmount = document.getElementById('confirmAmount');
         const confirmType = document.getElementById('confirmType');
+        
+        // Update the new payment summary total section
+        const paymentSummaryTotal = document.getElementById('paymentSummaryTotal');
+        const selectedPaymentAmount = document.getElementById('selectedPaymentAmount');
         
         if (confirmationEl && confirmAmount && confirmType) {
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
@@ -2624,6 +2674,16 @@ class RServiceTracker {
             // Add animation
             confirmationEl.style.animation = 'slideInUp 0.3s ease-out';
             setTimeout(() => confirmationEl.style.animation = '', 300);
+        }
+        
+        // Update the new payment summary total section
+        if (paymentSummaryTotal && selectedPaymentAmount) {
+            selectedPaymentAmount.textContent = this.utils.formatCurrency(amount);
+            paymentSummaryTotal.style.display = 'block';
+            
+            // Add animation
+            paymentSummaryTotal.style.animation = 'slideInUp 0.3s ease-out';
+            setTimeout(() => paymentSummaryTotal.style.animation = '', 300);
         }
     }
 

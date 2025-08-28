@@ -6275,6 +6275,7 @@ button.disabled:hover {
   padding: 2rem 2rem 1.5rem;
   text-align: center;
   position: relative;
+  border-bottom: 3px solid rgba(255, 255, 255, 0.2);
 }
 
 .payment-header h3 {
@@ -6601,6 +6602,113 @@ button.disabled:hover {
   animation: slideInUp 0.3s ease-out;
 }
 
+/* Enhanced Payment Summary Styles */
+.payment-summary-card {
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-rgb), 0.08) 0%,
+    rgba(var(--primary-rgb), 0.04) 100%);
+  border: 2px solid rgba(var(--primary-rgb), 0.15);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+}
+
+.payment-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.payment-summary-header i {
+  font-size: 1.2rem;
+}
+
+.payment-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.payment-summary-item {
+  text-align: center;
+  padding: 0.75rem;
+  background: rgba(var(--surface-alt-rgb), 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(var(--border-rgb), 0.3);
+}
+
+.payment-summary-value {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.payment-summary-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.payment-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(var(--success-rgb), 0.1);
+  border-radius: 12px;
+  border: 2px solid rgba(var(--success-rgb), 0.2);
+  font-weight: 700;
+  margin-top: 1rem;
+}
+
+.payment-summary-total-label {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.payment-summary-total-value {
+  color: var(--success);
+  font-size: 1.4rem;
+}
+
+/* Calendar Header Enhancement */
+.calendar-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  padding: 2rem 2rem 1.5rem;
+  text-align: center;
+  position: relative;
+  border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.calendar-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
 /* Dark Theme Adjustments */
 [data-theme*="dark"] .payment-modal-clean,
 [data-theme*="dark"] .calendar-modal-clean {
@@ -6608,6 +6716,32 @@ button.disabled:hover {
     rgba(30, 32, 37, 0.98) 0%, 
     rgba(24, 26, 31, 1) 50%,
     rgba(18, 20, 25, 0.98) 100%);
+}
+
+/* Enhanced Dark Theme for Headers */
+[data-theme*="dark"] .payment-header,
+[data-theme*="dark"] .calendar-header {
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-rgb), 0.9) 0%,
+    rgba(var(--primary-rgb), 0.7) 50%,
+    rgba(var(--primary-rgb), 0.9) 100%);
+  color: white;
+  border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+[data-theme*="dark"] .payment-summary-card {
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-rgb), 0.15) 0%,
+    rgba(var(--primary-rgb), 0.08) 100%);
+  border-color: rgba(var(--primary-rgb), 0.25);
+}
+
+[data-theme*="dark"] .payment-summary-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme*="dark"] .payment-body,
