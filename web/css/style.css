@@ -6280,7 +6280,7 @@ button.disabled:hover {
     var(--surface-alt) 50%, 
     rgba(var(--surface-rgb), 0.95) 100%);
   color: var(--text-primary);
-  padding: 1.5rem 1.5rem 1rem;
+  padding: 2rem 2rem 1.5rem;
   text-align: center;
   position: relative;
   border-bottom: 3px solid var(--primary);
@@ -6291,10 +6291,10 @@ button.disabled:hover {
 }
 
 .payment-header h3 {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 500;
   margin: 0;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
 }
 
 .payment-body {
@@ -6394,13 +6394,13 @@ button.disabled:hover {
 /* Clean Payment Buttons */
 .payment-buttons-clean {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-  gap: 0.5rem;
-  margin: 0 0 0.75rem 0;
-  padding: 0.75rem;
-  background: rgba(var(--background-rgb), 0.2);
-  border-radius: 12px;
-  border: 1px solid rgba(var(--border-rgb), 0.1);
+  grid-template-columns: repeat(auto-fit, minmax(55px, 1fr));
+  gap: 0.4rem;
+  margin: 0 0 0.6rem 0;
+  padding: 0.6rem;
+  background: rgba(var(--background-rgb), 0.15);
+  border-radius: 8px;
+  border: 1px solid rgba(var(--border-rgb), 0.08);
 }
 
 .payment-buttons-clean .payment-btn {
@@ -6408,17 +6408,18 @@ button.disabled:hover {
     var(--surface-alt) 0%, 
     rgba(var(--surface-alt-rgb), 0.9) 100%);
   border: 1px solid rgba(var(--primary-rgb), 0.15);
-  border-radius: 8px;
-  padding: 0.6rem 0.4rem;
-  font-size: 0.85rem;
+  border-radius: 6px;
+  padding: 0.45rem 0.3rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-primary);
   transition: all 0.2s ease;
   cursor: pointer;
   position: relative;
-  backdrop-filter: blur(5px);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(3px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   overflow: hidden;
+  min-height: 32px;
 }
 
 .payment-buttons-clean .payment-btn::before {
@@ -6437,10 +6438,10 @@ button.disabled:hover {
 
 .payment-buttons-clean .payment-btn:hover {
   border-color: var(--primary);
-  transform: translateY(-3px);
+  transform: translateY(-1px);
   box-shadow: 
-    0 8px 25px rgba(var(--primary-rgb), 0.25),
-    0 4px 15px rgba(0, 0, 0, 0.1);
+    0 3px 12px rgba(var(--primary-rgb), 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.08);
   background: linear-gradient(135deg, 
     rgba(var(--primary-rgb), 0.05) 0%, 
     var(--surface-alt) 100%);
@@ -6454,10 +6455,10 @@ button.disabled:hover {
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: white;
   border-color: var(--primary-dark);
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-1px) scale(1.02);
   box-shadow: 
-    0 10px 25px rgba(var(--primary-rgb), 0.3),
-    0 5px 15px rgba(var(--primary-rgb), 0.2);
+    0 4px 15px rgba(var(--primary-rgb), 0.25),
+    0 2px 8px rgba(var(--primary-rgb), 0.15);
 }
 
 /* Payment Confirmation */
@@ -6571,7 +6572,7 @@ button.disabled:hover {
     var(--surface-alt) 50%,
     rgba(var(--surface-rgb), 0.95) 100%);
   color: var(--text-primary);
-  padding: 1.5rem 1.5rem 1rem;
+  padding: 2rem 2rem 1.5rem;
   text-align: center;
   position: relative;
   border-bottom: 3px solid var(--primary);
@@ -6582,10 +6583,10 @@ button.disabled:hover {
 }
 
 .calendar-header h3 {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 500;
   margin: 0;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
 }
 
 .calendar-body {
@@ -6824,19 +6825,19 @@ button.disabled:hover {
 /* Simple Payment Summary Styles */
 .payment-summary-simple {
   background: linear-gradient(135deg, 
-    rgba(var(--primary-rgb), 0.06) 0%,
-    rgba(var(--primary-rgb), 0.03) 50%,
+    rgba(var(--primary-rgb), 0.05) 0%,
+    rgba(var(--primary-rgb), 0.02) 50%,
     rgba(var(--primary-rgb), 0.01) 100%);
-  border: 1px solid rgba(var(--primary-rgb), 0.15);
-  border-radius: 10px;
-  padding: 0.75rem;
-  margin: 0.5rem 0;
+  border: 1px solid rgba(var(--primary-rgb), 0.12);
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin: 0.4rem 0;
   position: relative;
   overflow: hidden;
   box-shadow: 
-    0 2px 8px rgba(var(--primary-rgb), 0.08),
-    0 1px 2px rgba(0, 0, 0, 0.03);
-  backdrop-filter: blur(5px);
+    0 1px 4px rgba(var(--primary-rgb), 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(3px);
 }
 
 .payment-summary-simple::before {
@@ -6856,34 +6857,34 @@ button.disabled:hover {
 .summary-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
   font-weight: 500;
   color: var(--primary);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .summary-header i {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--primary);
 }
 
 .summary-info {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .summary-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0.75rem;
-  background: rgba(var(--background-rgb), 0.2);
-  border-radius: 6px;
-  border: 1px solid rgba(var(--border-rgb), 0.1);
+  padding: 0.35rem 0.5rem;
+  background: rgba(var(--background-rgb), 0.15);
+  border-radius: 4px;
+  border: 1px solid rgba(var(--border-rgb), 0.08);
   transition: all 0.2s ease;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
 }
 
 .summary-item:hover {
@@ -6895,15 +6896,15 @@ button.disabled:hover {
 .summary-label {
   font-weight: 500;
   color: var(--text-secondary);
-  font-size: 0.8rem;
-  letter-spacing: 0.3px;
+  font-size: 0.7rem;
+  letter-spacing: 0.2px;
 }
 
 .summary-value {
   font-weight: 600;
   color: var(--primary);
-  font-size: 0.9rem;
-  letter-spacing: 0.3px;
+  font-size: 0.8rem;
+  letter-spacing: 0.2px;
 }
 
 .summary-selected {
@@ -6964,7 +6965,7 @@ button.disabled:hover {
     var(--surface-alt) 50%, 
     rgba(var(--surface-rgb), 0.95) 100%);
   color: var(--text-primary);
-  padding: 1.5rem 1.5rem 1rem;
+  padding: 2rem 2rem 1.5rem;
   text-align: center;
   position: relative;
   border-bottom: 3px solid var(--primary);
@@ -6975,39 +6976,38 @@ button.disabled:hover {
 }
 
 .standard-header h3 {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 500;
   margin: 0;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
 }
 
 /* Corner Close Button for All Dialogs */
 .corner-close {
   position: absolute !important;
-  top: 1rem !important;
-  right: 1rem !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  color: var(--text-primary) !important;
+  top: 1.25rem !important;
+  right: 1.25rem !important;
+  background: var(--primary) !important;
+  border: none !important;
+  color: white !important;
   border-radius: 8px !important;
-  width: 40px !important;
-  height: 40px !important;
+  width: 36px !important;
+  height: 36px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 1.1rem !important;
+  font-size: 1rem !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
   z-index: 1000 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 3px 12px rgba(var(--primary-rgb), 0.3) !important;
 }
 
 .corner-close:hover {
-  background: rgba(255, 255, 255, 1) !important;
-  border-color: rgba(var(--error-rgb), 0.3) !important;
-  color: var(--error) !important;
-  transform: scale(1.1) !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+  background: var(--primary-light) !important;
+  color: white !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.4) !important;
 }
 
 /* Enhanced Dark Theme for Headers */
@@ -7039,15 +7039,18 @@ button.disabled:hover {
 
 /* Corner Close Button Dark Theme */
 [data-theme*="dark"] .corner-close {
-  background: rgba(40, 44, 52, 0.9) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: var(--primary) !important;
   color: white !important;
 }
 
 [data-theme*="dark"] .corner-close:hover {
-  background: rgba(60, 64, 72, 1) !important;
-  border-color: rgba(var(--error-rgb), 0.4) !important;
-  color: var(--error) !important;
+  background: var(--primary-light) !important;
+  color: white !important;
+}
+
+/* Hide close button for work days selector */
+#calendarSelectionModal .corner-close {
+  display: none !important;
 }
 
 [data-theme*="dark"] .payment-summary-card {
@@ -7095,24 +7098,30 @@ button.disabled:hover {
   .payment-header,
   .calendar-header,
   .standard-header {
-    padding: 1rem 0.75rem 0.75rem;
+    padding: 1.5rem 1rem 1rem;
   }
   
   .payment-header h3,
   .calendar-header h3,
   .standard-header h3 {
-    font-size: 1rem;
+    font-size: 1.2rem;
   }
   
   .payment-buttons-clean {
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-    gap: 0.4rem;
-    padding: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    gap: 0.3rem;
+    padding: 0.4rem;
+  }
+  
+  .payment-buttons-clean .payment-btn {
+    padding: 0.4rem 0.25rem;
+    font-size: 0.7rem;
+    min-height: 28px;
   }
   
   .payment-summary-simple {
-    padding: 0.5rem;
-    margin: 0.4rem 0;
+    padding: 0.4rem;
+    margin: 0.3rem 0;
   }
   
   .confirmation-actions,
@@ -7126,11 +7135,11 @@ button.disabled:hover {
   }
   
   .corner-close {
-    top: 0.75rem !important;
-    right: 0.75rem !important;
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 1.1rem !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.9rem !important;
   }
 }
 
@@ -7160,24 +7169,25 @@ button.disabled:hover {
   .payment-header,
   .calendar-header,
   .standard-header {
-    padding: 0.75rem 0.5rem 0.5rem;
+    padding: 1rem 0.75rem 0.75rem;
   }
   
   .payment-header h3,
   .calendar-header h3,
   .modal-header h3 {
-    font-size: 0.95rem;
+    font-size: 1.1rem;
   }
   
   .payment-buttons-clean {
-    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-    gap: 0.3rem;
-    padding: 0.4rem;
+    grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+    gap: 0.25rem;
+    padding: 0.35rem;
   }
   
   .payment-buttons-clean .payment-btn {
-    padding: 0.4rem 0.2rem;
-    font-size: 0.75rem;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.65rem;
+    min-height: 26px;
   }
   
   .payment-summary-simple {
@@ -7191,19 +7201,11 @@ button.disabled:hover {
   }
   
   .corner-close {
-    top: 0.5rem !important;
-    right: 0.5rem !important;
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 1rem !important;
-    background: rgba(255, 255, 255, 0.9) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  }
-  
-  .corner-close:hover {
-    background: rgba(255, 255, 255, 1) !important;
-    transform: scale(1.05) !important;
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.85rem !important;
   }
 }
 
@@ -7219,13 +7221,13 @@ button.disabled:hover {
   .payment-header,
   .calendar-header,
   .standard-header {
-    padding: 0.5rem 0.4rem 0.4rem;
+    padding: 0.75rem 0.5rem 0.5rem;
   }
   
   .payment-header h3,
   .calendar-header h3,
   .modal-header h3 {
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
 }
 
