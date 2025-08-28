@@ -484,43 +484,22 @@ class NotificationManager {
 
     playEnhancedPaymentSequence() {
         try {
-            // Multi-layered premium payment sound experience
-            console.log('Playing enhanced payment sequence...');
+            // Simplified yet premium payment sound experience
+            console.log('Playing improved payment sequence...');
             
-            // Layer 1: Initial banking transaction sound
-            this.playBankingTransactionSound();
+            // Layer 1: Modern digital payment chime
+            this.createModernPaymentChime();
             
-            // Layer 2: Card processing with realistic delay
-            setTimeout(() => this.createCardProcessingSound(), 120);
+            // Layer 2: Cash register ka-ching (classic satisfaction)
+            setTimeout(() => this.createImprovedCashRegister(), 300);
             
-            // Layer 3: Digital authentication beeps
-            setTimeout(() => this.createAuthenticationBeeps(), 280);
-            
-            // Layer 4: Processing confirmation
-            setTimeout(() => this.createProcessingConfirmation(), 450);
-            
-            // Layer 5: Cash register kaching (classic satisfaction sound)
-            setTimeout(() => this.createCashRegisterKaching(), 650);
-            
-            // Layer 6: Digital payment confirmation
-            setTimeout(() => this.createDigitalPaymentConfirmation(), 800);
-            
-            // Layer 7: Success chime harmony
-            setTimeout(() => this.createPaymentSuccessHarmony(), 1000);
-            
-            // Layer 8: ATM receipt print sound
-            setTimeout(() => this.createATMReceiptSound(), 1200);
-            
-            // Layer 9: Wealthy success finale
-            setTimeout(() => this.createWealthySuccessFinale(), 1400);
-            
-            // Layer 10: Final confirmation ring
-            setTimeout(() => this.createFinalConfirmationRing(), 1700);
+            // Layer 3: Success confirmation harmony
+            setTimeout(() => this.createSuccessConfirmation(), 600);
             
         } catch (error) {
             console.warn('Error playing enhanced payment sequence:', error);
             // Fallback to basic payment sound
-            this.playPaymentSound();
+            this.playSimplePaymentFallback();
         }
     }
 
@@ -2954,6 +2933,140 @@ class NotificationManager {
             console.log('Wealthy success finale played');
         } catch (error) {
             console.warn('Error playing wealthy success finale:', error);
+        }
+    }
+
+    // NEW IMPROVED PAYMENT SOUNDS
+
+    createModernPaymentChime() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Modern digital payment chime - clean and satisfying
+            const masterGain = ctx.createGain();
+            masterGain.connect(ctx.destination);
+            masterGain.gain.setValueAtTime(0.6, now);
+            
+            // Digital chime frequencies (pleasant major pentatonic)
+            const frequencies = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+            
+            frequencies.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(masterGain);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + index * 0.08);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(2000, now);
+                
+                gain.gain.setValueAtTime(0.4, now + index * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.08 + 0.6);
+                
+                osc.start(now + index * 0.08);
+                osc.stop(now + index * 0.08 + 0.6);
+            });
+            
+            console.log('Modern payment chime played');
+        } catch (error) {
+            console.warn('Error creating modern payment chime:', error);
+        }
+    }
+
+    createImprovedCashRegister() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Improved cash register ka-ching - shorter and sweeter
+            const masterGain = ctx.createGain();
+            masterGain.connect(ctx.destination);
+            masterGain.gain.setValueAtTime(0.5, now);
+            
+            // Quick "ka" sound
+            const kaOsc = ctx.createOscillator();
+            const kaGain = ctx.createGain();
+            
+            kaOsc.connect(kaGain);
+            kaGain.connect(masterGain);
+            
+            kaOsc.type = 'square';
+            kaOsc.frequency.setValueAtTime(180, now);
+            kaOsc.frequency.linearRampToValueAtTime(120, now + 0.06);
+            
+            kaGain.gain.setValueAtTime(0.3, now);
+            kaGain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+            
+            kaOsc.start(now);
+            kaOsc.stop(now + 0.06);
+            
+            // Sweet "ching" bell
+            const chingOsc = ctx.createOscillator();
+            const chingGain = ctx.createGain();
+            
+            chingOsc.connect(chingGain);
+            chingGain.connect(masterGain);
+            
+            chingOsc.type = 'sine';
+            chingOsc.frequency.setValueAtTime(1320, now + 0.08);
+            
+            chingGain.gain.setValueAtTime(0.6, now + 0.08);
+            chingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08 + 0.4);
+            
+            chingOsc.start(now + 0.08);
+            chingOsc.stop(now + 0.08 + 0.4);
+            
+            console.log('Improved cash register sound played');
+        } catch (error) {
+            console.warn('Error creating improved cash register sound:', error);
+        }
+    }
+
+    createSuccessConfirmation() {
+        if (!this.audioContext) return;
+
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
+            // Success confirmation chord - satisfying and complete
+            const masterGain = ctx.createGain();
+            masterGain.connect(ctx.destination);
+            masterGain.gain.setValueAtTime(0.4, now);
+            
+            // Perfect major chord (C-E-G)
+            const chord = [523.25, 659.25, 783.99]; // C5, E5, G5
+            
+            chord.forEach((freq, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(masterGain);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                
+                osc.start(now);
+                osc.stop(now + 0.8);
+            });
+            
+            console.log('Success confirmation played');
+        } catch (error) {
+            console.warn('Error creating success confirmation:', error);
         }
     }
 }

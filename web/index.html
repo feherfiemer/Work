@@ -618,8 +618,36 @@
                     <p>You have <span id="unpaidDaysCount">4</span> unpaid work days.</p>
                     <p>Pending amount: <span id="pendingAmount">₹100</span></p>
                 </div>
+                
+                <!-- Payment Receipt Card Preview -->
+                <div class="payment-receipt-card" id="paymentReceiptCard" style="display: none;">
+                    <div class="receipt-header">
+                        <h5><i class="fas fa-receipt"></i> Payment Preview</h5>
+                        <div class="receipt-badge">Live Preview</div>
+                    </div>
+                    <div class="receipt-body">
+                        <div class="receipt-row">
+                            <span class="receipt-label">Selected Amount:</span>
+                            <span class="receipt-value" id="previewSelectedAmount">₹0</span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">Payment Type:</span>
+                            <span class="receipt-value" id="previewPaymentType">Regular</span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">Work Days Covered:</span>
+                            <span class="receipt-value" id="previewWorkDaysCovered">0</span>
+                        </div>
+                        <div class="receipt-divider"></div>
+                        <div class="receipt-total">
+                            <span class="total-label">Total Payment:</span>
+                            <span class="total-amount" id="previewTotalPayment">₹0</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="payment-options">
-                    <h4>Select payment amount:</h4>
+                    <h4><i class="fas fa-calculator"></i> Select payment amount:</h4>
                     
                     <!-- Quick Amount Buttons (Dynamically Generated) -->
                     <div class="payment-section">
@@ -629,7 +657,7 @@
                         </div>
                     </div>
 
-                    <!-- Payment Summary -->
+                    <!-- Enhanced Payment Summary -->
                     <div class="payment-summary" id="paymentSummary" style="display: none;">
                         <h5><i class="fas fa-receipt"></i> Payment Summary</h5>
                         <div class="summary-item">

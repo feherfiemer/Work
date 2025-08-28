@@ -1776,10 +1776,12 @@ class RServiceTracker {
                 paidBtn.disabled = false;
                 paidBtn.classList.remove('disabled-state');
                 paidBtn.classList.add('has-pending-work');
+                paidBtn.classList.add('payment-ready'); // Add pulse and glow effect
             } else {
                 paidBtn.disabled = true;
                 paidBtn.classList.add('disabled-state');
                 paidBtn.classList.remove('has-pending-work');
+                paidBtn.classList.remove('payment-ready'); // Remove pulse and glow effect
             }
         }
     }
@@ -2572,6 +2574,13 @@ class RServiceTracker {
         const paymentTypeEl = document.getElementById('paymentTypeDisplay');
         const workDaysCoveredEl = document.getElementById('workDaysCoveredDisplay');
         
+        // Also update the new payment receipt card
+        const receiptCard = document.getElementById('paymentReceiptCard');
+        const previewSelectedAmount = document.getElementById('previewSelectedAmount');
+        const previewPaymentType = document.getElementById('previewPaymentType');
+        const previewWorkDaysCovered = document.getElementById('previewWorkDaysCovered');
+        const previewTotalPayment = document.getElementById('previewTotalPayment');
+        
         if (summaryEl && selectedAmountEl && paymentTypeEl && workDaysCoveredEl) {
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             const totalWorkCompletedValue = this.pendingUnpaidDates.length * dailyWage;
@@ -2592,6 +2601,27 @@ class RServiceTracker {
             workDaysCoveredEl.textContent = `${workDaysCovered} days`;
             
             summaryEl.style.display = 'block';
+            
+            // Update the receipt card as well
+            if (receiptCard && previewSelectedAmount && previewPaymentType && previewWorkDaysCovered && previewTotalPayment) {
+                previewSelectedAmount.textContent = `₹${amount}`;
+                previewTotalPayment.textContent = `₹${amount}`;
+                previewWorkDaysCovered.textContent = workDaysCovered;
+                
+                if (isAdvance) {
+                    previewPaymentType.textContent = 'Advance Payment';
+                    previewPaymentType.style.color = 'var(--warning)';
+                } else {
+                    previewPaymentType.textContent = 'Regular Payment';
+                    previewPaymentType.style.color = 'var(--success)';
+                }
+                
+                receiptCard.style.display = 'block';
+                
+                // Add a nice animation when the card appears
+                receiptCard.style.animation = 'bounceIn 0.6s ease-out';
+                setTimeout(() => receiptCard.style.animation = '', 600);
+            }
         }
     }
 
@@ -2744,6 +2774,22 @@ class RServiceTracker {
          * COMPREHENSIVE MONEY FLOW SYNCHRONIZATION
          * Updates ALL systems that deal with money, payments, earnings, and financial data
          */
+        
+        // Debouncing mechanism to prevent too frequent sync calls
+        if (this._syncInProgress) {
+            console.log('[SYNC] Sync already in progress, skipping...');
+            return;
+        }
+        
+        const now = Date.now();
+        if (this._lastSyncTime && (now - this._lastSyncTime) < 1000) {
+            console.log('[SYNC] Sync called too recently, debouncing...');
+            return;
+        }
+        
+        this._syncInProgress = true;
+        this._lastSyncTime = now;
+        
         const syncStartTime = performance.now();
         try {
             console.log('[SYNC] Starting COMPREHENSIVE money flow synchronization...');
@@ -2970,6 +3016,9 @@ class RServiceTracker {
                 console.error('[SYNC] Financial recovery failed:', recoveryError);
                 this.notifications.showToast('Critical sync error. Please refresh the page to restore financial data.', 'error', 8000);
             }
+        } finally {
+            // Always clean up sync state
+            this._syncInProgress = false;
         }
     }
 

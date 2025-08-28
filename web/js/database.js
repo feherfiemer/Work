@@ -426,8 +426,8 @@ class DatabaseManager {
                 const recordDate = new Date(record.date);
                 const hasAdvancePaymentBefore = advancePayments.some(payment => {
                     const paymentDate = new Date(payment.paymentDate);
-                    // Work must be done AFTER the advance payment date
-                    return paymentDate < recordDate;
+                    // Work must be done AFTER or ON the advance payment date to count
+                    return paymentDate <= recordDate;
                 });
                 
                 // Don't count work that's already been paid for in regular payments
