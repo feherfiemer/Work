@@ -188,6 +188,25 @@ class DatabaseManager {
     }
 
     async addPayment(amount, workDates, paymentDate = new Date().toISOString().split('T')[0], isAdvance = false) {
+        // 🏦 AMOUNT FLOW INTEGRATION
+        // All payment amounts must flow through the central AmountFlow system
+        if (window.AmountFlow) {
+            try {
+                const amountFlowResult = await window.AmountFlow.processAmount('addPayment', amount, {
+                    workDates: workDates || [],
+                    paymentDate,
+                    isAdvance,
+                    db: null, // Prevent recursive call
+                    triggerReconciliation: false // We'll trigger it after DB operation
+                });
+                
+                console.log('[Database] Payment processed through AmountFlow:', amountFlowResult);
+            } catch (error) {
+                console.error('[Database] AmountFlow validation failed:', error);
+                throw new Error(`Payment validation failed: ${error.message}`);
+            }
+        }
+
         const payment = {
             amount: amount,
             workDates: workDates || [], // Can be empty for advance payments
@@ -199,9 +218,21 @@ class DatabaseManager {
             pendingDaysAtPayment: workDates ? workDates.length : 0
         };
 
-        return this.performTransaction(this.stores.payments, 'readwrite', (store) => {
+        const result = await this.performTransaction(this.stores.payments, 'readwrite', (store) => {
             return store.add(payment);
         });
+
+        // 🔄 Trigger AmountFlow reconciliation after successful DB operation
+        if (window.AmountFlow) {
+            try {
+                await window.AmountFlow.performReconciliation();
+                console.log('[Database] AmountFlow reconciliation completed after payment addition');
+            } catch (error) {
+                console.warn('[Database] AmountFlow reconciliation warning:', error);
+            }
+        }
+
+        return result;
     }
 
     async getAllPayments() {
@@ -289,24 +320,52 @@ class DatabaseManager {
         const totalWorked = workRecords.filter(record => record.status === 'completed').length;
         const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
         
+        // Calculate total theoretical earnings based on work completed
+        const totalEarned = totalWorked * DAILY_WAGE;
+        
+        // Find unpaid work records (work done but not yet paid)
         const unpaidWork = workRecords.filter(record => 
             record.status === 'completed' && !this.isRecordPaid(record, payments)
         );
-        const pendingWorkValue = unpaidWork.length * DAILY_WAGE;
         
-        const totalEarned = totalPaid;
+        // Current earnings = unpaid work value (resets to 0 when payment received)
+        const currentEarnings = unpaidWork.length * DAILY_WAGE;
         
-        const currentBalance = pendingWorkValue;
+        // Balance calculation for advance payment tracking
+        const currentBalance = totalEarned - totalPaid;
         
-        return {
+        // Separate tracking for advance payments
+        const advancePayments = payments.filter(p => p.isAdvance);
+        const regularPayments = payments.filter(p => !p.isAdvance);
+        const totalAdvancePaid = advancePayments.reduce((sum, p) => sum + p.amount, 0);
+        const totalRegularPaid = regularPayments.reduce((sum, p) => sum + p.amount, 0);
+        
+        const calculatedAmounts = {
+            totalWorked,
+            totalPaid,
+            totalEarned, // Total theoretical earnings based on all work completed
+            totalAdvancePaid,
+            totalRegularPaid,
+            currentEarnings, // Current unpaid earnings (resets to 0 when payment received)
+            currentBalance, // Balance for advance payment tracking (earned - paid)
+            unpaidWorkDays: unpaidWork.length,
+            dailyWage: DAILY_WAGE,
+            actualBalance: currentBalance,
+            isAdvanced: currentBalance < 0, // True if user received advance payments
+            pendingWorkValue: currentEarnings // Alias for backward compatibility
+        };
+
+        // 🔧 FIX: Remove AmountFlow call from calculateAmounts to prevent circular dependency
+        // calculateAmounts should be a pure calculation function
+        // AmountFlow reconciliation will call this function and compare results
+        console.log('[Database] Calculating amounts from raw data:', {
             totalWorked,
             totalPaid,
             totalEarned,
-            currentBalance,
-            pendingWorkValue,
-            unpaidWorkDays: unpaidWork.length,
-            dailyWage: DAILY_WAGE
-        };
+            unpaidWorkDays: unpaidWork.length
+        });
+        
+        return calculatedAmounts;
     }
 
     async getEarningsStats() {
@@ -321,37 +380,87 @@ class DatabaseManager {
                 .filter(record => record.status === 'completed')
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
             
+            // Enhanced streak calculation
             let currentStreak = 0;
-            let expectedDate = new Date();
-            const today = expectedDate.toISOString().split('T')[0];
+            let longestStreak = 0;
+            let tempStreak = 0;
+            let lastWorkDate = null;
             
-            // Check if today has work completed
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            
+            // Sort records by date ascending for better streak calculation
+            const chronologicalRecords = [...sortedRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Calculate longest streak and current streak
+            for (let i = 0; i < chronologicalRecords.length; i++) {
+                const record = chronologicalRecords[i];
+                const recordDate = new Date(record.date);
+                const recordDateStr = record.date;
+                
+                if (lastWorkDate) {
+                    const expectedDate = new Date(lastWorkDate);
+                    expectedDate.setDate(expectedDate.getDate() + 1);
+                    const expectedDateStr = expectedDate.toISOString().split('T')[0];
+                    
+                    if (recordDateStr === expectedDateStr) {
+                        // Consecutive day
+                        tempStreak++;
+                    } else {
+                        // Streak broken
+                        longestStreak = Math.max(longestStreak, tempStreak);
+                        tempStreak = 1;
+                    }
+                } else {
+                    tempStreak = 1;
+                }
+                
+                lastWorkDate = recordDateStr;
+            }
+            longestStreak = Math.max(longestStreak, tempStreak);
+            
+            // Calculate current streak (working backwards from today)
             const todayRecord = sortedRecords.find(record => record.date === today);
+            const yesterdayRecord = sortedRecords.find(record => record.date === yesterdayStr);
+            
             if (todayRecord) {
                 currentStreak = 1;
-                expectedDate.setDate(expectedDate.getDate() - 1); // Move to yesterday
+                let checkDate = new Date();
+                checkDate.setDate(checkDate.getDate() - 1);
+                
+                // Count backwards
+                while (true) {
+                    const checkDateStr = checkDate.toISOString().split('T')[0];
+                    const dayRecord = sortedRecords.find(record => record.date === checkDateStr);
+                    
+                    if (dayRecord) {
+                        currentStreak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
+            } else if (yesterdayRecord) {
+                // If didn't work today but worked yesterday, streak continues until yesterday
+                currentStreak = 1;
+                let checkDate = new Date();
+                checkDate.setDate(checkDate.getDate() - 2); // Day before yesterday
+                
+                while (true) {
+                    const checkDateStr = checkDate.toISOString().split('T')[0];
+                    const dayRecord = sortedRecords.find(record => record.date === checkDateStr);
+                    
+                    if (dayRecord) {
+                        currentStreak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
             } else {
-                expectedDate.setDate(expectedDate.getDate() - 1); // Start from yesterday
-            }
-            
-            // Count consecutive days working backwards
-            for (const record of sortedRecords) {
-                const recordDate = new Date(record.date);
-                const expectedDateStr = expectedDate.toISOString().split('T')[0];
-                const recordDateStr = recordDate.toISOString().split('T')[0];
-                
-                // Skip today's record if we already counted it
-                if (recordDateStr === today && todayRecord) {
-                    continue;
-                }
-                
-                if (recordDateStr === expectedDateStr) {
-                    currentStreak++;
-                    expectedDate.setDate(expectedDate.getDate() - 1);
-                } else if (recordDateStr < expectedDateStr) {
-                    // There's a gap in the streak
-                    break;
-                }
+                currentStreak = 0;
             }
             
             const unpaidWork = workRecords.filter(record => 
@@ -367,6 +476,7 @@ class DatabaseManager {
                 totalPaid,
                 currentBalance,
                 currentStreak,
+                longestStreak,
                 progressToPayday,
                 unpaidWork,
                 canGetPaid: unpaidWork >= paymentThreshold
@@ -379,6 +489,7 @@ class DatabaseManager {
                 totalPaid: 0,
                 currentBalance: 0,
                 currentStreak: 0,
+                longestStreak: 0,
                 progressToPayday: 0,
                 unpaidWork: 0,
                 canGetPaid: false
@@ -392,6 +503,7 @@ class DatabaseManager {
             const payments = await this.getAllPayments();
             
             const advancePayments = payments.filter(payment => payment.isAdvance);
+            console.log('[Advance] Found advance payments:', advancePayments.length);
             
             if (advancePayments.length === 0) {
                 return {
@@ -438,10 +550,27 @@ class DatabaseManager {
             
             totalWorkCompletedForAdvance = allWorkAfterAdvance.length;
             
+            // Additional validation: ensure we don't have negative balances
+            const regularPayments = payments.filter(p => !p.isAdvance);
+            const totalRegularPaymentAmount = regularPayments.reduce((sum, p) => sum + p.amount, 0);
+            const totalWorkEarned = workRecords.filter(r => r.status === 'completed').length * amounts.dailyWage;
+            
+            // If total payments exceed work earned, adjust advance payment calculation
+            if (totalRegularPaymentAmount + totalAdvanceAmount > totalWorkEarned) {
+                const excessPayment = (totalRegularPaymentAmount + totalAdvanceAmount) - totalWorkEarned;
+                console.log('[Advance] Excess payment detected:', excessPayment);
+            }
+            
             const workRequiredForAdvance = totalWorkCoveredByAdvance; // Days paid for
             const workCompletedForAdvance = totalWorkCompletedForAdvance; // Days actually completed
             const workRemainingForAdvance = Math.max(0, workRequiredForAdvance - workCompletedForAdvance);
             
+            console.log('[Advance] Status calculated:', {
+                totalAdvanceAmount,
+                workRequiredForAdvance,
+                workCompletedForAdvance,
+                workRemainingForAdvance
+            });
             
             return {
                 hasAdvancePayments: true,

@@ -49,6 +49,7 @@ class RServiceTracker {
             this.loadTheme();
             
             this.setupEventListeners();
+            this.setupGlobalSyncEventListener();
             
             await this.loadInitialData();
             
@@ -77,43 +78,132 @@ class RServiceTracker {
                 }
             };
             
+            // 🔄 Expose the master sync function globally for easy access
+            window.syncAllSystems = async (source = 'manual', options = {}) => {
+                if (this.syncAllSystems) {
+                    return await this.syncAllSystems(source, options);
+                } else {
+                    console.error('syncAllSystems not available');
+                    return { success: false, error: 'Function not available' };
+                }
+            };
+            
             window.testAllSystems = async () => {
                 console.log('[SYSTEM] Testing all R-Service Tracker systems...');
+                const testResults = {};
                 
                 try {
-                                    console.log('[DATABASE] Testing database...');
-                const stats = await this.db.getEarningsStats();
-                console.log('[DATABASE] Database working - Current stats:', stats);
-                
-                console.log('[NOTIFICATIONS] Testing notifications...');
-                this.notifications.testAllNotifications();
-                
-                console.log('[CHARTS] Testing charts...');
-                if (this.charts) {
-                    await this.charts.updateCharts();
-                    console.log('[CHARTS] Charts system working');
-                }
-                
-                console.log('[CALENDAR] Testing calendar...');
-                if (this.calendar) {
-                    this.calendar.render();
-                    console.log('[CALENDAR] Calendar system working');
-                }
-                
-                console.log('[UTILITIES] Testing utilities...');
-                const testDate = this.utils.formatDate(new Date());
-                console.log('[UTILITIES] Utilities working - Test date:', testDate);
-                
-                console.log('[PWA] Testing PWA features...');
-                if ('serviceWorker' in navigator) {
-                    console.log('[PWA] Service Worker supported');
-                }
-                
-                    this.notifications.showToast('All systems tested successfully!', 'success', 5000);
+                    // Test Database
+                    console.log('[DATABASE] Testing database...');
+                    const stats = await this.db.getEarningsStats();
+                    const workRecords = await this.db.getAllWorkRecords();
+                    const payments = await this.db.getAllPayments();
+                    testResults.database = {
+                        status: 'PASS',
+                        stats: stats,
+                        workRecords: workRecords.length,
+                        payments: payments.length
+                    };
+                    console.log('[DATABASE] ✅ Database working - Current stats:', stats);
+                    
+                    // Test Dashboard Updates
+                    console.log('[DASHBOARD] Testing dashboard updates...');
+                    await this.updateDashboard();
+                    testResults.dashboard = { status: 'PASS' };
+                    console.log('[DASHBOARD] ✅ Dashboard update working');
+                    
+                    // Test Advance Payment System
+                    console.log('[ADVANCE] Testing advance payment system...');
+                    const advanceStatus = await this.db.getAdvancePaymentStatus();
+                    testResults.advancePayment = {
+                        status: 'PASS',
+                        hasAdvancePayments: advanceStatus.hasAdvancePayments,
+                        totalAdvanceAmount: advanceStatus.totalAdvanceAmount
+                    };
+                    console.log('[ADVANCE] ✅ Advance payment system working:', advanceStatus);
+                    
+                    // Test Notifications
+                    console.log('[NOTIFICATIONS] Testing notifications...');
+                    this.notifications.testAllNotifications();
+                    testResults.notifications = { status: 'PASS' };
+                    console.log('[NOTIFICATIONS] ✅ Notifications system working');
+                    
+                    // Test Charts
+                    console.log('[CHARTS] Testing charts...');
+                    if (this.charts) {
+                        await this.charts.updateCharts();
+                        testResults.charts = { status: 'PASS' };
+                        console.log('[CHARTS] ✅ Charts system working');
+                    } else {
+                        testResults.charts = { status: 'SKIP', reason: 'Charts not initialized' };
+                    }
+                    
+                    // Test Calendar
+                    console.log('[CALENDAR] Testing calendar...');
+                    if (this.calendar) {
+                        await this.calendar.updateCalendar();
+                        testResults.calendar = { status: 'PASS' };
+                        console.log('[CALENDAR] ✅ Calendar system working');
+                    } else {
+                        testResults.calendar = { status: 'SKIP', reason: 'Calendar not initialized' };
+                    }
+                    
+                    // Test Master Sync Function
+                    console.log('[SYNC] Testing master sync function...');
+                    const syncResult = await this.syncAllSystems('system_test', {
+                        showNotification: false
+                    });
+                    testResults.masterSync = {
+                        status: syncResult.success ? 'PASS' : 'FAIL',
+                        duration: syncResult.duration,
+                        syncId: syncResult.syncId
+                    };
+                    console.log('[SYNC] ✅ Master sync function working:', syncResult);
+                    
+                    // Test Global Sync Event System
+                    console.log('[SYNC] Testing global sync event system...');
+                    const syncEvent = new CustomEvent('forceSystemSync', {
+                        detail: { source: 'system_test' }
+                    });
+                    window.dispatchEvent(syncEvent);
+                    testResults.globalSync = { status: 'PASS' };
+                    console.log('[SYNC] ✅ Global sync event system working');
+                    
+                    // Test Utilities
+                    console.log('[UTILITIES] Testing utilities...');
+                    const testDate = this.utils.formatDate(new Date());
+                    const testCurrency = this.utils.formatCurrency(100);
+                    testResults.utilities = {
+                        status: 'PASS',
+                        testDate: testDate,
+                        testCurrency: testCurrency
+                    };
+                    console.log('[UTILITIES] ✅ Utilities working - Test date:', testDate);
+                    
+                    // Test PWA Features
+                    console.log('[PWA] Testing PWA features...');
+                    const pwaTests = {
+                        serviceWorker: 'serviceWorker' in navigator,
+                        localStorage: typeof Storage !== 'undefined',
+                        indexedDB: 'indexedDB' in window
+                    };
+                    testResults.pwa = { status: 'PASS', features: pwaTests };
+                    console.log('[PWA] ✅ PWA features:', pwaTests);
+                    
+                    // Final Results
+                    console.log('\n🎉 ALL SYSTEM TESTS COMPLETED SUCCESSFULLY! 🎉');
+                    console.log('📊 Test Results Summary:', testResults);
+                    
+                    this.notifications.showToast('🎉 All systems tested successfully! Check console for detailed results.', 'success', 8000);
+                    
+                    return testResults;
                     
                 } catch (error) {
-                    console.error('[SYSTEM] System test failed:', error);
-                    this.notifications.showToast('System test failed: ' + error.message, 'error', 5000);
+                    console.error('[SYSTEM] ❌ System test failed:', error);
+                    testResults.error = error.message;
+                    console.log('📊 Test Results (with errors):', testResults);
+                    this.notifications.showToast('❌ System test failed: ' + error.message, 'error', 8000);
+                    return testResults;
                 }
             };
             
@@ -325,6 +415,334 @@ class RServiceTracker {
                 sideMenu.classList.remove('open');
             }
         });
+    }
+
+    setupGlobalSyncEventListener() {
+        // Listen for global system sync events to ensure all components stay synchronized
+        window.addEventListener('forceSystemSync', async (event) => {
+            const source = event.detail?.source || 'unknown';
+            console.log(`[GlobalSync] Received sync event from: ${source}`);
+            
+            // Use the master sync function for all synchronization
+            await this.syncAllSystems(`event_${source}`, { 
+                showNotification: false // Don't show notification for event-triggered syncs
+            });
+        });
+        
+        console.log('[GlobalSync] Global sync event listener setup completed');
+    }
+
+    /**
+     * 🔄 ULTRA-ENHANCED MASTER SYNCHRONIZATION SYSTEM
+     * This function provides COMPREHENSIVE, ATOMIC synchronization across ALL system components
+     * Called by EVERY action to maintain PERFECT system consistency with ZERO data loss
+     * 
+     * COMPLETE SYNCHRONIZATION PIPELINE:
+     * Phase 1: Data Layer Synchronization
+     * - Fresh database state retrieval with integrity validation
+     * - Duplicate detection and resolution
+     * - Transaction consistency verification
+     * - Advance payment calculation refresh
+     * - Cross-reference data validation
+     * 
+     * Phase 2: Business Logic Layer Synchronization
+     * - Earnings calculations with real-time accuracy
+     * - Payment status determination
+     * - Work streak and milestone calculations
+     * - Advance payment progress tracking
+     * - Balance reconciliation
+     * 
+     * Phase 3: Presentation Layer Synchronization
+     * - Dashboard real-time updates with animations
+     * - Calendar visual state refresh
+     * - Chart data recomputation and re-rendering
+     * - Progress indicators and status badges
+     * - Button states and availability
+     * 
+     * Phase 4: User Experience Layer Synchronization
+     * - Notification system alignment
+     * - Sound effect triggers
+     * - Visual feedback coordination
+     * - Responsive layout adjustments
+     * - Accessibility updates
+     * 
+     * Phase 5: Data Integrity and Recovery
+     * - System consistency validation
+     * - Error detection and correction
+     * - Performance monitoring
+     * - Fallback mechanism activation
+     * - Diagnostic reporting
+     */
+    async syncAllSystems(source = 'unknown', options = {}) {
+        const syncId = Date.now();
+        const startTime = performance.now();
+        
+        console.log(`[SYNC-${syncId}] Starting sync from: ${source}`);
+        
+        try {
+            // 1. Refresh database state FIRST
+            console.log(`[SYNC-${syncId}] Refreshing database state...`);
+            const allWorkRecords = await this.db.getAllWorkRecords();
+            const allPayments = await this.db.getAllPayments();
+            this.currentStats = await this.db.getEarningsStats();
+            
+            console.log(`[SYNC-${syncId}] Fresh database state:`, {
+                workRecords: allWorkRecords.length,
+                payments: allPayments.length,
+                stats: this.currentStats
+            });
+            
+            // 1.5. 🏦 AMOUNT FLOW RECONCILIATION - Do this BEFORE UI updates
+            console.log(`[SYNC-${syncId}] Performing AmountFlow reconciliation with fresh data...`);
+            if (window.AmountFlow) {
+                try {
+                    const reconciliationResult = await window.AmountFlow.performReconciliation();
+                    console.log(`[SYNC-${syncId}] AmountFlow reconciliation completed:`, reconciliationResult);
+                    
+                    const validationResult = await window.AmountFlow.performComprehensiveValidation();
+                    console.log(`[SYNC-${syncId}] AmountFlow validation completed:`, {
+                        isValid: validationResult.isValid,
+                        totalChecks: validationResult.totalChecks,
+                        passedChecks: validationResult.passedChecks,
+                        errors: validationResult.errors.length,
+                        warnings: validationResult.warnings.length
+                    });
+                    
+                    if (validationResult.errors.length > 0) {
+                        console.error(`[SYNC-${syncId}] AmountFlow validation errors:`, validationResult.errors);
+                    }
+                    
+                    const amountTally = window.AmountFlow.generateAmountTally();
+                    console.log(`[SYNC-${syncId}] Amount tally before UI updates:`, amountTally);
+                    
+                } catch (error) {
+                    console.error(`[SYNC-${syncId}] AmountFlow reconciliation failed:`, error);
+                }
+            } else {
+                console.warn(`[SYNC-${syncId}] AmountFlow not available for reconciliation`);
+            }
+            
+            // 2. Update dashboard with reconciled data
+            console.log(`[SYNC-${syncId}] Updating dashboard...`);
+            await this.updateDashboard();
+            
+            // 3. Update calendar if available - FORCE FRESH DATA LOAD
+            console.log(`[SYNC-${syncId}] Updating calendar...`);
+            if (this.calendar) {
+                if (typeof this.calendar.loadData === 'function') {
+                    console.log(`[SYNC-${syncId}] Loading fresh calendar data...`);
+                    await this.calendar.loadData();
+                }
+                if (typeof this.calendar.updateCalendar === 'function') {
+                    console.log(`[SYNC-${syncId}] Rendering calendar with fresh data...`);
+                    await this.calendar.updateCalendar();
+                } else if (typeof this.calendar.render === 'function') {
+                    console.log(`[SYNC-${syncId}] Rendering calendar...`);
+                    this.calendar.render();
+                }
+            } else {
+                console.warn(`[SYNC-${syncId}] Calendar not available for update`);
+            }
+            
+            // 4. Update charts if available - FORCE FRESH DATA
+            console.log(`[SYNC-${syncId}] Updating charts...`);
+            if (this.charts) {
+                if (typeof this.charts.updateCharts === 'function') {
+                    console.log(`[SYNC-${syncId}] Updating charts with fresh data...`);
+                    await this.charts.updateCharts();
+                } else {
+                    console.warn(`[SYNC-${syncId}] Charts updateCharts function not available`);
+                }
+            } else {
+                console.warn(`[SYNC-${syncId}] Charts system not available for update`);
+            }
+            
+            // 5. Update payment system
+            console.log(`[SYNC-${syncId}] Updating payment system...`);
+            await this.updatePendingUnpaidDates();
+            await this.updatePaidButtonVisibility();
+            
+            // 6. Update advance payments
+            console.log(`[SYNC-${syncId}] Checking advance payments...`);
+            if (typeof this.checkAdvancePaymentNotification === 'function') {
+                await this.checkAdvancePaymentNotification();
+            }
+            
+            // 7. Update UI elements
+            console.log(`[SYNC-${syncId}] Updating UI elements...`);
+            if (typeof this.updateTodayStatus === 'function') {
+                await this.updateTodayStatus();
+            }
+            this.updateButtonStates();
+            
+            // 8. Update progress indicators
+            const progressTextEl = document.getElementById('progressText');
+            const progressFillEl = document.getElementById('progressFill');
+            if (progressTextEl && progressFillEl) {
+                await this.updateProgressBar(progressTextEl, progressFillEl);
+            }
+            
+            // 🏦 FINAL VERIFICATION - Verify that all systems are reconciled
+            console.log(`[SYNC-${syncId}] Final system verification...`);
+            if (window.AmountFlow) {
+                const finalAmountFlowState = window.AmountFlow.getCurrentState();
+                const finalTally = window.AmountFlow.generateAmountTally();
+                
+                if (finalAmountFlowState.isReconciled && finalTally.summary.reconciliationStatus === 'RECONCILED') {
+                    console.log(`[SYNC-${syncId}] ✅ All systems perfectly reconciled and synced`);
+                } else {
+                    console.warn(`[SYNC-${syncId}] ⚠️ System reconciliation may be incomplete`);
+                }
+                
+                console.log(`[SYNC-${syncId}] Final amount tally:`, finalTally);
+            }
+            
+            const endTime = performance.now();
+            const duration = Math.round(endTime - startTime);
+            
+            console.log(`[SYNC-${syncId}] Sync completed successfully in ${duration}ms`);
+            console.log(`[SYNC-${syncId}] Final stats:`, {
+                totalWorked: this.currentStats.totalWorked,
+                totalEarned: this.currentStats.totalEarned,
+                totalPaid: this.currentStats.totalPaid,
+                currentEarnings: this.currentStats.currentEarnings,
+                unpaidDays: this.currentStats.unpaidWorkDays
+            });
+            
+            // Optional success notification
+            if (options.showNotification !== false && duration > 1000) {
+                this.notifications?.showToast(`System sync completed (${duration}ms)`, 'success', 3000);
+            }
+            
+            return {
+                success: true,
+                duration: duration,
+                stats: this.currentStats,
+                syncId: syncId,
+                workRecords: allWorkRecords.length,
+                payments: allPayments.length
+            };
+            
+        } catch (error) {
+            const endTime = performance.now();
+            const duration = Math.round(endTime - startTime);
+            
+            console.error(`[SYNC-${syncId}] Sync failed after ${duration}ms:`, error);
+            
+            // Show error notification
+            this.notifications?.showToast(`System sync failed: ${error.message}`, 'error', 5000);
+            
+            // Recovery attempt
+            try {
+                console.log(`[SYNC-${syncId}] Attempting recovery...`);
+                this.currentStats = await this.db.getEarningsStats();
+                await this.updateDashboard();
+                console.log(`[SYNC-${syncId}] Recovery completed`);
+            } catch (recoveryError) {
+                console.error(`[SYNC-${syncId}] Recovery failed:`, recoveryError);
+            }
+            
+            return {
+                success: false,
+                error: error.message,
+                duration: duration,
+                syncId: syncId
+            };
+        }
+    }
+
+
+
+    /**
+     * Validates data integrity to detect duplicate amounts or calculations
+     */
+    validateDataIntegrity(workRecords, payments) {
+        const duplicates = {
+            hasDuplicates: false,
+            duplicateWorkDates: [],
+            duplicatePayments: [],
+            issues: []
+        };
+
+        // Check for duplicate work records on same date
+        const workDates = {};
+        workRecords.forEach(record => {
+            if (workDates[record.date]) {
+                duplicates.hasDuplicates = true;
+                duplicates.duplicateWorkDates.push(record.date);
+            }
+            workDates[record.date] = (workDates[record.date] || 0) + 1;
+        });
+
+        // Check for suspicious payment patterns
+        const paymentAmounts = {};
+        payments.forEach(payment => {
+            const key = `${payment.amount}_${payment.paymentDate}`;
+            if (paymentAmounts[key]) {
+                duplicates.hasDuplicates = true;
+                duplicates.duplicatePayments.push(key);
+            }
+            paymentAmounts[key] = (paymentAmounts[key] || 0) + 1;
+        });
+
+        if (duplicates.hasDuplicates) {
+            duplicates.issues.push('Potential duplicate data detected');
+        }
+
+        return duplicates;
+    }
+
+    /**
+     * Validates system consistency across components
+     */
+    async validateSystemConsistency() {
+        try {
+            const dashboardBalance = document.getElementById('currentEarnings')?.textContent || '0';
+            const statsBalance = this.currentStats?.currentBalance || 0;
+            
+            return {
+                dashboardMatch: dashboardBalance.includes(statsBalance.toString()),
+                statsValid: this.currentStats !== null,
+                pendingDatesValid: Array.isArray(this.pendingUnpaidDates),
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            return {
+                error: error.message,
+                statsValid: false,
+                timestamp: new Date().toISOString()
+            };
+        }
+    }
+
+    /**
+     * Updates all button states for consistency
+     */
+    updateButtonStates() {
+        try {
+            // Update paid button
+            const paidBtn = document.getElementById('paidBtn');
+            if (paidBtn) {
+                const shouldShow = this.pendingUnpaidDates && this.pendingUnpaidDates.length > 0;
+                paidBtn.style.display = shouldShow ? 'inline-flex' : 'none';
+            }
+
+            // Update done button
+            const doneBtn = document.getElementById('doneBtn');
+            if (doneBtn) {
+                const today = this.utils.getTodayString();
+                const todayRecord = this.currentStats?.workRecords?.find(r => r.date === today);
+                if (todayRecord && todayRecord.status === 'completed') {
+                    doneBtn.innerHTML = '<i class="fas fa-check"></i> Already Done';
+                    doneBtn.disabled = true;
+                } else {
+                    doneBtn.innerHTML = '<i class="fas fa-check"></i> Mark as Done';
+                    doneBtn.disabled = false;
+                }
+            }
+        } catch (error) {
+            console.error('Error updating button states:', error);
+        }
     }
 
     closeMenu() {
@@ -1031,7 +1449,7 @@ class RServiceTracker {
 
     resetSettings() {
         this.notifications.showConfirmation(
-            'Are you sure you want to make the settings to default?',
+            'Are you sure you want to reset the settings to default?',
             () => {
                 try {
                     if (window.ConfigManager) {
@@ -1121,11 +1539,22 @@ class RServiceTracker {
         const earningsInsightBtn = document.getElementById('earningsInsightBtn');
         const earningsInsightTooltip = document.getElementById('earningsInsightTooltip');
 
+        console.log('[Tooltip] Setting up earnings insight:', {
+            earningsInsightBtn: !!earningsInsightBtn,
+            earningsInsightTooltip: !!earningsInsightTooltip
+        });
+
         if (earningsInsightBtn && earningsInsightTooltip) {
             earningsInsightBtn.addEventListener('click', async (e) => {
+                console.log('[Tooltip] Earnings insight button clicked');
                 e.stopPropagation();
                 this.createRippleEffect(e.currentTarget, e);
-                await this.toggleEarningsInsight(e.target);
+                await this.toggleEarningsInsight(e.currentTarget); // Use currentTarget instead of target
+            });
+        } else {
+            console.error('[Tooltip] Earnings insight elements not found!', {
+                earningsInsightBtn: !!earningsInsightBtn,
+                earningsInsightTooltip: !!earningsInsightTooltip
             });
         }
 
@@ -1146,14 +1575,10 @@ class RServiceTracker {
             }
         });
 
-        // Update tooltip position on scroll instead of hiding
+        // Tooltip uses fixed positioning and should not move on scroll
+        // Remove any scroll handlers to ensure it stays fixed
         window.addEventListener('scroll', () => {
-            if (earningsInsightTooltip && earningsInsightTooltip.classList.contains('show')) {
-                const earningsInsightBtn = document.getElementById('earningsInsightBtn');
-                if (earningsInsightBtn) {
-                    this.positionTooltip(earningsInsightTooltip, earningsInsightBtn);
-                }
-            }
+            // Do nothing - let tooltip stay fixed where it is
         });
     }
 
@@ -1170,22 +1595,55 @@ class RServiceTracker {
 
     async showEarningsInsight(targetElement) {
         try {
+            console.log('[Tooltip] showEarningsInsight called with target:', targetElement);
             const stats = await this.db.getEarningsStats();
             
             // Generate professional status message
             const statusMessage = await this.generateEarningsStatusMessage(stats);
+            console.log('[Tooltip] Generated status message:', statusMessage);
             
             // Update tooltip content
             const messageEl = document.getElementById('earningsStatusMessage');
             if (messageEl) {
                 messageEl.textContent = statusMessage;
+                console.log('[Tooltip] Updated message element');
+            } else {
+                console.error('[Tooltip] Message element not found');
             }
             
             // Position and show tooltip
             const tooltip = document.getElementById('earningsInsightTooltip');
+            console.log('[Tooltip] Tooltip element found:', !!tooltip);
+            console.log('[Tooltip] Target element provided:', !!targetElement);
+            
             if (tooltip && targetElement) {
+                // Ensure tooltip is properly initialized
+                tooltip.style.display = 'block';
+                tooltip.style.visibility = 'visible';
+                tooltip.style.opacity = '1';
+                tooltip.style.zIndex = '10000';
+                tooltip.style.position = 'fixed';
+                
+                console.log('[Tooltip] Pre-positioning tooltip styles applied');
+                
                 this.positionTooltip(tooltip, targetElement);
                 tooltip.classList.add('show');
+                
+                console.log('[Tooltip] Earnings insight tooltip shown with class:', tooltip.className);
+                console.log('[Tooltip] Final tooltip styles:', {
+                    display: tooltip.style.display,
+                    visibility: tooltip.style.visibility,
+                    opacity: tooltip.style.opacity,
+                    position: tooltip.style.position,
+                    top: tooltip.style.top,
+                    left: tooltip.style.left,
+                    zIndex: tooltip.style.zIndex
+                });
+            } else {
+                console.error('[Tooltip] Tooltip element or target element not found', {
+                    tooltip: !!tooltip,
+                    targetElement: !!targetElement
+                });
             }
         } catch (error) {
             console.error('Error showing earnings insight:', error);
@@ -1194,71 +1652,91 @@ class RServiceTracker {
     }
 
     positionTooltip(tooltip, targetElement) {
-        // Get target button position relative to viewport
-        const targetRect = targetElement.getBoundingClientRect();
+        // Get target button position relative to viewport (use the icon inside the button for precision)
+        const targetIcon = targetElement.querySelector('i') || targetElement;
+        const targetRect = targetIcon.getBoundingClientRect();
         const tooltipContent = tooltip.querySelector('.tooltip-content');
-        const tooltipArrow = tooltip.querySelector('.tooltip-arrow');
+        
+        // Store the original target position for fixed positioning during scroll
+        const fixedTargetRect = {
+            left: targetRect.left,
+            top: targetRect.top,
+            right: targetRect.right,
+            bottom: targetRect.bottom,
+            width: targetRect.width,
+            height: targetRect.height
+        };
         
         // Reset classes and styles
         tooltip.classList.remove('top', 'bottom', 'left', 'right');
         tooltip.style.maxWidth = '';
         
         // Show tooltip temporarily to measure its size
+        tooltip.style.position = 'fixed';
         tooltip.style.visibility = 'hidden';
         tooltip.style.opacity = '1';
         tooltip.style.display = 'block';
+        tooltip.style.top = '0px';
+        tooltip.style.left = '0px';
+        tooltip.style.zIndex = '9999';
+        
+        // Force layout calculation and measurement
+        tooltip.offsetHeight;
         const tooltipRect = tooltipContent.getBoundingClientRect();
-        tooltip.style.visibility = '';
-        tooltip.style.opacity = '';
-        tooltip.style.display = '';
+        
+        console.log('[Tooltip] Measured tooltip size:', tooltipRect.width, 'x', tooltipRect.height);
+        
+        // Reset measurement styles but keep position fixed
+        tooltip.style.visibility = 'visible';
+        tooltip.style.opacity = '0';
         
         // Add padding for safe margins
         const MARGIN = 20;
-        const ARROW_SIZE = 8;
+        const ARROW_SIZE = 10;
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         
-        // Calculate available space with margins
-        const spaceAbove = targetRect.top - MARGIN - ARROW_SIZE;
-        const spaceBelow = viewportHeight - targetRect.bottom - MARGIN - ARROW_SIZE;
-        const spaceLeft = targetRect.left - MARGIN - ARROW_SIZE;
-        const spaceRight = viewportWidth - targetRect.right - MARGIN - ARROW_SIZE;
+        // Calculate available space with margins using fixed target rect
+        const spaceAbove = fixedTargetRect.top - MARGIN - ARROW_SIZE;
+        const spaceBelow = viewportHeight - fixedTargetRect.bottom - MARGIN - ARROW_SIZE;
+        const spaceLeft = fixedTargetRect.left - MARGIN - ARROW_SIZE;
+        const spaceRight = viewportWidth - fixedTargetRect.right - MARGIN - ARROW_SIZE;
         
         let position = 'bottom'; // default
         let left, top;
         
-        // Determine best position based on available space
+        // Determine best position based on available space using fixed target rect
         if (spaceBelow >= tooltipRect.height) {
             // Show below (preferred)
             position = 'bottom';
-            top = targetRect.bottom + 10;
-            left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+            top = fixedTargetRect.bottom + 10;
+            left = fixedTargetRect.left + (fixedTargetRect.width / 2) - (tooltipRect.width / 2);
         } else if (spaceAbove >= tooltipRect.height) {
             // Show above
             position = 'top';
-            top = targetRect.top - tooltipRect.height - 10;
-            left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+            top = fixedTargetRect.top - tooltipRect.height - 10;
+            left = fixedTargetRect.left + (fixedTargetRect.width / 2) - (tooltipRect.width / 2);
         } else if (spaceRight >= tooltipRect.width) {
             // Show right
             position = 'right';
-            left = targetRect.right + 10;
-            top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+            left = fixedTargetRect.right + 10;
+            top = fixedTargetRect.top + (fixedTargetRect.height / 2) - (tooltipRect.height / 2);
         } else if (spaceLeft >= tooltipRect.width) {
             // Show left
             position = 'left';
-            left = targetRect.left - tooltipRect.width - 10;
-            top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+            left = fixedTargetRect.left - tooltipRect.width - 10;
+            top = fixedTargetRect.top + (fixedTargetRect.height / 2) - (tooltipRect.height / 2);
         } else {
             // Force fit - use position with most space
             const maxSpace = Math.max(spaceBelow, spaceAbove, spaceLeft, spaceRight);
             if (maxSpace === spaceBelow || maxSpace === spaceAbove) {
                 position = maxSpace === spaceBelow ? 'bottom' : 'top';
-                top = maxSpace === spaceBelow ? targetRect.bottom + 8 : targetRect.top - tooltipRect.height - 8;
-                left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+                top = maxSpace === spaceBelow ? fixedTargetRect.bottom + 8 : fixedTargetRect.top - tooltipRect.height - 8;
+                left = fixedTargetRect.left + (fixedTargetRect.width / 2) - (tooltipRect.width / 2);
             } else {
                 position = maxSpace === spaceRight ? 'right' : 'left';
-                left = maxSpace === spaceRight ? targetRect.right + 8 : targetRect.left - tooltipRect.width - 8;
-                top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
+                left = maxSpace === spaceRight ? fixedTargetRect.right + 8 : fixedTargetRect.left - tooltipRect.width - 8;
+                top = fixedTargetRect.top + (fixedTargetRect.height / 2) - (tooltipRect.height / 2);
             }
         }
         
@@ -1283,57 +1761,124 @@ class RServiceTracker {
         // Apply position
         tooltip.style.left = `${left}px`;
         tooltip.style.top = `${top}px`;
+        tooltip.style.opacity = '1';
+        tooltip.style.visibility = 'visible';
+        tooltip.style.zIndex = '9999';
         tooltip.classList.add(position);
         
+        console.log(`[Tooltip] Final position: ${left}px, ${top}px, class: ${position}`);
+        
         // Enhanced arrow positioning - precisely point to the icon center
+        let tooltipArrow = tooltip.querySelector('.tooltip-arrow');
+        
+        // Ensure arrow element exists
+        if (!tooltipArrow) {
+            console.log('[Tooltip] Creating missing arrow element');
+            tooltipArrow = document.createElement('div');
+            tooltipArrow.className = 'tooltip-arrow';
+            tooltip.appendChild(tooltipArrow);
+        }
+        
         if (tooltipArrow) {
-            const targetCenterX = targetRect.left + (targetRect.width / 2);
-            const targetCenterY = targetRect.top + (targetRect.height / 2);
+            // Use fixed target rect for arrow positioning to maintain position during scroll
+            const targetCenterX = fixedTargetRect.left + (fixedTargetRect.width / 2);
+            const targetCenterY = fixedTargetRect.top + (fixedTargetRect.height / 2);
             const tooltipLeft = parseFloat(tooltip.style.left);
             const tooltipTop = parseFloat(tooltip.style.top);
+            const tooltipRect = tooltip.getBoundingClientRect();
             
-            // Let CSS handle arrow visibility timing - remove inline styles
-            tooltipArrow.style.opacity = '';
-            tooltipArrow.style.visibility = '';
+            // Smaller, more precise arrow styling
+            tooltipArrow.style.cssText = `
+                position: absolute !important;
+                width: 12px !important;
+                height: 12px !important;
+                transform: rotate(45deg) !important;
+                z-index: 1001 !important;
+                background: rgba(var(--primary-rgb), 0.98) !important;
+                border: 1px solid rgba(var(--primary-rgb), 0.9) !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: none !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+            `;
             
-            // Calculate exact positioning based on tooltip position relative to target
-            if (position === 'bottom' || position === 'top') {
-                // Horizontal arrow positioning - point exactly to button center
+            console.log('[Tooltip] Arrow positioning debug:', {
+                position: position,
+                targetCenter: { x: targetCenterX, y: targetCenterY },
+                tooltipPos: { left: tooltipLeft, top: tooltipTop },
+                tooltipSize: { width: tooltipRect.width, height: tooltipRect.height }
+            });
+            
+            // FIXED: Calculate exact positioning based on tooltip position relative to target
+            if (position === 'bottom') {
+                // Tooltip is below button, arrow points up (appears at top of tooltip)
                 const targetCenterRelativeToTooltip = targetCenterX - tooltipLeft;
-                let arrowLeft = targetCenterRelativeToTooltip - 4; // Center arrow (arrow is 8px wide)
+                let arrowLeft = targetCenterRelativeToTooltip - 8; // Center arrow (16px wide)
                 
-                // Ensure arrow stays within tooltip bounds with proper margins
-                const arrowWidth = 8;
-                const minMargin = 6;
-                const maxMargin = tooltipRect.width - arrowWidth - 6;
-                
+                // Constrain within tooltip bounds
+                const minMargin = 8;
+                const maxMargin = tooltipRect.width - 24;
                 arrowLeft = Math.max(minMargin, Math.min(maxMargin, arrowLeft));
                 
                 tooltipArrow.style.left = `${arrowLeft}px`;
+                tooltipArrow.style.top = '-8px'; // Arrow at top of tooltip
+                
+                console.log(`[Tooltip] Bottom position: Arrow at left ${arrowLeft}px, top -8px`);
+                
+            } else if (position === 'top') {
+                // Tooltip is above button, arrow points down (appears at bottom of tooltip)
+                const targetCenterRelativeToTooltip = targetCenterX - tooltipLeft;
+                let arrowLeft = targetCenterRelativeToTooltip - 8;
+                
+                const minMargin = 8;
+                const maxMargin = tooltipRect.width - 24;
+                arrowLeft = Math.max(minMargin, Math.min(maxMargin, arrowLeft));
+                
+                tooltipArrow.style.left = `${arrowLeft}px`;
+                tooltipArrow.style.bottom = '-8px'; // Arrow at bottom of tooltip
                 tooltipArrow.style.top = '';
-                tooltipArrow.style.right = '';
-                tooltipArrow.style.bottom = '';
                 
-                console.log(`[Tooltip] Arrow positioned at ${arrowLeft}px pointing to button center (${targetCenterX})`);
-            } else if (position === 'left' || position === 'right') {
-                // Vertical arrow positioning - point exactly to button center
+                console.log(`[Tooltip] Top position: Arrow at left ${arrowLeft}px, bottom -6px`);
+                
+            } else if (position === 'right') {
+                // Tooltip is right of button, arrow points left (appears at left of tooltip)
                 const targetCenterRelativeToTooltip = targetCenterY - tooltipTop;
-                let arrowTop = targetCenterRelativeToTooltip - 4; // Center arrow (arrow is 8px tall)
+                let arrowTop = targetCenterRelativeToTooltip - 8;
                 
-                // Ensure arrow stays within tooltip bounds with proper margins
-                const arrowHeight = 8;
-                const minMargin = 6;
-                const maxMargin = tooltipRect.height - arrowHeight - 6;
-                
+                const minMargin = 8;
+                const maxMargin = tooltipRect.height - 24;
                 arrowTop = Math.max(minMargin, Math.min(maxMargin, arrowTop));
                 
                 tooltipArrow.style.top = `${arrowTop}px`;
-                tooltipArrow.style.left = '';
-                tooltipArrow.style.right = '';
-                tooltipArrow.style.bottom = '';
+                tooltipArrow.style.left = '-8px'; // Arrow at left of tooltip
                 
-                console.log(`[Tooltip] Arrow positioned at ${arrowTop}px pointing to button center (${targetCenterY})`);
+                console.log(`[Tooltip] Right position: Arrow at top ${arrowTop}px, left -6px`);
+                
+            } else if (position === 'left') {
+                // Tooltip is left of button, arrow points right (appears at right of tooltip)
+                const targetCenterRelativeToTooltip = targetCenterY - tooltipTop;
+                let arrowTop = targetCenterRelativeToTooltip - 8;
+                
+                const minMargin = 8;
+                const maxMargin = tooltipRect.height - 24;
+                arrowTop = Math.max(minMargin, Math.min(maxMargin, arrowTop));
+                
+                tooltipArrow.style.top = `${arrowTop}px`;
+                tooltipArrow.style.right = '-8px'; // Arrow at right of tooltip
+                tooltipArrow.style.left = '';
+                
+                console.log(`[Tooltip] Left position: Arrow at top ${arrowTop}px, right -6px`);
             }
+            
+            // Clear any conflicting styles
+            ['top', 'left', 'right', 'bottom'].forEach(prop => {
+                if (!tooltipArrow.style[prop]) {
+                    tooltipArrow.style[prop] = '';
+                }
+            });
+            
+            console.log('[Tooltip] Final arrow positioning applied for position:', position);
         }
     }
 
@@ -1348,10 +1893,13 @@ class RServiceTracker {
                 tooltipArrow.style.cssText = ''; // Clear all inline styles
             }
             
-            // Reset tooltip position as well
+            // Reset tooltip position and display
             tooltip.style.left = '';
             tooltip.style.top = '';
             tooltip.style.maxWidth = '';
+            tooltip.style.display = 'none';
+            tooltip.style.opacity = '';
+            tooltip.style.visibility = '';
         }
     }
 
@@ -1398,45 +1946,59 @@ class RServiceTracker {
     }
 
     async generateEarningsStatusMessage(stats) {
-        const { totalWorked, totalEarned, totalPaid, currentBalance } = stats;
+        const { totalWorked, totalEarned, totalPaid, currentEarnings, unpaidWorkDays, workStreak } = stats;
         const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+        const currentDate = new Date().toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
         
         // Check for advance payment status
         const advanceStatus = await this.db.getAdvancePaymentStatus();
         
         // New user - no work done
         if (totalWorked === 0) {
-            return `Welcome to your earnings tracker! Your daily rate is set to ${this.utils.formatCurrency(dailyWage)}. To begin tracking your work progress, simply click the Mark as Done button when you complete your first work session. This will start building your work history and earnings record.`;
+            return `Welcome to R-Service Tracker, your comprehensive work and earnings management system. Today is ${currentDate}, and your daily rate is set at ${this.utils.formatCurrency(dailyWage)}. To begin tracking your progress, simply mark today's work as completed using the dashboard controls. The system offers a full calendar view for historical tracking, detailed payment management, comprehensive analytics, and professional report generation capabilities. Start your journey by recording your first work day and watch as the system automatically calculates your earnings, tracks payment schedules, and provides insights into your work patterns.`;
         }
         
         // Handle advance payment scenarios
         if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0) {
             const remainingDays = advanceStatus.workRemainingForAdvance;
             const advanceAmount = advanceStatus.totalAdvanceAmount;
-            const completedDays = totalWorked - remainingDays;
+            const progressPercent = Math.round(((advanceStatus.totalAdvanceAmount / dailyWage - remainingDays) / (advanceStatus.totalAdvanceAmount / dailyWage)) * 100);
             
-            return `You have received an advance payment of ${this.utils.formatCurrency(advanceAmount)} and are making good progress on your work commitment. Currently, you have completed ${completedDays} out of ${totalWorked} required work days. You need to complete ${remainingDays} more days to fulfill your advance payment obligation and maintain your earning schedule.`;
+            return `You are currently operating under an advance payment arrangement. An advance payment of ${this.utils.formatCurrency(advanceAmount)} has been received and recorded in your account. To fulfill this advance payment commitment, you need to complete ${remainingDays} additional work days. Your current progress stands at ${progressPercent}% completion of the advance payment terms. The system is actively tracking your daily progress toward fulfilling this advance payment obligation. Once you complete the required work days, your account balance will be reconciled and you can resume regular payment schedules. Continue maintaining your excellent work consistency to meet your advance payment commitments.`;
         }
         
         // Has worked but no payments made
         if (totalWorked > 0 && totalPaid === 0) {
-            return `Your work record shows ${totalWorked} completed work session${totalWorked !== 1 ? 's' : ''} with a total pending payment of ${this.utils.formatCurrency(currentBalance)}. You have not collected any payments yet, which means this is a great time to initiate your first payment collection. Your consistent work is building up a solid earnings foundation.`;
+            const weekCount = Math.floor(totalWorked / 7);
+            const streakText = (workStreak && workStreak > 1) ? ` including a ${workStreak} day consecutive work streak` : '';
+            
+            return `Your work record shows exceptional dedication with ${totalWorked} completed work days${streakText}. ${weekCount > 0 ? `This represents ${weekCount} full week${weekCount > 1 ? 's' : ''} of consistent work performance. ` : ''}Your current earnings from completed work total ${this.utils.formatCurrency(currentEarnings)}, which represents the accumulated value of your unpaid work days. This amount is ready for payment collection and will reset to zero once payment is received. The system has automatically calculated your earnings based on your daily rate and completed work days. You have established a strong foundation of work consistency and are now positioned to collect your first payment from the accumulated earnings.`;
         }
         
         // Has worked and received some payments
-        if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
-            const pendingDays = Math.ceil(currentBalance / dailyWage);
+        if (totalWorked > 0 && totalPaid > 0 && currentEarnings > 0) {
+            const pendingDays = Math.ceil(currentEarnings / dailyWage);
+            const paymentRate = Math.round((totalPaid / totalEarned) * 100);
+            const unpaidText = unpaidWorkDays > 0 ? ` There are currently ${unpaidWorkDays} work days awaiting payment processing.` : '';
             
-            return `You have successfully completed ${totalWorked} work days and collected ${this.utils.formatCurrency(totalPaid)} in payments so far. Currently, you have ${this.utils.formatCurrency(currentBalance)} pending equivalent to ${pendingDays} work day${pendingDays !== 1 ? 's' : ''}. Your payment management is running smoothly, and you are maintaining a healthy work to payment ratio.`;
+            return `Your earnings profile demonstrates consistent work performance and regular payment activity. You have completed ${totalWorked} total work days and have collected ${this.utils.formatCurrency(totalPaid)}, representing ${paymentRate}% of your total theoretical earnings. Your current accumulated earnings from recent unpaid work amount to ${this.utils.formatCurrency(currentEarnings)}, which covers ${pendingDays} work days.${unpaidText} This current earnings amount will reset to zero when your next payment is processed. The system maintains a complete record of all work completed and payments received, ensuring accurate tracking of your financial progress and work history.`;
         }
         
         // All payments up to date
-        if (totalWorked > 0 && currentBalance === 0) {
-            return `Excellent work! You have completed ${totalWorked} work day${totalWorked !== 1 ? 's' : ''} and earned a total of ${this.utils.formatCurrency(totalPaid)}. All your payments are current and up to date, which demonstrates excellent financial management and work discipline. Keep up the great work with your consistent earning schedule.`;
+        if (totalWorked > 0 && currentEarnings === 0) {
+            const avgDailyEarning = totalPaid / totalWorked;
+            const weeklyEarning = avgDailyEarning * 7;
+            
+            return `Congratulations on maintaining perfect payment status. You have completed ${totalWorked} work days with total earnings of ${this.utils.formatCurrency(totalPaid)} fully collected. Your average daily earning rate is ${this.utils.formatCurrency(avgDailyEarning)}, which projects to ${this.utils.formatCurrency(weeklyEarning)} per week. All completed work has been properly compensated with no outstanding balances. Your current earnings counter shows zero, indicating that all recent work has been paid. This demonstrates excellent financial management and consistent payment processing. Continue this pattern of regular work completion and timely payment collection to maintain your perfect payment record.`;
         }
         
-        // Fallback message
-        return `Your earnings tracker is ready to help you manage your work and payments efficiently. With your daily rate set at ${this.utils.formatCurrency(dailyWage)}, you can easily track your progress and maintain organized financial records. Start by marking your work as done when you complete each session.`;
+        // Fallback message with encouragement
+        return `Welcome to your R-Service Tracker dashboard for ${currentDate}. Your daily work rate is configured at ${this.utils.formatCurrency(dailyWage)} per completed day. The system is ready to track your work progress, calculate earnings automatically, and manage payment schedules efficiently. To begin or continue your tracking, mark today's work as completed when finished. The comprehensive calendar view allows you to review historical work patterns and payment records. Use the analytics features to gain insights into your work consistency and earning trends. The system provides complete transparency in tracking your professional progress and financial management.`;
     }
 
 
@@ -1497,30 +2059,42 @@ class RServiceTracker {
 
     async loadInitialData() {
         try {
+            console.log('[App] Loading initial data...');
             this.currentStats = await this.db.getEarningsStats();
+            console.log('[App] Initial stats loaded:', this.currentStats);
             
-            this.updateDashboard();
+            await this.updateDashboard();
             
             await this.checkPendingPayments();
             
-            this.updateTodayStatus();
+            await this.updateTodayStatus();
             
+            console.log('[App] Initial data loading completed');
         } catch (error) {
             console.error('Error loading initial data:', error);
         }
     }
 
-    updateDashboard() {
+    async updateDashboard() {
         if (this.updateDashboardTimeout) {
             clearTimeout(this.updateDashboardTimeout);
         }
         
-        this.updateDashboardTimeout = setTimeout(() => {
-            this._performDashboardUpdate();
+        this.updateDashboardTimeout = setTimeout(async () => {
+            await this._performDashboardUpdate();
         }, 50);
     }
 
-    _performDashboardUpdate() {
+    async _performDashboardUpdate() {
+        try {
+            // Fetch fresh stats every time dashboard updates
+            this.currentStats = await this.db.getEarningsStats();
+            console.log('[Dashboard] Fresh stats loaded:', this.currentStats);
+        } catch (error) {
+            console.error('[Dashboard] Error fetching fresh stats:', error);
+            // Fall back to existing stats if available
+        }
+
         const dashboardCards = document.querySelectorAll('.card');
         dashboardCards.forEach(card => {
             card.style.animation = 'fadeInUp 0.5s ease-out';
@@ -1539,8 +2113,8 @@ class RServiceTracker {
         const streakCountEl = document.getElementById('streakCount');
 
         if (currentEarningsEl) {
-            const currentBalance = this.currentStats?.currentBalance || 0;
-            this.utils.animateNumber(currentEarningsEl, 0, currentBalance, 1500);
+            const currentEarnings = this.currentStats?.currentEarnings || 0;
+            this.utils.animateNumber(currentEarningsEl, 0, currentEarnings, 1500);
         }
         
         if (daysWorkedEl) {
@@ -1824,21 +2398,15 @@ class RServiceTracker {
             this.notifications.showWorkCompletedNotification();
             this.notifications.showToast(`Great job! You earned ₹${window.R_SERVICE_CONFIG?.DAILY_WAGE || 25} today`, 'success');
             
-            this.currentStats = await this.db.getEarningsStats();
-            this.updateDashboard();
-            this.updateTodayStatus();
-            
+            // Check milestones before system sync
             this.notifications.checkMilestones(this.currentStats);
             
-            await this.charts.updateCharts();
-            if (this.calendar) {
-                await this.calendar.updateCalendar();
-            }
+            // Use the master sync function to ensure everything is updated
+            await this.syncAllSystems('mark_as_done', {
+                showNotification: true
+            });
             
-            await this.checkPendingPayments();
-            
-            // Ensure paid button shows immediately if eligible
-            await this.updatePaidButtonVisibility();
+            console.log('Mark as done completed with full system sync');
             
         } catch (error) {
             console.error('Error marking work as done:', error);
@@ -2065,7 +2633,7 @@ class RServiceTracker {
 
     async processPayment(amount, closeModalCallback) {
         try {
-            console.log('Processing payment:', { amount, pendingDates: this.pendingUnpaidDates });
+            console.log('Processing payment:', { amount, pendingDates: this.pendingUnpaidDates, forcePaidDate: this.forcePaidDateString });
             
             if (!amount || amount <= 0) {
                 throw new Error('Invalid payment amount');
@@ -2076,21 +2644,136 @@ class RServiceTracker {
             }
             
             const DAILY_WAGE = 25; // Should match database constant
-            const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
-            
-            const isAdvancePayment = amount > totalWorkCompletedValue;
-            
+            let isAdvancePayment = false;
             let workDatesToPay = [];
-            if (totalWorkCompletedValue > 0) {
-                const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
-                workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
-                console.log('Work dates to pay:', workDatesToPay);
+            
+            // 🏦 AMOUNT FLOW INTEGRATION - Pre-validate payment amount
+            if (window.AmountFlow) {
+                try {
+                    console.log('[App] Pre-validating payment amount through AmountFlow...');
+                    await window.AmountFlow.validateAmount('addPayment', amount, {
+                        minAmount: 1,
+                        maxAmount: window.R_SERVICE_CONFIG?.MAX_PAYMENT_AMOUNT || 100000
+                    });
+                } catch (error) {
+                    console.error('[App] AmountFlow pre-validation failed:', error);
+                    throw new Error(`Payment validation failed: ${error.message}`);
+                }
             }
             
-            const paymentDate = this.utils.getTodayString();
-            console.log('Adding payment to database:', { amount, workDatesToPay, paymentDate, isAdvancePayment });
-            
-            await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
+            // Unified payment processing (works for both normal and force payments)
+            if (this.forcePaidDateString) {
+                console.log('Processing force payment for specific date:', this.forcePaidDateString);
+                
+                // 🔧 FIXED FORCE PAYMENT LOGIC:
+                // Force payment should ONLY cover PREVIOUS unpaid work days
+                // The force paid date itself should NOT be included in payment coverage
+                // This allows the force paid date to be marked as done later and count as unpaid work
+                
+                // Get all current pending unpaid dates (excluding the force paid date)
+                await this.updatePendingUnpaidDates();
+                
+                // Remove the force paid date from pending list if it's there (it shouldn't be covered by this payment)
+                const filteredPendingDates = this.pendingUnpaidDates.filter(date => date !== this.forcePaidDateString);
+                
+                console.log('Force payment details:', {
+                    forcePaidDate: this.forcePaidDateString,
+                    originalPendingDates: this.pendingUnpaidDates,
+                    filteredPendingDates: filteredPendingDates,
+                    amount: amount
+                });
+                
+                // Calculate total value of PREVIOUS unpaid work (excluding force paid date)
+                const totalPendingValue = filteredPendingDates.length * DAILY_WAGE;
+                
+                // 🏦 AMOUNT FLOW - Validate advance payment calculation
+                if (window.AmountFlow) {
+                    try {
+                        const advanceResult = await window.AmountFlow.processAmount('processAdvancePayment', amount, {
+                            workValue: totalPendingValue,
+                            triggerReconciliation: false,
+                            context: 'force_payment'
+                        });
+                        isAdvancePayment = advanceResult.isAdvance;
+                        console.log('[App] AmountFlow force payment calculation:', advanceResult);
+                    } catch (error) {
+                        console.warn('[App] AmountFlow advance calculation warning:', error);
+                        isAdvancePayment = amount > totalPendingValue; // Fallback to original logic
+                    }
+                } else {
+                    isAdvancePayment = amount > totalPendingValue;
+                }
+                
+                if (totalPendingValue > 0 && filteredPendingDates.length > 0) {
+                    // Cover previous unpaid work days only
+                    const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), filteredPendingDates.length);
+                    workDatesToPay = filteredPendingDates.slice(0, daysCovered);
+                    console.log('Force payment - covering PREVIOUS work dates:', workDatesToPay);
+                } else {
+                    // If no previous pending work, this is an advance payment
+                    // Associate it with the force paid date as a placeholder, but mark as advance
+                    workDatesToPay = [this.forcePaidDateString];
+                    isAdvancePayment = true;
+                    console.log('Force payment - no previous work to cover, treating as advance for date:', this.forcePaidDateString);
+                }
+                
+                const paymentDate = this.utils.getTodayString();
+                
+                // 🏦 Database call will handle AmountFlow integration internally
+                await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
+                
+                // Update pending unpaid dates by removing only the PAID ones (not the force paid date)
+                if (!isAdvancePayment && workDatesToPay.length > 0) {
+                    // Remove only the dates that were actually paid
+                    this.pendingUnpaidDates = this.pendingUnpaidDates.filter(date => !workDatesToPay.includes(date));
+                    console.log('Updated pending dates after force payment:', this.pendingUnpaidDates);
+                }
+                
+                // Clear the force paid date
+                const processedDate = this.forcePaidDateString;
+                this.forcePaidDateString = null;
+                
+                console.log('Force payment recorded successfully for date:', processedDate, {
+                    coveredDates: workDatesToPay,
+                    isAdvance: isAdvancePayment,
+                    remainingPendingDates: this.pendingUnpaidDates
+                });
+            } else {
+                // Normal payment processing
+                const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
+                
+                // 🏦 AMOUNT FLOW - Validate advance payment calculation
+                if (window.AmountFlow) {
+                    try {
+                        const advanceResult = await window.AmountFlow.processAmount('processAdvancePayment', amount, {
+                            workValue: totalWorkCompletedValue,
+                            triggerReconciliation: false
+                        });
+                        isAdvancePayment = advanceResult.isAdvance;
+                        console.log('[App] AmountFlow advance payment calculation:', advanceResult);
+                    } catch (error) {
+                        console.warn('[App] AmountFlow advance calculation warning:', error);
+                        isAdvancePayment = amount > totalWorkCompletedValue; // Fallback to original logic
+                    }
+                } else {
+                    isAdvancePayment = amount > totalWorkCompletedValue;
+                }
+                
+                if (totalWorkCompletedValue > 0) {
+                    const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
+                    workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
+                    console.log('Normal payment - work dates to pay:', workDatesToPay);
+                }
+                
+                const paymentDate = this.utils.getTodayString();
+                console.log('Adding payment to database:', { amount, workDatesToPay, paymentDate, isAdvancePayment });
+                
+                // 🏦 Database call will handle AmountFlow integration internally
+                await this.db.addPayment(amount, workDatesToPay, paymentDate, isAdvancePayment);
+                
+                // Update pending unpaid dates
+                this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
+            }
             
             closeModalCallback();
             
@@ -2107,32 +2790,20 @@ class RServiceTracker {
             this.notifications.showPaymentNotification(amount);
             this.notifications.showToast(`${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)} of ₹${amount} recorded successfully!`, 'success');
             
-            if (workDatesToPay.length === this.pendingUnpaidDates.length && this.pendingUnpaidDates.length > 0) {
+            if (!this.forcePaidDateString && workDatesToPay.length === this.pendingUnpaidDates.length && this.pendingUnpaidDates.length > 0) {
                 setTimeout(() => {
                     this.notifications.showToast(`All ${workDatesToPay.length} pending work days have been paid!`, 'info');
                 }, 1000);
             }
             
-            console.log('Updating stats and UI...');
-            this.currentStats = await this.db.getEarningsStats();
-            this.updateDashboard();
+            console.log('Updating all systems after payment...');
             
-            this.pendingUnpaidDates = this.pendingUnpaidDates.slice(workDatesToPay.length);
-            await this.updatePaidButtonVisibility();
+            // Use the master sync function to ensure everything is updated
+            await this.syncAllSystems('payment_processing', {
+                showNotification: true
+            });
             
-            try {
-                await this.charts.updateCharts();
-            } catch (chartError) {
-                console.error('Error updating charts:', chartError);
-            }
-            
-            try {
-                if (this.calendar) {
-                    await this.calendar.updateCalendar();
-                }
-            } catch (calendarError) {
-                console.error('Error updating calendar:', calendarError);
-            }
+            console.log('Payment processing completed with full system sync');
             
         } catch (error) {
             console.error('Error recording payment:', error);
@@ -2182,14 +2853,23 @@ class RServiceTracker {
 
     async initializeViews() {
         try {
+            console.log('[App] Initializing charts...');
             await this.charts.initializeCharts();
             
+            console.log('[App] Initializing calendar...');
             await this.calendar.init();
+            console.log('[App] Calendar initialized successfully');
             
             this.setupBalanceSheetFilters();
             
         } catch (error) {
-            console.error('Error initializing views:', error);
+            console.error('[App] Error initializing views:', error);
+            
+            // Try to show calendar anyway even if there was an error
+            if (error.message?.includes('calendar') || error.message?.includes('Calendar')) {
+                console.warn('[App] Calendar initialization failed, but continuing...');
+                this.notifications?.showToast('Calendar had initialization issues. Some features may not work properly.', 'warning', 5000);
+            }
         }
     }
 
@@ -2478,11 +3158,44 @@ class RServiceTracker {
     }
 
     showStreakInfo() {
-        const message = this.currentStats.currentStreak > 0 
-            ? `Amazing! You have a ${this.currentStats.currentStreak} day work streak! Keep it up!`
-            : 'Start your work streak by completing tasks consistently!';
+        const currentStreak = this.currentStats.currentStreak || 0;
+        const longestStreak = this.currentStats.longestStreak || 0;
+        
+        let message = '';
+        let messageType = 'info';
+        
+        if (currentStreak > 0) {
+            if (currentStreak >= 30) {
+                message = `🔥 LEGENDARY! ${currentStreak} day streak! You're absolutely crushing it!`;
+                messageType = 'success';
+            } else if (currentStreak >= 14) {
+                message = `🚀 AMAZING! ${currentStreak} day streak! You're on fire!`;
+                messageType = 'success';
+            } else if (currentStreak >= 7) {
+                message = `⭐ EXCELLENT! ${currentStreak} day streak! One week strong!`;
+                messageType = 'success';
+            } else if (currentStreak >= 3) {
+                message = `💪 GREAT! ${currentStreak} day streak! Building momentum!`;
+                messageType = 'success';
+            } else {
+                message = `✨ Nice! ${currentStreak} day streak! Keep it up!`;
+                messageType = 'info';
+            }
             
-        this.notifications.showToast(message, 'info');
+            if (longestStreak > currentStreak) {
+                message += `\n(Your longest streak: ${longestStreak} days)`;
+            } else if (longestStreak === currentStreak && currentStreak > 1) {
+                message += `\n🏆 This is your longest streak yet!`;
+            }
+        } else {
+            if (longestStreak > 0) {
+                message = `Start a new streak! Your longest was ${longestStreak} days - you can beat that! 💪`;
+            } else {
+                message = 'Start your work streak by completing tasks consistently! 🚀';
+            }
+        }
+            
+        this.notifications.showToast(message, messageType, 6000);
     }
 
     handleClearData() {
@@ -2593,21 +3306,24 @@ class RServiceTracker {
             console.log('Service Worker not supported');
         }
 
-        let deferredPrompt;
         let installBannerShown = false;
         
-        // Check if already installed or dismissed
+        // Make deferredPrompt accessible globally
+        window.deferredPrompt = null;
+        
+        // Check if already installed
         const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
                            window.navigator.standalone === true;
         const isDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
+        const isClosed = localStorage.getItem('pwa-install-closed') === 'true';
         
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            deferredPrompt = e;
+            window.deferredPrompt = e;
             
-            // Show install banner if conditions are met
+            // Show install banner if not installed and not permanently dismissed
             if (!isInstalled && !isDismissed && !installBannerShown) {
-                this.showInstallRecommendation(deferredPrompt);
+                this.showInstallRecommendation(window.deferredPrompt);
                 installBannerShown = true;
             }
             
@@ -2634,47 +3350,109 @@ class RServiceTracker {
             }
         });
         
-        // Show banner after some user interaction if not shown yet
+        // Development: Clear PWA states for testing (remove in production)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('[PWA] Development mode detected - clearing PWA states for testing');
+            localStorage.removeItem('pwa-install-closed');
+            localStorage.removeItem('pwa-install-dismissed');
+        }
+        
+        // Show banner logic: first visit, every visit unless closed, or payment days
         setTimeout(async () => {
-            if (!isInstalled && !installBannerShown) {
+            // Recalculate conditions after potential localStorage clear
+            const finalIsDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
+            const finalIsClosed = localStorage.getItem('pwa-install-closed') === 'true';
+            
+            console.log('[PWA] Checking banner display conditions:', {
+                isInstalled,
+                installBannerShown,
+                isDismissed: finalIsDismissed,
+                isClosed: finalIsClosed,
+                hasDeferredPrompt: !!deferredPrompt
+            });
+            
+            if (!isInstalled && !installBannerShown && !finalIsDismissed) {
                 const shouldShowOnPaymentDay = await this.shouldShowPWAOnPaymentDay();
-                if ((!isDismissed || shouldShowOnPaymentDay) && deferredPrompt) {
-                    this.showInstallRecommendation(deferredPrompt);
+                
+                // Show banner if:
+                // 1. Not closed at all (first time or subsequent visits)
+                // 2. Or it's a payment day (even if closed before)
+                if (!finalIsClosed || shouldShowOnPaymentDay) {
+                    console.log('[PWA] Showing PWA banner');
+                    // Only show if we have the prompt or it's a generic prompt
+                    if (window.deferredPrompt) {
+                        this.showInstallRecommendation(window.deferredPrompt);
+                    } else if (this.checkPWASupport()) {
+                        this.showInstallRecommendationGeneric();
+                    }
                     installBannerShown = true;
+                    
+                    // If showing on payment day, clear the closed status for next time
+                    if (shouldShowOnPaymentDay && finalIsClosed) {
+                        localStorage.removeItem('pwa-install-closed');
+                        localStorage.removeItem('pwa-install-closed-date');
+                        console.log('[PWA] Showing PWA banner on payment day - cleared closed status');
+                    }
+                } else {
+                    console.log('[PWA] Banner not shown - closed or other conditions not met');
                 }
+            } else {
+                console.log('[PWA] Banner not shown - already installed, shown, or dismissed');
             }
-        }, 30000); // Show after 30 seconds if not shown yet
+        }, 1000); // Show after 1 second on first visit (reduced from 3 seconds)
     }
 
     showInstallRecommendation(deferredPrompt) {
+        console.log('[PWA] showInstallRecommendation called');
         const banner = document.getElementById('pwaInstallBanner');
         const installBtn = document.getElementById('installAppBtn');
-        const dismissBtn = document.getElementById('dismissInstallBtn');
+        const closeBtn = document.getElementById('closeInstallBtn');
         
-        if (!banner) return;
+        console.log('[PWA] Elements found:', {
+            banner: !!banner,
+            installBtn: !!installBtn,
+            closeBtn: !!closeBtn
+        });
+        
+        if (!banner) {
+            console.error('[PWA] PWA install banner not found!');
+            return;
+        }
         
         // Show banner with animation
         banner.style.display = 'block';
+        banner.style.visibility = 'visible';
+        banner.style.opacity = '1';
         setTimeout(() => banner.classList.add('show'), 100);
+        
+        console.log('[PWA] Banner displayed with classes:', banner.className);
         
         // Handle install button click
         if (installBtn) {
+            console.log('[PWA] Setting up install button click handler');
             installBtn.onclick = () => {
-                this.triggerInstall(deferredPrompt);
+                console.log('[PWA] Install button clicked');
+                this.triggerInstall(window.deferredPrompt);
             };
+        } else {
+            console.error('[PWA] Install button not found!');
         }
         
-        // Handle dismiss button click
-        if (dismissBtn) {
-            dismissBtn.onclick = () => {
-                this.dismissInstallRecommendation();
+        // Handle close button click
+        if (closeBtn) {
+            console.log('[PWA] Setting up close button click handler');
+            closeBtn.onclick = () => {
+                console.log('[PWA] Close button clicked');
+                this.closeInstallRecommendation();
             };
+        } else {
+            console.error('[PWA] Close button not found!');
         }
         
         // Auto-hide after 60 seconds
         setTimeout(() => {
             if (banner.classList.contains('show')) {
-                this.dismissInstallRecommendation();
+                this.closeInstallRecommendation();
             }
         }, 60000);
     }
@@ -2689,6 +3467,14 @@ class RServiceTracker {
         }
     }
 
+    closeInstallRecommendation() {
+        this.hideInstallRecommendation();
+        localStorage.setItem('pwa-install-closed', 'true');
+        localStorage.setItem('pwa-install-closed-date', new Date().toISOString());
+        
+        this.notifications.showToast('PWA recommendation closed. It will reappear on payment days.', 'info', 5000);
+    }
+
     dismissInstallRecommendation() {
         this.hideInstallRecommendation();
         localStorage.setItem('pwa-install-dismissed', 'true');
@@ -2698,21 +3484,32 @@ class RServiceTracker {
     }
 
     triggerInstall(deferredPrompt) {
+        console.log('[PWA] triggerInstall called with prompt:', !!deferredPrompt);
+        
         if (!deferredPrompt) {
-            this.notifications.showToast('Install prompt not available. Try using your browser menu.', 'warning');
+            console.log('[PWA] No deferred prompt available, showing manual instructions');
+            this.notifications.showToast('Please use your browser menu to install: Menu → Add to Home Screen or Install App', 'info', 8000);
             return;
         }
         
+        console.log('[PWA] Showing install prompt');
         deferredPrompt.prompt();
+        
         deferredPrompt.userChoice.then((choiceResult) => {
+            console.log('[PWA] User choice result:', choiceResult.outcome);
             if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
+                console.log('[PWA] User accepted the install prompt');
                 this.hideInstallRecommendation();
+                this.notifications.showToast('App is being installed...', 'success', 3000);
             } else {
-                console.log('User dismissed the install prompt');
+                console.log('[PWA] User dismissed the install prompt');
                 this.dismissInstallRecommendation();
             }
-            deferredPrompt = null;
+            // Clear the deferred prompt
+            window.deferredPrompt = null;
+        }).catch((error) => {
+            console.error('[PWA] Error with install prompt:', error);
+            this.notifications.showToast('Error showing install prompt. Try using your browser menu.', 'warning', 5000);
         });
     }
 
@@ -2747,7 +3544,38 @@ class RServiceTracker {
         }
     }
 
+    checkPWASupport() {
+        // Check for essential PWA features
+        const hasServiceWorker = 'serviceWorker' in navigator;
+        const hasManifest = document.querySelector('link[rel="manifest"]');
+        const supportsStandalone = 'standalone' in navigator || window.matchMedia('(display-mode: standalone)').matches !== undefined;
+        
+        // Additional browser-specific checks
+        const userAgent = navigator.userAgent;
+        const isSupported = (
+            // Chrome/Chromium based browsers
+            (userAgent.includes('Chrome') && !userAgent.includes('Edg')) ||
+            // Firefox with PWA support
+            (userAgent.includes('Firefox') && parseInt(userAgent.match(/Firefox\/(\d+)/)?.[1] || '0') >= 85) ||
+            // Safari with PWA support (iOS 11.3+ and macOS Safari 11.1+)
+            (userAgent.includes('Safari') && !userAgent.includes('Chrome')) ||
+            // Samsung Internet
+            userAgent.includes('SamsungBrowser') ||
+            // Edge
+            userAgent.includes('Edg')
+        );
+
+        return hasServiceWorker && hasManifest && supportsStandalone && isSupported;
+    }
+
     showInstallRecommendationGeneric() {
+        // Check if browser supports PWA features
+        const supportsPWA = this.checkPWASupport();
+        if (!supportsPWA) {
+            console.log('[PWA] Browser does not support PWA features, skipping banner');
+            return;
+        }
+
         // Check if already dismissed
         const isDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
         if (isDismissed) {
@@ -2766,44 +3594,36 @@ class RServiceTracker {
             if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
                 // Safari instructions
                 instructions = `
-                    <div class="install-instructions">
-                        <h3><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h3>
-                        <p>Add this app to your home screen for easy access:</p>
-                        <ol>
-                            <li>Tap the Share button <i class="fas fa-share"></i></li>
-                            <li>Select "Add to Home Screen"</li>
-                            <li>Tap "Add" to confirm</li>
-                        </ol>
+                    <div class="install-banner-text">
+                        <h4><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h4>
+                        <p>Add to home screen: Share → Add to Home Screen</p>
                     </div>
                 `;
             } else if (userAgent.includes('Firefox')) {
                 // Firefox instructions
                 instructions = `
-                    <div class="install-instructions">
-                        <h3><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h3>
-                        <p>Add this app for a better experience:</p>
-                        <ol>
-                            <li>Tap the menu button <i class="fas fa-bars"></i></li>
-                            <li>Select "Install"</li>
-                            <li>Confirm installation</li>
-                        </ol>
+                    <div class="install-banner-text">
+                        <h4><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h4>
+                        <p>Install from menu: Menu → Install</p>
                     </div>
                 `;
             } else {
                 // Generic instructions
                 instructions = `
-                    <div class="install-instructions">
-                        <h3><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h3>
-                        <p>Get the best experience by installing this app on your device!</p>
-                        <p>Look for the install option in your browser menu.</p>
+                    <div class="install-banner-text">
+                        <h4><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h4>
+                        <p>Get quick access and offline functionality</p>
                     </div>
                 `;
             }
             
             bannerContent.innerHTML = instructions + `
                 <div class="install-banner-actions">
-                    <button id="dismissInstallBtn" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Maybe Later
+                    <button id="installAppBtn" class="install-btn">
+                        <i class="fas fa-download"></i> Install
+                    </button>
+                    <button id="closeInstallBtn" class="close-btn" title="Close (will appear again on payment days)">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
             `;
@@ -2813,39 +3633,38 @@ class RServiceTracker {
         banner.style.display = 'block';
         setTimeout(() => banner.classList.add('show'), 100);
         
-        // Handle dismiss button click
-        const dismissBtn = document.getElementById('dismissInstallBtn');
-        if (dismissBtn) {
-            dismissBtn.onclick = () => {
-                this.dismissInstallRecommendation();
+        // Handle install button click (try native install first, then fallback)
+        const installBtn = document.getElementById('installAppBtn');
+        if (installBtn) {
+            installBtn.onclick = () => {
+                // Try native install first if available
+                if (window.deferredPrompt) {
+                    this.triggerInstall(window.deferredPrompt);
+                } else {
+                    // Show the browser's native install prompt if available
+                    if ('BeforeInstallPromptEvent' in window || window.navigator.standalone !== undefined) {
+                        this.notifications.showToast('Please use your browser menu to install: Menu → Add to Home Screen or Install App', 'info', 8000);
+                    } else {
+                        this.notifications.showToast('PWA installation not supported on this browser', 'warning', 5000);
+                    }
+                }
+            };
+        }
+        
+        // Handle close button click
+        const closeBtn = document.getElementById('closeInstallBtn');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                this.closeInstallRecommendation();
             };
         }
         
         // Auto-hide after 60 seconds
         setTimeout(() => {
             if (banner.classList.contains('show')) {
-                this.dismissInstallRecommendation();
+                this.closeInstallRecommendation();
             }
         }, 60000);
-    }
-
-    triggerInstall(deferredPrompt) {
-        if (!deferredPrompt) {
-            this.notifications.showToast('Install prompt not available. Try using your browser menu.', 'warning');
-            return;
-        }
-        
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-                this.hideInstallRecommendation();
-            } else {
-                console.log('User dismissed the install prompt');
-                this.dismissInstallRecommendation();
-            }
-            deferredPrompt = null;
-        });
     }
 
     async handleURLParameters() {

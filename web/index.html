@@ -272,7 +272,7 @@
                             <div class="earnings-info">
                                 <div class="current-earnings">
                                     <span class="amount">₹<span id="currentEarnings">0</span></span>
-                                    <span class="label">Current Balance</span>
+                                    <span class="label">Pending Earnings</span>
                                 </div>
                                 <div class="days-worked">
                                     <span class="count" id="daysWorked">0</span>
@@ -400,45 +400,97 @@
 
     <!-- Modals -->
     <div id="aboutModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>About Tracker</h3>
-                <button class="close-modal">
+        <div class="modal-content about-modal-content">
+            <div class="modal-header about-modal-header">
+                <div class="about-header-content">
+                    <div class="about-app-brand">
+                        <i class="fas fa-check-circle about-brand-icon"></i>
+                        <h3>R-Service Tracker</h3>
+                        <span class="version-badge">v2.0.0</span>
+                    </div>
+                </div>
+                <button class="close-modal about-close-btn">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="about-content">
-                    <div class="app-info">
-                        <div class="app-title">
-                            <i class="fas fa-check-circle app-icon"></i>
-                            <h4>Tracker</h4>
-                        </div>
-                        <p class="app-description">Professional work tracking and payment management system with advanced features for freelancers and contractors.</p>
-                    </div>
-                    
-                    <div class="features-compact">
-                        <div class="feature-highlight">
-                            <i class="fas fa-briefcase"></i>
-                            <span>Daily Work Tracking</span>
-                        </div>
-                        <div class="feature-highlight">
-                            <i class="fas fa-money-bill-wave"></i>
-                            <span>Advanced Payment System</span>
-                        </div>
-                        <div class="feature-highlight">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Analytics & PDF Reports</span>
-                        </div>
-                        <div class="feature-highlight">
-                            <i class="fas fa-mobile-alt"></i>
-                            <span>Offline PWA</span>
+            <div class="modal-body about-modal-body">
+                <div class="about-content premium-about">
+                    <div class="app-info premium-app-info">
+                        <div class="app-description-premium">
+                            <h4>🚀 Professional Work & Payment Management</h4>
+                            <p>Sophisticated, feature-rich Progressive Web Application designed for efficient work tracking and payment management. Built with modern web technologies for freelancers, contractors, and productivity enthusiasts.</p>
                         </div>
                     </div>
                     
-                    <div class="privacy-info">
-                        <p><i class="fas fa-shield-alt"></i> <strong>Privacy First:</strong> All data stays on your device. No tracking, no ads.</p>
-                        <p><i class="fas fa-star"></i> Premium tracking solution for professionals</p>
+                    <div class="features-premium">
+                        <h5><i class="fas fa-sparkles"></i> Premium Features</h5>
+                        <div class="features-grid">
+                            <div class="feature-premium">
+                                <div class="feature-icon-wrapper">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h6>Smart Work Tracking</h6>
+                                    <p>Daily work logging with streak system</p>
+                                </div>
+                            </div>
+                            <div class="feature-premium">
+                                <div class="feature-icon-wrapper">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h6>Advanced Payments</h6>
+                                    <p>Automatic payments & advance tracking</p>
+                                </div>
+                            </div>
+                            <div class="feature-premium">
+                                <div class="feature-icon-wrapper">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h6>Analytics & Reports</h6>
+                                    <p>Interactive charts & PDF exports</p>
+                                </div>
+                            </div>
+                            <div class="feature-premium">
+                                <div class="feature-icon-wrapper">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <div class="feature-content">
+                                    <h6>PWA Experience</h6>
+                                    <p>Offline support & home screen install</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="about-highlights">
+                        <div class="highlight-item security">
+                            <i class="fas fa-shield-alt"></i>
+                            <div>
+                                <h6>🔒 Privacy-First Design</h6>
+                                <p>All data stored locally on your device. Zero tracking, zero ads, complete privacy.</p>
+                            </div>
+                        </div>
+                        <div class="highlight-item premium">
+                            <i class="fas fa-crown"></i>
+                            <div>
+                                <h6>✨ Premium Experience</h6>
+                                <p>Professional-grade UI with glass morphism, premium sounds, and smooth animations.</p>
+                            </div>
+                        </div>
+                        <div class="highlight-item tech">
+                            <i class="fas fa-code"></i>
+                            <div>
+                                <h6>🛠️ Modern Technology</h6>
+                                <p>Built with Vanilla JS, IndexedDB, Web Audio API, and Progressive Web App standards.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="about-footer">
+                        <p>Empowering productivity through intelligent work tracking and payment management.</p>
+                        <p class="copyright">© 2024 R-Service Tracker - Built with ❤️ for professionals worldwide</p>
                     </div>
                 </div>
             </div>
@@ -526,20 +578,17 @@
     </div>
 
     <!-- PWA Install Recommendation -->
-    <div id="pwaInstallBanner" class="pwa-install-banner" style="display: none;">
+    <div id="pwaInstallBanner" class="pwa-install-banner simple" style="display: none;">
         <div class="install-banner-content">
-            <div class="install-banner-icon">
-                <i class="fas fa-mobile-alt"></i>
-            </div>
             <div class="install-banner-text">
-                <h4>Install R-Service Tracker</h4>
-                <p>Get quick access with shortcuts and offline functionality</p>
+                <h4><i class="fas fa-mobile-alt"></i> Install R-Service Tracker</h4>
+                <p>Add to home screen for quick access and offline functionality</p>
             </div>
             <div class="install-banner-actions">
-                <button id="installAppBtn" class="btn btn-primary install-btn">
-                    <i class="fas fa-download"></i> Install App
+                <button id="installAppBtn" class="install-btn">
+                    <i class="fas fa-download"></i> Install
                 </button>
-                <button id="dismissInstallBtn" class="btn btn-secondary dismiss-btn">
+                <button id="closeInstallBtn" class="close-btn" title="Close (will appear again on payment days)">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -552,11 +601,14 @@
     <!-- Audio Elements (now handled by Web Audio API in notifications.js) -->
 
     <!-- Scripts (optimized loading order) -->
+    <script src="js/amountFlow.js" defer></script>
     <script src="js/database.js" defer></script>
     <script src="js/utils.js" defer></script>
     <script src="js/notifications.js" defer></script>
     <script src="js/charts.js" defer></script>
     <script src="js/calendar.js" defer></script>
     <script src="js/app.js" defer></script>
+    <!-- AmountFlow Test Script (remove in production) -->
+    <script src="test_amount_flow.js" defer></script>
 </body>
 </html>

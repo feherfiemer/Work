@@ -13,11 +13,20 @@ class CalendarManager {
 
     async init() {
         try {
+            console.log('[Calendar] Initializing calendar...');
             await this.loadData();
+            console.log('[Calendar] Data loaded, setting up event listeners...');
             this.setupEventListeners();
+            console.log('[Calendar] Event listeners set up, rendering...');
             this.render();
+            console.log('[Calendar] Calendar initialization completed successfully');
         } catch (error) {
-            console.error('Error initializing calendar:', error);
+            console.error('[Calendar] Error initializing calendar:', error);
+            // Try to show a basic calendar structure
+            const gridElement = document.getElementById('calendarGrid');
+            if (gridElement) {
+                gridElement.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Calendar initialization failed. Please refresh the page.</div>';
+            }
         }
     }
 
@@ -78,8 +87,19 @@ class CalendarManager {
     }
 
     render() {
-        this.updateTitle();
-        this.renderGrid();
+        try {
+            console.log('[Calendar] Starting render...');
+            this.updateTitle();
+            this.renderGrid();
+            console.log('[Calendar] Render completed successfully');
+        } catch (error) {
+            console.error('[Calendar] Error during render:', error);
+            // Try to show an error message in the calendar
+            const gridElement = document.getElementById('calendarGrid');
+            if (gridElement) {
+                gridElement.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Calendar render error. Please refresh the page.</div>';
+            }
+        }
     }
 
     updateTitle() {
@@ -92,10 +112,14 @@ class CalendarManager {
     }
 
     renderGrid() {
-        const gridElement = document.getElementById('calendarGrid');
-        if (!gridElement) return;
+        try {
+            const gridElement = document.getElementById('calendarGrid');
+            if (!gridElement) {
+                console.error('[Calendar] Calendar grid element not found');
+                return;
+            }
 
-        const fragment = document.createDocumentFragment();
+            const fragment = document.createDocumentFragment();
         
         gridElement.innerHTML = '';
 
@@ -148,19 +172,33 @@ class CalendarManager {
         }
         
         gridElement.appendChild(fragment);
+        
+        } catch (error) {
+            console.error('[Calendar] Error in renderGrid:', error);
+            // Show basic calendar structure if there's an error
+            const gridElement = document.getElementById('calendarGrid');
+            if (gridElement) {
+                gridElement.innerHTML = '<div style="padding: 20px; text-align: center;">Calendar loading error. Please try refreshing.</div>';
+            }
+        }
     }
 
     createDayCell(day, cellDate, dateString) {
-        const cell = document.createElement('div');
-        cell.className = 'calendar-cell';
-        
-        const today = new Date();
-        const isToday = this.isSameDate(cellDate, today);
-        
-        const workRecord = this.workRecords.find(record => record.date === dateString);
-        const isWorked = workRecord && workRecord.status === 'completed';
-        
-        const isPaid = this.isDatePaid(dateString);
+        try {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell';
+            
+            const today = new Date();
+            const isToday = this.isSameDate(cellDate, today);
+            
+            // Safety check for work records
+            const workRecord = (this.workRecords && Array.isArray(this.workRecords)) 
+                ? this.workRecords.find(record => record.date === dateString)
+                : null;
+            const isWorked = workRecord && workRecord.status === 'completed';
+            
+            const isPaid = this.isDatePaid(dateString);
+            const isForcePaid = this.isForcePaidDate(dateString); // Use dedicated force paid detection
         
         if (isToday) {
             cell.classList.add('today');
@@ -170,6 +208,9 @@ class CalendarManager {
             if (isPaid) {
                 cell.classList.add('paid');
             }
+        } else if (isForcePaid) {
+            // Show force-paid dates with a special style
+            cell.classList.add('force-paid');
         }
 
         const cellContent = this.createCellContent(day, workRecord, isPaid, isToday);
@@ -188,6 +229,15 @@ class CalendarManager {
         });
 
         return cell;
+        
+        } catch (error) {
+            console.error('[Calendar] Error creating day cell:', error);
+            // Return a basic cell if there's an error
+            const errorCell = document.createElement('div');
+            errorCell.className = 'calendar-cell';
+            errorCell.innerHTML = `<div class="day-number">${day}</div>`;
+            return errorCell;
+        }
     }
 
     createCellContent(day, workRecord, isPaid, isToday) {
@@ -263,6 +313,26 @@ class CalendarManager {
                 `;
                 indicators.appendChild(paidIndicator);
             }
+        } else if (isForcePaid) {
+            // Force-paid date (payment without work record) - use orange styling to distinguish from regular payments
+            const forcePaidIndicator = document.createElement('span');
+            forcePaidIndicator.className = 'force-paid-indicator';
+            forcePaidIndicator.innerHTML = '<i class="fas fa-hand-holding-usd"></i>';
+            forcePaidIndicator.style.cssText = `
+                background: #ff9800;
+                color: white;
+                border-radius: 50%;
+                width: 10px;
+                height: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.5rem;
+                flex-shrink: 0;
+                margin: 0 1px;
+                border: 1px solid #f57c00;
+            `;
+            indicators.appendChild(forcePaidIndicator);
         }
 
         content.appendChild(dayNumber);
@@ -306,16 +376,33 @@ class CalendarManager {
             if (isPaid) {
                 const payment = this.getPaymentForDate(dateString);
                 const paidAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+                const totalPaymentAmount = payment ? payment.amount : paidAmount;
+                const workDaysInPayment = payment ? payment.workDates.length : 1;
+                
                 content += `
                     <div class="payment-status success">
                         <i class="fas fa-money-bill-wave"></i>
                         <span>Payment Received</span>
                     </div>
                     <div class="payment-details">
-                        <span class="label">Amount Paid:</span>
+                        <span class="label">Daily Amount:</span>
                         <span class="amount">₹${paidAmount}</span>
                     </div>
                 `;
+                
+                if (payment && workDaysInPayment > 1) {
+                    content += `
+                        <div class="payment-details">
+                            <span class="label">Total Payment:</span>
+                            <span class="amount">₹${totalPaymentAmount}</span>
+                        </div>
+                        <div class="payment-details">
+                            <span class="label">Days Covered:</span>
+                            <span class="amount">${workDaysInPayment} days</span>
+                        </div>
+                    `;
+                }
+                
                 if (payment) {
                     content += `
                         <div class="payment-details">
@@ -323,6 +410,15 @@ class CalendarManager {
                             <span class="date">${new Date(payment.paymentDate).toLocaleDateString()}</span>
                         </div>
                     `;
+                    
+                    if (payment.isAdvance) {
+                        content += `
+                            <div class="payment-details">
+                                <span class="label">Payment Type:</span>
+                                <span class="amount">Advance Payment</span>
+                            </div>
+                        `;
+                    }
                 }
             } else {
                 content += `
@@ -332,82 +428,200 @@ class CalendarManager {
                     </div>
                 `;
                 
-                // Add Force Paid button for all completed work (regardless of payment day)
-                content += `
-                    <button class="force-paid-btn" data-date="${dateString}" style="
-                        margin-top: 1rem;
-                        width: 100%;
-                        padding: 0.75rem;
-                        background: linear-gradient(135deg, var(--success), #45a049);
-                        color: white;
-                        border: none;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-family: var(--font-family);
-                        font-weight: 600;
-                        font-size: 0.9rem;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        box-shadow: var(--shadow-light);
-                        transition: all var(--transition-fast);
-                    ">
-                        <i class="fas fa-hand-holding-usd"></i>
-                        Force Mark as Paid
-                    </button>
-                `;
+                // Add Force Paid button only for past or today dates (not future dates)
+                if (isPastOrTodayDate) {
+                    content += `
+                        <button class="force-paid-btn" data-date="${dateString}" style="
+                            margin-top: 1rem;
+                            width: 100%;
+                            padding: 0.75rem;
+                            background: linear-gradient(135deg, #ff9800, #f57c00);
+                            color: white;
+                            border: none;
+                            border-radius: var(--border-radius);
+                            cursor: pointer;
+                            font-family: var(--font-family);
+                            font-weight: 600;
+                            font-size: 0.9rem;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                            box-shadow: var(--shadow-light);
+                            transition: all var(--transition-fast);
+                        ">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            Force Mark as Paid
+                        </button>
+                    `;
+                }
             }
         } else {
-            content += `
-                <div class="work-status not-worked">
-                    <i class="fas fa-times-circle"></i>
-                    <span>No Work Recorded</span>
-                </div>
-            `;
-            
-            // Add Mark as Done button only for past or today dates
-            if (isPastOrTodayDate) {
+            // Check if this date has a force payment (paid but no work record)
+            if (this.isForcePaidDate(dateString)) {
                 content += `
-                    <button class="mark-done-btn" data-date="${dateString}" style="
-                        margin-top: 1rem;
-                        width: 100%;
-                        padding: 0.75rem;
-                        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                        color: white;
-                        border: none;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-family: var(--font-family);
-                        font-weight: 600;
-                        font-size: 0.9rem;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        box-shadow: var(--shadow-light);
-                        transition: all var(--transition-fast);
-                    ">
-                        <i class="fas fa-check"></i>
-                        Mark as Done
-                    </button>
-                `;
-            } else {
-                content += `
-                    <div class="future-date-notice" style="
-                        margin-top: 1rem;
-                        padding: 0.75rem;
-                        background: var(--warning);
-                        color: white;
-                        border-radius: var(--border-radius);
-                        text-align: center;
-                        font-weight: 500;
-                    ">
-                        <i class="fas fa-calendar-times"></i>
-                        Cannot mark work for future dates
+                    <div class="work-status force-paid" style="color: #ff9800; border-color: #ff9800;">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Force Paid (No Work Recorded)</span>
                     </div>
                 `;
+                
+                // Allow marking work as done even for force paid dates
+                if (isPastOrTodayDate) {
+                    content += `
+                        <button class="mark-done-btn" data-date="${dateString}" style="
+                            margin-top: 1rem;
+                            width: 100%;
+                            padding: 0.75rem;
+                            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                            color: white;
+                            border: none;
+                            border-radius: var(--border-radius-small);
+                            cursor: pointer;
+                            font-size: 0.875rem;
+                            font-weight: 500;
+                            text-transform: none;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                            box-shadow: var(--shadow-light);
+                            transition: all var(--transition-fast);
+                        ">
+                            <i class="fas fa-check"></i>
+                            Mark Work as Done
+                        </button>
+                    `;
+                }
+                
+                const payment = this.getPaymentForDate(dateString);
+                const paidAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+                const totalPaymentAmount = payment ? payment.amount : paidAmount;
+                const workDaysInPayment = payment ? payment.workDates.length : 1;
+                
+                content += `
+                    <div class="payment-status success">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Force Payment Received</span>
+                    </div>
+                    <div class="payment-details">
+                        <span class="label">Daily Amount:</span>
+                        <span class="amount">₹${paidAmount}</span>
+                    </div>
+                `;
+                
+                if (payment && workDaysInPayment > 1) {
+                    content += `
+                        <div class="payment-details">
+                            <span class="label">Total Payment:</span>
+                            <span class="amount">₹${totalPaymentAmount}</span>
+                        </div>
+                        <div class="payment-details">
+                            <span class="label">Days Covered:</span>
+                            <span class="amount">${workDaysInPayment} days</span>
+                        </div>
+                    `;
+                }
+                
+                if (payment) {
+                    content += `
+                        <div class="payment-details">
+                            <span class="label">Payment Date:</span>
+                            <span class="date">${new Date(payment.paymentDate).toLocaleDateString()}</span>
+                        </div>
+                    `;
+                    
+                    if (payment.isAdvance) {
+                        content += `
+                            <div class="payment-details">
+                                <span class="label">Payment Type:</span>
+                                <span class="amount">Force/Advance Payment</span>
+                            </div>
+                        `;
+                    }
+                }
+            } else {
+                content += `
+                    <div class="work-status not-worked">
+                        <i class="fas fa-times-circle"></i>
+                        <span>No Work Recorded</span>
+                    </div>
+                `;
+                
+                // Add Mark as Done button only for past or today dates
+                if (isPastOrTodayDate) {
+                    content += `
+                        <button class="mark-done-btn" data-date="${dateString}" style="
+                            margin-top: 1rem;
+                            width: 100%;
+                            padding: 0.75rem;
+                            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                            color: white;
+                            border: none;
+                            border-radius: var(--border-radius);
+                            cursor: pointer;
+                            font-family: var(--font-family);
+                            font-weight: 600;
+                            font-size: 0.9rem;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                            box-shadow: var(--shadow-light);
+                            transition: all var(--transition-fast);
+                        ">
+                            <i class="fas fa-check"></i>
+                            Mark as Done
+                        </button>
+                    `;
+                }
             }
+        }
+        
+        // Add Force Paid button for any past or today date where no work record exists and not already paid
+        if (isPastOrTodayDate && (!workRecord || workRecord.status !== 'completed') && !isPaid) {
+            content += `
+                <button class="force-paid-btn" data-date="${dateString}" style="
+                    margin-top: 0.5rem;
+                    width: 100%;
+                    padding: 0.75rem;
+                    background: linear-gradient(135deg, #ff9800, #f57c00);
+                    color: white;
+                    border: none;
+                    border-radius: var(--border-radius);
+                    cursor: pointer;
+                    font-family: var(--font-family);
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    box-shadow: var(--shadow-light);
+                    transition: all var(--transition-fast);
+                ">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    Force Mark as Paid
+                </button>
+            `;
+        }
+        
+        // Only show future date notice for actual future dates (not for past or today)
+        if (!isPastOrTodayDate) {
+            content += `
+                <div class="future-date-notice" style="
+                    margin-top: 1rem;
+                    padding: 0.75rem;
+                    background: var(--warning);
+                    color: white;
+                    border-radius: var(--border-radius);
+                    text-align: center;
+                    font-weight: 500;
+                ">
+                    <i class="fas fa-calendar-times"></i>
+                    Cannot mark work or payments for future dates
+                </div>
+            `;
         }
 
         content += `</div>`;
@@ -594,15 +808,78 @@ class CalendarManager {
     }
 
     isDatePaid(dateString) {
-        return this.payments.some(payment => 
-            payment.workDates.includes(dateString)
-        );
+        try {
+            if (!this.payments || !Array.isArray(this.payments)) {
+                return false;
+            }
+            return this.payments.some(payment => 
+                payment.workDates && payment.workDates.includes(dateString)
+            );
+        } catch (error) {
+            console.error('[Calendar] Error in isDatePaid:', error);
+            return false;
+        }
+    }
+
+    isForcePaidDate(dateString) {
+        try {
+            // Safety check: ensure data is loaded
+            if (!this.payments || !Array.isArray(this.payments) || !this.workRecords || !Array.isArray(this.workRecords)) {
+                console.warn('[Calendar] Data not loaded for force paid detection:', { 
+                    payments: this.payments?.length || 'undefined', 
+                    workRecords: this.workRecords?.length || 'undefined' 
+                });
+                return false;
+            }
+
+            // A date is force paid if:
+            // 1. It has a payment associated with it, OR
+            // 2. It's an advance payment made on that date (even if not in workDates due to bug fix)
+            
+            // Check if directly paid
+            const directlyPaid = this.payments.some(payment => 
+                payment.workDates && payment.workDates.includes(dateString)
+            );
+            
+            if (directlyPaid) {
+                // If directly paid, check if there's no work record (force paid scenario)
+                const workRecord = this.workRecords.find(record => record.date === dateString);
+                return !workRecord || workRecord.status !== 'completed';
+            }
+            
+            // Check if this date had an advance payment made on it (force payment scenario)
+            const advancePaymentOnDate = this.payments.find(payment => 
+                payment.isAdvance && 
+                payment.paymentDate === dateString &&
+                payment.workDates && 
+                payment.workDates.length === 1 &&
+                payment.workDates[0] === dateString
+            );
+            
+            if (advancePaymentOnDate) {
+                const workRecord = this.workRecords.find(record => record.date === dateString);
+                return !workRecord || workRecord.status !== 'completed';
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('[Calendar] Error in isForcePaidDate:', error);
+            return false;
+        }
     }
 
     getPaymentForDate(dateString) {
-        return this.payments.find(payment => 
-            payment.workDates.includes(dateString)
-        );
+        try {
+            if (!this.payments || !Array.isArray(this.payments)) {
+                return null;
+            }
+            return this.payments.find(payment => 
+                payment.workDates && payment.workDates.includes(dateString)
+            );
+        } catch (error) {
+            console.error('[Calendar] Error in getPaymentForDate:', error);
+            return null;
+        }
     }
 
     async isPaymentDay() {
@@ -711,14 +988,7 @@ class CalendarManager {
                 throw new Error('Database not available');
             }
             
-            const workRecord = await this.db.getWorkRecord(dateString);
-            if (!workRecord || workRecord.status !== 'completed') {
-                if (window.app && window.app.notifications) {
-                    window.app.notifications.showToast('Can only force payment for completed work days!', 'warning');
-                }
-                return;
-            }
-
+            // Check if already paid first
             const payments = await this.db.getAllPayments();
             const isAlreadyPaid = payments.some(payment => 
                 payment.workDates && payment.workDates.includes(dateString)
@@ -729,6 +999,17 @@ class CalendarManager {
                     window.app.notifications.showToast('This work day is already paid!', 'warning');
                 }
                 return;
+            }
+
+            // For force payment, we only need to record the payment, not mark work as done
+            // Check if work record exists, if not, we'll just process payment without creating work record
+            let workRecord = await this.db.getWorkRecord(dateString);
+            const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+            
+            if (!workRecord) {
+                console.log('No work record exists for force payment date:', dateString);
+                // Don't create work record - force payment means payment without work completion
+                workRecord = { date: dateString, wage: dailyWage, status: 'pending' };
             }
 
             // Store the date for use in payment processing
@@ -744,14 +1025,30 @@ class CalendarManager {
             } else {
                 // Fallback to direct payment if payment modal is not available
                 console.warn('Payment modal not available, using direct payment');
+                
                 const paymentAmount = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
                 const today = new Date();
                 const paymentDate = today.getFullYear() + '-' + 
                                   String(today.getMonth() + 1).padStart(2, '0') + '-' + 
                                   String(today.getDate()).padStart(2, '0');
                 
-                console.log('Adding direct payment:', { amount: paymentAmount, workDates: [dateString], paymentDate });
-                await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
+                console.log('Processing force payment through main app logic for consistency...');
+                
+                // 🔧 FIX: Use the main app's payment processing logic to ensure consistency
+                // This ensures the force payment goes through the same logic as other payments
+                if (window.app && typeof window.app.processPayment === 'function') {
+                    // Set the force paid date in the app
+                    window.app.forcePaidDateString = dateString;
+                    
+                    // Process through main payment logic (this will handle the bug fix properly)
+                    await window.app.processPayment(paymentAmount, () => {
+                        console.log('Force payment processed through main app logic');
+                    });
+                } else {
+                    // Fallback to direct database call if app not available
+                    console.log('App not available, using direct database call');
+                    await this.db.addPayment(paymentAmount, [dateString], paymentDate, false);
+                }
                 console.log('Force payment added successfully');
 
                 if (window.app && window.app.notifications) {
@@ -775,23 +1072,26 @@ class CalendarManager {
                 
                 console.log('Calendar refreshed after force payment');
 
-                if (window.app && typeof window.app.updateDashboard === 'function') {
+                if (window.app && typeof window.app.syncAllSystems === 'function') {
                     try {
-                        window.app.currentStats = await this.db.getEarningsStats();
-                        window.app.updateDashboard();
-                        await window.app.updatePendingUnpaidDates();
-                        await window.app.updatePaidButtonVisibility();
+                        console.log('Triggering master sync after calendar force payment...');
                         
-                        // Trigger payment check to potentially hide paid button
-                        if (typeof window.app.checkPendingPayments === 'function') {
-                            await window.app.checkPendingPayments();
-                        }
+                        // Use the master sync function for complete system synchronization
+                        await window.app.syncAllSystems('calendar_force_payment', {
+                            showNotification: true
+                        });
                         
-                        if (window.app.charts && typeof window.app.charts.updateCharts === 'function') {
-                            await window.app.charts.updateCharts();
-                        }
+                        console.log('Master sync completed after calendar force payment');
                     } catch (appUpdateError) {
-                        console.error('Error updating app components:', appUpdateError);
+                        console.error('Error during master sync after force payment:', appUpdateError);
+                        
+                        // Fallback to basic updates
+                        try {
+                            window.app.currentStats = await window.app.db.getEarningsStats();
+                            await window.app.updateDashboard();
+                        } catch (retryError) {
+                            console.error('Fallback update failed:', retryError);
+                        }
                     }
                 }
             } catch (renderError) {
@@ -879,6 +1179,18 @@ class CalendarManager {
                 }
             }
 
+            // Ensure system amounts are properly updated for calendar marking
+            if (window.app && typeof window.app.updatePendingUnpaidDates === 'function') {
+                try {
+                    await window.app.updatePendingUnpaidDates();
+                    await window.app.updateDashboard();
+                    await window.app.updatePaidButtonVisibility();
+                    console.log('System amounts updated after calendar marking');
+                } catch (updateError) {
+                    console.error('Error updating system amounts after calendar marking:', updateError);
+                }
+            }
+
             // Refresh calendar and app state
             try {
                 await this.loadData();
@@ -891,26 +1203,26 @@ class CalendarManager {
                 
                 console.log('Calendar refreshed after marking as done');
 
-                if (window.app && typeof window.app.updateDashboard === 'function') {
+                if (window.app && typeof window.app.syncAllSystems === 'function') {
                     try {
-                        window.app.currentStats = await this.db.getEarningsStats();
-                        window.app.updateDashboard();
+                        console.log('Triggering master sync after calendar mark as done...');
                         
-                        // Update today's status (done button state)
-                        if (typeof window.app.updateTodayStatus === 'function') {
-                            await window.app.updateTodayStatus();
-                        }
+                        // Use the master sync function for complete system synchronization
+                        await window.app.syncAllSystems('calendar_mark_done', {
+                            showNotification: true
+                        });
                         
-                        await window.app.updatePendingUnpaidDates();
-                        await window.app.updatePaidButtonVisibility();
-                        
-                        if (typeof window.app.checkPendingPayments === 'function') {
-                            await window.app.checkPendingPayments();
-                        }
-                        
-                        console.log('App dashboard updated after marking as done');
+                        console.log('Master sync completed after calendar mark as done');
                     } catch (appError) {
-                        console.error('Error updating app after marking as done:', appError);
+                        console.error('Error during master sync after mark as done:', appError);
+                        
+                        // Fallback to basic updates
+                        try {
+                            window.app.currentStats = await window.app.db.getEarningsStats();
+                            await window.app.updateDashboard();
+                        } catch (retryError) {
+                            console.error('Fallback update failed:', retryError);
+                        }
                     }
                 }
 
