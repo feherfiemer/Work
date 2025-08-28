@@ -1765,14 +1765,15 @@ class RServiceTracker {
             
             const advanceStatus = await this.db.getAdvancePaymentStatus();
             
-            // Show the button if there are any unpaid work days OR if there are advance payments
-            const shouldShowPaidBtn = this.pendingUnpaidDates.length > 0 || 
-                                    (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0);
+            // Always show the paid button - users can make advance payments at any time
+            // This enables flexible payment workflows and better user experience
+            this.showPaidButton();
             
-            if (shouldShowPaidBtn) {
-                this.showPaidButton();
+            // Optional: Add visual indication if there are pending work days
+            if (this.pendingUnpaidDates.length > 0) {
+                paidBtn.classList.add('has-pending-work');
             } else {
-                this.hidePaidButton();
+                paidBtn.classList.remove('has-pending-work');
             }
         }
     }
@@ -2018,7 +2019,8 @@ class RServiceTracker {
         const selectedDates = document.querySelectorAll('.calendar-work-date.selected');
         const selectedDatesCount = document.getElementById('selectedDatesCount');
         const selectedAmountPreview = document.getElementById('selectedAmountPreview');
-        const proceedBtn = document.getElementById('proceedToPaymentBtn');
+        const confirmBtn = document.getElementById('confirmCalendarDirectPaymentBtn');
+        const directPaymentSummary = document.getElementById('directPaymentSummary');
 
         let totalAmount = 0;
         const selectedDatesList = [];
@@ -2037,9 +2039,39 @@ class RServiceTracker {
             selectedAmountPreview.textContent = this.utils.formatCurrency(totalAmount);
         }
 
-        // Enable/disable proceed button
-        if (proceedBtn) {
-            proceedBtn.disabled = selectedDates.length === 0;
+        // Show/hide payment summary and enable/disable confirm button
+        if (selectedDates.length > 0) {
+            if (directPaymentSummary) {
+                directPaymentSummary.style.display = 'block';
+                
+                // Update direct payment summary
+                const directSelectedDaysDisplay = document.getElementById('directSelectedDaysDisplay');
+                const directTotalAmountDisplay = document.getElementById('directTotalAmountDisplay');
+                const directSelectedDatesListDisplay = document.getElementById('directSelectedDatesListDisplay');
+                
+                if (directSelectedDaysDisplay) {
+                    directSelectedDaysDisplay.textContent = selectedDates.length;
+                }
+                if (directTotalAmountDisplay) {
+                    directTotalAmountDisplay.textContent = this.utils.formatCurrency(totalAmount);
+                }
+                if (directSelectedDatesListDisplay) {
+                    const dateStrings = selectedDatesList.map(date => 
+                        this.utils.formatDate(date, { month: 'short', day: 'numeric' })
+                    ).join(', ');
+                    directSelectedDatesListDisplay.textContent = dateStrings;
+                }
+            }
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+            }
+        } else {
+            if (directPaymentSummary) {
+                directPaymentSummary.style.display = 'none';
+            }
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+            }
         }
 
         // Store selected data for later use
@@ -2049,7 +2081,7 @@ class RServiceTracker {
 
     setupCalendarSelectionHandlers() {
         const modal = document.getElementById('calendarSelectionModal');
-        const proceedBtn = document.getElementById('proceedToPaymentBtn');
+        const confirmBtn = document.getElementById('confirmCalendarDirectPaymentBtn');
         const cancelBtn = document.getElementById('cancelCalendarSelectionBtn');
         const closeBtn = document.getElementById('closeCalendarSelectionModal');
 
@@ -2057,6 +2089,10 @@ class RServiceTracker {
             modal.classList.remove('show');
             this.selectedCalendarDates = [];
             this.selectedCalendarAmount = 0;
+            const directPaymentSummary = document.getElementById('directPaymentSummary');
+            if (directPaymentSummary) {
+                directPaymentSummary.style.display = 'none';
+            }
         };
 
         // Close modal handlers
@@ -2074,11 +2110,11 @@ class RServiceTracker {
             }
         };
 
-        // Proceed to payment - show payment section within calendar modal
-        if (proceedBtn) {
-            proceedBtn.onclick = () => {
-                if (this.selectedCalendarDates && this.selectedCalendarDates.length > 0) {
-                    this.showCalendarPaymentSection();
+        // Direct payment confirmation
+        if (confirmBtn) {
+            confirmBtn.onclick = () => {
+                if (this.selectedCalendarDates && this.selectedCalendarDates.length > 0 && this.selectedCalendarAmount > 0) {
+                    this.processDirectCalendarPayment(this.selectedCalendarAmount, closeModal);
                 } else {
                     this.notifications.showToast('Please select at least one work date', 'warning');
                 }
@@ -2551,6 +2587,37 @@ class RServiceTracker {
                 this.selectedPaymentAmount = null;
             }
         );
+    }
+
+    async processDirectCalendarPayment(amount, closeModalCallback) {
+        try {
+            console.log('Processing direct calendar payment:', { 
+                amount, 
+                selectedDates: this.selectedCalendarDates,
+                selectedAmount: this.selectedCalendarAmount 
+            });
+            
+            // Set loading state on confirm button
+            const confirmBtn = document.getElementById('confirmCalendarDirectPaymentBtn');
+            if (confirmBtn) {
+                confirmBtn.classList.add('loading');
+                confirmBtn.textContent = 'Processing...';
+            }
+            
+            // Use the standard payment processing
+            await this.processPayment(amount, closeModalCallback);
+            
+        } catch (error) {
+            console.error('Error processing direct calendar payment:', error);
+            this.notifications.showToast('Error processing payment. Please try again.', 'error');
+            
+            // Reset button state
+            const confirmBtn = document.getElementById('confirmCalendarDirectPaymentBtn');
+            if (confirmBtn) {
+                confirmBtn.classList.remove('loading');
+                confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Payment';
+            }
+        }
     }
 
     async processPayment(amount, closeModalCallback) {

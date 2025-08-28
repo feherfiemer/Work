@@ -1787,7 +1787,163 @@ class NotificationManager {
             const ctx = this.audioContext;
             const now = ctx.currentTime;
             
-            // Create cash register-like sequence with multiple tones
+            // Ultra-premium payment sound sequence with realistic banking tones
+            this.createUltraPremiumPaymentSequence(ctx, now);
+            
+            console.log('Ultra-premium enhanced payment sound played');
+        } catch (error) {
+            console.warn('Error playing enhanced payment sound:', error);
+            // Fallback to simpler sound
+            this.playSimplePaymentFallback();
+        }
+    }
+
+    createUltraPremiumPaymentSequence(ctx, startTime) {
+        // Create multiple layers for rich, banking-grade payment sound
+        
+        // Layer 1: Card tap/chip recognition sound
+        this.createCardChipSound(ctx, startTime);
+        
+        // Layer 2: Processing beeps (realistic banking terminal)
+        this.createProcessingBeeps(ctx, startTime + 0.2);
+        
+        // Layer 3: Confirmation chimes (premium banking sound)
+        this.createPremiumConfirmationChimes(ctx, startTime + 0.6);
+        
+        // Layer 4: Cash register finale with reverb
+        this.createEnhancedCashRegisterFinale(ctx, startTime + 1.0);
+    }
+
+    createCardChipSound(ctx, startTime) {
+        // Realistic NFC/chip card recognition sound
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.type = 'square';
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(2400, startTime);
+        filter.Q.setValueAtTime(15, startTime);
+        
+        osc.frequency.setValueAtTime(2400, startTime);
+        osc.frequency.exponentialRampToValueAtTime(2800, startTime + 0.05);
+        osc.frequency.exponentialRampToValueAtTime(2200, startTime + 0.1);
+        
+        gain.gain.setValueAtTime(0.15, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+        
+        osc.start(startTime);
+        osc.stop(startTime + 0.15);
+    }
+
+    createProcessingBeeps(ctx, startTime) {
+        // Banking terminal processing beeps
+        const beepTimes = [0, 0.15, 0.3];
+        
+        beepTimes.forEach((time, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1000 + (index * 100), startTime + time);
+            
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1000 + (index * 100), startTime + time);
+            filter.Q.setValueAtTime(5, startTime + time);
+            
+            gain.gain.setValueAtTime(0.2, startTime + time);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + time + 0.1);
+            
+            osc.start(startTime + time);
+            osc.stop(startTime + time + 0.1);
+        });
+    }
+
+    createPremiumConfirmationChimes(ctx, startTime) {
+        // Premium banking confirmation chord
+        const frequencies = [523.25, 659.25, 783.99, 1046.5]; // C5 major chord
+        
+        frequencies.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, startTime);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(freq * 3, startTime);
+            filter.Q.setValueAtTime(1, startTime);
+            
+            gain.gain.setValueAtTime(0.1 - (index * 0.02), startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+            
+            osc.start(startTime + (index * 0.05));
+            osc.stop(startTime + 0.8);
+        });
+    }
+
+    createEnhancedCashRegisterFinale(ctx, startTime) {
+        // Enhanced cash register "cha-ching" with reverb effect
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        const delay = ctx.createDelay();
+        const delayGain = ctx.createGain();
+        
+        // Main sound path
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
+        // Reverb path
+        gain.connect(delay);
+        delay.connect(delayGain);
+        delayGain.connect(ctx.destination);
+        
+        osc1.type = 'triangle';
+        osc2.type = 'sine';
+        
+        osc1.frequency.setValueAtTime(1760, startTime); // A6
+        osc2.frequency.setValueAtTime(880, startTime);  // A5
+        
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1500, startTime);
+        filter.Q.setValueAtTime(3, startTime);
+        
+        delay.delayTime.setValueAtTime(0.1, startTime);
+        delayGain.gain.setValueAtTime(0.3, startTime);
+        
+        gain.gain.setValueAtTime(0.25, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.2);
+        
+        osc1.start(startTime);
+        osc2.start(startTime);
+        osc1.stop(startTime + 1.2);
+        osc2.stop(startTime + 1.2);
+    }
+
+    playSimplePaymentFallback() {
+        // Simple fallback payment sound
+        try {
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
+            
             const sequence = [
                 { freq: 440, time: 0, duration: 0.15 },
                 { freq: 554.37, time: 0.1, duration: 0.15 },
@@ -1802,18 +1958,12 @@ class NotificationManager {
             sequence.forEach(note => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
-                const filter = ctx.createBiquadFilter();
                 
-                osc.connect(filter);
-                filter.connect(gain);
+                osc.connect(gain);
                 gain.connect(masterGain);
                 
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(note.freq, now + note.time);
-                
-                filter.type = 'bandpass';
-                filter.frequency.setValueAtTime(note.freq * 2, now + note.time);
-                filter.Q.setValueAtTime(2, now + note.time);
                 
                 gain.gain.setValueAtTime(0.8, now + note.time);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + note.time + note.duration);
@@ -1822,9 +1972,9 @@ class NotificationManager {
                 osc.stop(now + note.time + note.duration);
             });
             
-            console.log('Enhanced payment sound played');
+            console.log('Fallback payment sound played');
         } catch (error) {
-            console.warn('Error playing enhanced payment sound:', error);
+            console.warn('Even fallback payment sound failed:', error);
         }
     }
 

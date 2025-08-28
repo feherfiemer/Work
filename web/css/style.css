@@ -1476,15 +1476,46 @@ body {
 .btn-success.enhanced-paid-btn {
   background: linear-gradient(135deg, #20c997, #28a745, #17a2b8, #20c997);
   background-size: 300% 300%;
-  animation: enhancedGreenFlow 4s ease-in-out infinite;
+  animation: enhancedGreenFlow 4s ease-in-out infinite, continuousGlow 2s ease-in-out infinite alternate;
   box-shadow: 0 0 20px rgba(40, 167, 69, 0.4), 
               0 0 40px rgba(32, 201, 151, 0.3),
+              0 0 60px rgba(40, 167, 69, 0.2),
               inset 0 0 15px rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   font-weight: 700;
   letter-spacing: 0.5px;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  position: relative;
+  overflow: visible;
+}
+
+.btn-success.enhanced-paid-btn::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, rgba(40, 167, 69, 0.6), rgba(32, 201, 151, 0.6), rgba(23, 162, 184, 0.6));
+  border-radius: inherit;
+  z-index: -1;
+  animation: pulseGlow 2s ease-in-out infinite alternate;
+  filter: blur(8px);
+}
+
+.btn-success.enhanced-paid-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: sparkle 3s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 .btn-success.enhanced-paid-btn:hover {
@@ -2098,6 +2129,45 @@ body {
 @keyframes glow {
   0%, 100% { box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.5); }
   50% { box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.8); }
+}
+
+@keyframes continuousGlow {
+  0% { 
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.4), 
+                0 0 40px rgba(32, 201, 151, 0.3),
+                0 0 60px rgba(40, 167, 69, 0.2),
+                inset 0 0 15px rgba(255, 255, 255, 0.1);
+  }
+  100% { 
+    box-shadow: 0 0 30px rgba(40, 167, 69, 0.6), 
+                0 0 60px rgba(32, 201, 151, 0.5),
+                0 0 90px rgba(40, 167, 69, 0.3),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+  }
+}
+
+@keyframes pulseGlow {
+  0% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% { 
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% { 
+    width: 0;
+    height: 0;
+    opacity: 0;
+  }
+  50% { 
+    width: 20px;
+    height: 20px;
+    opacity: 0.8;
+  }
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
@@ -3608,9 +3678,122 @@ select:focus {
   justify-content: center;
 }
 
+/* Direct Payment Summary Styles */
+.direct-payment-summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(var(--success-rgb), 0.08), rgba(var(--primary-rgb), 0.05));
+  border: 1px solid rgba(var(--success-rgb), 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(var(--success-rgb), 0.1);
+  animation: slideInUp 0.3s ease-out;
+}
+
+.direct-payment-summary h4 {
+  color: var(--success);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.direct-payment-summary .payment-summary {
+  background: rgba(var(--success-rgb), 0.05);
+  border: 1px solid rgba(var(--success-rgb), 0.15);
+  margin-top: 0;
+}
+
+/* Enhanced spacing for modal elements */
+.calendar-selection-info {
+  margin-bottom: 1.5rem;
+}
+
+.unpaid-work-calendar {
+  margin-bottom: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.calendar-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 2rem 0 1.5rem 0;
+}
+
 .payment-confirmation-buttons .btn {
   flex: 1;
   max-width: 150px;
+}
+
+/* Loading state for calendar confirm button */
+#confirmCalendarDirectPaymentBtn.loading {
+  pointer-events: none;
+  opacity: 0.8;
+  position: relative;
+}
+
+#confirmCalendarDirectPaymentBtn.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: glazing 1.5s ease-in-out infinite;
+}
+
+/* Visual indication for pending work on paid button */
+#paidBtn.has-pending-work {
+  animation: enhancedGreenFlow 4s ease-in-out infinite, continuousGlow 2s ease-in-out infinite alternate, pendingWorkPulse 1.5s ease-in-out infinite;
+}
+
+#paidBtn.has-pending-work::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #ff6b6b, #ff5252);
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: notificationPulse 2s ease-in-out infinite;
+  z-index: 10;
+}
+
+@keyframes pendingWorkPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.4), 
+                0 0 40px rgba(32, 201, 151, 0.3),
+                0 0 60px rgba(40, 167, 69, 0.2);
+  }
+  50% { 
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(40, 167, 69, 0.6), 
+                0 0 60px rgba(32, 201, 151, 0.5),
+                0 0 90px rgba(40, 167, 69, 0.3);
+  }
+}
+
+@keyframes notificationPulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
 }
 
 /* Balance Sheet Sections */
