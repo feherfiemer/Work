@@ -2569,59 +2569,37 @@ class RServiceTracker {
     }
 
     updatePaymentSummary(amount) {
-        const summaryEl = document.getElementById('paymentSummary');
-        const selectedAmountEl = document.getElementById('selectedAmountDisplay');
-        const paymentTypeEl = document.getElementById('paymentTypeDisplay');
-        const workDaysCoveredEl = document.getElementById('workDaysCoveredDisplay');
-        
-        // Also update the new payment receipt card
+        // Use only the receipt card (replaces old summary)
         const receiptCard = document.getElementById('paymentReceiptCard');
         const previewSelectedAmount = document.getElementById('previewSelectedAmount');
         const previewPaymentType = document.getElementById('previewPaymentType');
         const previewWorkDaysCovered = document.getElementById('previewWorkDaysCovered');
         const previewTotalPayment = document.getElementById('previewTotalPayment');
         
-        if (summaryEl && selectedAmountEl && paymentTypeEl && workDaysCoveredEl) {
+        if (receiptCard && previewSelectedAmount && previewPaymentType && previewWorkDaysCovered && previewTotalPayment) {
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             const totalWorkCompletedValue = this.pendingUnpaidDates.length * dailyWage;
             
             const isAdvance = amount > totalWorkCompletedValue;
             const workDaysCovered = Math.min(Math.floor(amount / dailyWage), this.pendingUnpaidDates.length);
             
-            selectedAmountEl.textContent = `₹${amount}`;
+            previewSelectedAmount.textContent = `₹${amount}`;
+            previewTotalPayment.textContent = `₹${amount}`;
+            previewWorkDaysCovered.textContent = workDaysCovered;
             
             if (isAdvance) {
-                paymentTypeEl.textContent = 'Advance Payment';
-                paymentTypeEl.style.color = 'var(--warning)';
+                previewPaymentType.textContent = 'Advance Payment';
+                previewPaymentType.style.color = 'var(--warning)';
             } else {
-                paymentTypeEl.textContent = 'Regular Payment';
-                paymentTypeEl.style.color = 'var(--success)';
+                previewPaymentType.textContent = 'Regular Payment';
+                previewPaymentType.style.color = 'var(--success)';
             }
             
-            workDaysCoveredEl.textContent = `${workDaysCovered} days`;
+            receiptCard.style.display = 'block';
             
-            summaryEl.style.display = 'block';
-            
-            // Update the receipt card as well
-            if (receiptCard && previewSelectedAmount && previewPaymentType && previewWorkDaysCovered && previewTotalPayment) {
-                previewSelectedAmount.textContent = `₹${amount}`;
-                previewTotalPayment.textContent = `₹${amount}`;
-                previewWorkDaysCovered.textContent = workDaysCovered;
-                
-                if (isAdvance) {
-                    previewPaymentType.textContent = 'Advance Payment';
-                    previewPaymentType.style.color = 'var(--warning)';
-                } else {
-                    previewPaymentType.textContent = 'Regular Payment';
-                    previewPaymentType.style.color = 'var(--success)';
-                }
-                
-                receiptCard.style.display = 'block';
-                
-                // Add a nice animation when the card appears
-                receiptCard.style.animation = 'bounceIn 0.6s ease-out';
-                setTimeout(() => receiptCard.style.animation = '', 600);
-            }
+            // Add a nice animation when the card appears
+            receiptCard.style.animation = 'bounceIn 0.6s ease-out';
+            setTimeout(() => receiptCard.style.animation = '', 600);
         }
     }
 
@@ -2771,33 +2749,357 @@ class RServiceTracker {
 
     async syncAmountFlow() {
         /**
-         * COMPREHENSIVE MONEY FLOW SYNCHRONIZATION
-         * Updates ALL systems that deal with money, payments, earnings, and financial data
+         * 🔄 SOPHISTICATED MULTI-LAYERED SYNCHRONIZATION SYSTEM
+         * 
+         * A comprehensive, intelligent synchronization system that handles all financial data
+         * with surgical precision and clarity. This system operates in multiple layers to ensure
+         * absolute data integrity and system coherence.
          */
         
-        // Debouncing mechanism to prevent too frequent sync calls
+        // 🛡️ LAYER 0: SYNC ORCHESTRATION & DEBOUNCING
         if (this._syncInProgress) {
-            console.log('[SYNC] Sync already in progress, skipping...');
-            return;
+            console.log('🔄 [SYNC] Synchronization already in progress, queuing request...');
+            return this._queueSyncRequest();
         }
         
         const now = Date.now();
         if (this._lastSyncTime && (now - this._lastSyncTime) < 1000) {
-            console.log('[SYNC] Sync called too recently, debouncing...');
-            return;
+            console.log('⏱️ [SYNC] Debouncing sync call (too frequent)...');
+            return this._queueDelayedSync();
         }
         
         this._syncInProgress = true;
         this._lastSyncTime = now;
+        this._syncId = Math.random().toString(36).substr(2, 9);
         
         const syncStartTime = performance.now();
+        console.log(`🚀 [SYNC-${this._syncId}] Starting sophisticated multi-layered synchronization...`);
+        
         try {
-            console.log('[SYNC] Starting COMPREHENSIVE money flow synchronization...');
+            // 🏗️ LAYER 1: FOUNDATION - DATABASE INTEGRITY & VALIDATION
+            await this._syncLayer1_DatabaseIntegrity();
             
-            // 1. Database integrity validation
-            if (!this.db) {
-                throw new Error('Database not available');
+            // 📊 LAYER 2: DATA COLLECTION - Comprehensive Financial Data Gathering
+            const syncData = await this._syncLayer2_DataCollection();
+            
+            // 🧮 LAYER 3: CALCULATION ENGINE - Advanced Financial Computations
+            const computedData = await this._syncLayer3_CalculationEngine(syncData);
+            
+            // 🎯 LAYER 4: STATE MANAGEMENT - Application State Synchronization
+            await this._syncLayer4_StateManagement(computedData);
+            
+            // 🎨 LAYER 5: UI ORCHESTRATION - User Interface Updates
+            await this._syncLayer5_UIOrchestration(computedData);
+            
+            // 🔔 LAYER 6: NOTIFICATION SYSTEM - User Feedback & Alerts
+            await this._syncLayer6_NotificationSystem(computedData);
+            
+            // ✅ LAYER 7: VALIDATION & VERIFICATION - Final System Check
+            await this._syncLayer7_FinalValidation(computedData);
+            
+            const syncDuration = performance.now() - syncStartTime;
+            console.log(`✅ [SYNC-${this._syncId}] Multi-layered synchronization completed successfully in ${syncDuration.toFixed(2)}ms`);
+            
+        } catch (error) {
+            const syncDuration = performance.now() - syncStartTime;
+            console.error(`❌ [SYNC-${this._syncId}] Critical synchronization error after ${syncDuration.toFixed(2)}ms:`, error);
+            await this._handleSyncError(error);
+        } finally {
+            // Always clean up sync state
+            this._syncInProgress = false;
+            this._processPendingSyncRequests();
+        }
+    }
+
+    async _syncLayer1_DatabaseIntegrity() {
+        console.log('🏗️ [LAYER 1] Database Integrity Check...');
+        
+        if (!this.db) {
+            throw new Error('Database connection not available');
+        }
+        
+        // Verify database connectivity and basic operations
+        try {
+            await this.db.getAllWorkRecords();
+            console.log('✅ [LAYER 1] Database integrity verified');
+        } catch (error) {
+            throw new Error(`Database integrity check failed: ${error.message}`);
+        }
+    }
+
+    async _syncLayer2_DataCollection() {
+        console.log('📊 [LAYER 2] Comprehensive Data Collection...');
+        
+        try {
+            const [workRecords, payments, monthlyEarnings, earningsStats] = await Promise.all([
+                this.db.getAllWorkRecords(),
+                this.db.getAllPayments(),
+                this.db.getMonthlyEarnings(),
+                this.db.getEarningsStats()
+            ]);
+            
+            console.log(`📊 [LAYER 2] Data collected: ${workRecords.length} work records, ${payments.length} payments`);
+            
+            return {
+                workRecords,
+                payments,
+                monthlyEarnings,
+                earningsStats,
+                collectionTimestamp: Date.now()
+            };
+        } catch (error) {
+            throw new Error(`Data collection failed: ${error.message}`);
+        }
+    }
+
+    async _syncLayer3_CalculationEngine(syncData) {
+        console.log('🧮 [LAYER 3] Advanced Financial Calculations...');
+        
+        try {
+            // Calculate advance payment status with improved logic
+            const advanceStatus = await this.db.getAdvancePaymentStatus();
+            
+            // Update pending unpaid dates
+            await this.updatePendingUnpaidDates();
+            
+            // Calculate payment day status
+            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || 4;
+            const isPaymentDay = this.pendingUnpaidDates.length > 0 && 
+                                this.pendingUnpaidDates.length % paymentThreshold === 0;
+            
+            console.log('🧮 [LAYER 3] Calculations completed');
+            
+            return {
+                ...syncData,
+                advanceStatus,
+                isPaymentDay,
+                paymentThreshold,
+                pendingUnpaidDates: [...this.pendingUnpaidDates],
+                calculationTimestamp: Date.now()
+            };
+        } catch (error) {
+            throw new Error(`Calculation engine failed: ${error.message}`);
+        }
+    }
+
+    async _syncLayer4_StateManagement(computedData) {
+        console.log('🎯 [LAYER 4] Application State Synchronization...');
+        
+        try {
+            // Update application state
+            const previousStats = { ...this.currentStats };
+            this.currentStats = computedData.earningsStats;
+            
+            // Track state changes
+            const stateChanges = this._detectStateChanges(previousStats, this.currentStats);
+            
+            console.log('🎯 [LAYER 4] State management completed', stateChanges);
+            
+            return {
+                ...computedData,
+                previousStats,
+                stateChanges,
+                stateTimestamp: Date.now()
+            };
+        } catch (error) {
+            throw new Error(`State management failed: ${error.message}`);
+        }
+    }
+
+    async _syncLayer5_UIOrchestration(computedData) {
+        console.log('🎨 [LAYER 5] UI Orchestration...');
+        
+        try {
+            // Update dashboard with animation
+            this.updateDashboard();
+            
+            // Update payment button state
+            await this.updatePaidButtonVisibility();
+            
+            // Update progress indicators
+            this._updateProgressIndicators(computedData);
+            
+            // Update earnings displays with animation
+            this._updateEarningsDisplays(computedData);
+            
+            console.log('🎨 [LAYER 5] UI orchestration completed');
+        } catch (error) {
+            throw new Error(`UI orchestration failed: ${error.message}`);
+        }
+    }
+
+    async _syncLayer6_NotificationSystem(computedData) {
+        console.log('🔔 [LAYER 6] Notification System...');
+        
+        try {
+            // Check for advance payment notifications
+            await this.checkAdvancePaymentNotification();
+            
+            // Check for payment day notifications
+            if (computedData.isPaymentDay) {
+                this.notifications.showPaydayNotification();
             }
+            
+            console.log('🔔 [LAYER 6] Notification system completed');
+        } catch (error) {
+            console.warn('⚠️ [LAYER 6] Notification system error (non-critical):', error);
+        }
+    }
+
+    async _syncLayer7_FinalValidation(computedData) {
+        console.log('✅ [LAYER 7] Final Validation & Verification...');
+        
+        try {
+            // Validate data consistency
+            const isValid = this._validateSyncedData(computedData);
+            
+            if (!isValid) {
+                throw new Error('Data validation failed after sync');
+            }
+            
+            // Clear any stale caches
+            this._clearStaleData();
+            
+            console.log('✅ [LAYER 7] Final validation completed - system synchronized');
+        } catch (error) {
+            throw new Error(`Final validation failed: ${error.message}`);
+        }
+    }
+
+    _detectStateChanges(previous, current) {
+        return {
+            balanceChanged: (previous?.currentBalance || 0) !== (current?.currentBalance || 0),
+            earnedChanged: (previous?.totalEarned || 0) !== (current?.totalEarned || 0),
+            paidChanged: (previous?.totalPaid || 0) !== (current?.totalPaid || 0),
+            workedChanged: (previous?.totalWorked || 0) !== (current?.totalWorked || 0)
+        };
+    }
+
+    _updateProgressIndicators(computedData) {
+        const progressFillEl = document.getElementById('progressFill');
+        const progressTextEl = document.getElementById('progressText');
+        const progressLabelEl = document.getElementById('progressLabel');
+        
+        if (computedData.advanceStatus.hasAdvancePayments && computedData.advanceStatus.workRemainingForAdvance > 0) {
+            const workCompleted = computedData.advanceStatus.workCompletedForAdvance || 0;
+            const workRequired = computedData.advanceStatus.workRequiredForAdvance || 1;
+            const progressPercent = Math.min((workCompleted / workRequired) * 100, 100);
+            
+            if (progressLabelEl) {
+                progressLabelEl.textContent = `Advance Payment Progress (₹${computedData.advanceStatus.totalAdvanceAmount} paid)`;
+            }
+            if (progressTextEl) {
+                progressTextEl.textContent = `${workCompleted}/${workRequired} days`;
+            }
+            if (progressFillEl) {
+                const finalPercent = workCompleted === 0 ? 0 : 
+                                  workCompleted >= workRequired ? 100 : 
+                                  Math.max(progressPercent, 10);
+                progressFillEl.style.width = `${finalPercent}%`;
+                progressFillEl.style.backgroundColor = workCompleted >= workRequired ? 'var(--success)' : 'var(--warning)';
+            }
+        } else {
+            // Regular progress display
+            const progressPercent = Math.min((computedData.pendingUnpaidDates.length / computedData.paymentThreshold) * 100, 100);
+            
+            if (progressLabelEl) {
+                progressLabelEl.textContent = 'Progress to Payment Day';
+            }
+            if (progressTextEl) {
+                progressTextEl.textContent = `${computedData.pendingUnpaidDates.length}/${computedData.paymentThreshold} days`;
+            }
+            if (progressFillEl) {
+                progressFillEl.style.width = `${progressPercent}%`;
+                progressFillEl.style.backgroundColor = 'var(--primary)';
+            }
+        }
+    }
+
+    _updateEarningsDisplays(computedData) {
+        // Animate earnings displays
+        const currentEarningsEl = document.getElementById('currentEarnings');
+        if (currentEarningsEl) {
+            const currentBalance = computedData.earningsStats?.currentBalance || 0;
+            this.utils.animateNumber(currentEarningsEl, 0, currentBalance, 1000);
+        }
+        
+        const totalEarnedEl = document.getElementById('totalEarned');
+        if (totalEarnedEl) {
+            const totalEarned = computedData.earningsStats?.totalEarned || 0;
+            this.utils.animateNumber(totalEarnedEl, 0, totalEarned, 1200);
+        }
+        
+        const daysWorkedEl = document.getElementById('daysWorked');
+        if (daysWorkedEl) {
+            const totalWorked = computedData.earningsStats?.totalWorked || 0;
+            this.utils.animateNumber(daysWorkedEl, 0, totalWorked, 800);
+        }
+    }
+
+    _validateSyncedData(computedData) {
+        // Basic validation checks
+        if (!computedData.earningsStats) return false;
+        if (!Array.isArray(computedData.workRecords)) return false;
+        if (!Array.isArray(computedData.payments)) return false;
+        if (computedData.earningsStats.currentBalance < 0) return false;
+        
+        return true;
+    }
+
+    _clearStaleData() {
+        // Clear any cached financial data
+        if (window.cachedEarningsStats) {
+            window.cachedEarningsStats = null;
+        }
+        if (window.cachedAdvanceStatus) {
+            window.cachedAdvanceStatus = null;
+        }
+    }
+
+    async _queueSyncRequest() {
+        // Queue sync request for later execution
+        this._pendingSyncRequests = (this._pendingSyncRequests || 0) + 1;
+        console.log(`📋 [SYNC] Queued sync request (${this._pendingSyncRequests} pending)`);
+    }
+
+    async _queueDelayedSync() {
+        // Delayed sync with debounce
+        if (this._delayedSyncTimeout) {
+            clearTimeout(this._delayedSyncTimeout);
+        }
+        
+        this._delayedSyncTimeout = setTimeout(() => {
+            this.syncAmountFlow();
+        }, 1000);
+    }
+
+    _processPendingSyncRequests() {
+        if (this._pendingSyncRequests > 0) {
+            console.log(`📋 [SYNC] Processing ${this._pendingSyncRequests} pending sync requests`);
+            this._pendingSyncRequests = 0;
+            setTimeout(() => this.syncAmountFlow(), 100);
+        }
+    }
+
+    async _handleSyncError(error) {
+        console.error('🚨 [SYNC] Handling synchronization error:', error);
+        
+        // Attempt recovery
+        try {
+            this.currentStats = await this.db.getEarningsStats();
+            await this.updatePendingUnpaidDates();
+            this.updateDashboard();
+            
+            this.notifications.showToast('Data synchronized with recovery mode.', 'warning', 5000);
+        } catch (recoveryError) {
+            console.error('💥 [SYNC] Recovery failed:', recoveryError);
+            this.notifications.showToast('Critical sync error. Please refresh the page.', 'error', 8000);
+        }
+    }
+
+    // Legacy sync function for compatibility
+    async _legacySyncAmountFlow() {
+        console.log('🔄 [LEGACY] Using legacy sync method...');
             
             // 2. Force reload ALL financial data from database 
             let workRecords, payments, monthlyEarnings;

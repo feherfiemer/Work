@@ -1532,20 +1532,7 @@ body {
   box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
 }
 
-/* Pending work indicator */
-.btn-success.enhanced-paid-btn.has-pending-work::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  width: 14px;
-  height: 14px;
-  background: radial-gradient(circle, #ff4757, #ff3742);
-  border-radius: 50%;
-  border: 2px solid white;
-  animation: pendingWorkIndicator 2s ease-in-out infinite;
-  z-index: 10;
-}
+/* Pending work indicator - REMOVED RED DOT */
 
 /* Background glow effect for enabled state */
 .btn-success.enhanced-paid-btn:not(:disabled)::after {
@@ -2331,6 +2318,179 @@ body {
     transform: scale(1.1);
     filter: blur(12px);
   }
+}
+
+/* ===== ENHANCED DIALOG STYLES ===== */
+
+.payment-status-card {
+  background: linear-gradient(135deg, var(--surface), var(--surface-alt));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.status-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.status-header h5 {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.status-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.status-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.status-value.highlight {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.receipt-actions {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.receipt-actions .btn {
+  flex: 1;
+  max-width: 140px;
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Enhanced modal headers for both dialogs */
+.modal-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border-radius: 12px 12px 0 0;
+  padding: 1.25rem 1.5rem;
+  margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1), transparent);
+  pointer-events: none;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.close-modal {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.close-modal:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.05);
+}
+
+/* Enhanced payment options styling */
+.payment-options h4 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.payment-section h5 {
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+/* Enhanced calendar selection modal */
+.large-modal {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 800px;
+}
+
+.calendar-selection-info {
+  background: linear-gradient(135deg, var(--surface-alt), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.payment-summary-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.payment-summary-preview span:first-child {
+  color: var(--text-secondary);
+}
+
+.payment-summary-preview span:last-child {
+  color: var(--primary);
+  font-size: 1.1em;
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
@@ -4034,19 +4194,7 @@ select:focus {
   animation: enhancedGreenFlow 4s ease-in-out infinite, continuousGlow 2s ease-in-out infinite alternate, pendingWorkPulse 1.5s ease-in-out infinite;
 }
 
-#paidBtn.has-pending-work::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  width: 12px;
-  height: 12px;
-  background: radial-gradient(circle, #ff6b6b, #ff5252);
-  border-radius: 50%;
-  border: 2px solid white;
-  animation: notificationPulse 2s ease-in-out infinite;
-  z-index: 10;
-}
+/* Red indicator removed for cleaner look */
 
 @keyframes pendingWorkPulse {
   0%, 100% { 

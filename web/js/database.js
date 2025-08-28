@@ -417,28 +417,21 @@ class DatabaseManager {
                 totalWorkCoveredByAdvance += daysAdvancedFor;
             }
             
-            // Calculate how much work has been completed after receiving advance payments
-            // that counts towards paying off the advance
-            const allWorkAfterAdvance = workRecords.filter(record => {
+            // Calculate how much work has been completed that counts towards paying off advance
+            // SIMPLIFIED: Count ALL completed work that hasn't been paid for yet
+            const allWorkForAdvance = workRecords.filter(record => {
                 if (record.status !== 'completed') return false;
-                
-                // Check if this work was done after any advance payment
-                const recordDate = new Date(record.date);
-                const hasAdvancePaymentBefore = advancePayments.some(payment => {
-                    const paymentDate = new Date(payment.paymentDate);
-                    // Work must be done AFTER or ON the advance payment date to count
-                    return paymentDate <= recordDate;
-                });
                 
                 // Don't count work that's already been paid for in regular payments
                 const isAlreadyPaidInRegularPayment = payments.some(payment => 
                     !payment.isAdvance && payment.workDates && payment.workDates.includes(record.date)
                 );
                 
-                return hasAdvancePaymentBefore && !isAlreadyPaidInRegularPayment;
+                // Count ALL unpaid work towards advance payment (no date restrictions)
+                return !isAlreadyPaidInRegularPayment;
             });
             
-            totalWorkCompletedForAdvance = allWorkAfterAdvance.length;
+            totalWorkCompletedForAdvance = allWorkForAdvance.length;
             
             const workRequiredForAdvance = totalWorkCoveredByAdvance; // Days paid for
             const workCompletedForAdvance = totalWorkCompletedForAdvance; // Days actually completed
@@ -449,8 +442,8 @@ class DatabaseManager {
                 totalAdvancePayments: advancePayments.length,
                 totalAdvanceAmount,
                 workCoveredByAdvance: totalWorkCoveredByAdvance,
-                workAfterAdvanceCount: allWorkAfterAdvance.length,
-                workAfterAdvanceDates: allWorkAfterAdvance.map(r => r.date),
+                allUnpaidWorkCount: allWorkForAdvance.length,
+                allUnpaidWorkDates: allWorkForAdvance.map(r => r.date),
                 workRequiredForAdvance,
                 workCompletedForAdvance,
                 workRemainingForAdvance
