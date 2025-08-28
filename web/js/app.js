@@ -2044,22 +2044,22 @@ class RServiceTracker {
             if (directPaymentSummary) {
                 directPaymentSummary.style.display = 'block';
                 
-                // Update direct payment summary
-                const directSelectedDaysDisplay = document.getElementById('directSelectedDaysDisplay');
-                const directTotalAmountDisplay = document.getElementById('directTotalAmountDisplay');
-                const directSelectedDatesListDisplay = document.getElementById('directSelectedDatesListDisplay');
+                // Update direct payment summary to match main payment modal format
+                const directSelectedAmountDisplay = document.getElementById('directSelectedAmountDisplay');
+                const directPaymentTypeDisplay = document.getElementById('directPaymentTypeDisplay');
+                const directWorkDaysCoveredDisplay = document.getElementById('directWorkDaysCoveredDisplay');
                 
-                if (directSelectedDaysDisplay) {
-                    directSelectedDaysDisplay.textContent = selectedDates.length;
+                if (directSelectedAmountDisplay) {
+                    directSelectedAmountDisplay.textContent = this.utils.formatCurrency(totalAmount);
                 }
-                if (directTotalAmountDisplay) {
-                    directTotalAmountDisplay.textContent = this.utils.formatCurrency(totalAmount);
+                if (directPaymentTypeDisplay) {
+                    // Determine payment type based on amount vs work value
+                    const workValue = selectedDates.length * (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+                    const paymentType = totalAmount > workValue ? 'Advance' : 'Regular';
+                    directPaymentTypeDisplay.textContent = paymentType;
                 }
-                if (directSelectedDatesListDisplay) {
-                    const dateStrings = selectedDatesList.map(date => 
-                        this.utils.formatDate(date, { month: 'short', day: 'numeric' })
-                    ).join(', ');
-                    directSelectedDatesListDisplay.textContent = dateStrings;
+                if (directWorkDaysCoveredDisplay) {
+                    directWorkDaysCoveredDisplay.textContent = selectedDates.length;
                 }
             }
             if (confirmBtn) {
@@ -2092,6 +2092,14 @@ class RServiceTracker {
             const directPaymentSummary = document.getElementById('directPaymentSummary');
             if (directPaymentSummary) {
                 directPaymentSummary.style.display = 'none';
+            }
+            
+            // Reset confirm button state
+            const confirmBtn = document.getElementById('confirmCalendarDirectPaymentBtn');
+            if (confirmBtn) {
+                confirmBtn.classList.remove('loading');
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Payment';
             }
         };
 
@@ -2590,6 +2598,8 @@ class RServiceTracker {
     }
 
     async processDirectCalendarPayment(amount, closeModalCallback) {
+        const confirmBtn = document.getElementById('confirmCalendarDirectPaymentBtn');
+        
         try {
             console.log('Processing direct calendar payment:', { 
                 amount, 
@@ -2598,23 +2608,30 @@ class RServiceTracker {
             });
             
             // Set loading state on confirm button
-            const confirmBtn = document.getElementById('confirmCalendarDirectPaymentBtn');
             if (confirmBtn) {
                 confirmBtn.classList.add('loading');
-                confirmBtn.textContent = 'Processing...';
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             }
             
             // Use the standard payment processing
             await this.processPayment(amount, closeModalCallback);
             
+            // Reset button state after successful payment (though modal should be closed)
+            if (confirmBtn) {
+                confirmBtn.classList.remove('loading');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Payment';
+            }
+            
         } catch (error) {
             console.error('Error processing direct calendar payment:', error);
             this.notifications.showToast('Error processing payment. Please try again.', 'error');
             
-            // Reset button state
-            const confirmBtn = document.getElementById('confirmCalendarDirectPaymentBtn');
+            // Reset button state on error
             if (confirmBtn) {
                 confirmBtn.classList.remove('loading');
+                confirmBtn.disabled = false;
                 confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Payment';
             }
         }
@@ -2714,150 +2731,193 @@ class RServiceTracker {
 
     async syncAmountFlow() {
         /**
-         * Enhanced central function to sync all amount flow and updates across the entire application.
-         * This ensures unified state management for work completion, payments, and earnings.
-         * Called after every action that affects amounts, work status, or payments.
-         * 
-         * Enhanced with:
-         * - Improved error handling and recovery
-         * - Performance monitoring
-         * - Data validation
-         * - Cache optimization
-         * - User experience improvements
+         * COMPREHENSIVE MONEY FLOW SYNCHRONIZATION
+         * Updates ALL systems that deal with money, payments, earnings, and financial data
          */
         const syncStartTime = performance.now();
         try {
-            console.log('[SYNC] Starting enhanced amount flow synchronization...');
+            console.log('[SYNC] Starting COMPREHENSIVE money flow synchronization...');
             
-            // 1. Data integrity validation
+            // 1. Database integrity validation
             if (!this.db) {
                 throw new Error('Database not available');
             }
             
-            // 2. Refresh core data from database with error handling
-            let workRecords, payments;
+            // 2. Force reload ALL financial data from database 
+            let workRecords, payments, monthlyEarnings;
             try {
-                [workRecords, payments] = await Promise.all([
+                [workRecords, payments, monthlyEarnings] = await Promise.all([
                     this.db.getAllWorkRecords(),
-                    this.db.getAllPayments()
+                    this.db.getAllPayments(),
+                    this.db.getMonthlyEarnings()
                 ]);
-                console.log(`[SYNC] Loaded ${workRecords.length} work records and ${payments.length} payments`);
+                console.log(`[SYNC] Loaded ${workRecords.length} work records, ${payments.length} payments, monthly data`);
             } catch (dataError) {
-                console.error('[SYNC] Error loading core data:', dataError);
-                throw new Error('Failed to load core data from database');
+                console.error('[SYNC] Error loading financial data:', dataError);
+                throw new Error('Failed to load financial data from database');
             }
             
-            // 3. Recalculate all earnings statistics with validation
+            // 3. Recalculate ALL earnings statistics (critical for money flow)
             const previousStats = { ...this.currentStats };
             this.currentStats = await this.db.getEarningsStats();
             
-            // Validate stats changes
+            // 4. Recalculate advance payment status (critical for money flow)
+            const advanceStatus = await this.db.getAdvancePaymentStatus();
+            
+            // 5. Update pending unpaid dates (affects payment eligibility)
+            await this.updatePendingUnpaidDates();
+            
+            // 6. Force update payment threshold calculations
+            const paymentThreshold = window.R_SERVICE_CONFIG?.PAYMENT_THRESHOLD || window.R_SERVICE_CONFIG?.PAYMENT_DAY_DURATION || 4;
+            const isPaymentDay = this.pendingUnpaidDates.length > 0 && this.pendingUnpaidDates.length % paymentThreshold === 0;
+            
+            // Log all critical financial changes
             if (this.currentStats && previousStats) {
                 const balanceChange = this.currentStats.currentBalance - (previousStats.currentBalance || 0);
                 const totalEarnedChange = this.currentStats.totalEarned - (previousStats.totalEarned || 0);
-                if (Math.abs(balanceChange) > 0 || Math.abs(totalEarnedChange) > 0) {
-                    console.log('[SYNC] Detected changes - Balance:', balanceChange, 'Total Earned:', totalEarnedChange);
-                }
+                const totalPaidChange = this.currentStats.totalPaid - (previousStats.totalPaid || 0);
+                
+                console.log('[SYNC] FINANCIAL CHANGES DETECTED:');
+                console.log(`  - Balance Change: ${balanceChange}`);
+                console.log(`  - Total Earned Change: ${totalEarnedChange}`);
+                console.log(`  - Total Paid Change: ${totalPaidChange}`);
+                console.log(`  - Advance Status: ${JSON.stringify(advanceStatus)}`);
+                console.log(`  - Payment Day Status: ${isPaymentDay}`);
+                console.log(`  - Unpaid Days: ${this.pendingUnpaidDates.length}`);
             }
             
-            console.log('[SYNC] Updated earnings stats:', this.currentStats);
-            
-            // 4. Update pending unpaid dates with error recovery
+            // 7. Update ALL UI components that display money
             try {
-                await this.updatePendingUnpaidDates();
-            } catch (pendingError) {
-                console.error('[SYNC] Error updating pending dates:', pendingError);
-                // Continue sync but log the error
-            }
-            
-            // 5. Update main dashboard with enhanced feedback
-            try {
+                // Dashboard earnings display
                 this.updateDashboard();
-                console.log('[SYNC] Dashboard updated successfully');
-            } catch (dashboardError) {
-                console.error('[SYNC] Error updating dashboard:', dashboardError);
-                // Try a delayed retry
-                setTimeout(() => {
-                    try {
-                        this.updateDashboard();
-                        console.log('[SYNC] Dashboard updated on retry');
-                    } catch (retryError) {
-                        console.error('[SYNC] Dashboard retry failed:', retryError);
-                    }
-                }, 500);
+                console.log('[SYNC] Dashboard money displays updated');
+                
+                // Current earnings animation
+                const currentEarningsEl = document.getElementById('currentEarnings');
+                if (currentEarningsEl) {
+                    const currentBalance = this.currentStats?.currentBalance || 0;
+                    this.utils.animateNumber(currentEarningsEl, 0, currentBalance, 1000);
+                }
+                
+                // Total earned animation  
+                const totalEarnedEl = document.getElementById('totalEarned');
+                if (totalEarnedEl) {
+                    const totalEarned = this.currentStats?.totalEarned || 0;
+                    this.utils.animateNumber(totalEarnedEl, 0, totalEarned, 1200);
+                }
+                
+                // Days worked counter
+                const daysWorkedEl = document.getElementById('daysWorked');
+                if (daysWorkedEl) {
+                    const totalWorked = this.currentStats?.totalWorked || 0;
+                    this.utils.animateNumber(daysWorkedEl, 0, totalWorked, 800);
+                }
+                
+                // Progress bar and payment threshold displays
+                const progressFillEl = document.getElementById('progressFill');
+                const progressTextEl = document.getElementById('progressText');
+                if (progressFillEl && progressTextEl) {
+                    const progress = this.currentStats?.progressToPayday || 0;
+                    const progressPercent = (progress / paymentThreshold) * 100;
+                    progressFillEl.style.width = `${Math.min(progressPercent, 100)}%`;
+                    progressTextEl.textContent = `${progress}/${paymentThreshold} days`;
+                }
+                
+            } catch (uiError) {
+                console.error('[SYNC] Error updating money UI components:', uiError);
             }
             
-            // 6. Update button visibility with enhanced logic
+            // 8. Update payment button visibility and state (money-dependent)
             try {
                 await this.updatePaidButtonVisibility();
-                console.log('[SYNC] Button visibility updated');
+                console.log('[SYNC] Payment button state synchronized');
             } catch (buttonError) {
-                console.error('[SYNC] Error updating button visibility:', buttonError);
+                console.error('[SYNC] Error updating payment button:', buttonError);
             }
             
-            // 7. Update calendar with improved error handling
+            // 9. Update calendar with payment status (money-dependent)
             if (this.calendar) {
                 try {
                     await this.calendar.loadData();
                     this.calendar.render();
-                    console.log('[SYNC] Calendar updated successfully');
+                    console.log('[SYNC] Calendar payment status updated');
                 } catch (calendarError) {
-                    console.error('[SYNC] Error updating calendar:', calendarError);
-                    // Try to recover with a simplified update
-                    setTimeout(() => {
-                        try {
-                            this.calendar.render();
-                            console.log('[SYNC] Calendar recovered on retry');
-                        } catch (retryError) {
-                            console.error('[SYNC] Calendar retry failed:', retryError);
-                        }
-                    }, 1000);
+                    console.error('[SYNC] Error updating calendar money data:', calendarError);
                 }
             }
             
-            // 8. Update charts with performance monitoring
+            // 10. Update charts with financial data
             if (this.charts) {
                 try {
-                    const chartStartTime = performance.now();
                     await this.charts.updateCharts();
-                    const chartDuration = performance.now() - chartStartTime;
-                    console.log(`[SYNC] Charts updated successfully in ${chartDuration.toFixed(2)}ms`);
+                    console.log('[SYNC] Financial charts updated');
                 } catch (chartError) {
-                    console.error('[SYNC] Error updating charts:', chartError);
-                    // Charts are non-critical, continue without retry
+                    console.error('[SYNC] Error updating financial charts:', chartError);
                 }
             }
             
-            // 9. Check for milestone notifications and advance payments
+            // 11. Update advance payment notifications
             try {
                 await this.checkAdvancePaymentNotification();
             } catch (notificationError) {
-                console.error('[SYNC] Error checking notifications:', notificationError);
+                console.error('[SYNC] Error checking advance payment notifications:', notificationError);
             }
             
-            // 10. Performance monitoring and logging
+            // 12. Trigger any payment milestone notifications
+            try {
+                if (this.notifications && this.currentStats) {
+                    // Check for milestone notifications
+                    if (this.currentStats.totalEarned > 0 && this.currentStats.totalEarned % 500 === 0) {
+                        this.notifications.showToast(
+                            `Milestone reached! Total earnings: ₹${this.currentStats.totalEarned}`,
+                            'success',
+                            5000
+                        );
+                    }
+                }
+            } catch (milestoneError) {
+                console.error('[SYNC] Error checking milestones:', milestoneError);
+            }
+            
+            // 13. Force refresh any cached financial calculations
+            try {
+                // Clear any caches that might store outdated financial data
+                if (window.cachedEarningsStats) {
+                    window.cachedEarningsStats = null;
+                }
+                if (window.cachedAdvanceStatus) {
+                    window.cachedAdvanceStatus = null;
+                }
+            } catch (cacheError) {
+                console.error('[SYNC] Error clearing financial caches:', cacheError);
+            }
+            
+            // 14. Performance monitoring
             const syncDuration = performance.now() - syncStartTime;
-            console.log(`[SYNC] Enhanced amount flow synchronization completed successfully in ${syncDuration.toFixed(2)}ms`);
-            
-            // 11. User feedback for significant sync operations
-            if (syncDuration > 1000) {
-                this.notifications.showToast('Data synchronized successfully', 'info', 2000);
-            }
+            console.log(`[SYNC] COMPREHENSIVE money flow sync completed in ${syncDuration.toFixed(2)}ms`);
+            console.log('[SYNC] Current financial state:', {
+                currentBalance: this.currentStats?.currentBalance || 0,
+                totalEarned: this.currentStats?.totalEarned || 0,
+                totalPaid: this.currentStats?.totalPaid || 0,
+                unpaidDays: this.pendingUnpaidDates.length,
+                advanceAmount: advanceStatus.totalAdvanceAmount || 0,
+                isPaymentDay
+            });
             
         } catch (error) {
             const syncDuration = performance.now() - syncStartTime;
-            console.error(`[SYNC] Critical error in amount flow synchronization after ${syncDuration.toFixed(2)}ms:`, error);
+            console.error(`[SYNC] CRITICAL MONEY SYNC ERROR after ${syncDuration.toFixed(2)}ms:`, error);
             
-            // Enhanced error recovery
+            // Enhanced recovery for financial data
             try {
-                // Try basic recovery
                 this.currentStats = await this.db.getEarningsStats();
+                await this.updatePendingUnpaidDates();
                 this.updateDashboard();
-                console.log('[SYNC] Basic recovery completed');
-                this.notifications.showToast('Data sync recovered. Some features may need refresh.', 'warning', 4000);
+                console.log('[SYNC] Financial data recovery completed');
+                this.notifications.showToast('Financial data synchronized. Some features may need refresh.', 'warning', 5000);
             } catch (recoveryError) {
-                console.error('[SYNC] Recovery failed:', recoveryError);
-                this.notifications.showToast('Sync error detected. Please refresh the page.', 'error', 6000);
+                console.error('[SYNC] Financial recovery failed:', recoveryError);
+                this.notifications.showToast('Critical sync error. Please refresh the page to restore financial data.', 'error', 8000);
             }
         }
     }
