@@ -1876,53 +1876,59 @@ class RServiceTracker {
     }
 
     async generateEarningsStatusMessage(stats) {
-        const { totalWorked, totalEarned, totalPaid, currentBalance } = stats;
+        const { totalWorked, totalEarned, totalPaid, currentBalance, unpaidWorkDays, workStreak } = stats;
         const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
-        
-        // Only show current date status for today's date
-        const today = this.utils.getTodayString();
-        const currentDate = new Date().toISOString().split('T')[0];
-        
-        // Check if this is being called for today only
-        if (currentDate !== today) {
-            return '';
-        }
+        const currentDate = new Date().toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
         
         // Check for advance payment status
         const advanceStatus = await this.db.getAdvancePaymentStatus();
         
         // New user - no work done
         if (totalWorked === 0) {
-            return `Welcome to your earnings tracker. Daily rate ${this.utils.formatCurrency(dailyWage)}. Click Mark as Done to start tracking.`;
+            return `🎯 Welcome to R-Service Tracker!\n\n📅 Today: ${currentDate}\n💰 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n\n✨ Start your journey by marking today's work as done. Track your progress, manage payments, and watch your earnings grow!\n\n🚀 Features: Calendar view, Payment tracking, Analytics, Export reports`;
         }
         
         // Handle advance payment scenarios
         if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0) {
             const remainingDays = advanceStatus.workRemainingForAdvance;
             const advanceAmount = advanceStatus.totalAdvanceAmount;
+            const progressPercent = Math.round(((advanceStatus.totalAdvanceAmount / dailyWage - remainingDays) / (advanceStatus.totalAdvanceAmount / dailyWage)) * 100);
             
-            return `Advance payment ${this.utils.formatCurrency(advanceAmount)} received. ${remainingDays} more days needed to complete.`;
+            return `🔥 Advance Payment Mode\n\n💳 Advance Received: ${this.utils.formatCurrency(advanceAmount)}\n⏳ Remaining Work: ${remainingDays} days\n📊 Progress: ${progressPercent}% completed\n\n🎯 Keep up the great work! You're making excellent progress towards completing your advance payment commitment.`;
         }
         
         // Has worked but no payments made
         if (totalWorked > 0 && totalPaid === 0) {
-            return `${totalWorked} work days completed. Pending payment ${this.utils.formatCurrency(currentBalance)}. Ready to collect first payment.`;
+            const weekCount = Math.floor(totalWorked / 7);
+            const streakText = (workStreak && workStreak > 1) ? `🔥 ${workStreak} day streak` : '';
+            
+            return `💪 Outstanding Work Record!\n\n📈 Work Days: ${totalWorked} completed ${streakText}\n💰 Pending Payment: ${this.utils.formatCurrency(currentBalance)}\n${weekCount > 0 ? `📊 Equivalent: ${weekCount} week${weekCount > 1 ? 's' : ''} of work\n` : ''}⚡ Ready to collect your first payment!\n\n🎉 Your dedication is paying off. Time to cash in on your hard work!`;
         }
         
         // Has worked and received some payments
         if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
             const pendingDays = Math.ceil(currentBalance / dailyWage);
+            const paymentRate = Math.round((totalPaid / totalEarned) * 100);
+            const unpaidText = unpaidWorkDays > 0 ? `\n⏳ Unpaid Days: ${unpaidWorkDays}` : '';
             
-            return `${totalWorked} days completed. Collected ${this.utils.formatCurrency(totalPaid)}. Pending ${this.utils.formatCurrency(currentBalance)} for ${pendingDays} days.`;
+            return `💼 Active Earnings Profile\n\n📊 Total Work: ${totalWorked} days completed\n💸 Collected: ${this.utils.formatCurrency(totalPaid)} (${paymentRate}% of earnings)\n⏰ Pending: ${this.utils.formatCurrency(currentBalance)} for ${pendingDays} days${unpaidText}\n\n📈 Consistent performer! You're building a solid work history with regular payments.`;
         }
         
         // All payments up to date
         if (totalWorked > 0 && currentBalance === 0) {
-            return `Great work. ${totalWorked} days completed. Total earned ${this.utils.formatCurrency(totalPaid)}. All payments current.`;
+            const avgDailyEarning = totalPaid / totalWorked;
+            const weeklyEarning = avgDailyEarning * 7;
+            
+            return `🌟 Perfect Payment Status!\n\n✅ Work Completed: ${totalWorked} days\n💰 Total Earned: ${this.utils.formatCurrency(totalPaid)}\n📊 Daily Average: ${this.utils.formatCurrency(avgDailyEarning)}\n📈 Weekly Rate: ${this.utils.formatCurrency(weeklyEarning)}\n\n🎯 Excellent! All payments are current. You're maintaining a perfect payment record!`;
         }
         
-        // Fallback message
-        return `Daily rate ${this.utils.formatCurrency(dailyWage)}. Mark work as done to track progress.`;
+        // Fallback message with encouragement
+        return `🚀 R-Service Tracker Dashboard\n\n💰 Daily Rate: ${this.utils.formatCurrency(dailyWage)}\n📅 Today: ${currentDate}\n\n🎯 Ready to track your progress? Mark today's work as done and start building your earnings history!\n\n💡 Tip: Use the calendar view to see your work patterns and payment history.`;
     }
 
 

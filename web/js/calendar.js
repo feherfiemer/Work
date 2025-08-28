@@ -505,7 +505,10 @@ class CalendarManager {
                     Force Mark as Paid
                 </button>
             `;
-        } else {
+        }
+        
+        // Only show future date notice for actual future dates (not for past or today)
+        if (!isPastOrTodayDate) {
             content += `
                 <div class="future-date-notice" style="
                     margin-top: 1rem;
