@@ -6257,3 +6257,400 @@ button.disabled:hover {
   }
 }
 
+/* ===== PREMIUM PAYMENT DIALOGS ===== */
+
+/* Clean Payment Modal */
+.payment-modal-clean {
+  max-width: 420px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.15),
+    0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.payment-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  padding: 2rem 2rem 1.5rem;
+  text-align: center;
+  position: relative;
+}
+
+.payment-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.payment-body {
+  padding: 2rem;
+  background: var(--surface);
+}
+
+/* Clean Status Display */
+.payment-status-clean {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-rgb), 0.05) 0%,
+    rgba(var(--primary-rgb), 0.02) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
+}
+
+.status-item-clean {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.status-number {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.status-label-clean {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-divider {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, 
+    transparent, 
+    rgba(var(--border-rgb), 0.3), 
+    transparent);
+}
+
+/* Clean Payment Buttons */
+.payment-buttons-clean {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.payment-buttons-clean .payment-btn {
+  background: var(--surface-alt);
+  border: 2px solid rgba(var(--primary-rgb), 0.1);
+  border-radius: 12px;
+  padding: 1rem 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-buttons-clean .payment-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(var(--primary-rgb), 0.1), 
+    transparent);
+  transition: left 0.5s ease;
+}
+
+.payment-buttons-clean .payment-btn:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.2);
+}
+
+.payment-buttons-clean .payment-btn:hover::before {
+  left: 100%;
+}
+
+.payment-buttons-clean .payment-btn.selected {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border-color: var(--primary-dark);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 10px 25px rgba(var(--primary-rgb), 0.3),
+    0 5px 15px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Payment Confirmation */
+.payment-confirmation {
+  background: linear-gradient(135deg, 
+    rgba(var(--success-rgb), 0.08) 0%,
+    rgba(var(--success-rgb), 0.04) 100%);
+  border: 2px solid rgba(var(--success-rgb), 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  animation: slideInUp 0.3s ease-out;
+}
+
+.confirmation-amount {
+  margin-bottom: 1.5rem;
+}
+
+.confirmation-amount span {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--success);
+  margin-bottom: 0.25rem;
+}
+
+.confirmation-amount small {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-confirm, .btn-cancel {
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, var(--success), #20c997);
+  color: white;
+  box-shadow: 0 4px 15px rgba(var(--success-rgb), 0.3);
+}
+
+.btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(var(--success-rgb), 0.4);
+}
+
+.btn-cancel {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 2px solid rgba(var(--border-rgb), 0.3);
+}
+
+.btn-cancel:hover {
+  background: var(--surface);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* Calendar Modal Clean */
+.calendar-modal-clean {
+  max-width: 600px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.calendar-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  padding: 2rem 2rem 1.5rem;
+  text-align: center;
+}
+
+.calendar-header h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.calendar-body {
+  padding: 2rem;
+  background: var(--surface);
+}
+
+/* Calendar Info */
+.calendar-info-clean {
+  text-align: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-rgb), 0.05) 0%,
+    rgba(var(--primary-rgb), 0.02) 100%);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Direct Payment Clean */
+.direct-payment-clean {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.payment-preview-clean {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, 
+    rgba(var(--success-rgb), 0.08) 0%,
+    rgba(var(--success-rgb), 0.04) 100%);
+  border: 2px solid rgba(var(--success-rgb), 0.2);
+  border-radius: 16px;
+}
+
+.preview-amount {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--success);
+  margin-bottom: 0.25rem;
+}
+
+.preview-type {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Calendar Actions Clean */
+.calendar-actions-clean {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-confirm-main, .btn-cancel-main {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-confirm-main {
+  background: linear-gradient(135deg, var(--success), #20c997);
+  color: white;
+  box-shadow: 0 4px 15px rgba(var(--success-rgb), 0.3);
+  flex: 1;
+  max-width: 200px;
+}
+
+.btn-confirm-main:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(var(--success-rgb), 0.4);
+}
+
+.btn-confirm-main:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-cancel-main {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 2px solid rgba(var(--border-rgb), 0.3);
+}
+
+.btn-cancel-main:hover {
+  background: var(--surface);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* Calendar Confirmation */
+.calendar-confirmation {
+  background: linear-gradient(135deg, 
+    rgba(var(--success-rgb), 0.08) 0%,
+    rgba(var(--success-rgb), 0.04) 100%);
+  border: 2px solid rgba(var(--success-rgb), 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-top: 1rem;
+  animation: slideInUp 0.3s ease-out;
+}
+
+/* Dark Theme Adjustments */
+[data-theme*="dark"] .payment-modal-clean,
+[data-theme*="dark"] .calendar-modal-clean {
+  background: linear-gradient(145deg, 
+    rgba(30, 32, 37, 0.98) 0%, 
+    rgba(24, 26, 31, 1) 50%,
+    rgba(18, 20, 25, 0.98) 100%);
+}
+
+[data-theme*="dark"] .payment-body,
+[data-theme*="dark"] .calendar-body {
+  background: transparent;
+}
+
+[data-theme*="dark"] .payment-buttons-clean .payment-btn {
+  background: rgba(var(--surface-alt-rgb), 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme*="dark"] .payment-buttons-clean .payment-btn:hover {
+  background: rgba(var(--surface-alt-rgb), 1);
+  border-color: var(--primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .payment-modal-clean,
+  .calendar-modal-clean {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+  
+  .payment-body,
+  .calendar-body {
+    padding: 1.5rem;
+  }
+  
+  .payment-buttons-clean {
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  .confirmation-actions,
+  .calendar-actions-clean {
+    flex-direction: column;
+  }
+  
+  .btn-confirm, .btn-cancel,
+  .btn-confirm-main, .btn-cancel-main {
+    width: 100%;
+  }
+}
+

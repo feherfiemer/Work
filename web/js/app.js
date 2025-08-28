@@ -2525,8 +2525,8 @@ class RServiceTracker {
             modal.classList.remove('show');
             document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
             this.selectedPaymentAmount = null;
-            const summaryEl = document.getElementById('paymentSummary');
-            if (summaryEl) summaryEl.style.display = 'none';
+            const confirmationEl = document.getElementById('paymentConfirmation');
+            if (confirmationEl) confirmationEl.style.display = 'none';
         };
 
         if (closeBtn) {
@@ -2598,44 +2598,32 @@ class RServiceTracker {
             newCancelBtn.addEventListener('click', () => {
                 document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('selected'));
                 this.selectedPaymentAmount = null;
-                const summaryEl = document.getElementById('paymentSummary');
-                if (summaryEl) summaryEl.style.display = 'none';
+                const confirmationEl = document.getElementById('paymentConfirmation');
+                if (confirmationEl) confirmationEl.style.display = 'none';
             });
         }
     }
 
     updatePaymentSummary(amount) {
-        // Use only the receipt card (replaces old summary)
-        const receiptCard = document.getElementById('paymentReceiptCard');
-        const previewSelectedAmount = document.getElementById('previewSelectedAmount');
-        const previewPaymentType = document.getElementById('previewPaymentType');
-        const previewWorkDaysCovered = document.getElementById('previewWorkDaysCovered');
-        const previewTotalPayment = document.getElementById('previewTotalPayment');
+        // Use the new simplified confirmation section
+        const confirmationEl = document.getElementById('paymentConfirmation');
+        const confirmAmount = document.getElementById('confirmAmount');
+        const confirmType = document.getElementById('confirmType');
         
-        if (receiptCard && previewSelectedAmount && previewPaymentType && previewWorkDaysCovered && previewTotalPayment) {
+        if (confirmationEl && confirmAmount && confirmType) {
             const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
             const totalWorkCompletedValue = this.pendingUnpaidDates.length * dailyWage;
             
             const isAdvance = amount > totalWorkCompletedValue;
-            const workDaysCovered = Math.min(Math.floor(amount / dailyWage), this.pendingUnpaidDates.length);
             
-            previewSelectedAmount.textContent = `₹${amount}`;
-            previewTotalPayment.textContent = `₹${amount}`;
-            previewWorkDaysCovered.textContent = workDaysCovered;
+            confirmAmount.textContent = `₹${amount}`;
+            confirmType.textContent = isAdvance ? 'Advance Payment' : 'Regular Payment';
             
-            if (isAdvance) {
-                previewPaymentType.textContent = 'Advance Payment';
-                previewPaymentType.style.color = 'var(--warning)';
-            } else {
-                previewPaymentType.textContent = 'Regular Payment';
-                previewPaymentType.style.color = 'var(--success)';
-            }
+            confirmationEl.style.display = 'block';
             
-            receiptCard.style.display = 'block';
-            
-            // Add a nice animation when the card appears
-            receiptCard.style.animation = 'bounceIn 0.6s ease-out';
-            setTimeout(() => receiptCard.style.animation = '', 600);
+            // Add animation
+            confirmationEl.style.animation = 'slideInUp 0.3s ease-out';
+            setTimeout(() => confirmationEl.style.animation = '', 300);
         }
     }
 

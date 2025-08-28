@@ -495,108 +495,61 @@
 
     <!-- Calendar Selection Modal -->
     <div id="calendarSelectionModal" class="modal">
-        <div class="modal-content large-modal">
-            <div class="modal-header">
-                <h3><i class="fas fa-calendar-alt"></i>Select Work Dates to Pay</h3>
+        <div class="modal-content calendar-modal-clean">
+            <div class="modal-header calendar-header">
+                <h3>Select Work Dates</h3>
                 <button class="close-modal" id="closeCalendarSelectionModal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="calendar-selection-info">
-                    <p>Select the work dates you want to include in this payment:</p>
-                    <div class="payment-summary-preview">
-                        <span>Selected: <span id="selectedDatesCount">0</span> days</span>
-                        <span>Total: <span id="selectedAmountPreview">₹0</span></span>
-                    </div>
+            <div class="modal-body calendar-body">
+                <!-- Simple Selection Info -->
+                <div class="calendar-info-clean">
+                    <span id="selectedDatesCount">0</span> days selected • 
+                    <span id="selectedAmountPreview">₹0</span>
                 </div>
+                
+                <!-- Calendar Display -->
                 <div class="unpaid-work-calendar" id="unpaidWorkCalendar">
                     <!-- Calendar with unpaid work dates will be generated here -->
                 </div>
                 
-                <!-- Direct Payment Summary Section -->
-                <div class="direct-payment-summary" id="directPaymentSummary" style="display: none;">
-                    <div class="section-divider"></div>
-                    
-                    <div class="payment-receipt-card">
-                        <div class="receipt-header">
-                            <h5><i class="fas fa-receipt"></i> Payment Receipt</h5>
-                            <div class="receipt-badge">Preview</div>
-                        </div>
-                        <div class="receipt-body">
-                            <div class="receipt-row">
-                                <span class="receipt-label">Selected Amount:</span>
-                                <span class="receipt-value" id="directSelectedAmountDisplay">₹0</span>
-                            </div>
-                            <div class="receipt-row">
-                                <span class="receipt-label">Payment Type:</span>
-                                <span class="receipt-value" id="directPaymentTypeDisplay">Regular</span>
-                            </div>
-                            <div class="receipt-row">
-                                <span class="receipt-label">Work Days Covered:</span>
-                                <span class="receipt-value" id="directWorkDaysCoveredDisplay">0</span>
-                            </div>
-                            <div class="receipt-divider"></div>
-                            <div class="receipt-total">
-                                <span class="total-label">Total Payment:</span>
-                                <span class="total-amount" id="directTotalPaymentDisplay">₹0</span>
-                            </div>
-                        </div>
+                <!-- Simple Direct Payment Section -->
+                <div class="direct-payment-clean" id="directPaymentSummary" style="display: none;">
+                    <div class="payment-preview-clean">
+                        <span class="preview-amount" id="directSelectedAmountDisplay">₹0</span>
+                        <span class="preview-type" id="directPaymentTypeDisplay">Regular</span>
                     </div>
                 </div>
                 
-                <!-- Payment Amount Selection Section -->
-                <div class="payment-amount-section" id="paymentAmountSection" style="display: none;">
-                    <div class="section-divider"></div>
-                    <h4><i class="fas fa-calculator"></i> Select Payment Amount</h4>
-                    
-                    <!-- Quick Amount Buttons -->
-                    <div class="payment-section">
-                        <h5>Quick Amounts:</h5>
-                        <div class="payment-buttons" id="calendarPaymentButtons">
-                            <!-- Buttons will be generated dynamically -->
-                        </div>
+                <!-- Simple Payment Amount Section -->
+                <div class="payment-amounts-clean" id="paymentAmountSection" style="display: none;">
+                    <div class="payment-buttons-clean" id="calendarPaymentButtons">
+                        <!-- Buttons will be generated dynamically -->
                     </div>
-
-                    <!-- Payment Summary for Calendar Selection -->
-                    <div class="payment-summary" id="calendarPaymentSummary" style="display: none;">
-                        <h5><i class="fas fa-receipt"></i> Payment Summary</h5>
-                        <div class="summary-item">
-                            <span>Selected Amount:</span>
+                    
+                    <div id="calendarPaymentSummary" class="calendar-confirmation" style="display: none;">
+                        <div class="confirmation-amount">
                             <span id="calendarSelectedAmountDisplay">₹0</span>
+                            <small id="calendarPaymentTypeDisplay">Regular Payment</small>
                         </div>
-                        <div class="summary-item">
-                            <span>Payment Type:</span>
-                            <span id="calendarPaymentTypeDisplay">Regular</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Work Days Covered:</span>
-                            <span id="calendarWorkDaysCoveredDisplay">0</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Selected Work Dates:</span>
-                            <span id="calendarSelectedDatesDisplay">0 days</span>
-                        </div>
-                        
-                        <!-- Confirmation Buttons -->
-                        <div class="payment-confirmation-buttons">
-                            <button id="confirmCalendarPaymentBtn" class="btn btn-primary">
-                                <i class="fas fa-check"></i> Confirm Payment
+                        <div class="confirmation-actions">
+                            <button id="confirmCalendarPaymentBtn" class="btn-confirm">
+                                Confirm
                             </button>
-                            <button id="cancelCalendarPaymentBtn" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancel
+                            <button id="cancelCalendarPaymentBtn" class="btn-cancel">
+                                Cancel
                             </button>
                         </div>
                     </div>
                 </div>
                 
-                <div class="calendar-actions">
-                    <button id="confirmCalendarDirectPaymentBtn" class="btn btn-success" disabled>
-                        <i class="fas fa-check"></i>
-                        Confirm Payment
+                <!-- Simple Actions -->
+                <div class="calendar-actions-clean">
+                    <button id="confirmCalendarDirectPaymentBtn" class="btn-confirm-main" disabled>
+                        Pay Selected
                     </button>
-                    <button id="cancelCalendarSelectionBtn" class="btn btn-secondary">
-                        <i class="fas fa-times"></i>
+                    <button id="cancelCalendarSelectionBtn" class="btn-cancel-main">
                         Cancel
                     </button>
                 </div>
@@ -606,80 +559,46 @@
 
     <!-- Payment Selection Modal -->
     <div id="paymentModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-money-bill-wave"></i>Select Payment Amount</h3>
+        <div class="modal-content payment-modal-clean">
+            <div class="modal-header payment-header">
+                <h3>Payment</h3>
                 <button class="close-modal" id="closePaymentModal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="payment-info">
-                    <div class="payment-status-card">
-                        <div class="status-header">
-                            <h5><i class="fas fa-clipboard-list"></i> Work Status</h5>
-                        </div>
-                        <div class="status-body">
-                            <div class="status-item">
-                                <span class="status-label">Unpaid Work Days:</span>
-                                <span class="status-value" id="unpaidDaysCount">4</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="status-label">Pending Amount:</span>
-                                <span class="status-value highlight" id="pendingAmount">₹100</span>
-                            </div>
-                        </div>
+            <div class="modal-body payment-body">
+                <!-- Simple Status Display -->
+                <div class="payment-status-clean">
+                    <div class="status-item-clean">
+                        <span class="status-number" id="unpaidDaysCount">0</span>
+                        <span class="status-label-clean">unpaid days</span>
+                    </div>
+                    <div class="status-divider"></div>
+                    <div class="status-item-clean">
+                        <span class="status-number" id="pendingAmount">₹0</span>
+                        <span class="status-label-clean">pending amount</span>
                     </div>
                 </div>
                 
-                <div class="payment-options">
-                    <h4><i class="fas fa-calculator"></i> Select Payment Amount</h4>
-                    
-                    <!-- Quick Amount Buttons (Dynamically Generated) -->
-                    <div class="payment-section">
-                        <h5>Quick Amounts:</h5>
-                        <div class="payment-buttons" id="paymentButtons">
-                            <!-- Buttons will be generated dynamically based on increment value -->
-                        </div>
-                    </div>
+                <!-- Clean Payment Buttons -->
+                <div class="payment-buttons-clean" id="paymentButtons">
+                    <!-- Buttons will be generated dynamically -->
+                </div>
 
-                    <!-- Enhanced Payment Receipt Card (Replaces Summary) -->
-                    <div class="payment-receipt-card" id="paymentReceiptCard" style="display: none;">
-                        <div class="receipt-header">
-                            <h5><i class="fas fa-receipt"></i> Payment Preview</h5>
-                            <div class="receipt-badge">Live Preview</div>
-                        </div>
-                        <div class="receipt-body">
-                            <div class="receipt-row">
-                                <span class="receipt-label">Selected Amount:</span>
-                                <span class="receipt-value" id="previewSelectedAmount">₹0</span>
-                            </div>
-                            <div class="receipt-row">
-                                <span class="receipt-label">Payment Type:</span>
-                                <span class="receipt-value" id="previewPaymentType">Regular</span>
-                            </div>
-                            <div class="receipt-row">
-                                <span class="receipt-label">Work Days Covered:</span>
-                                <span class="receipt-value" id="previewWorkDaysCovered">0</span>
-                            </div>
-                            <div class="receipt-divider"></div>
-                            <div class="receipt-total">
-                                <span class="total-label">Total Payment:</span>
-                                <span class="total-amount" id="previewTotalPayment">₹0</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Confirmation Buttons in Card -->
-                        <div class="receipt-actions">
-                            <button id="confirmPaymentBtn" class="btn btn-primary">
-                                <i class="fas fa-check"></i> Confirm Payment
-                            </button>
-                            <button id="cancelPaymentBtn" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancel
-                            </button>
-                        </div>
+                <!-- Simple Confirmation -->
+                <div id="paymentConfirmation" class="payment-confirmation" style="display: none;">
+                    <div class="confirmation-amount">
+                        <span id="confirmAmount">₹0</span>
+                        <small id="confirmType">Regular Payment</small>
                     </div>
-
+                    <div class="confirmation-actions">
+                        <button id="confirmPaymentBtn" class="btn-confirm">
+                            Confirm
+                        </button>
+                        <button id="cancelPaymentBtn" class="btn-cancel">
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
