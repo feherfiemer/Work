@@ -399,44 +399,47 @@
     </div>
 
     <!-- Modals -->
-    <div id="aboutModal" class="modal">
-        <div class="modal-content standard-modal-clean">
-            <div class="modal-header standard-header">
-                <h3>About Tracker</h3>
-                <button class="close-modal corner-close">
+    <div id="aboutModal" class="modal-modern">
+        <div class="modal-content-modern about-modal-modern">
+            <div class="modal-header-modern">
+                <h3 class="modal-title-modern">
+                    <i class="fas fa-info-circle"></i>
+                    About R-Service Tracker
+                </h3>
+                <button class="close-modal-modern">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="about-content">
-                    <div class="app-info">
-                        <div class="app-title">
-                            <i class="fas fa-check-circle app-icon"></i>
-                            <h4>Tracker</h4>
+            <div class="modal-body-modern">
+                <div class="about-content-modern">
+                    <div class="app-info-modern">
+                        <div class="app-title-modern">
+                            <i class="fas fa-check-circle app-icon-modern"></i>
+                            <h4>R-Service Tracker</h4>
                         </div>
-                        <p class="app-description">Professional work tracking and payment management system with advanced features for freelancers and contractors.</p>
+                        <p class="app-description-modern">Professional work tracking and payment management system with advanced features for freelancers and contractors.</p>
                     </div>
                     
-                    <div class="features-compact">
-                        <div class="feature-highlight">
+                    <div class="features-modern">
+                        <div class="feature-card-modern">
                             <i class="fas fa-briefcase"></i>
                             <span>Daily Work Tracking</span>
                         </div>
-                        <div class="feature-highlight">
+                        <div class="feature-card-modern">
                             <i class="fas fa-money-bill-wave"></i>
                             <span>Advanced Payment System</span>
                         </div>
-                        <div class="feature-highlight">
+                        <div class="feature-card-modern">
                             <i class="fas fa-chart-line"></i>
                             <span>Analytics & PDF Reports</span>
                         </div>
-                        <div class="feature-highlight">
+                        <div class="feature-card-modern">
                             <i class="fas fa-mobile-alt"></i>
                             <span>Offline PWA</span>
                         </div>
                     </div>
                     
-                    <div class="privacy-info">
+                    <div class="privacy-info-modern">
                         <p><i class="fas fa-shield-alt"></i> <strong>Privacy First:</strong> All data stays on your device. No tracking, no ads.</p>
                         <p><i class="fas fa-star"></i> Premium tracking solution for professionals</p>
                     </div>
@@ -445,48 +448,54 @@
         </div>
     </div>
 
-    <div id="confirmModal" class="modal">
-        <div class="modal-content standard-modal-clean">
-            <div class="modal-header standard-header">
-                <h3>Confirm Action</h3>
-                <button class="close-modal corner-close" id="closeConfirmModal">
+    <div id="confirmModal" class="modal-modern">
+        <div class="modal-content-modern confirm-modal-modern">
+            <div class="modal-header-modern">
+                <h3 class="modal-title-modern">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Confirm Action
+                </h3>
+                <button class="close-modal-modern" id="closeConfirmModal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body">
-                <p id="confirmMessage"></p>
-                <div class="modal-actions">
-                    <button id="confirmYes" class="btn btn-danger">Yes, Continue</button>
-                    <button id="confirmNo" class="btn btn-secondary">Cancel</button>
+            <div class="modal-body-modern">
+                <p id="confirmMessage" class="confirm-message-modern"></p>
+                <div class="modal-actions-modern">
+                    <button id="confirmYes" class="btn-modern-danger">Yes, Continue</button>
+                    <button id="confirmNo" class="btn-modern-secondary">Cancel</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Date Selection Modal -->
-    <div id="dateSelectionModal" class="modal">
-        <div class="modal-content payment-modal-clean">
-            <div class="modal-header payment-header">
-                <h3><i class="fas fa-calendar-check"></i>Select Payment Date</h3>
-                <button class="close-modal corner-close" id="closeDateSelectionModal">
+    <div id="dateSelectionModal" class="modal-modern">
+        <div class="modal-content-modern date-modal-modern">
+            <div class="modal-header-modern">
+                <h3 class="modal-title-modern">
+                    <i class="fas fa-calendar-check"></i>
+                    Select Payment Date
+                </h3>
+                <button class="close-modal-modern" id="closeDateSelectionModal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="date-selection-info">
+            <div class="modal-body-modern">
+                <div class="date-selection-info-modern">
                     <p>Choose when you want to mark the payment:</p>
                 </div>
-                <div class="date-options">
-                    <button id="todayDateBtn" class="btn btn-primary date-option-btn">
+                <div class="date-options-modern">
+                    <button id="todayDateBtn" class="date-option-btn-modern">
                         <i class="fas fa-calendar-day"></i>
-                        <div>
+                        <div class="date-option-content-modern">
                             <strong>Today</strong>
                             <small>Mark payment for today</small>
                         </div>
                     </button>
-                    <button id="previousDateBtn" class="btn btn-secondary date-option-btn">
+                    <button id="previousDateBtn" class="date-option-btn-modern">
                         <i class="fas fa-calendar-alt"></i>
-                        <div>
+                        <div class="date-option-content-modern">
                             <strong>Previous Date</strong>
                             <small>Select specific dates from calendar</small>
                         </div>
@@ -497,21 +506,24 @@
     </div>
 
     <!-- Calendar Selection Modal -->
-    <div id="calendarSelectionModal" class="modal">
-        <div class="modal-content calendar-modal-clean">
-            <div class="modal-header calendar-header">
-                <h3>Select Work Dates</h3>
-                <button class="close-modal corner-close" id="closeCalendarSelectionModal">
+    <div id="calendarSelectionModal" class="modal-modern">
+        <div class="modal-content-modern calendar-modal-modern">
+            <div class="modal-header-modern">
+                <h3 class="modal-title-modern">
+                    <i class="fas fa-calendar-check"></i>
+                    Select Work Dates
+                </h3>
+                <button class="close-modal-modern" id="closeCalendarSelectionModal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body calendar-body">
+            <div class="modal-body-modern">
                 <!-- Calendar Display -->
                 <div class="unpaid-work-calendar" id="unpaidWorkCalendar">
                     <!-- Calendar with unpaid work dates will be generated here -->
                 </div>
                 
-                <!-- Simple Direct Payment Section -->
+                <!-- Modern Direct Payment Section -->
                 <div class="direct-payment-clean" id="directPaymentSummary" style="display: none;">
                     <div class="payment-preview-clean">
                         <span class="preview-amount" id="directSelectedAmountDisplay">₹0</span>
@@ -519,60 +531,58 @@
                     </div>
                 </div>
                 
-                <!-- Simple Payment Amount Section -->
+                <!-- Modern Payment Amount Section -->
                 <div class="payment-amounts-clean" id="paymentAmountSection" style="display: none;">
-                    <div class="payment-buttons-clean" id="calendarPaymentButtons">
+                    <div class="payment-buttons-modern" id="calendarPaymentButtons">
                         <!-- Buttons will be generated dynamically -->
                     </div>
                     
-                    <div id="calendarPaymentSummary" class="calendar-confirmation" style="display: none;">
-                        <div class="confirmation-amount">
-                            <span id="calendarSelectedAmountDisplay">₹0</span>
-                            <small id="calendarPaymentTypeDisplay">Regular Payment</small>
-                        </div>
-                        <div class="confirmation-actions">
-                            <button id="confirmCalendarPaymentBtn" class="btn-confirm">
+                    <div id="calendarPaymentSummary" class="payment-confirmation-modern" style="display: none;">
+                        <span class="confirmation-amount-modern" id="calendarSelectedAmountDisplay">₹0</span>
+                        <span class="confirmation-type-modern" id="calendarPaymentTypeDisplay">Regular Payment</span>
+                        <div class="confirmation-actions-modern">
+                            <button id="confirmCalendarPaymentBtn" class="btn-modern-primary">
                                 Confirm
                             </button>
-                            <button id="cancelCalendarPaymentBtn" class="btn-cancel">
+                            <button id="cancelCalendarPaymentBtn" class="btn-modern-secondary">
                                 Cancel
                             </button>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Simple Calendar Summary -->
-                <div class="payment-summary-simple" id="calendarPaymentSummaryCard">
-                    <div class="summary-header">
+                <!-- Modern Calendar Summary -->
+                <div class="calendar-summary-modern" id="calendarPaymentSummaryCard">
+                    <div class="summary-header-modern">
                         <i class="fas fa-calendar-check"></i>
                         <span>Selection Summary</span>
                     </div>
-                    <div class="summary-info">
-                        <div class="summary-item">
-                            <span class="summary-label">Days Selected:</span>
-                            <span class="summary-value" id="selectedDatesCount">0</span>
+                    <div class="summary-grid-modern">
+                        <div class="summary-item-modern">
+                            <span class="summary-label-modern">Days Selected</span>
+                            <span class="summary-value-modern" id="selectedDatesCount">0</span>
                         </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Total Amount:</span>
-                            <span class="summary-value" id="selectedAmountPreview">₹0</span>
+                        <div class="summary-item-modern">
+                            <span class="summary-label-modern">Total Amount</span>
+                            <span class="summary-value-modern" id="selectedAmountPreview">₹0</span>
                         </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Daily Rate:</span>
-                            <span class="summary-value" id="calendarDailyWageDisplay">₹25</span>
+                        <div class="summary-item-modern">
+                            <span class="summary-label-modern">Daily Rate</span>
+                            <span class="summary-value-modern" id="calendarDailyWageDisplay">₹25</span>
                         </div>
-                        <div class="summary-selected" id="calendarPaymentSummaryTotal" style="display: none;">
-                            <span class="selected-label">Payment Amount:</span>
-                            <span class="selected-amount" id="calendarSelectedPaymentAmount">₹0</span>
+                        <div class="summary-item-modern" id="calendarPaymentSummaryTotal" style="display: none;">
+                            <span class="summary-label-modern">Payment Amount</span>
+                            <span class="summary-value-modern" id="calendarSelectedPaymentAmount">₹0</span>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Simple Actions -->
-                <div class="calendar-actions-clean">
-                    <button id="confirmCalendarDirectPaymentBtn" class="btn-confirm-main" disabled>
+                <!-- Modern Actions -->
+                <div class="calendar-actions-modern">
+                    <button id="confirmCalendarDirectPaymentBtn" class="btn-modern-primary" disabled>
                         Pay Selected
                     </button>
-                    <button id="cancelCalendarSelectionBtn" class="btn-cancel-main">
+                    <button id="cancelCalendarSelectionBtn" class="btn-modern-secondary">
                         Cancel
                     </button>
                 </div>
@@ -587,57 +597,58 @@
     </div>
 
     <!-- Payment Selection Modal -->
-    <div id="paymentModal" class="modal">
-        <div class="modal-content payment-modal-clean">
-            <div class="modal-header payment-header">
-                <h3>Payment</h3>
-                <button class="close-modal corner-close" id="closePaymentModal">
+    <div id="paymentModal" class="modal-modern">
+        <div class="modal-content-modern payment-modal-modern">
+            <div class="modal-header-modern">
+                <h3 class="modal-title-modern">
+                    <i class="fas fa-credit-card"></i>
+                    Payment
+                </h3>
+                <button class="close-modal-modern" id="closePaymentModal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body payment-body">
-                <!-- Clean Payment Buttons -->
-                <div class="payment-buttons-clean" id="paymentButtons">
+            <div class="modal-body-modern">
+                <!-- Modern Payment Buttons -->
+                <div class="payment-buttons-modern" id="paymentButtons">
                     <!-- Buttons will be generated dynamically -->
                 </div>
 
-                <!-- Simple Payment Summary -->
-                <div class="payment-summary-simple" id="paymentSummaryCard">
-                    <div class="summary-header">
+                <!-- Modern Payment Summary -->
+                <div class="payment-summary-modern" id="paymentSummaryCard">
+                    <div class="summary-header-modern">
                         <i class="fas fa-info-circle"></i>
                         <span>Payment Summary</span>
                     </div>
-                    <div class="summary-info">
-                        <div class="summary-item">
-                            <span class="summary-label">Unpaid Days:</span>
-                            <span class="summary-value" id="unpaidDaysCount">0</span>
+                    <div class="summary-grid-modern">
+                        <div class="summary-item-modern">
+                            <span class="summary-label-modern">Unpaid Days</span>
+                            <span class="summary-value-modern" id="unpaidDaysCount">0</span>
                         </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Total Pending:</span>
-                            <span class="summary-value" id="pendingAmount">₹0</span>
+                        <div class="summary-item-modern">
+                            <span class="summary-label-modern">Total Pending</span>
+                            <span class="summary-value-modern" id="pendingAmount">₹0</span>
                         </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Daily Rate:</span>
-                            <span class="summary-value" id="dailyWageDisplay">₹25</span>
+                        <div class="summary-item-modern">
+                            <span class="summary-label-modern">Daily Rate</span>
+                            <span class="summary-value-modern" id="dailyWageDisplay">₹25</span>
                         </div>
-                        <div class="summary-selected" id="paymentSummaryTotal" style="display: none;">
-                            <span class="selected-label">Selected Payment:</span>
-                            <span class="selected-amount" id="selectedPaymentAmount">₹0</span>
+                        <div class="summary-item-modern" id="paymentSummaryTotal" style="display: none;">
+                            <span class="summary-label-modern">Selected Payment</span>
+                            <span class="summary-value-modern" id="selectedPaymentAmount">₹0</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Simple Confirmation -->
-                <div id="paymentConfirmation" class="payment-confirmation" style="display: none;">
-                    <div class="confirmation-amount">
-                        <span id="confirmAmount">₹0</span>
-                        <small id="confirmType">Regular Payment</small>
-                    </div>
-                    <div class="confirmation-actions">
-                        <button id="confirmPaymentBtn" class="btn-confirm">
+                <!-- Modern Confirmation -->
+                <div id="paymentConfirmation" class="payment-confirmation-modern" style="display: none;">
+                    <span class="confirmation-amount-modern" id="confirmAmount">₹0</span>
+                    <span class="confirmation-type-modern" id="confirmType">Regular Payment</span>
+                    <div class="confirmation-actions-modern">
+                        <button id="confirmPaymentBtn" class="btn-modern-primary">
                             Confirm
                         </button>
-                        <button id="cancelPaymentBtn" class="btn-cancel">
+                        <button id="cancelPaymentBtn" class="btn-modern-secondary">
                             Cancel
                         </button>
                     </div>

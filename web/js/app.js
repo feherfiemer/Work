@@ -1450,7 +1450,7 @@ class RServiceTracker {
 
     setupModalHandlers() {
         const aboutModal = document.getElementById('aboutModal');
-        const closeModalBtns = document.querySelectorAll('.close-modal');
+        const closeModalBtns = document.querySelectorAll('.close-modal, .close-modal-modern');
         
         closeModalBtns.forEach(btn => {
             btn.addEventListener('click', () => {
