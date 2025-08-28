@@ -894,8 +894,7 @@ class CalendarManager {
 
                 if (window.app && typeof window.app.updateDashboard === 'function') {
                     try {
-                        window.app.currentStats = await this.db.getEarningsStats();
-                        window.app.updateDashboard();
+                        await window.app.updateDashboard();
                         await window.app.updatePendingUnpaidDates();
                         await window.app.updatePaidButtonVisibility();
                         
@@ -1005,8 +1004,7 @@ class CalendarManager {
             if (window.app && typeof window.app.updatePendingUnpaidDates === 'function') {
                 try {
                     await window.app.updatePendingUnpaidDates();
-                    window.app.currentStats = await this.db.getEarningsStats();
-                    window.app.updateDashboard();
+                    await window.app.updateDashboard();
                     await window.app.updatePaidButtonVisibility();
                     console.log('System amounts updated after calendar marking');
                 } catch (updateError) {
@@ -1028,8 +1026,7 @@ class CalendarManager {
 
                 if (window.app && typeof window.app.updateDashboard === 'function') {
                     try {
-                        window.app.currentStats = await this.db.getEarningsStats();
-                        window.app.updateDashboard();
+                        await window.app.updateDashboard();
                         
                         // Update today's status (done button state)
                         if (typeof window.app.updateTodayStatus === 'function') {

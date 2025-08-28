@@ -1557,30 +1557,42 @@ class RServiceTracker {
 
     async loadInitialData() {
         try {
+            console.log('[App] Loading initial data...');
             this.currentStats = await this.db.getEarningsStats();
+            console.log('[App] Initial stats loaded:', this.currentStats);
             
-            this.updateDashboard();
+            await this.updateDashboard();
             
             await this.checkPendingPayments();
             
-            this.updateTodayStatus();
+            await this.updateTodayStatus();
             
+            console.log('[App] Initial data loading completed');
         } catch (error) {
             console.error('Error loading initial data:', error);
         }
     }
 
-    updateDashboard() {
+    async updateDashboard() {
         if (this.updateDashboardTimeout) {
             clearTimeout(this.updateDashboardTimeout);
         }
         
-        this.updateDashboardTimeout = setTimeout(() => {
-            this._performDashboardUpdate();
+        this.updateDashboardTimeout = setTimeout(async () => {
+            await this._performDashboardUpdate();
         }, 50);
     }
 
-    _performDashboardUpdate() {
+    async _performDashboardUpdate() {
+        try {
+            // Fetch fresh stats every time dashboard updates
+            this.currentStats = await this.db.getEarningsStats();
+            console.log('[Dashboard] Fresh stats loaded:', this.currentStats);
+        } catch (error) {
+            console.error('[Dashboard] Error fetching fresh stats:', error);
+            // Fall back to existing stats if available
+        }
+
         const dashboardCards = document.querySelectorAll('.card');
         dashboardCards.forEach(card => {
             card.style.animation = 'fadeInUp 0.5s ease-out';
