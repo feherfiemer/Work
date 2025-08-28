@@ -2986,7 +2986,10 @@ class RServiceTracker {
             
             bannerContent.innerHTML = instructions + `
                 <div class="install-banner-actions">
-                    <button id="closeInstallBtn" class="close-btn">
+                    <button id="installAppBtn" class="install-btn">
+                        <i class="fas fa-download"></i> Install
+                    </button>
+                    <button id="closeInstallBtn" class="close-btn" title="Close (will appear again on payment days)">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -2996,6 +2999,15 @@ class RServiceTracker {
         // Show banner with animation
         banner.style.display = 'block';
         setTimeout(() => banner.classList.add('show'), 100);
+        
+        // Handle install button click (generic fallback)
+        const installBtn = document.getElementById('installAppBtn');
+        if (installBtn) {
+            installBtn.onclick = () => {
+                // For generic install, provide instructions
+                this.notifications.showToast('Please use your browser menu to install: Menu → Add to Home Screen or Install App', 'info', 8000);
+            };
+        }
         
         // Handle close button click
         const closeBtn = document.getElementById('closeInstallBtn');

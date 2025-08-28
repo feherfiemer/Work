@@ -161,6 +161,7 @@ class CalendarManager {
         const isWorked = workRecord && workRecord.status === 'completed';
         
         const isPaid = this.isDatePaid(dateString);
+        const isForcePaid = isPaid && !isWorked; // Force paid means paid but no work record
         
         if (isToday) {
             cell.classList.add('today');
@@ -170,6 +171,9 @@ class CalendarManager {
             if (isPaid) {
                 cell.classList.add('paid');
             }
+        } else if (isForcePaid) {
+            // Show force-paid dates with a special style
+            cell.classList.add('force-paid');
         }
 
         const cellContent = this.createCellContent(day, workRecord, isPaid, isToday);
@@ -263,6 +267,25 @@ class CalendarManager {
                 `;
                 indicators.appendChild(paidIndicator);
             }
+        } else if (isPaid && !workRecord) {
+            // Force-paid date (payment without work record)
+            const forcePaidIndicator = document.createElement('span');
+            forcePaidIndicator.className = 'force-paid-indicator';
+            forcePaidIndicator.innerHTML = '<i class="fas fa-coins"></i>';
+            forcePaidIndicator.style.cssText = `
+                background: var(--warning);
+                color: white;
+                border-radius: 50%;
+                width: 10px;
+                height: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.5rem;
+                flex-shrink: 0;
+                margin: 0 1px;
+            `;
+            indicators.appendChild(forcePaidIndicator);
         }
 
         content.appendChild(dayNumber);
@@ -361,44 +384,75 @@ class CalendarManager {
                 }
             }
         } else {
-            content += `
-                <div class="work-status not-worked">
-                    <i class="fas fa-times-circle"></i>
-                    <span>No Work Recorded</span>
-                </div>
-            `;
-            
-            // Add Mark as Done button only for past or today dates
-            if (isPastOrTodayDate) {
+            // Check if this date has a force payment (paid but no work record)
+            if (isPaid) {
                 content += `
-                    <button class="mark-done-btn" data-date="${dateString}" style="
-                        margin-top: 1rem;
-                        width: 100%;
-                        padding: 0.75rem;
-                        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                        color: white;
-                        border: none;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-family: var(--font-family);
-                        font-weight: 600;
-                        font-size: 0.9rem;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        box-shadow: var(--shadow-light);
-                        transition: all var(--transition-fast);
-                    ">
-                        <i class="fas fa-check"></i>
-                        Mark as Done
-                    </button>
+                    <div class="work-status not-worked">
+                        <i class="fas fa-coins"></i>
+                        <span>Force Payment (No Work Recorded)</span>
+                    </div>
                 `;
+                
+                const payment = this.getPaymentForDate(dateString);
+                const paidAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+                content += `
+                    <div class="payment-status success">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Force Payment Received</span>
+                    </div>
+                    <div class="payment-details">
+                        <span class="label">Amount Paid:</span>
+                        <span class="amount">₹${paidAmount}</span>
+                    </div>
+                `;
+                if (payment) {
+                    content += `
+                        <div class="payment-details">
+                            <span class="label">Payment Date:</span>
+                            <span class="date">${new Date(payment.paymentDate).toLocaleDateString()}</span>
+                        </div>
+                    `;
+                }
+            } else {
+                content += `
+                    <div class="work-status not-worked">
+                        <i class="fas fa-times-circle"></i>
+                        <span>No Work Recorded</span>
+                    </div>
+                `;
+                
+                // Add Mark as Done button only for past or today dates
+                if (isPastOrTodayDate) {
+                    content += `
+                        <button class="mark-done-btn" data-date="${dateString}" style="
+                            margin-top: 1rem;
+                            width: 100%;
+                            padding: 0.75rem;
+                            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                            color: white;
+                            border: none;
+                            border-radius: var(--border-radius);
+                            cursor: pointer;
+                            font-family: var(--font-family);
+                            font-weight: 600;
+                            font-size: 0.9rem;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.5rem;
+                            box-shadow: var(--shadow-light);
+                            transition: all var(--transition-fast);
+                        ">
+                            <i class="fas fa-check"></i>
+                            Mark as Done
+                        </button>
+                    `;
+                }
             }
         }
         
-        // Add Force Paid button for any past or today date where no work record exists
-        if (isPastOrTodayDate && (!workRecord || workRecord.status !== 'completed')) {
+        // Add Force Paid button for any past or today date where no work record exists and not already paid
+        if (isPastOrTodayDate && (!workRecord || workRecord.status !== 'completed') && !isPaid) {
             content += `
                 <button class="force-paid-btn" data-date="${dateString}" style="
                     margin-top: 0.5rem;

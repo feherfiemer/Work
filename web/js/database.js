@@ -294,9 +294,22 @@ class DatabaseManager {
         );
         const pendingWorkValue = unpaidWork.length * DAILY_WAGE;
         
-        const totalEarned = totalPaid;
+        // Calculate total earned as work value + any force payments (payments without work records)
+        const workBasedPayments = payments.filter(payment => 
+            payment.workDates && payment.workDates.some(date => 
+                workRecords.some(record => record.date === date && record.status === 'completed')
+            )
+        );
+        const forcePayments = payments.filter(payment => 
+            payment.workDates && payment.workDates.every(date => 
+                !workRecords.some(record => record.date === date && record.status === 'completed')
+            )
+        );
         
-        const currentBalance = pendingWorkValue;
+        const totalEarned = (totalWorked * DAILY_WAGE) + forcePayments.reduce((sum, payment) => sum + payment.amount, 0);
+        
+        // Current balance is earned amount minus paid amount
+        const currentBalance = totalEarned - totalPaid;
         
         return {
             totalWorked,

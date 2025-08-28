@@ -2725,6 +2725,11 @@ body {
   border-left: 4px solid var(--info);
 }
 
+.calendar-cell.force-paid {
+  background: var(--warning-alpha);
+  border-left: 4px solid var(--warning);
+}
+
 /* ===== ALIGNMENT AND LAYOUT FIXES ===== */
 .btn, button {
   display: flex;
@@ -4986,8 +4991,6 @@ button.disabled:hover {
   /* Ensure tooltip stays completely fixed */
   will-change: transform, opacity;
   contain: layout style paint;
-  top: auto !important;
-  left: auto !important;
   /* Ensure proper stacking and display */
   display: none;
 }
