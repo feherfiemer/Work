@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Calendar Test</title>
+    <style>
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+        .calendar-cell { border: 1px solid #ccc; padding: 5px; min-height: 30px; }
+        .calendar-cell.force-paid { background: rgba(255, 152, 0, 0.1); border-left: 4px solid #ff9800; }
+        .force-paid-indicator { background: #ff9800; color: white; border-radius: 50%; width: 15px; height: 15px; }
+        #calendarGrid { max-width: 800px; margin: 20px auto; }
+        #calendarTitle { text-align: center; font-size: 24px; margin: 20px; }
+        .error { color: red; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Emergency Calendar Test</h1>
+    <div id="calendarTitle">Loading...</div>
+    <div id="calendarGrid"></div>
+    <div id="testResults"></div>
+
+    <script src="js/database.js"></script>
+    <script src="js/amountFlow.js"></script>
+    <script src="js/calendar.js"></script>
+    <script>
+        // Simple test
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const resultsDiv = document.getElementById('testResults');
+                resultsDiv.innerHTML = '<p>Testing calendar initialization...</p>';
+                
+                // Initialize database
+                const db = new WorkDatabase();
+                await db.init();
+                
+                // Initialize calendar
+                const calendar = new Calendar(db);
+                await calendar.init();
+                
+                resultsDiv.innerHTML += '<p style="color: green;">✅ Calendar initialized successfully!</p>';
+                
+            } catch (error) {
+                console.error('Calendar test failed:', error);
+                document.getElementById('testResults').innerHTML = 
+                    `<p style="color: red;">❌ Calendar test failed: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -13,11 +13,20 @@ class CalendarManager {
 
     async init() {
         try {
+            console.log('[Calendar] Initializing calendar...');
             await this.loadData();
+            console.log('[Calendar] Data loaded, setting up event listeners...');
             this.setupEventListeners();
+            console.log('[Calendar] Event listeners set up, rendering...');
             this.render();
+            console.log('[Calendar] Calendar initialization completed successfully');
         } catch (error) {
-            console.error('Error initializing calendar:', error);
+            console.error('[Calendar] Error initializing calendar:', error);
+            // Try to show a basic calendar structure
+            const gridElement = document.getElementById('calendarGrid');
+            if (gridElement) {
+                gridElement.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Calendar initialization failed. Please refresh the page.</div>';
+            }
         }
     }
 
@@ -78,8 +87,19 @@ class CalendarManager {
     }
 
     render() {
-        this.updateTitle();
-        this.renderGrid();
+        try {
+            console.log('[Calendar] Starting render...');
+            this.updateTitle();
+            this.renderGrid();
+            console.log('[Calendar] Render completed successfully');
+        } catch (error) {
+            console.error('[Calendar] Error during render:', error);
+            // Try to show an error message in the calendar
+            const gridElement = document.getElementById('calendarGrid');
+            if (gridElement) {
+                gridElement.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Calendar render error. Please refresh the page.</div>';
+            }
+        }
     }
 
     updateTitle() {
@@ -92,10 +112,14 @@ class CalendarManager {
     }
 
     renderGrid() {
-        const gridElement = document.getElementById('calendarGrid');
-        if (!gridElement) return;
+        try {
+            const gridElement = document.getElementById('calendarGrid');
+            if (!gridElement) {
+                console.error('[Calendar] Calendar grid element not found');
+                return;
+            }
 
-        const fragment = document.createDocumentFragment();
+            const fragment = document.createDocumentFragment();
         
         gridElement.innerHTML = '';
 
@@ -148,20 +172,33 @@ class CalendarManager {
         }
         
         gridElement.appendChild(fragment);
+        
+        } catch (error) {
+            console.error('[Calendar] Error in renderGrid:', error);
+            // Show basic calendar structure if there's an error
+            const gridElement = document.getElementById('calendarGrid');
+            if (gridElement) {
+                gridElement.innerHTML = '<div style="padding: 20px; text-align: center;">Calendar loading error. Please try refreshing.</div>';
+            }
+        }
     }
 
     createDayCell(day, cellDate, dateString) {
-        const cell = document.createElement('div');
-        cell.className = 'calendar-cell';
-        
-        const today = new Date();
-        const isToday = this.isSameDate(cellDate, today);
-        
-        const workRecord = this.workRecords.find(record => record.date === dateString);
-        const isWorked = workRecord && workRecord.status === 'completed';
-        
-        const isPaid = this.isDatePaid(dateString);
-        const isForcePaid = this.isForcePaidDate(dateString); // Use dedicated force paid detection
+        try {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell';
+            
+            const today = new Date();
+            const isToday = this.isSameDate(cellDate, today);
+            
+            // Safety check for work records
+            const workRecord = (this.workRecords && Array.isArray(this.workRecords)) 
+                ? this.workRecords.find(record => record.date === dateString)
+                : null;
+            const isWorked = workRecord && workRecord.status === 'completed';
+            
+            const isPaid = this.isDatePaid(dateString);
+            const isForcePaid = this.isForcePaidDate(dateString); // Use dedicated force paid detection
         
         if (isToday) {
             cell.classList.add('today');
@@ -192,6 +229,15 @@ class CalendarManager {
         });
 
         return cell;
+        
+        } catch (error) {
+            console.error('[Calendar] Error creating day cell:', error);
+            // Return a basic cell if there's an error
+            const errorCell = document.createElement('div');
+            errorCell.className = 'calendar-cell';
+            errorCell.innerHTML = `<div class="day-number">${day}</div>`;
+            return errorCell;
+        }
     }
 
     createCellContent(day, workRecord, isPaid, isToday) {
@@ -762,47 +808,78 @@ class CalendarManager {
     }
 
     isDatePaid(dateString) {
-        return this.payments.some(payment => 
-            payment.workDates.includes(dateString)
-        );
+        try {
+            if (!this.payments || !Array.isArray(this.payments)) {
+                return false;
+            }
+            return this.payments.some(payment => 
+                payment.workDates && payment.workDates.includes(dateString)
+            );
+        } catch (error) {
+            console.error('[Calendar] Error in isDatePaid:', error);
+            return false;
+        }
     }
 
     isForcePaidDate(dateString) {
-        // A date is force paid if:
-        // 1. It has a payment associated with it, OR
-        // 2. It's an advance payment made on that date (even if not in workDates due to bug fix)
-        
-        // Check if directly paid
-        const directlyPaid = this.payments.some(payment => 
-            payment.workDates.includes(dateString)
-        );
-        
-        if (directlyPaid) {
-            // If directly paid, check if there's no work record (force paid scenario)
-            const workRecord = this.workRecords.find(record => record.date === dateString);
-            return !workRecord || workRecord.status !== 'completed';
+        try {
+            // Safety check: ensure data is loaded
+            if (!this.payments || !Array.isArray(this.payments) || !this.workRecords || !Array.isArray(this.workRecords)) {
+                console.warn('[Calendar] Data not loaded for force paid detection:', { 
+                    payments: this.payments?.length || 'undefined', 
+                    workRecords: this.workRecords?.length || 'undefined' 
+                });
+                return false;
+            }
+
+            // A date is force paid if:
+            // 1. It has a payment associated with it, OR
+            // 2. It's an advance payment made on that date (even if not in workDates due to bug fix)
+            
+            // Check if directly paid
+            const directlyPaid = this.payments.some(payment => 
+                payment.workDates && payment.workDates.includes(dateString)
+            );
+            
+            if (directlyPaid) {
+                // If directly paid, check if there's no work record (force paid scenario)
+                const workRecord = this.workRecords.find(record => record.date === dateString);
+                return !workRecord || workRecord.status !== 'completed';
+            }
+            
+            // Check if this date had an advance payment made on it (force payment scenario)
+            const advancePaymentOnDate = this.payments.find(payment => 
+                payment.isAdvance && 
+                payment.paymentDate === dateString &&
+                payment.workDates && 
+                payment.workDates.length === 1 &&
+                payment.workDates[0] === dateString
+            );
+            
+            if (advancePaymentOnDate) {
+                const workRecord = this.workRecords.find(record => record.date === dateString);
+                return !workRecord || workRecord.status !== 'completed';
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('[Calendar] Error in isForcePaidDate:', error);
+            return false;
         }
-        
-        // Check if this date had an advance payment made on it (force payment scenario)
-        const advancePaymentOnDate = this.payments.find(payment => 
-            payment.isAdvance && 
-            payment.paymentDate === dateString &&
-            payment.workDates.length === 1 &&
-            payment.workDates[0] === dateString
-        );
-        
-        if (advancePaymentOnDate) {
-            const workRecord = this.workRecords.find(record => record.date === dateString);
-            return !workRecord || workRecord.status !== 'completed';
-        }
-        
-        return false;
     }
 
     getPaymentForDate(dateString) {
-        return this.payments.find(payment => 
-            payment.workDates.includes(dateString)
-        );
+        try {
+            if (!this.payments || !Array.isArray(this.payments)) {
+                return null;
+            }
+            return this.payments.find(payment => 
+                payment.workDates && payment.workDates.includes(dateString)
+            );
+        } catch (error) {
+            console.error('[Calendar] Error in getPaymentForDate:', error);
+            return null;
+        }
     }
 
     async isPaymentDay() {

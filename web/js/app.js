@@ -2853,14 +2853,23 @@ class RServiceTracker {
 
     async initializeViews() {
         try {
+            console.log('[App] Initializing charts...');
             await this.charts.initializeCharts();
             
+            console.log('[App] Initializing calendar...');
             await this.calendar.init();
+            console.log('[App] Calendar initialized successfully');
             
             this.setupBalanceSheetFilters();
             
         } catch (error) {
-            console.error('Error initializing views:', error);
+            console.error('[App] Error initializing views:', error);
+            
+            // Try to show calendar anyway even if there was an error
+            if (error.message?.includes('calendar') || error.message?.includes('Calendar')) {
+                console.warn('[App] Calendar initialization failed, but continuing...');
+                this.notifications?.showToast('Calendar had initialization issues. Some features may not work properly.', 'warning', 5000);
+            }
         }
     }
 
