@@ -329,16 +329,33 @@ class CalendarManager {
             if (isPaid) {
                 const payment = this.getPaymentForDate(dateString);
                 const paidAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+                const totalPaymentAmount = payment ? payment.amount : paidAmount;
+                const workDaysInPayment = payment ? payment.workDates.length : 1;
+                
                 content += `
                     <div class="payment-status success">
                         <i class="fas fa-money-bill-wave"></i>
                         <span>Payment Received</span>
                     </div>
                     <div class="payment-details">
-                        <span class="label">Amount Paid:</span>
+                        <span class="label">Daily Amount:</span>
                         <span class="amount">₹${paidAmount}</span>
                     </div>
                 `;
+                
+                if (payment && workDaysInPayment > 1) {
+                    content += `
+                        <div class="payment-details">
+                            <span class="label">Total Payment:</span>
+                            <span class="amount">₹${totalPaymentAmount}</span>
+                        </div>
+                        <div class="payment-details">
+                            <span class="label">Days Covered:</span>
+                            <span class="amount">${workDaysInPayment} days</span>
+                        </div>
+                    `;
+                }
+                
                 if (payment) {
                     content += `
                         <div class="payment-details">
@@ -346,6 +363,15 @@ class CalendarManager {
                             <span class="date">${new Date(payment.paymentDate).toLocaleDateString()}</span>
                         </div>
                     `;
+                    
+                    if (payment.isAdvance) {
+                        content += `
+                            <div class="payment-details">
+                                <span class="label">Payment Type:</span>
+                                <span class="amount">Advance Payment</span>
+                            </div>
+                        `;
+                    }
                 }
             } else {
                 content += `
@@ -423,16 +449,33 @@ class CalendarManager {
                 
                 const payment = this.getPaymentForDate(dateString);
                 const paidAmount = payment ? Math.floor(payment.amount / payment.workDates.length) : (window.R_SERVICE_CONFIG?.DAILY_WAGE || 25);
+                const totalPaymentAmount = payment ? payment.amount : paidAmount;
+                const workDaysInPayment = payment ? payment.workDates.length : 1;
+                
                 content += `
                     <div class="payment-status success">
                         <i class="fas fa-money-bill-wave"></i>
                         <span>Force Payment Received</span>
                     </div>
                     <div class="payment-details">
-                        <span class="label">Amount Paid:</span>
+                        <span class="label">Daily Amount:</span>
                         <span class="amount">₹${paidAmount}</span>
                     </div>
                 `;
+                
+                if (payment && workDaysInPayment > 1) {
+                    content += `
+                        <div class="payment-details">
+                            <span class="label">Total Payment:</span>
+                            <span class="amount">₹${totalPaymentAmount}</span>
+                        </div>
+                        <div class="payment-details">
+                            <span class="label">Days Covered:</span>
+                            <span class="amount">${workDaysInPayment} days</span>
+                        </div>
+                    `;
+                }
+                
                 if (payment) {
                     content += `
                         <div class="payment-details">
@@ -440,6 +483,15 @@ class CalendarManager {
                             <span class="date">${new Date(payment.paymentDate).toLocaleDateString()}</span>
                         </div>
                     `;
+                    
+                    if (payment.isAdvance) {
+                        content += `
+                            <div class="payment-details">
+                                <span class="label">Payment Type:</span>
+                                <span class="amount">Force/Advance Payment</span>
+                            </div>
+                        `;
+                    }
                 }
             } else {
                 content += `

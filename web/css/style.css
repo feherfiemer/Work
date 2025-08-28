@@ -5017,14 +5017,13 @@ button.disabled:hover {
   border-radius: var(--border-radius-small);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  /* Enhanced theme-based styling - vibrant and modern */
-  background: linear-gradient(135deg, var(--primary), rgba(var(--primary-rgb), 0.9));
-  border: 1px solid rgba(var(--primary-rgb), 0.3);
+  /* Clean solid background without grey corners */
+  background: var(--primary);
+  border: 2px solid var(--primary-dark);
   color: white;
   box-shadow: 
-    0 8px 32px rgba(var(--primary-rgb), 0.4),
-    0 4px 16px rgba(var(--primary-rgb), 0.3),
-    0 2px 8px rgba(0, 0, 0, 0.2);
+    0 12px 24px rgba(0, 0, 0, 0.15),
+    0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Light themes - softer shadows */
@@ -5045,17 +5044,17 @@ button.disabled:hover {
 
 .tooltip-arrow {
   position: absolute !important;
-  width: 12px !important;
-  height: 12px !important;
+  width: 16px !important;
+  height: 16px !important;
   transform: rotate(45deg) !important;
-  z-index: 1001 !important;
-  background: linear-gradient(135deg, var(--primary), rgba(var(--primary-rgb), 0.95)) !important;
-  border: 1px solid rgba(var(--primary-rgb), 0.3) !important;
+  z-index: 1002 !important;
+  background: var(--primary) !important;
+  border: 2px solid var(--primary-dark) !important;
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: none !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Force arrow visibility in all states */
@@ -5076,25 +5075,25 @@ button.disabled:hover {
 
 /* Precise arrow positioning - points exactly to icon center */
 .earnings-tooltip.top .tooltip-arrow {
-  bottom: -6px !important;
+  bottom: -8px !important;
   /* Left position is set dynamically by JavaScript */
   transform: rotate(45deg) !important;
 }
 
 .earnings-tooltip.bottom .tooltip-arrow {
-  top: -6px !important;
+  top: -8px !important;
   /* Left position is set dynamically by JavaScript */
   transform: rotate(45deg) !important;
 }
 
 .earnings-tooltip.left .tooltip-arrow {
-  right: -6px !important;
+  right: -8px !important;
   /* Top position is set dynamically by JavaScript */
   transform: rotate(45deg) !important;
 }
 
 .earnings-tooltip.right .tooltip-arrow {
-  left: -6px !important;
+  left: -8px !important;
   /* Top position is set dynamically by JavaScript */
   transform: rotate(45deg) !important;
 }

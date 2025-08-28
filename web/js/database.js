@@ -289,16 +289,18 @@ class DatabaseManager {
         const totalWorked = workRecords.filter(record => record.status === 'completed').length;
         const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
         
-        // Calculate total earned based on actual work completed (theoretical value)
+        // Calculate total theoretical earnings based on work completed
         const totalEarned = totalWorked * DAILY_WAGE;
         
-        // Find unpaid work records
+        // Find unpaid work records (work done but not yet paid)
         const unpaidWork = workRecords.filter(record => 
             record.status === 'completed' && !this.isRecordPaid(record, payments)
         );
-        const pendingWorkValue = unpaidWork.length * DAILY_WAGE;
         
-        // Current balance = Total earned - Total paid (can be negative for advances)
+        // Current earnings = unpaid work value (resets to 0 when payment received)
+        const currentEarnings = unpaidWork.length * DAILY_WAGE;
+        
+        // Balance calculation for advance payment tracking
         const currentBalance = totalEarned - totalPaid;
         
         // Separate tracking for advance payments
@@ -310,15 +312,16 @@ class DatabaseManager {
         return {
             totalWorked,
             totalPaid,
-            totalEarned, // Theoretical earnings based on work completed
+            totalEarned, // Total theoretical earnings based on all work completed
             totalAdvancePaid,
             totalRegularPaid,
-            currentBalance, // Actual balance (earned - paid)
-            pendingWorkValue, // Value of unpaid work only
+            currentEarnings, // Current unpaid earnings (resets to 0 when payment received)
+            currentBalance, // Balance for advance payment tracking (earned - paid)
             unpaidWorkDays: unpaidWork.length,
             dailyWage: DAILY_WAGE,
             actualBalance: currentBalance,
-            isAdvanced: currentBalance < 0 // True if user received advance payments
+            isAdvanced: currentBalance < 0, // True if user received advance payments
+            pendingWorkValue: currentEarnings // Alias for backward compatibility
         };
     }
 
