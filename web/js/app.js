@@ -433,46 +433,61 @@ class RServiceTracker {
     }
 
     /**
-     * 🔄 MASTER SYNCHRONIZATION FUNCTION
+     * 🔄 ENHANCED MASTER SYNCHRONIZATION FUNCTION
      * This function ensures ALL systems are up-to-date and synchronized
-     * Called by all major operations to maintain system consistency
+     * Called by EVERY action to maintain perfect system consistency
      * 
      * Synchronizes:
-     * - Database state (fresh data)
-     * - Dashboard display
-     * - Calendar view
-     * - Charts and analytics
-     * - Payment system state
-     * - Advance payment tracking
-     * - UI element states
+     * - Database state (fresh data with duplicate amount validation)
+     * - Dashboard display (all metrics and balances)
+     * - Calendar view (work and payment status)
+     * - Charts and analytics (real-time data)
+     * - Payment system state (buttons and notifications)
+     * - Advance payment tracking (progress and reminders)
+     * - UI element states (buttons, indicators, tooltips)
+     * - Data integrity validation
      */
     async syncAllSystems(source = 'unknown', options = {}) {
         const syncId = Date.now();
         const startTime = performance.now();
         
-        console.log(`\n🔄 [SYNC-${syncId}] MASTER SYSTEM SYNC INITIATED`);
+        console.log(`\n🔄 [SYNC-${syncId}] ENHANCED MASTER SYSTEM SYNC INITIATED`);
         console.log(`📍 [SYNC-${syncId}] Source: ${source}`);
         console.log(`⚙️ [SYNC-${syncId}] Options:`, options);
         
         try {
-            // 🗄️ STEP 1: Force fresh database state
-            console.log(`📊 [SYNC-${syncId}] Step 1: Refreshing database state...`);
+            // 🗄️ STEP 1: Force fresh database state with validation
+            console.log(`📊 [SYNC-${syncId}] Step 1: Refreshing database state with validation...`);
             this.currentStats = await this.db.getEarningsStats();
             const allWorkRecords = await this.db.getAllWorkRecords();
             const allPayments = await this.db.getAllPayments();
+            
+            // Validate data integrity
+            const duplicateCheck = this.validateDataIntegrity(allWorkRecords, allPayments);
+            if (duplicateCheck.hasDuplicates) {
+                console.warn(`⚠️ [SYNC-${syncId}] Data integrity issues detected:`, duplicateCheck);
+            }
+            
             console.log(`✅ [SYNC-${syncId}] Database refreshed - Stats:`, this.currentStats);
+            console.log(`📈 [SYNC-${syncId}] Amounts breakdown:`, {
+                totalWorked: this.currentStats.totalWorked,
+                totalEarned: this.currentStats.totalEarned,
+                totalPaid: this.currentStats.totalPaid,
+                currentBalance: this.currentStats.currentBalance,
+                isAdvanced: this.currentStats.isAdvanced
+            });
             
             // 🏠 STEP 2: Update Dashboard with fresh data
             console.log(`🏠 [SYNC-${syncId}] Step 2: Updating dashboard...`);
             await this.updateDashboard();
-            console.log(`✅ [SYNC-${syncId}] Dashboard updated`);
+            console.log(`✅ [SYNC-${syncId}] Dashboard updated with current balance: ${this.currentStats.currentBalance}`);
             
             // 📅 STEP 3: Refresh Calendar view
             console.log(`📅 [SYNC-${syncId}] Step 3: Refreshing calendar...`);
             if (this.calendar && typeof this.calendar.updateCalendar === 'function') {
                 await this.calendar.loadData(); // Force fresh data load
                 await this.calendar.updateCalendar();
-                console.log(`✅ [SYNC-${syncId}] Calendar refreshed`);
+                console.log(`✅ [SYNC-${syncId}] Calendar refreshed with ${allWorkRecords.length} work records`);
             } else {
                 console.log(`⚠️ [SYNC-${syncId}] Calendar not available for update`);
             }
@@ -481,7 +496,7 @@ class RServiceTracker {
             console.log(`📈 [SYNC-${syncId}] Step 4: Updating charts...`);
             if (this.charts && typeof this.charts.updateCharts === 'function') {
                 await this.charts.updateCharts();
-                console.log(`✅ [SYNC-${syncId}] Charts updated`);
+                console.log(`✅ [SYNC-${syncId}] Charts updated with ${allPayments.length} payments`);
             } else {
                 console.log(`⚠️ [SYNC-${syncId}] Charts not available for update`);
             }
@@ -490,13 +505,13 @@ class RServiceTracker {
             console.log(`💰 [SYNC-${syncId}] Step 5: Updating payment system...`);
             await this.updatePendingUnpaidDates();
             await this.updatePaidButtonVisibility();
-            console.log(`✅ [SYNC-${syncId}] Payment system updated`);
+            console.log(`✅ [SYNC-${syncId}] Payment system updated - Unpaid days: ${this.currentStats.unpaidWorkDays}`);
             
             // 🔄 STEP 6: Update Advance Payment Status
             console.log(`🔄 [SYNC-${syncId}] Step 6: Checking advance payments...`);
             if (typeof this.checkAdvancePaymentNotification === 'function') {
                 await this.checkAdvancePaymentNotification();
-                console.log(`✅ [SYNC-${syncId}] Advance payment status checked`);
+                console.log(`✅ [SYNC-${syncId}] Advance payment status checked - Advanced: ${this.currentStats.isAdvanced}`);
             }
             
             // ⚡ STEP 7: Update Today's Status and UI Elements
@@ -509,16 +524,30 @@ class RServiceTracker {
             if (typeof this.checkPendingPayments === 'function') {
                 await this.checkPendingPayments();
             }
+            
+            // Update all button states
+            this.updateButtonStates();
             console.log(`✅ [SYNC-${syncId}] UI elements updated`);
             
-            // 🎯 STEP 8: Final validation and logging
+            // 🔍 STEP 8: Data consistency validation
+            console.log(`🔍 [SYNC-${syncId}] Step 8: Validating data consistency...`);
+            const consistencyCheck = await this.validateSystemConsistency();
+            console.log(`✅ [SYNC-${syncId}] Consistency check:`, consistencyCheck);
+            
+            // 🎯 STEP 9: Final validation and logging
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
             
-            console.log(`\n🎉 [SYNC-${syncId}] MASTER SYNC COMPLETED SUCCESSFULLY!`);
+            console.log(`\n🎉 [SYNC-${syncId}] ENHANCED MASTER SYNC COMPLETED SUCCESSFULLY!`);
             console.log(`⏱️ [SYNC-${syncId}] Duration: ${duration}ms`);
             console.log(`📊 [SYNC-${syncId}] Final stats:`, this.currentStats);
             console.log(`🔢 [SYNC-${syncId}] Work records: ${allWorkRecords.length}, Payments: ${allPayments.length}`);
+            console.log(`💰 [SYNC-${syncId}] Financial summary:`, {
+                earned: this.currentStats.totalEarned,
+                paid: this.currentStats.totalPaid,
+                balance: this.currentStats.currentBalance,
+                pending: this.currentStats.pendingWorkValue
+            });
             
             // Optional success notification
             if (options.showNotification !== false && duration > 1000) {
@@ -531,26 +560,29 @@ class RServiceTracker {
                 stats: this.currentStats,
                 syncId: syncId,
                 workRecords: allWorkRecords.length,
-                payments: allPayments.length
+                payments: allPayments.length,
+                integrity: duplicateCheck,
+                consistency: consistencyCheck
             };
             
         } catch (error) {
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
             
-            console.error(`❌ [SYNC-${syncId}] MASTER SYNC FAILED after ${duration}ms:`, error);
+            console.error(`❌ [SYNC-${syncId}] ENHANCED MASTER SYNC FAILED after ${duration}ms:`, error);
             
             // Show error notification
             this.notifications?.showToast(`❌ System sync failed: ${error.message}`, 'error', 5000);
             
-            // Attempt basic recovery
+            // Enhanced recovery with data validation
             try {
-                console.log(`🔧 [SYNC-${syncId}] Attempting basic recovery...`);
+                console.log(`🔧 [SYNC-${syncId}] Attempting enhanced recovery...`);
                 this.currentStats = await this.db.getEarningsStats();
                 await this.updateDashboard();
-                console.log(`✅ [SYNC-${syncId}] Basic recovery completed`);
+                await this.updatePendingUnpaidDates();
+                console.log(`✅ [SYNC-${syncId}] Enhanced recovery completed`);
             } catch (recoveryError) {
-                console.error(`💥 [SYNC-${syncId}] Recovery failed:`, recoveryError);
+                console.error(`💥 [SYNC-${syncId}] Enhanced recovery failed:`, recoveryError);
             }
             
             return {
@@ -559,6 +591,98 @@ class RServiceTracker {
                 duration: duration,
                 syncId: syncId
             };
+        }
+    }
+
+    /**
+     * Validates data integrity to detect duplicate amounts or calculations
+     */
+    validateDataIntegrity(workRecords, payments) {
+        const duplicates = {
+            hasDuplicates: false,
+            duplicateWorkDates: [],
+            duplicatePayments: [],
+            issues: []
+        };
+
+        // Check for duplicate work records on same date
+        const workDates = {};
+        workRecords.forEach(record => {
+            if (workDates[record.date]) {
+                duplicates.hasDuplicates = true;
+                duplicates.duplicateWorkDates.push(record.date);
+            }
+            workDates[record.date] = (workDates[record.date] || 0) + 1;
+        });
+
+        // Check for suspicious payment patterns
+        const paymentAmounts = {};
+        payments.forEach(payment => {
+            const key = `${payment.amount}_${payment.paymentDate}`;
+            if (paymentAmounts[key]) {
+                duplicates.hasDuplicates = true;
+                duplicates.duplicatePayments.push(key);
+            }
+            paymentAmounts[key] = (paymentAmounts[key] || 0) + 1;
+        });
+
+        if (duplicates.hasDuplicates) {
+            duplicates.issues.push('Potential duplicate data detected');
+        }
+
+        return duplicates;
+    }
+
+    /**
+     * Validates system consistency across components
+     */
+    async validateSystemConsistency() {
+        try {
+            const dashboardBalance = document.getElementById('currentEarnings')?.textContent || '0';
+            const statsBalance = this.currentStats?.currentBalance || 0;
+            
+            return {
+                dashboardMatch: dashboardBalance.includes(statsBalance.toString()),
+                statsValid: this.currentStats !== null,
+                pendingDatesValid: Array.isArray(this.pendingUnpaidDates),
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            return {
+                error: error.message,
+                statsValid: false,
+                timestamp: new Date().toISOString()
+            };
+        }
+    }
+
+    /**
+     * Updates all button states for consistency
+     */
+    updateButtonStates() {
+        try {
+            // Update paid button
+            const paidBtn = document.getElementById('paidBtn');
+            if (paidBtn) {
+                const shouldShow = this.pendingUnpaidDates && this.pendingUnpaidDates.length > 0;
+                paidBtn.style.display = shouldShow ? 'inline-flex' : 'none';
+            }
+
+            // Update done button
+            const doneBtn = document.getElementById('doneBtn');
+            if (doneBtn) {
+                const today = this.utils.getTodayString();
+                const todayRecord = this.currentStats?.workRecords?.find(r => r.date === today);
+                if (todayRecord && todayRecord.status === 'completed') {
+                    doneBtn.innerHTML = '<i class="fas fa-check"></i> Already Done';
+                    doneBtn.disabled = true;
+                } else {
+                    doneBtn.innerHTML = '<i class="fas fa-check"></i> Mark as Done';
+                    doneBtn.disabled = false;
+                }
+            }
+        } catch (error) {
+            console.error('Error updating button states:', error);
         }
     }
 
@@ -1591,16 +1715,17 @@ class RServiceTracker {
             const targetCenterY = targetRect.top + (targetRect.height / 2);
             const tooltipLeft = parseFloat(tooltip.style.left);
             const tooltipTop = parseFloat(tooltip.style.top);
+            const tooltipRect = tooltip.getBoundingClientRect();
             
-            // Force arrow visibility with comprehensive styling
+            // Smaller, more precise arrow styling
             tooltipArrow.style.cssText = `
                 position: absolute !important;
-                width: 16px !important;
-                height: 16px !important;
+                width: 12px !important;
+                height: 12px !important;
                 transform: rotate(45deg) !important;
                 z-index: 1001 !important;
                 background: rgba(var(--primary-rgb), 0.98) !important;
-                border: 2px solid rgba(var(--primary-rgb), 0.9) !important;
+                border: 1px solid rgba(var(--primary-rgb), 0.9) !important;
                 display: block !important;
                 visibility: visible !important;
                 opacity: 1 !important;
@@ -1608,71 +1733,82 @@ class RServiceTracker {
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
             `;
             
-            console.log('[Tooltip] Arrow styles force-applied:', {
-                element: tooltipArrow,
-                opacity: tooltipArrow.style.opacity,
-                visibility: tooltipArrow.style.visibility,
-                display: tooltipArrow.style.display,
-                className: tooltipArrow.className,
-                cssText: tooltipArrow.style.cssText
+            console.log('[Tooltip] Arrow positioning debug:', {
+                position: position,
+                targetCenter: { x: targetCenterX, y: targetCenterY },
+                tooltipPos: { left: tooltipLeft, top: tooltipTop },
+                tooltipSize: { width: tooltipRect.width, height: tooltipRect.height }
             });
             
-            // Calculate exact positioning based on tooltip position relative to target
-            if (position === 'bottom' || position === 'top') {
-                // Horizontal arrow positioning - point exactly to button center
+            // FIXED: Calculate exact positioning based on tooltip position relative to target
+            if (position === 'bottom') {
+                // Tooltip is below button, arrow points up (appears at top of tooltip)
                 const targetCenterRelativeToTooltip = targetCenterX - tooltipLeft;
-                let arrowLeft = targetCenterRelativeToTooltip - 8; // Center arrow (arrow is 16px wide)
+                let arrowLeft = targetCenterRelativeToTooltip - 6; // Center arrow (12px wide)
                 
-                // Ensure arrow stays within tooltip bounds with proper margins
-                const arrowWidth = 16;
-                const minMargin = 8;
-                const maxMargin = tooltipRect.width - arrowWidth - 8;
-                
+                // Constrain within tooltip bounds
+                const minMargin = 6;
+                const maxMargin = tooltipRect.width - 18;
                 arrowLeft = Math.max(minMargin, Math.min(maxMargin, arrowLeft));
                 
-                // Apply positioning with inline styles to override any conflicts
-                tooltipArrow.style.left = `${arrowLeft}px !important`;
+                tooltipArrow.style.left = `${arrowLeft}px`;
+                tooltipArrow.style.top = '-6px'; // Arrow at top of tooltip
+                
+                console.log(`[Tooltip] Bottom position: Arrow at left ${arrowLeft}px, top -6px`);
+                
+            } else if (position === 'top') {
+                // Tooltip is above button, arrow points down (appears at bottom of tooltip)
+                const targetCenterRelativeToTooltip = targetCenterX - tooltipLeft;
+                let arrowLeft = targetCenterRelativeToTooltip - 6;
+                
+                const minMargin = 6;
+                const maxMargin = tooltipRect.width - 18;
+                arrowLeft = Math.max(minMargin, Math.min(maxMargin, arrowLeft));
+                
+                tooltipArrow.style.left = `${arrowLeft}px`;
+                tooltipArrow.style.bottom = '-6px'; // Arrow at bottom of tooltip
                 tooltipArrow.style.top = '';
-                tooltipArrow.style.right = '';
-                tooltipArrow.style.bottom = '';
                 
-                console.log(`[Tooltip] Arrow positioned horizontally at ${arrowLeft}px pointing to button center (${targetCenterX})`);
-            } else if (position === 'left' || position === 'right') {
-                // Vertical arrow positioning - point exactly to button center
+                console.log(`[Tooltip] Top position: Arrow at left ${arrowLeft}px, bottom -6px`);
+                
+            } else if (position === 'right') {
+                // Tooltip is right of button, arrow points left (appears at left of tooltip)
                 const targetCenterRelativeToTooltip = targetCenterY - tooltipTop;
-                let arrowTop = targetCenterRelativeToTooltip - 8; // Center arrow (arrow is 16px tall)
+                let arrowTop = targetCenterRelativeToTooltip - 6;
                 
-                // Ensure arrow stays within tooltip bounds with proper margins
-                const arrowHeight = 16;
-                const minMargin = 8;
-                const maxMargin = tooltipRect.height - arrowHeight - 8;
-                
+                const minMargin = 6;
+                const maxMargin = tooltipRect.height - 18;
                 arrowTop = Math.max(minMargin, Math.min(maxMargin, arrowTop));
                 
-                // Apply positioning with inline styles to override any conflicts
-                tooltipArrow.style.top = `${arrowTop}px !important`;
-                tooltipArrow.style.left = '';
-                tooltipArrow.style.right = '';
-                tooltipArrow.style.bottom = '';
+                tooltipArrow.style.top = `${arrowTop}px`;
+                tooltipArrow.style.left = '-6px'; // Arrow at left of tooltip
                 
-                console.log(`[Tooltip] Arrow positioned vertically at ${arrowTop}px pointing to button center (${targetCenterY})`);
+                console.log(`[Tooltip] Right position: Arrow at top ${arrowTop}px, left -6px`);
+                
+            } else if (position === 'left') {
+                // Tooltip is left of button, arrow points right (appears at right of tooltip)
+                const targetCenterRelativeToTooltip = targetCenterY - tooltipTop;
+                let arrowTop = targetCenterRelativeToTooltip - 6;
+                
+                const minMargin = 6;
+                const maxMargin = tooltipRect.height - 18;
+                arrowTop = Math.max(minMargin, Math.min(maxMargin, arrowTop));
+                
+                tooltipArrow.style.top = `${arrowTop}px`;
+                tooltipArrow.style.right = '-6px'; // Arrow at right of tooltip
+                tooltipArrow.style.left = '';
+                
+                console.log(`[Tooltip] Left position: Arrow at top ${arrowTop}px, right -6px`);
             }
             
-            // Final verification that arrow is visible
-            setTimeout(() => {
-                const computedStyle = window.getComputedStyle(tooltipArrow);
-                console.log('[Tooltip] Final arrow computed styles:', {
-                    display: computedStyle.display,
-                    visibility: computedStyle.visibility,
-                    opacity: computedStyle.opacity,
-                    position: computedStyle.position,
-                    zIndex: computedStyle.zIndex,
-                    left: computedStyle.left,
-                    top: computedStyle.top,
-                    width: computedStyle.width,
-                    height: computedStyle.height
-                });
-            }, 100);
+            // Clear any conflicting styles
+            ['top', 'left', 'right', 'bottom'].forEach(prop => {
+                if (!tooltipArrow.style[prop]) {
+                    tooltipArrow.style[prop] = '';
+                }
+            });
+            
+            console.log('[Tooltip] Final arrow positioning applied for position:', position);
         }
     }
 
@@ -1743,42 +1879,50 @@ class RServiceTracker {
         const { totalWorked, totalEarned, totalPaid, currentBalance } = stats;
         const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
         
+        // Only show current date status for today's date
+        const today = this.utils.getTodayString();
+        const currentDate = new Date().toISOString().split('T')[0];
+        
+        // Check if this is being called for today only
+        if (currentDate !== today) {
+            return '';
+        }
+        
         // Check for advance payment status
         const advanceStatus = await this.db.getAdvancePaymentStatus();
         
         // New user - no work done
         if (totalWorked === 0) {
-            return `Welcome to your earnings tracker! Your daily rate is set to ${this.utils.formatCurrency(dailyWage)}. To begin tracking your work progress, simply click the Mark as Done button when you complete your first work session. This will start building your work history and earnings record.`;
+            return `Welcome to your earnings tracker. Daily rate ${this.utils.formatCurrency(dailyWage)}. Click Mark as Done to start tracking.`;
         }
         
         // Handle advance payment scenarios
         if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0) {
             const remainingDays = advanceStatus.workRemainingForAdvance;
             const advanceAmount = advanceStatus.totalAdvanceAmount;
-            const completedDays = totalWorked - remainingDays;
             
-            return `You have received an advance payment of ${this.utils.formatCurrency(advanceAmount)} and are making good progress on your work commitment. Currently, you have completed ${completedDays} out of ${totalWorked} required work days. You need to complete ${remainingDays} more days to fulfill your advance payment obligation and maintain your earning schedule.`;
+            return `Advance payment ${this.utils.formatCurrency(advanceAmount)} received. ${remainingDays} more days needed to complete.`;
         }
         
         // Has worked but no payments made
         if (totalWorked > 0 && totalPaid === 0) {
-            return `Your work record shows ${totalWorked} completed work session${totalWorked !== 1 ? 's' : ''} with a total pending payment of ${this.utils.formatCurrency(currentBalance)}. You have not collected any payments yet, which means this is a great time to initiate your first payment collection. Your consistent work is building up a solid earnings foundation.`;
+            return `${totalWorked} work days completed. Pending payment ${this.utils.formatCurrency(currentBalance)}. Ready to collect first payment.`;
         }
         
         // Has worked and received some payments
         if (totalWorked > 0 && totalPaid > 0 && currentBalance > 0) {
             const pendingDays = Math.ceil(currentBalance / dailyWage);
             
-            return `You have successfully completed ${totalWorked} work days and collected ${this.utils.formatCurrency(totalPaid)} in payments so far. Currently, you have ${this.utils.formatCurrency(currentBalance)} pending equivalent to ${pendingDays} work day${pendingDays !== 1 ? 's' : ''}. Your payment management is running smoothly, and you are maintaining a healthy work to payment ratio.`;
+            return `${totalWorked} days completed. Collected ${this.utils.formatCurrency(totalPaid)}. Pending ${this.utils.formatCurrency(currentBalance)} for ${pendingDays} days.`;
         }
         
         // All payments up to date
         if (totalWorked > 0 && currentBalance === 0) {
-            return `Excellent work! You have completed ${totalWorked} work day${totalWorked !== 1 ? 's' : ''} and earned a total of ${this.utils.formatCurrency(totalPaid)}. All your payments are current and up to date, which demonstrates excellent financial management and work discipline. Keep up the great work with your consistent earning schedule.`;
+            return `Great work. ${totalWorked} days completed. Total earned ${this.utils.formatCurrency(totalPaid)}. All payments current.`;
         }
         
         // Fallback message
-        return `Your earnings tracker is ready to help you manage your work and payments efficiently. With your daily rate set at ${this.utils.formatCurrency(dailyWage)}, you can easily track your progress and maintain organized financial records. Start by marking your work as done when you complete each session.`;
+        return `Daily rate ${this.utils.formatCurrency(dailyWage)}. Mark work as done to track progress.`;
     }
 
 

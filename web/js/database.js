@@ -289,28 +289,36 @@ class DatabaseManager {
         const totalWorked = workRecords.filter(record => record.status === 'completed').length;
         const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
         
+        // Calculate total earned based on actual work completed (theoretical value)
+        const totalEarned = totalWorked * DAILY_WAGE;
+        
+        // Find unpaid work records
         const unpaidWork = workRecords.filter(record => 
             record.status === 'completed' && !this.isRecordPaid(record, payments)
         );
         const pendingWorkValue = unpaidWork.length * DAILY_WAGE;
         
-        // Total earned is based on completed payments (actual money received)
-        // This shows the real payment amounts, not theoretical work value
-        const totalEarned = totalPaid;
+        // Current balance = Total earned - Total paid (can be negative for advances)
+        const currentBalance = totalEarned - totalPaid;
         
-        // Current balance is pending work value (what's owed for completed work)
-        // This shows unpaid work value
-        const currentBalance = pendingWorkValue;
+        // Separate tracking for advance payments
+        const advancePayments = payments.filter(p => p.isAdvance);
+        const regularPayments = payments.filter(p => !p.isAdvance);
+        const totalAdvancePaid = advancePayments.reduce((sum, p) => sum + p.amount, 0);
+        const totalRegularPaid = regularPayments.reduce((sum, p) => sum + p.amount, 0);
         
         return {
             totalWorked,
             totalPaid,
-            totalEarned,
-            currentBalance: currentBalance, // Show pending work value for current balance
-            pendingWorkValue,
+            totalEarned, // Theoretical earnings based on work completed
+            totalAdvancePaid,
+            totalRegularPaid,
+            currentBalance, // Actual balance (earned - paid)
+            pendingWorkValue, // Value of unpaid work only
             unpaidWorkDays: unpaidWork.length,
             dailyWage: DAILY_WAGE,
-            actualBalance: currentBalance // Keep track of actual balance including advances
+            actualBalance: currentBalance,
+            isAdvanced: currentBalance < 0 // True if user received advance payments
         };
     }
 
