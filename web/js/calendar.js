@@ -331,32 +331,6 @@ class CalendarManager {
                         <span>Payment Pending</span>
                     </div>
                 `;
-                
-                // Add Force Paid button for all completed work (regardless of payment day)
-                content += `
-                    <button class="force-paid-btn" data-date="${dateString}" style="
-                        margin-top: 1rem;
-                        width: 100%;
-                        padding: 0.75rem;
-                        background: linear-gradient(135deg, #FF6B35, #E55A2B);
-                        color: white;
-                        border: none;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-family: var(--font-family);
-                        font-weight: 600;
-                        font-size: 0.9rem;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        box-shadow: var(--shadow-light);
-                        transition: all var(--transition-fast);
-                    ">
-                        <i class="fas fa-hand-holding-usd" style="color: #FFB366;"></i>
-                        Force Paid
-                    </button>
-                `;
             }
         } else {
             content += `
@@ -409,6 +383,32 @@ class CalendarManager {
                 `;
             }
         }
+
+        // Add Force Paid button for ALL dates (below Mark as Done button)
+        content += `
+            <button class="force-paid-btn" data-date="${dateString}" style="
+                margin-top: 1rem;
+                width: 100%;
+                padding: 0.75rem;
+                background: linear-gradient(135deg, #FF6B35, #E55A2B);
+                color: white;
+                border: none;
+                border-radius: var(--border-radius);
+                cursor: pointer;
+                font-family: var(--font-family);
+                font-weight: 600;
+                font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                box-shadow: var(--shadow-light);
+                transition: all var(--transition-fast);
+            ">
+                <i class="fas fa-hand-holding-usd" style="color: #FFB366;"></i>
+                Force Paid
+            </button>
+        `;
 
         content += `</div>`;
 
@@ -711,14 +711,7 @@ class CalendarManager {
                 throw new Error('Database not available');
             }
             
-            const workRecord = await this.db.getWorkRecord(dateString);
-            if (!workRecord || workRecord.status !== 'completed') {
-                if (window.app && window.app.notifications) {
-                    window.app.notifications.showToast('Can only force payment for completed work days!', 'warning');
-                }
-                return;
-            }
-
+            // Check if already paid (but allow force payment even without work record)
             const payments = await this.db.getAllPayments();
             const isAlreadyPaid = payments.some(payment => 
                 payment.workDates && payment.workDates.includes(dateString)
@@ -726,9 +719,17 @@ class CalendarManager {
             
             if (isAlreadyPaid) {
                 if (window.app && window.app.notifications) {
-                    window.app.notifications.showToast('This work day is already paid!', 'warning');
+                    window.app.notifications.showToast('This date is already paid!', 'warning');
                 }
                 return;
+            }
+
+            // If no work record exists, create one for the force payment
+            const workRecord = await this.db.getWorkRecord(dateString);
+            if (!workRecord || workRecord.status !== 'completed') {
+                console.log('Creating work record for force payment on date:', dateString);
+                const dailyWage = window.R_SERVICE_CONFIG?.DAILY_WAGE || 25;
+                await this.db.addWorkRecord(dateString, dailyWage, 'completed');
             }
 
             // Store the date for use in payment processing
