@@ -2138,9 +2138,13 @@ class RServiceTracker {
 
         // Direct payment confirmation
         if (confirmBtn) {
-            confirmBtn.onclick = () => {
+            confirmBtn.onclick = async () => {
                 if (this.selectedCalendarDates && this.selectedCalendarDates.length > 0 && this.selectedCalendarAmount > 0) {
-                    this.processDirectCalendarPayment(this.selectedCalendarAmount, closeModal);
+                    try {
+                        await this.processDirectCalendarPayment(this.selectedCalendarAmount, closeModal);
+                    } catch (error) {
+                        console.error('Calendar payment error:', error);
+                    }
                 } else {
                     this.notifications.showToast('Please select at least one work date', 'warning');
                 }
@@ -2264,12 +2268,16 @@ class RServiceTracker {
         
         // Confirm payment
         if (confirmBtn) {
-            confirmBtn.onclick = () => {
+            confirmBtn.onclick = async () => {
                 if (this.selectedCalendarPaymentAmount && this.selectedCalendarPaymentAmount > 0) {
-                    this.processCalendarPayment(this.selectedCalendarPaymentAmount, () => {
-                        modal.classList.remove('show');
-                        this.resetCalendarSelection();
-                    });
+                    try {
+                        await this.processCalendarPayment(this.selectedCalendarPaymentAmount, () => {
+                            modal.classList.remove('show');
+                            this.resetCalendarSelection();
+                        });
+                    } catch (error) {
+                        console.error('Calendar payment error:', error);
+                    }
                 } else {
                     this.notifications.showToast('Please select a payment amount first', 'warning');
                 }
@@ -2341,6 +2349,14 @@ class RServiceTracker {
     }
 
     async processCalendarPayment(amount, closeModalCallback) {
+        // Prevent multiple simultaneous payment processing
+        if (this._calendarPaymentProcessing) {
+            console.warn('Calendar payment already in progress, ignoring duplicate request');
+            return;
+        }
+        
+        this._calendarPaymentProcessing = true;
+        
         try {
             console.log('Processing calendar payment:', { 
                 amount, 
@@ -2403,6 +2419,9 @@ class RServiceTracker {
             }
             
             this.notifications.showToast(errorMessage, 'error');
+        } finally {
+            // Always reset the calendar payment processing flag
+            this._calendarPaymentProcessing = false;
         }
     }
 
@@ -2552,9 +2571,20 @@ class RServiceTracker {
             const newConfirmBtn = confirmBtn.cloneNode(true);
             confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
             
-            newConfirmBtn.addEventListener('click', () => {
+            newConfirmBtn.addEventListener('click', async () => {
                 if (this.selectedPaymentAmount && this.selectedPaymentAmount > 0) {
-                    this.processPayment(this.selectedPaymentAmount, closeModal);
+                    // Prevent multiple clicks
+                    newConfirmBtn.disabled = true;
+                    newConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    
+                    try {
+                        await this.processPayment(this.selectedPaymentAmount, closeModal);
+                    } catch (error) {
+                        console.error('Payment processing error:', error);
+                        // Re-enable button if payment fails
+                        newConfirmBtn.disabled = false;
+                        newConfirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Payment';
+                    }
                 } else {
                     this.notifications.showToast('Please select a payment amount first', 'warning');
                 }
@@ -2622,6 +2652,13 @@ class RServiceTracker {
     }
 
     async processDirectCalendarPayment(amount, closeModalCallback) {
+        // Prevent multiple simultaneous payment processing
+        if (this._directCalendarPaymentProcessing) {
+            console.warn('Direct calendar payment already in progress, ignoring duplicate request');
+            return;
+        }
+        
+        this._directCalendarPaymentProcessing = true;
         const confirmBtn = document.getElementById('confirmCalendarDirectPaymentBtn');
         
         try {
@@ -2658,10 +2695,21 @@ class RServiceTracker {
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Payment';
             }
+        } finally {
+            // Always reset the direct calendar payment processing flag
+            this._directCalendarPaymentProcessing = false;
         }
     }
 
     async processPayment(amount, closeModalCallback) {
+        // Prevent multiple simultaneous payment processing
+        if (this._paymentProcessing) {
+            console.warn('Payment already in progress, ignoring duplicate request');
+            return;
+        }
+        
+        this._paymentProcessing = true;
+        
         try {
             console.log('Processing payment:', { 
                 amount, 
@@ -2750,6 +2798,9 @@ class RServiceTracker {
             } catch (closeError) {
                 console.error('Error closing modal:', closeError);
             }
+        } finally {
+            // Always reset the payment processing flag
+            this._paymentProcessing = false;
         }
     }
 
