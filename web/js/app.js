@@ -1473,7 +1473,6 @@ class RServiceTracker {
         const targetIcon = targetElement.querySelector('i') || targetElement;
         const targetRect = targetIcon.getBoundingClientRect();
         const tooltipContent = tooltip.querySelector('.tooltip-content');
-        const tooltipArrow = tooltip.querySelector('.tooltip-arrow');
         
         // Reset classes and styles
         tooltip.classList.remove('top', 'bottom', 'left', 'right');
