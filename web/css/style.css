@@ -1995,11 +1995,13 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
   max-width: 520px;
   width: 100%;
-  max-height: 85vh;
+  max-height: 90vh;
   overflow: hidden;
   animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   backdrop-filter: blur(20px);
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 [data-theme*="dark"] .modal-content {
@@ -2094,7 +2096,9 @@ body {
 .modal-body {
   padding: 2rem 2.5rem 2.5rem;
   overflow-y: auto;
-  max-height: calc(85vh - 120px);
+  max-height: calc(90vh - 120px);
+  flex: 1;
+  min-height: 0;
 }
 
 .modal-actions {
@@ -6272,18 +6276,17 @@ button.disabled:hover {
 
 .payment-header {
   background: linear-gradient(135deg, 
-    var(--surface) 0%, 
-    var(--surface-alt) 50%, 
-    rgba(var(--primary-rgb), 0.05) 100%);
-  color: var(--primary);
+    var(--primary) 0%, 
+    var(--primary-light) 50%, 
+    var(--primary) 100%);
+  color: white;
   padding: 2.5rem 2rem 2rem;
   text-align: center;
   position: relative;
-  border-bottom: 4px solid transparent;
-  border-image: linear-gradient(90deg, var(--primary), var(--primary-light)) 1;
+  border-bottom: 4px solid var(--primary);
   box-shadow: 
-    0 4px 15px rgba(var(--primary-rgb), 0.1),
-    0 1px 5px rgba(0, 0, 0, 0.05);
+    0 4px 15px rgba(var(--primary-rgb), 0.3),
+    0 1px 5px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(15px);
 }
 
@@ -6565,14 +6568,15 @@ button.disabled:hover {
   background: linear-gradient(135deg, 
     var(--primary) 0%, 
     var(--primary-light) 50%,
-    var(--secondary) 100%);
+    var(--primary) 100%);
   color: white;
   padding: 2.5rem 2rem 2rem;
   text-align: center;
   position: relative;
+  border-bottom: 4px solid var(--primary);
   backdrop-filter: blur(15px);
   box-shadow: 
-    0 4px 15px rgba(var(--primary-rgb), 0.2),
+    0 4px 15px rgba(var(--primary-rgb), 0.3),
     0 1px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -6942,23 +6946,7 @@ button.disabled:hover {
   border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Calendar Header Enhancement */
-.calendar-header {
-  background: linear-gradient(135deg, var(--surface), var(--surface-alt));
-  color: var(--primary);
-  padding: 2rem 2rem 1.5rem;
-  text-align: center;
-  position: relative;
-  border-bottom: 3px solid var(--border);
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-}
-
-.calendar-header h3 {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin: 0;
-  letter-spacing: 0.5px;
-}
+/* Calendar Header Enhancement - Removed duplicate style */
 
 /* Dark Theme Adjustments */
 [data-theme*="dark"] .payment-modal-clean,
@@ -6972,18 +6960,17 @@ button.disabled:hover {
 /* Standard Header for Non-Payment Dialogs */
 .standard-header {
   background: linear-gradient(135deg, 
-    var(--surface) 0%, 
-    var(--surface-alt) 50%, 
-    rgba(var(--text-rgb), 0.02) 100%);
-  color: var(--text-primary);
+    var(--primary) 0%, 
+    var(--primary-light) 50%, 
+    var(--primary) 100%);
+  color: white;
   padding: 2.5rem 2rem 2rem;
   text-align: center;
   position: relative;
-  border-bottom: 4px solid transparent;
-  border-image: linear-gradient(90deg, var(--text-secondary), var(--border)) 1;
+  border-bottom: 4px solid var(--primary);
   box-shadow: 
-    0 4px 15px rgba(var(--text-rgb), 0.05),
-    0 1px 5px rgba(0, 0, 0, 0.03);
+    0 4px 15px rgba(var(--primary-rgb), 0.3),
+    0 1px 5px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(15px);
 }
 
@@ -6999,10 +6986,10 @@ button.disabled:hover {
   position: absolute !important;
   top: 1rem !important;
   right: 1rem !important;
-  background: rgba(255, 255, 255, 0.2) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  color: white !important;
-  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
   width: 40px !important;
   height: 40px !important;
   display: flex !important;
@@ -7011,53 +6998,56 @@ button.disabled:hover {
   font-size: 1.1rem !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
-  z-index: 10 !important;
+  z-index: 1000 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 .corner-close:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 1) !important;
+  border-color: rgba(var(--error-rgb), 0.3) !important;
+  color: var(--error) !important;
   transform: scale(1.1) !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Enhanced Dark Theme for Headers */
 [data-theme*="dark"] .payment-header,
 [data-theme*="dark"] .calendar-header {
   background: linear-gradient(135deg, 
-    rgba(40, 44, 52, 0.95) 0%,
-    rgba(30, 34, 42, 0.98) 50%,
-    rgba(25, 29, 37, 0.95) 100%);
-  color: var(--primary);
-  border-bottom: 3px solid rgba(255, 255, 255, 0.15);
+    var(--primary) 0%,
+    var(--primary-light) 50%,
+    var(--primary) 100%);
+  color: white;
+  border-bottom: 4px solid var(--primary);
   box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 4px 15px rgba(var(--primary-rgb), 0.4),
+    0 1px 5px rgba(0, 0, 0, 0.2);
 }
 
 /* Dark Theme for Standard Headers */
 [data-theme*="dark"] .standard-header {
   background: linear-gradient(135deg, 
-    rgba(40, 44, 52, 0.95) 0%,
-    rgba(30, 34, 42, 0.98) 50%,
-    rgba(25, 29, 37, 0.95) 100%);
-  color: var(--text-primary);
-  border-bottom: 3px solid rgba(255, 255, 255, 0.15);
+    var(--primary) 0%,
+    var(--primary-light) 50%,
+    var(--primary) 100%);
+  color: white;
+  border-bottom: 4px solid var(--primary);
   box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 4px 15px rgba(var(--primary-rgb), 0.4),
+    0 1px 5px rgba(0, 0, 0, 0.2);
 }
 
 /* Corner Close Button Dark Theme */
 [data-theme*="dark"] .corner-close {
-  background: rgba(0, 0, 0, 0.4) !important;
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  color: var(--text-primary) !important;
+  background: rgba(40, 44, 52, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
 }
 
 [data-theme*="dark"] .corner-close:hover {
-  background: rgba(0, 0, 0, 0.5) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
+  background: rgba(60, 64, 72, 1) !important;
+  border-color: rgba(var(--error-rgb), 0.4) !important;
+  color: var(--error) !important;
 }
 
 [data-theme*="dark"] .payment-summary-card {
@@ -7090,7 +7080,8 @@ button.disabled:hover {
 /* Responsive Design */
 @media (max-width: 768px) {
   .payment-modal-clean,
-  .calendar-modal-clean {
+  .calendar-modal-clean,
+  .standard-modal-clean {
     margin: 1rem;
     max-width: calc(100vw - 2rem);
   }
@@ -7098,6 +7089,13 @@ button.disabled:hover {
   .payment-body,
   .calendar-body {
     padding: 1.5rem;
+    min-height: 300px;
+  }
+  
+  .payment-header,
+  .calendar-header,
+  .standard-header {
+    padding: 2rem 1.5rem 1.5rem;
   }
   
   .payment-buttons-clean {
@@ -7113,6 +7111,94 @@ button.disabled:hover {
   .btn-confirm, .btn-cancel,
   .btn-confirm-main, .btn-cancel-main {
     width: 100%;
+  }
+  
+  .corner-close {
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.1rem !important;
+  }
+}
+
+/* Extra small screens (480px and below) */
+@media (max-width: 480px) {
+  .modal {
+    padding: 0.5rem;
+  }
+  
+  .payment-modal-clean,
+  .calendar-modal-clean,
+  .standard-modal-clean {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
+  }
+  
+  .payment-body,
+  .calendar-body,
+  .modal-body {
+    padding: 1rem;
+    min-height: 250px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+  
+  .payment-header,
+  .calendar-header,
+  .standard-header {
+    padding: 1.5rem 1rem 1rem;
+  }
+  
+  .payment-header h3,
+  .calendar-header h3,
+  .modal-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .corner-close {
+    top: 0.5rem !important;
+    right: 0.5rem !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1rem !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .corner-close:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    transform: scale(1.05) !important;
+  }
+}
+
+/* Very small screens (360px and below) */
+@media (max-width: 360px) {
+  .modal {
+    padding: 0.25rem;
+  }
+  
+  .payment-modal-clean,
+  .calendar-modal-clean,
+  .standard-modal-clean {
+    margin: 0.25rem;
+    max-width: calc(100vw - 0.5rem);
+    max-height: calc(100vh - 0.5rem);
+  }
+  
+  .payment-body,
+  .calendar-body,
+  .modal-body {
+    padding: 0.75rem;
+    max-height: calc(100vh - 150px);
+  }
+  
+  .payment-header,
+  .calendar-header,
+  .standard-header {
+    padding: 1rem 0.75rem 0.75rem;
   }
 }
 
