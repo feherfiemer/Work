@@ -1841,16 +1841,37 @@ class RServiceTracker {
 
     async handlePaidClick() {
         try {
+            // Add loading animation
+            const paidBtn = document.getElementById('paidBtn');
+            if (paidBtn) {
+                paidBtn.classList.add('loading');
+            }
+
+            // Small delay to show loading animation
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             if (this.pendingUnpaidDates.length === 0) {
                 this.notifications.showToast('No unpaid work to record payment for', 'warning');
+                if (paidBtn) {
+                    paidBtn.classList.remove('loading');
+                }
                 return;
             }
             
-            this.showPaymentModal();
+            // Remove loading and show date selection modal
+            if (paidBtn) {
+                paidBtn.classList.remove('loading');
+            }
+            
+            this.showDateSelectionModal();
             
         } catch (error) {
             console.error('Error opening payment modal:', error);
             this.notifications.showToast('Error opening payment selection', 'error');
+            const paidBtn = document.getElementById('paidBtn');
+            if (paidBtn) {
+                paidBtn.classList.remove('loading');
+            }
         }
     }
 
@@ -1872,6 +1893,200 @@ class RServiceTracker {
         }
     }
 
+    showDateSelectionModal() {
+        const modal = document.getElementById('dateSelectionModal');
+        if (modal) {
+            modal.classList.add('show');
+            this.setupDateSelectionHandlers();
+        }
+    }
+
+    setupDateSelectionHandlers() {
+        const modal = document.getElementById('dateSelectionModal');
+        const todayBtn = document.getElementById('todayDateBtn');
+        const previousBtn = document.getElementById('previousDateBtn');
+        const closeBtn = document.getElementById('closeDateSelectionModal');
+
+        const closeModal = () => {
+            modal.classList.remove('show');
+        };
+
+        // Close modal handlers
+        if (closeBtn) {
+            closeBtn.onclick = closeModal;
+        }
+
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        };
+
+        // Today button - use existing payment flow
+        if (todayBtn) {
+            todayBtn.onclick = () => {
+                closeModal();
+                this.showPaymentModal();
+            };
+        }
+
+        // Previous date button - show calendar selection
+        if (previousBtn) {
+            previousBtn.onclick = () => {
+                closeModal();
+                this.showCalendarSelectionModal();
+            };
+        }
+    }
+
+    async showCalendarSelectionModal() {
+        const modal = document.getElementById('calendarSelectionModal');
+        const calendarContainer = document.getElementById('unpaidWorkCalendar');
+        
+        if (modal && calendarContainer) {
+            // Generate unpaid work calendar
+            await this.generateUnpaidWorkCalendar(calendarContainer);
+            modal.classList.add('show');
+            this.setupCalendarSelectionHandlers();
+        }
+    }
+
+    async generateUnpaidWorkCalendar(container) {
+        try {
+            await this.updatePendingUnpaidDates();
+            const workRecords = await this.db.getAllWorkRecords();
+            const payments = await this.db.getAllPayments();
+            
+            const unpaidRecords = workRecords.filter(record => 
+                record.status === 'completed' && !this.isRecordPaid(record, payments)
+            );
+
+            container.innerHTML = '';
+            
+            if (unpaidRecords.length === 0) {
+                container.innerHTML = '<p>No unpaid work dates available.</p>';
+                return;
+            }
+
+            // Sort dates in descending order (newest first)
+            unpaidRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            unpaidRecords.forEach(record => {
+                const dateElement = document.createElement('div');
+                dateElement.className = 'calendar-work-date';
+                dateElement.dataset.date = record.date;
+                dateElement.dataset.amount = record.amount;
+
+                const dateInfo = document.createElement('div');
+                dateInfo.className = 'date-info';
+
+                const dateText = document.createElement('div');
+                dateText.className = 'date-text';
+                dateText.textContent = this.utils.formatDate(record.date, { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+
+                const amountText = document.createElement('div');
+                amountText.className = 'amount-text';
+                amountText.textContent = this.utils.formatCurrency(record.amount);
+
+                const checkbox = document.createElement('div');
+                checkbox.className = 'checkbox';
+
+                dateInfo.appendChild(dateText);
+                dateInfo.appendChild(amountText);
+                dateElement.appendChild(dateInfo);
+                dateElement.appendChild(checkbox);
+
+                // Click handler for selection
+                dateElement.onclick = () => {
+                    dateElement.classList.toggle('selected');
+                    this.updateCalendarSelection();
+                };
+
+                container.appendChild(dateElement);
+            });
+
+        } catch (error) {
+            console.error('Error generating unpaid work calendar:', error);
+            container.innerHTML = '<p>Error loading unpaid work dates.</p>';
+        }
+    }
+
+    updateCalendarSelection() {
+        const selectedDates = document.querySelectorAll('.calendar-work-date.selected');
+        const selectedDatesCount = document.getElementById('selectedDatesCount');
+        const selectedAmountPreview = document.getElementById('selectedAmountPreview');
+        const proceedBtn = document.getElementById('proceedToPaymentBtn');
+
+        let totalAmount = 0;
+        const selectedDatesList = [];
+
+        selectedDates.forEach(dateEl => {
+            const amount = parseFloat(dateEl.dataset.amount);
+            totalAmount += amount;
+            selectedDatesList.push(dateEl.dataset.date);
+        });
+
+        // Update display
+        if (selectedDatesCount) {
+            selectedDatesCount.textContent = selectedDates.length;
+        }
+        if (selectedAmountPreview) {
+            selectedAmountPreview.textContent = this.utils.formatCurrency(totalAmount);
+        }
+
+        // Enable/disable proceed button
+        if (proceedBtn) {
+            proceedBtn.disabled = selectedDates.length === 0;
+        }
+
+        // Store selected data for later use
+        this.selectedCalendarDates = selectedDatesList;
+        this.selectedCalendarAmount = totalAmount;
+    }
+
+    setupCalendarSelectionHandlers() {
+        const modal = document.getElementById('calendarSelectionModal');
+        const proceedBtn = document.getElementById('proceedToPaymentBtn');
+        const cancelBtn = document.getElementById('cancelCalendarSelectionBtn');
+        const closeBtn = document.getElementById('closeCalendarSelectionModal');
+
+        const closeModal = () => {
+            modal.classList.remove('show');
+            this.selectedCalendarDates = [];
+            this.selectedCalendarAmount = 0;
+        };
+
+        // Close modal handlers
+        if (closeBtn) {
+            closeBtn.onclick = closeModal;
+        }
+
+        if (cancelBtn) {
+            cancelBtn.onclick = closeModal;
+        }
+
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        };
+
+        // Proceed to payment
+        if (proceedBtn) {
+            proceedBtn.onclick = () => {
+                if (this.selectedCalendarDates && this.selectedCalendarDates.length > 0) {
+                    closeModal();
+                    this.showCustomPaymentModal();
+                }
+            };
+        }
+    }
+
     async showPaymentModal() {
         const modal = document.getElementById('paymentModal');
         const unpaidDaysEl = document.getElementById('unpaidDaysCount');
@@ -1885,6 +2100,29 @@ class RServiceTracker {
             pendingAmountEl.textContent = this.utils.formatCurrency(pendingAmount);
             
             console.log('Payment modal - Unpaid days:', this.pendingUnpaidDates.length, 'Pending amount:', pendingAmount);
+            
+            // Clear any previous custom selection
+            this.selectedCalendarDates = [];
+            this.selectedCalendarAmount = 0;
+            
+            modal.classList.add('show');
+            this.setupPaymentModalHandlers();
+        }
+    }
+
+    async showCustomPaymentModal() {
+        const modal = document.getElementById('paymentModal');
+        const unpaidDaysEl = document.getElementById('unpaidDaysCount');
+        const pendingAmountEl = document.getElementById('pendingAmount');
+        
+        if (modal && unpaidDaysEl && pendingAmountEl && this.selectedCalendarDates) {
+            const selectedDaysCount = this.selectedCalendarDates.length;
+            const selectedAmount = this.selectedCalendarAmount;
+            
+            unpaidDaysEl.textContent = selectedDaysCount;
+            pendingAmountEl.textContent = this.utils.formatCurrency(selectedAmount);
+            
+            console.log('Custom payment modal - Selected days:', selectedDaysCount, 'Selected amount:', selectedAmount);
             
             modal.classList.add('show');
             this.setupPaymentModalHandlers();
@@ -2060,7 +2298,11 @@ class RServiceTracker {
 
     async processPayment(amount, closeModalCallback) {
         try {
-            console.log('Processing payment:', { amount, pendingDates: this.pendingUnpaidDates });
+            console.log('Processing payment:', { 
+                amount, 
+                pendingDates: this.pendingUnpaidDates,
+                selectedCalendarDates: this.selectedCalendarDates 
+            });
             
             if (!amount || amount <= 0) {
                 throw new Error('Invalid payment amount');
@@ -2071,16 +2313,26 @@ class RServiceTracker {
             }
             
             const DAILY_WAGE = 25; // Should match database constant
-            const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
-            
-            const isAdvancePayment = amount > totalWorkCompletedValue;
-            
             let workDatesToPay = [];
+            let isAdvancePayment = false;
             
-            if (totalWorkCompletedValue > 0) {
-                const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
-                workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
-                console.log('Work dates to pay:', workDatesToPay);
+            // Check if we're using custom selected dates from calendar
+            if (this.selectedCalendarDates && this.selectedCalendarDates.length > 0) {
+                // Use the specifically selected dates
+                workDatesToPay = [...this.selectedCalendarDates];
+                const expectedAmount = this.selectedCalendarAmount;
+                isAdvancePayment = amount > expectedAmount;
+                console.log('Using custom selected dates:', workDatesToPay);
+            } else {
+                // Use the traditional flow with all pending dates
+                const totalWorkCompletedValue = this.pendingUnpaidDates.length * DAILY_WAGE;
+                isAdvancePayment = amount > totalWorkCompletedValue;
+                
+                if (totalWorkCompletedValue > 0) {
+                    const daysCovered = Math.min(Math.floor(amount / DAILY_WAGE), this.pendingUnpaidDates.length);
+                    workDatesToPay = this.pendingUnpaidDates.slice(0, daysCovered);
+                    console.log('Using traditional flow - Work dates to pay:', workDatesToPay);
+                }
             }
             
             const paymentDate = this.utils.getTodayString();
@@ -2111,6 +2363,10 @@ class RServiceTracker {
             
             console.log('Syncing amount flow across all components...');
             await this.syncAmountFlow();
+            
+            // Clear custom calendar selection after successful payment
+            this.selectedCalendarDates = [];
+            this.selectedCalendarAmount = 0;
             
         } catch (error) {
             console.error('Error recording payment:', error);

@@ -460,6 +460,73 @@
         </div>
     </div>
 
+    <!-- Date Selection Modal -->
+    <div id="dateSelectionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Select Payment Date</h3>
+                <button class="close-modal" id="closeDateSelectionModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="date-selection-info">
+                    <p>Choose when you want to mark the payment:</p>
+                </div>
+                <div class="date-options">
+                    <button id="todayDateBtn" class="btn btn-primary date-option-btn">
+                        <i class="fas fa-calendar-day"></i>
+                        <div>
+                            <strong>Today</strong>
+                            <small>Mark payment for today</small>
+                        </div>
+                    </button>
+                    <button id="previousDateBtn" class="btn btn-secondary date-option-btn">
+                        <i class="fas fa-calendar-alt"></i>
+                        <div>
+                            <strong>Previous Date</strong>
+                            <small>Select specific dates from calendar</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Selection Modal -->
+    <div id="calendarSelectionModal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>Select Work Dates to Pay</h3>
+                <button class="close-modal" id="closeCalendarSelectionModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="calendar-selection-info">
+                    <p>Select the work dates you want to include in this payment:</p>
+                    <div class="payment-summary-preview">
+                        <span>Selected: <span id="selectedDatesCount">0</span> days</span>
+                        <span>Total: <span id="selectedAmountPreview">₹0</span></span>
+                    </div>
+                </div>
+                <div class="unpaid-work-calendar" id="unpaidWorkCalendar">
+                    <!-- Calendar with unpaid work dates will be generated here -->
+                </div>
+                <div class="calendar-actions">
+                    <button id="proceedToPaymentBtn" class="btn btn-success" disabled>
+                        <i class="fas fa-arrow-right"></i>
+                        Proceed to Payment
+                    </button>
+                    <button id="cancelCalendarSelectionBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Payment Selection Modal -->
     <div id="paymentModal" class="modal">
         <div class="modal-content">
