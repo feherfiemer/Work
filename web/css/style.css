@@ -2100,8 +2100,9 @@ body {
 .modal-actions {
   display: flex;
   gap: 1rem;
-  margin-top: 2rem;
-  justify-content: flex-end;
+  margin: 1.5rem 0 0;
+  justify-content: center;
+  align-items: center;
 }
 
 /* ===== FOOTER ===== */
@@ -4385,7 +4386,7 @@ select:focus {
 }
 
 .unpaid-work-calendar {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   max-height: 450px;
   overflow-y: auto;
   padding: 1rem;
@@ -5826,8 +5827,8 @@ button.disabled:hover {
 .date-options {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-top: 20px;
+  gap: 1rem;
+  margin: 1.5rem 0;
 }
 
 .date-option-btn {
@@ -6289,6 +6290,44 @@ button.disabled:hover {
 .payment-body {
   padding: 2rem;
   background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 300px;
+}
+
+/* Direct Payment Clean */
+.direct-payment-clean {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(var(--primary-rgb), 0.05);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.payment-preview-clean {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.preview-amount {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.preview-type {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payment-amounts-clean {
+  margin: 1rem 0;
 }
 
 /* Clean Status Display */
@@ -6343,7 +6382,8 @@ button.disabled:hover {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin: 1.5rem 0;
+  padding: 0;
 }
 
 .payment-buttons-clean .payment-btn {
@@ -6402,6 +6442,7 @@ button.disabled:hover {
   border: 2px solid rgba(var(--success-rgb), 0.2);
   border-radius: 16px;
   padding: 1.5rem;
+  margin: 1.5rem 0;
   text-align: center;
   animation: slideInUp 0.3s ease-out;
 }
@@ -6430,6 +6471,8 @@ button.disabled:hover {
   display: flex;
   gap: 1rem;
   justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
 }
 
 .btn-confirm, .btn-cancel {
@@ -6491,6 +6534,10 @@ button.disabled:hover {
 .calendar-body {
   padding: 2rem;
   background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 400px;
 }
 
 /* Calendar Info */
@@ -6545,7 +6592,8 @@ button.disabled:hover {
   display: flex;
   gap: 1rem;
   justify-content: center;
-  margin-top: 2rem;
+  align-items: center;
+  margin: 1.5rem 0;
 }
 
 .btn-confirm-main, .btn-cancel-main {
@@ -6597,6 +6645,7 @@ button.disabled:hover {
     rgba(var(--success-rgb), 0.04) 100%);
   border: 2px solid rgba(var(--success-rgb), 0.2);
   border-radius: 16px;
+  margin: 1rem 0;
   padding: 1.5rem;
   text-align: center;
   margin-top: 1rem;
@@ -6693,6 +6742,24 @@ button.disabled:hover {
   font-size: 1.4rem;
 }
 
+/* Standard Modal Clean */
+.standard-modal-clean {
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.98) 0%, 
+    rgba(248, 250, 252, 0.99) 50%,
+    rgba(241, 245, 249, 0.98) 100%) !important;
+  border: 1px solid rgba(var(--primary-rgb), 0.1) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+[data-theme*="dark"] .standard-modal-clean {
+  background: linear-gradient(145deg, 
+    rgba(30, 32, 37, 0.98) 0%, 
+    rgba(24, 26, 31, 0.99) 50%,
+    rgba(18, 20, 25, 0.98) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
 /* Simple Payment Summary Styles */
 .payment-summary-simple {
   background: linear-gradient(135deg, 
@@ -6701,7 +6768,7 @@ button.disabled:hover {
   border: 2px solid rgba(var(--primary-rgb), 0.12);
   border-radius: 12px;
   padding: 1.25rem;
-  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
   position: relative;
   overflow: hidden;
 }
@@ -6840,7 +6907,7 @@ button.disabled:hover {
   letter-spacing: 0.5px;
 }
 
-/* Corner Close Button for Payment Dialogs */
+/* Corner Close Button for All Dialogs */
 .corner-close {
   position: absolute !important;
   top: 1rem !important;
@@ -6896,8 +6963,8 @@ button.disabled:hover {
 
 /* Corner Close Button Dark Theme */
 [data-theme*="dark"] .corner-close {
-  background: rgba(0, 0, 0, 0.3) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
   color: var(--text-primary) !important;
 }
 
