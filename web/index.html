@@ -511,32 +511,6 @@
                     <!-- Calendar with unpaid work dates will be generated here -->
                 </div>
                 
-                <!-- Simple Calendar Summary -->
-                <div class="payment-summary-simple" id="calendarPaymentSummaryCard">
-                    <div class="summary-header">
-                        <i class="fas fa-calendar-check"></i>
-                        <span>Selection Summary</span>
-                    </div>
-                    <div class="summary-info">
-                        <div class="summary-item">
-                            <span class="summary-label">Days Selected:</span>
-                            <span class="summary-value" id="selectedDatesCount">0</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Total Amount:</span>
-                            <span class="summary-value" id="selectedAmountPreview">₹0</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Daily Rate:</span>
-                            <span class="summary-value" id="calendarDailyWageDisplay">₹25</span>
-                        </div>
-                        <div class="summary-selected" id="calendarPaymentSummaryTotal" style="display: none;">
-                            <span class="selected-label">Payment Amount:</span>
-                            <span class="selected-amount" id="calendarSelectedPaymentAmount">₹0</span>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- Simple Direct Payment Section -->
                 <div class="direct-payment-clean" id="directPaymentSummary" style="display: none;">
                     <div class="payment-preview-clean">
@@ -563,6 +537,32 @@
                             <button id="cancelCalendarPaymentBtn" class="btn-cancel">
                                 Cancel
                             </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Simple Calendar Summary -->
+                <div class="payment-summary-simple" id="calendarPaymentSummaryCard">
+                    <div class="summary-header">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Selection Summary</span>
+                    </div>
+                    <div class="summary-info">
+                        <div class="summary-item">
+                            <span class="summary-label">Days Selected:</span>
+                            <span class="summary-value" id="selectedDatesCount">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Total Amount:</span>
+                            <span class="summary-value" id="selectedAmountPreview">₹0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Daily Rate:</span>
+                            <span class="summary-value" id="calendarDailyWageDisplay">₹25</span>
+                        </div>
+                        <div class="summary-selected" id="calendarPaymentSummaryTotal" style="display: none;">
+                            <span class="selected-label">Payment Amount:</span>
+                            <span class="selected-amount" id="calendarSelectedPaymentAmount">₹0</span>
                         </div>
                     </div>
                 </div>
@@ -596,6 +596,11 @@
                 </button>
             </div>
             <div class="modal-body payment-body">
+                <!-- Clean Payment Buttons -->
+                <div class="payment-buttons-clean" id="paymentButtons">
+                    <!-- Buttons will be generated dynamically -->
+                </div>
+
                 <!-- Simple Payment Summary -->
                 <div class="payment-summary-simple" id="paymentSummaryCard">
                     <div class="summary-header">
@@ -620,11 +625,6 @@
                             <span class="selected-amount" id="selectedPaymentAmount">₹0</span>
                         </div>
                     </div>
-                </div>
-
-                <!-- Clean Payment Buttons -->
-                <div class="payment-buttons-clean" id="paymentButtons">
-                    <!-- Buttons will be generated dynamically -->
                 </div>
 
                 <!-- Simple Confirmation -->

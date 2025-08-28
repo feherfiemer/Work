@@ -6271,13 +6271,20 @@ button.disabled:hover {
 }
 
 .payment-header {
-  background: linear-gradient(135deg, var(--surface), var(--surface-alt));
+  background: linear-gradient(135deg, 
+    var(--surface) 0%, 
+    var(--surface-alt) 50%, 
+    rgba(var(--primary-rgb), 0.05) 100%);
   color: var(--primary);
-  padding: 2rem 2rem 1.5rem;
+  padding: 2.5rem 2rem 2rem;
   text-align: center;
   position: relative;
-  border-bottom: 3px solid var(--border);
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+  border-bottom: 4px solid transparent;
+  border-image: linear-gradient(90deg, var(--primary), var(--primary-light)) 1;
+  box-shadow: 
+    0 4px 15px rgba(var(--primary-rgb), 0.1),
+    0 1px 5px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(15px);
 }
 
 .payment-header h3 {
@@ -6288,12 +6295,15 @@ button.disabled:hover {
 }
 
 .payment-body {
-  padding: 2rem;
-  background: var(--surface);
+  padding: 2.5rem;
+  background: linear-gradient(145deg, 
+    var(--surface) 0%, 
+    rgba(var(--surface-rgb), 0.95) 100%);
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-height: 300px;
+  min-height: 350px;
+  position: relative;
 }
 
 /* Direct Payment Clean */
@@ -6380,23 +6390,30 @@ button.disabled:hover {
 /* Clean Payment Buttons */
 .payment-buttons-clean {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 0.75rem;
-  margin: 1.5rem 0;
-  padding: 0;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 1rem;
+  margin: 0 0 2rem 0;
+  padding: 1rem;
+  background: rgba(var(--background-rgb), 0.3);
+  border-radius: 16px;
+  border: 1px solid rgba(var(--border-rgb), 0.1);
 }
 
 .payment-buttons-clean .payment-btn {
-  background: var(--surface-alt);
-  border: 2px solid rgba(var(--primary-rgb), 0.1);
-  border-radius: 12px;
-  padding: 1rem 0.5rem;
-  font-size: 1rem;
+  background: linear-gradient(135deg, 
+    var(--surface-alt) 0%, 
+    rgba(var(--surface-alt-rgb), 0.9) 100%);
+  border: 2px solid rgba(var(--primary-rgb), 0.15);
+  border-radius: 14px;
+  padding: 1.25rem 0.75rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-primary);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -6416,8 +6433,13 @@ button.disabled:hover {
 
 .payment-buttons-clean .payment-btn:hover {
   border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.2);
+  transform: translateY(-3px);
+  box-shadow: 
+    0 8px 25px rgba(var(--primary-rgb), 0.25),
+    0 4px 15px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, 
+    rgba(var(--primary-rgb), 0.05) 0%, 
+    var(--surface-alt) 100%);
 }
 
 .payment-buttons-clean .payment-btn:hover::before {
@@ -6437,14 +6459,21 @@ button.disabled:hover {
 /* Payment Confirmation */
 .payment-confirmation {
   background: linear-gradient(135deg, 
-    rgba(var(--success-rgb), 0.08) 0%,
-    rgba(var(--success-rgb), 0.04) 100%);
-  border: 2px solid rgba(var(--success-rgb), 0.2);
-  border-radius: 16px;
-  padding: 1.5rem;
+    rgba(var(--success-rgb), 0.12) 0%,
+    rgba(var(--success-rgb), 0.06) 50%,
+    rgba(var(--success-rgb), 0.03) 100%);
+  border: 2px solid rgba(var(--success-rgb), 0.25);
+  border-radius: 18px;
+  padding: 2rem;
   margin: 1.5rem 0;
   text-align: center;
   animation: slideInUp 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 8px 30px rgba(var(--success-rgb), 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .confirmation-amount {
@@ -6476,38 +6505,53 @@ button.disabled:hover {
 }
 
 .btn-confirm, .btn-cancel {
-  padding: 0.875rem 2rem;
-  border-radius: 12px;
+  padding: 1rem 2.5rem;
+  border-radius: 14px;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   border: none;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .btn-confirm {
-  background: linear-gradient(135deg, var(--success), #20c997);
+  background: linear-gradient(135deg, 
+    var(--success) 0%, 
+    #20c997 50%, 
+    #17a2b8 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(var(--success-rgb), 0.3);
+  box-shadow: 
+    0 6px 20px rgba(var(--success-rgb), 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-confirm:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(var(--success-rgb), 0.4);
+  transform: translateY(-3px);
+  box-shadow: 
+    0 10px 30px rgba(var(--success-rgb), 0.5),
+    0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .btn-cancel {
-  background: var(--surface-alt);
+  background: linear-gradient(135deg, 
+    var(--surface-alt) 0%, 
+    rgba(var(--surface-alt-rgb), 0.9) 100%);
   color: var(--text-primary);
-  border: 2px solid rgba(var(--border-rgb), 0.3);
+  border: 2px solid rgba(var(--border-rgb), 0.4);
+  box-shadow: 0 4px 12px rgba(var(--border-rgb), 0.2);
 }
 
 .btn-cancel:hover {
-  background: var(--surface);
+  background: linear-gradient(135deg, 
+    var(--surface) 0%, 
+    rgba(var(--primary-rgb), 0.05) 100%);
   border-color: var(--primary);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.2);
 }
 
 /* Calendar Modal Clean */
@@ -6518,10 +6562,18 @@ button.disabled:hover {
 }
 
 .calendar-header {
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  background: linear-gradient(135deg, 
+    var(--primary) 0%, 
+    var(--primary-light) 50%,
+    var(--secondary) 100%);
   color: white;
-  padding: 2rem 2rem 1.5rem;
+  padding: 2.5rem 2rem 2rem;
   text-align: center;
+  position: relative;
+  backdrop-filter: blur(15px);
+  box-shadow: 
+    0 4px 15px rgba(var(--primary-rgb), 0.2),
+    0 1px 5px rgba(0, 0, 0, 0.1);
 }
 
 .calendar-header h3 {
@@ -6532,12 +6584,15 @@ button.disabled:hover {
 }
 
 .calendar-body {
-  padding: 2rem;
-  background: var(--surface);
+  padding: 2.5rem;
+  background: linear-gradient(145deg, 
+    var(--surface) 0%, 
+    rgba(var(--surface-rgb), 0.95) 100%);
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-height: 400px;
+  min-height: 450px;
+  position: relative;
 }
 
 /* Calendar Info */
@@ -6763,14 +6818,19 @@ button.disabled:hover {
 /* Simple Payment Summary Styles */
 .payment-summary-simple {
   background: linear-gradient(135deg, 
-    rgba(var(--primary-rgb), 0.06) 0%,
-    rgba(var(--primary-rgb), 0.03) 100%);
-  border: 2px solid rgba(var(--primary-rgb), 0.12);
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
+    rgba(var(--primary-rgb), 0.08) 0%,
+    rgba(var(--primary-rgb), 0.04) 50%,
+    rgba(var(--primary-rgb), 0.02) 100%);
+  border: 1px solid rgba(var(--primary-rgb), 0.15);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
   position: relative;
   overflow: hidden;
+  box-shadow: 
+    0 4px 20px rgba(var(--primary-rgb), 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
 }
 
 .payment-summary-simple::before {
@@ -6779,63 +6839,83 @@ button.disabled:hover {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  height: 4px;
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--primary-light) 50%, 
+    var(--secondary) 100%);
+  border-radius: 16px 16px 0 0;
 }
 
 .summary-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  font-weight: 700;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  font-weight: 600;
   color: var(--primary);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
 }
 
 .summary-header i {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .summary-info {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .summary-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(var(--border-rgb), 0.15);
+  padding: 0.875rem 1rem;
+  background: rgba(var(--background-rgb), 0.4);
+  border-radius: 10px;
+  border: 1px solid rgba(var(--border-rgb), 0.1);
+  transition: all 0.2s ease;
 }
 
-.summary-item:last-child {
-  border-bottom: none;
+.summary-item:hover {
+  background: rgba(var(--primary-rgb), 0.05);
+  border-color: rgba(var(--primary-rgb), 0.2);
+  transform: translateY(-1px);
 }
 
 .summary-label {
   font-weight: 500;
   color: var(--text-secondary);
   font-size: 0.95rem;
+  letter-spacing: 0.5px;
 }
 
 .summary-value {
-  font-weight: 700;
-  color: var(--text-primary);
-  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 1.05rem;
+  letter-spacing: 0.3px;
 }
 
 .summary-selected {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(var(--success-rgb), 0.1);
-  border-radius: 8px;
-  border: 2px solid rgba(var(--success-rgb), 0.2);
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, 
+    rgba(var(--success-rgb), 0.12) 0%,
+    rgba(var(--success-rgb), 0.06) 100%);
+  border-radius: 14px;
+  border: 2px solid rgba(var(--success-rgb), 0.25);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(var(--success-rgb), 0.15);
 }
 
 .selected-label {
@@ -6891,13 +6971,20 @@ button.disabled:hover {
 
 /* Standard Header for Non-Payment Dialogs */
 .standard-header {
-  background: linear-gradient(135deg, var(--surface), var(--surface-alt));
+  background: linear-gradient(135deg, 
+    var(--surface) 0%, 
+    var(--surface-alt) 50%, 
+    rgba(var(--text-rgb), 0.02) 100%);
   color: var(--text-primary);
-  padding: 2rem 2rem 1.5rem;
+  padding: 2.5rem 2rem 2rem;
   text-align: center;
   position: relative;
-  border-bottom: 3px solid var(--border);
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+  border-bottom: 4px solid transparent;
+  border-image: linear-gradient(90deg, var(--text-secondary), var(--border)) 1;
+  box-shadow: 
+    0 4px 15px rgba(var(--text-rgb), 0.05),
+    0 1px 5px rgba(0, 0, 0, 0.03);
+  backdrop-filter: blur(15px);
 }
 
 .standard-header h3 {
