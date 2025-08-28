@@ -1765,14 +1765,20 @@ class RServiceTracker {
             
             const advanceStatus = await this.db.getAdvancePaymentStatus();
             
-            // Always show the paid button - users can make advance payments at any time
-            // This enables flexible payment workflows and better user experience
+            // Always show the button but disable if no work to pay for
             this.showPaidButton();
             
-            // Optional: Add visual indication if there are pending work days
-            if (this.pendingUnpaidDates.length > 0) {
+            // Enable/disable based on available work to pay for
+            const hasUnpaidWork = this.pendingUnpaidDates.length > 0;
+            const hasAdvancePaymentWork = advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0;
+            
+            if (hasUnpaidWork || hasAdvancePaymentWork) {
+                paidBtn.disabled = false;
+                paidBtn.classList.remove('disabled-state');
                 paidBtn.classList.add('has-pending-work');
             } else {
+                paidBtn.disabled = true;
+                paidBtn.classList.add('disabled-state');
                 paidBtn.classList.remove('has-pending-work');
             }
         }
@@ -2813,14 +2819,53 @@ class RServiceTracker {
                     this.utils.animateNumber(daysWorkedEl, 0, totalWorked, 800);
                 }
                 
-                // Progress bar and payment threshold displays
+                // Progress bar and payment threshold displays (including advance payments)
                 const progressFillEl = document.getElementById('progressFill');
                 const progressTextEl = document.getElementById('progressText');
-                if (progressFillEl && progressTextEl) {
-                    const progress = this.currentStats?.progressToPayday || 0;
-                    const progressPercent = (progress / paymentThreshold) * 100;
-                    progressFillEl.style.width = `${Math.min(progressPercent, 100)}%`;
-                    progressTextEl.textContent = `${progress}/${paymentThreshold} days`;
+                const progressLabelEl = document.getElementById('progressLabel');
+                
+                // Handle advance payment progress or regular progress
+                if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance > 0) {
+                    const workCompleted = advanceStatus.workCompletedForAdvance || 0;
+                    const workRequired = advanceStatus.workRequiredForAdvance || 1;
+                    const progressPercent = Math.min((workCompleted / workRequired) * 100, 100);
+                    
+                    if (progressLabelEl) {
+                        progressLabelEl.textContent = `Advance Payment Progress (₹${advanceStatus.totalAdvanceAmount} paid)`;
+                    }
+                    if (progressTextEl) {
+                        progressTextEl.textContent = `${workCompleted}/${workRequired} days`;
+                    }
+                    if (progressFillEl) {
+                        const finalPercent = workCompleted === 0 ? 0 : 
+                                          workCompleted >= workRequired ? 100 : 
+                                          Math.max(progressPercent, 10);
+                        progressFillEl.style.width = `${finalPercent}%`;
+                        progressFillEl.style.backgroundColor = workCompleted >= workRequired ? 'var(--success)' : 'var(--warning)';
+                    }
+                } else if (advanceStatus.hasAdvancePayments && advanceStatus.workRemainingForAdvance === 0) {
+                    if (progressLabelEl) {
+                        progressLabelEl.textContent = 'Advance Completed';
+                    }
+                    if (progressTextEl) {
+                        progressTextEl.textContent = 'All advance work completed';
+                    }
+                    if (progressFillEl) {
+                        progressFillEl.style.width = '100%';
+                        progressFillEl.style.backgroundColor = 'var(--success)';
+                    }
+                } else {
+                    // Regular progress to payday
+                    if (progressLabelEl) {
+                        progressLabelEl.textContent = 'Progress to Payday';
+                    }
+                    if (progressFillEl && progressTextEl) {
+                        const progress = this.currentStats?.progressToPayday || 0;
+                        const progressPercent = (progress / paymentThreshold) * 100;
+                        progressFillEl.style.width = `${Math.min(progressPercent, 100)}%`;
+                        progressFillEl.style.backgroundColor = 'var(--primary)';
+                        progressTextEl.textContent = `${progress}/${paymentThreshold} days`;
+                    }
                 }
                 
             } catch (uiError) {

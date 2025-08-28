@@ -1799,19 +1799,25 @@ class NotificationManager {
     }
 
     createUltraPremiumPaymentSequence(ctx, startTime) {
-        // Create multiple layers for rich, banking-grade payment sound
+        // Create multiple layers for ultra-realistic, premium banking payment sound
         
-        // Layer 1: Card tap/chip recognition sound
-        this.createCardChipSound(ctx, startTime);
+        // Layer 1: NFC/Card tap recognition (enhanced)
+        this.createAdvancedCardChipSound(ctx, startTime);
         
-        // Layer 2: Processing beeps (realistic banking terminal)
-        this.createProcessingBeeps(ctx, startTime + 0.2);
+        // Layer 2: Banking terminal processing sequence (enhanced)
+        this.createAdvancedProcessingBeeps(ctx, startTime + 0.15);
         
-        // Layer 3: Confirmation chimes (premium banking sound)
-        this.createPremiumConfirmationChimes(ctx, startTime + 0.6);
+        // Layer 3: Digital authorization confirmation
+        this.createDigitalAuthorizationSound(ctx, startTime + 0.45);
         
-        // Layer 4: Cash register finale with reverb
-        this.createEnhancedCashRegisterFinale(ctx, startTime + 1.0);
+        // Layer 4: Premium banking confirmation chimes
+        this.createPremiumBankingChimes(ctx, startTime + 0.7);
+        
+        // Layer 5: Luxury cash register finale with spatial audio
+        this.createLuxuryCashRegisterFinale(ctx, startTime + 1.0);
+        
+        // Layer 6: Success completion tone
+        this.createSuccessCompletionTone(ctx, startTime + 1.3);
     }
 
     createCardChipSound(ctx, startTime) {
@@ -1976,6 +1982,225 @@ class NotificationManager {
         } catch (error) {
             console.warn('Even fallback payment sound failed:', error);
         }
+    }
+
+    createAdvancedCardChipSound(ctx, startTime) {
+        // Ultra-realistic NFC/chip card recognition with multiple harmonics
+        const frequencies = [2400, 2800, 3200];
+        
+        frequencies.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = index === 0 ? 'square' : 'sine';
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(freq, startTime);
+            filter.Q.setValueAtTime(20, startTime);
+            
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.frequency.exponentialRampToValueAtTime(freq * 1.2, startTime + 0.03);
+            osc.frequency.exponentialRampToValueAtTime(freq * 0.9, startTime + 0.1);
+            
+            gain.gain.setValueAtTime(0.1 - (index * 0.02), startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.12);
+            
+            osc.start(startTime + (index * 0.01));
+            osc.stop(startTime + 0.12);
+        });
+    }
+
+    createAdvancedProcessingBeeps(ctx, startTime) {
+        // Enhanced banking terminal processing with realistic timing
+        const sequence = [
+            { freq: 1000, time: 0, duration: 0.08 },
+            { freq: 1100, time: 0.12, duration: 0.08 },
+            { freq: 1200, time: 0.24, duration: 0.08 },
+            { freq: 1300, time: 0.36, duration: 0.1 }
+        ];
+        
+        sequence.forEach((beep, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(beep.freq, startTime + beep.time);
+            
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(beep.freq, startTime + beep.time);
+            filter.Q.setValueAtTime(8, startTime + beep.time);
+            
+            gain.gain.setValueAtTime(0.15, startTime + beep.time);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + beep.time + beep.duration);
+            
+            osc.start(startTime + beep.time);
+            osc.stop(startTime + beep.time + beep.duration);
+        });
+    }
+
+    createDigitalAuthorizationSound(ctx, startTime) {
+        // Digital authorization confirmation with electronic feel
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc1.type = 'sawtooth';
+        osc2.type = 'sine';
+        
+        osc1.frequency.setValueAtTime(440, startTime);
+        osc1.frequency.exponentialRampToValueAtTime(880, startTime + 0.15);
+        
+        osc2.frequency.setValueAtTime(220, startTime);
+        osc2.frequency.exponentialRampToValueAtTime(440, startTime + 0.15);
+        
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2000, startTime);
+        filter.frequency.exponentialRampToValueAtTime(4000, startTime + 0.15);
+        
+        gain.gain.setValueAtTime(0.12, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+        
+        osc1.start(startTime);
+        osc2.start(startTime);
+        osc1.stop(startTime + 0.2);
+        osc2.stop(startTime + 0.2);
+    }
+
+    createPremiumBankingChimes(ctx, startTime) {
+        // Luxury banking confirmation chord with harmonic richness
+        const chord = [523.25, 659.25, 783.99, 1046.5, 1318.5]; // Extended C major chord
+        
+        chord.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            const delay = ctx.createDelay();
+            const delayGain = ctx.createGain();
+            
+            // Main signal path
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            
+            // Delay/reverb path
+            gain.connect(delay);
+            delay.connect(delayGain);
+            delayGain.connect(ctx.destination);
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, startTime);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(freq * 4, startTime);
+            filter.Q.setValueAtTime(1, startTime);
+            
+            delay.delayTime.setValueAtTime(0.05 + (index * 0.01), startTime);
+            delayGain.gain.setValueAtTime(0.2, startTime);
+            
+            gain.gain.setValueAtTime(0.08 - (index * 0.01), startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.2);
+            
+            osc.start(startTime + (index * 0.03));
+            osc.stop(startTime + 1.2);
+        });
+    }
+
+    createLuxuryCashRegisterFinale(ctx, startTime) {
+        // Premium cash register "cha-ching" with spatial audio and reverb
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const osc3 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        const delay1 = ctx.createDelay();
+        const delay2 = ctx.createDelay();
+        const delayGain1 = ctx.createGain();
+        const delayGain2 = ctx.createGain();
+        
+        // Complex routing for spatial effect
+        osc1.connect(filter);
+        osc2.connect(filter);
+        osc3.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
+        // Multiple delay lines for rich reverb
+        gain.connect(delay1);
+        gain.connect(delay2);
+        delay1.connect(delayGain1);
+        delay2.connect(delayGain2);
+        delayGain1.connect(ctx.destination);
+        delayGain2.connect(ctx.destination);
+        
+        osc1.type = 'triangle';
+        osc2.type = 'sine';
+        osc3.type = 'square';
+        
+        osc1.frequency.setValueAtTime(1760, startTime); // A6
+        osc2.frequency.setValueAtTime(880, startTime);  // A5
+        osc3.frequency.setValueAtTime(440, startTime);  // A4
+        
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1500, startTime);
+        filter.Q.setValueAtTime(2, startTime);
+        
+        delay1.delayTime.setValueAtTime(0.08, startTime);
+        delay2.delayTime.setValueAtTime(0.15, startTime);
+        delayGain1.gain.setValueAtTime(0.25, startTime);
+        delayGain2.gain.setValueAtTime(0.15, startTime);
+        
+        gain.gain.setValueAtTime(0.2, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
+        
+        osc1.start(startTime);
+        osc2.start(startTime + 0.02);
+        osc3.start(startTime + 0.04);
+        osc1.stop(startTime + 1.5);
+        osc2.stop(startTime + 1.5);
+        osc3.stop(startTime + 1.5);
+    }
+
+    createSuccessCompletionTone(ctx, startTime) {
+        // Final success confirmation tone with magical feel
+        const frequencies = [1047, 1319, 1568, 2093]; // C6, E6, G6, C7
+        
+        frequencies.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, startTime);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(freq * 2, startTime);
+            filter.Q.setValueAtTime(1, startTime);
+            
+            gain.gain.setValueAtTime(0.06 - (index * 0.01), startTime + (index * 0.05));
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+            
+            osc.start(startTime + (index * 0.05));
+            osc.stop(startTime + 0.8);
+        });
     }
 
     createWorkCompletionChime() {
